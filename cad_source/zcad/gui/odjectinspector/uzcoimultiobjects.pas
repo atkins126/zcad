@@ -67,6 +67,7 @@ type
   TMSEditor={$IFNDEF DELPHI}packed{$ENDIF} object(TWrapper2ObjInsp)
                 TxtEntType:TMSPrimitiveDetector;(*'Process primitives'*)
                 VariablesUnit:TObjectUnit;(*'Variables'*)
+                CommandsUnit:TObjectUnit;(*'Commands'*)
                 GeneralUnit:TObjectUnit;(*'General'*)
                 GeometryUnit:TObjectUnit;(*'Geometry'*)
                 MiscUnit:TObjectUnit;(*'Misc'*)
@@ -106,6 +107,7 @@ implementation
 constructor  TMSEditor.init;
 begin
      VariablesUnit.init('VariablesUnit');
+     CommandsUnit.init('CommandsUnit');
      GeneralUnit.init('GeneralUnit');
      GeometryUnit.init('GeometryUnit');
      MiscUnit.init('MiscUnit');
@@ -119,6 +121,7 @@ end;
 destructor  TMSEditor.done;
 begin
      VariablesUnit.done;
+     CommandsUnit.done;
      GeneralUnit.done;
      GeometryUnit.done;
      MiscUnit.done;
