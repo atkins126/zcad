@@ -412,6 +412,7 @@ begin
     begin
       case MultiPropertiesManager.MultiPropertyVector[i].MPCategory of
       MPCGeneral:pu:=@self.GeneralUnit;
+      MPCCommands:pu:=@self.CommandsUnit;
       MPCGeometry:pu:=@self.GeometryUnit;
       MPCMisc:pu:=@self.MiscUnit;
       MPCSummary:pu:=@self.SummaryUnit;
@@ -551,6 +552,13 @@ begin
                        debugln('{T+}GeneralUnit.free start');
      GeneralUnit.free;
      GeneralUnit.InterfaceUses.PushBackIfNotPresent(sysunit);
+     if VerboseLog^ then
+                       debugln('{T-}end');
+
+     if VerboseLog^ then
+                       debugln('{T+}CommandsUnit.free start');
+     CommandsUnit.free;
+     CommandsUnit.InterfaceUses.PushBackIfNotPresent(sysunit);
      if VerboseLog^ then
                        debugln('{T-}end');
 

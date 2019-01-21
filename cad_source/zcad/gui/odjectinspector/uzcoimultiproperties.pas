@@ -29,7 +29,7 @@ type
   TObjIDVector=TMyVector<TObjID>;
 
   TMultiProperty=class;
-  TMultiPropertyCategory=(MPCGeneral,MPCGeometry,MPCMisc,MPCSummary);
+  TMultiPropertyCategory=(MPCGeneral,MPCCommands,MPCGeometry,MPCMisc,MPCSummary);
   TChangedData=record
                      PEntity,
                      PGetDataInEtity:GDBPointer;
