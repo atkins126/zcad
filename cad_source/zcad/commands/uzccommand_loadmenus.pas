@@ -13,42 +13,27 @@
 *****************************************************************************
 }
 {
-@author(Andrey Zubarev <zamtmn@yandex.ru>)
+@author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
-{$mode delphi}
-unit uzccommand_layoff;
 
+unit uzccommand_loadmenus;
 {$INCLUDE def.inc}
 
 interface
 uses
-  uzccommandsabstract,uzeentity,uzcdrawing,uzcdrawings,uzccommandsmanager,
-  uzcstrconsts,uzcutils,zcchangeundocommand,uzbtypes,uzccommandsimpl;
+ LCLProc,
+ uzbpaths,uzccommandsabstract,uzccommandsimpl,uzbtypes,uzmenusmanager;
 
 implementation
-const
-  LayOffCommandName='LayOff';
-function LayOff_com(operands:TCommandOperands):TCommandResult;
-var
-  _PEntity:PGDBObjEntity;
-  UndoStartMarkerPlaced:boolean;
+function LoadMenus_com(operands:TCommandOperands):TCommandResult;
 begin
-  UndoStartMarkerPlaced:=false;
-  while commandmanager.getentity(rscmSelectEntity,_PEntity) do
-  begin
-   if _PEntity^.vp.Layer._on then begin
-     zcPlaceUndoStartMarkerIfNeed(UndoStartMarkerPlaced,LayOffCommandName,true);
-     with PushCreateTGChangeCommand(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,_PEntity^.vp.Layer._on)^ do
-     begin
-       _PEntity^.vp.Layer._on:=not _PEntity^.vp.Layer._on;
-       ComitFromObj;
-     end;
-     zcRedrawCurrentDrawing;
-   end;
-  end;
-  zcPlaceUndoEndMarkerIfNeed(UndoStartMarkerPlaced);
+  MenusManager.LoadMenus(ExpandPath(operands));
   result:=cmd_ok;
 end;
+
+
 initialization
-  CreateCommandFastObjectPlugin(@LayOff_com,LayOffCommandName,CADWG,0);
+  CreateCommandFastObjectPlugin(@LoadMenus_com,'LoadMenus',0,0);
+finalization
+  debugln('{I}[UnitsFinalization] Unit "',{$INCLUDE %FILE%},'" finalization');
 end.

@@ -16,39 +16,32 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
 
-unit uzcshared;
+unit uzccommand_loadactions;
 {$INCLUDE def.inc}
-interface
-uses uzcinterface,uzclog,uzbpaths,{$IFNDEF DELPHI}LCLtype,{$ELSE}windows,{$ENDIF}Controls,
-     uzbtypesbase,Classes, SysUtils, {$IFNDEF DELPHI}fileutil,{$ENDIF}Forms,
-     ExtCtrls{, ComCtrls}{$IFNDEF DELPHI},LCLProc{$ENDIF};
 
-procedure FatalError(errstr:GDBString);
+interface
+uses
+ LCLProc,ComCtrls,Controls,
+ uzctreenode,uzbpaths,uzccommandsabstract,uzccommandsimpl,uzbtypes,uztoolbarsmanager;
 
 implementation
-procedure FatalError(errstr:GDBString);
-var s:GDBString;
+procedure FixButtonCaption(_tb:TToolBar;_control:tcontrol);
 begin
-     s:='FATALERROR: '+errstr;
-     programlog.logoutstr(s,0,LM_Fatal);
-     s:=(s);
-     ZCMsgCallBackInterface.Do_BeforeShowModal(nil);
-     Application.MessageBox(@s[1],'',MB_OK);
-     ZCMsgCallBackInterface.Do_AfterShowModal(nil);
+  if _control is TToolButton then
+    if assigned((_control as TToolButton).action) then
+       if ((_control as TToolButton).action)is TmyAction then
+         (_control as TToolButton).Caption:=(((_control as TToolButton).action)as TmyAction).imgstr;
+end;
 
-     halt(0);
-end;
-procedure ShowError(errstr:String); export;
-var
-   ts:GDBString;
+function LoadActions_com(operands:TCommandOperands):TCommandResult;
 begin
-     ZCMsgCallBackInterface.TextMessage(errstr,TMWOSilentShowError);
-     ts:=(errstr);
-     ZCMsgCallBackInterface.Do_BeforeShowModal(nil);
-     Application.MessageBox(@ts[1],'',MB_ICONERROR);
-     ZCMsgCallBackInterface.Do_AfterShowModal(nil);
+  ToolBarsManager.LoadActions(ExpandPath(operands));
+  ToolBarsManager.IterateToolBarsContent(FixButtonCaption);
+  result:=cmd_ok;
 end;
-begin
-uzclog.HistoryTextOut:=ZCMsgCallBackInterface.Do_HistoryOut();
-uzclog.MessageBoxTextOut:=@ShowError;
+
+initialization
+  CreateCommandFastObjectPlugin(@LoadActions_com,'LoadActions',0,0);
+finalization
+  debugln('{I}[UnitsFinalization] Unit "',{$INCLUDE %FILE%},'" finalization');
 end.

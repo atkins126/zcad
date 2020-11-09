@@ -37,7 +37,7 @@ GDBObjMText={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjText)
                  linespace:GDBDouble;(*saved_to_shd*)(*oi_readonly*)
                  linespacef:GDBDouble;(*saved_to_shd*)
                  text:XYZWGDBGDBStringArray;(*oi_readonly*)(*hidden_in_objinsp*)
-                 constructor init(own:GDBPointer;layeraddres:PGDBLayerProp;LW:GDBSmallint;c:GDBString;p:GDBvertex;s,o,w,a:GDBDouble;j:TTextJustify;wi,l:GDBDouble);
+                 constructor init(own:GDBPointer;layeraddres:PGDBLayerProp;LW:GDBSmallint;c:TDXFEntsInternalStringType;p:GDBvertex;s,o,w,a:GDBDouble;j:TTextJustify;wi,l:GDBDouble);
                  constructor initnul(owner:PGDBObjGenericWithSubordinated);
                  procedure LoadFromDXF(var f: GDBOpenArrayOfByte;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
                  procedure SaveToDXF(var outhandle:{GDBInteger}GDBOpenArrayOfByte;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
@@ -57,7 +57,7 @@ GDBObjMText={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjText)
                  function GetObjType:TObjID;virtual;
             end;
 {Export-}
-procedure FormatMtext(pfont:pgdbfont;width,size,wfactor:GDBDouble;content:UnicodeString;var text:XYZWGDBGDBStringArray);
+procedure FormatMtext(pfont:pgdbfont;width,size,wfactor:GDBDouble;content:TDXFEntsInternalStringType;var text:XYZWGDBGDBStringArray);
 function GetLinesH(linespace,size:GDBDouble;var lines:XYZWGDBGDBStringArray):GDBDouble;
 function GetLinesW(var lines:XYZWGDBGDBStringArray):GDBDouble;
 function GetLineSpaceFromLineSpaceF(linespacef,size:GDBDouble):GDBDouble;
@@ -150,12 +150,12 @@ begin
                else
                    result:=0;
 end;
-procedure FormatMtext(pfont:pgdbfont;width,size,wfactor:GDBDouble;content:UnicodeString;var text:XYZWGDBGDBStringArray);
+procedure FormatMtext(pfont:pgdbfont;width,size,wfactor:GDBDouble;content:TDXFEntsInternalStringType;var text:XYZWGDBGDBStringArray);
 var
   canbreak: GDBBoolean;
   currsymbol, lastbreak, lastcanbreak: GDBInteger;
   linewidth, lastlinewidth, maxlinewidth,lastsymspace: GDBDouble;
-  currline: UnicodeString;
+  currline:TDXFEntsInternalStringType;
   swp:GDBStrWithPoint;
   psyminfo:PGDBsymdolinfo;
   l:GDBInteger;
@@ -939,8 +939,9 @@ begin
                                                         TXTStyleIndex:=sysvar.DWG.DWG_CTStyle^;}
                            end;
   OldVersTextReplace(ttemplate);
-  //OldVersTextReplace(Content);
-  template:=utf8tostring(Tria_AnsiToUtf8(ttemplate));
+  OldVersTextReplace(Content);
+  Content:=utf8tostring(Tria_AnsiToUtf8(ttemplate));
+  template:=utf8tostring({Tria_AnsiToUtf8}(template));
   textprop.justify:=b2j[j];
   P_drawInOCS := Local.p_insert;
   linespace := textprop.size * linespacef * 5 / 3;
@@ -976,7 +977,7 @@ var
   //bw: GDBByte;
   s: GDBString;
   ul:boolean;
-  quotedcontent:UnicodeString;
+  quotedcontent:TDXFEntsInternalStringType;
 begin
   ul:=false;
   SaveToDXFObjPrefix(outhandle,'MTEXT','AcDbMText',IODXFContext);

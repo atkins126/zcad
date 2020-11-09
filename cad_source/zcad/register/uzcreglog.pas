@@ -13,42 +13,41 @@
 *****************************************************************************
 }
 {
-@author(Andrey Zubarev <zamtmn@yandex.ru>)
+@author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
-{$mode delphi}
-unit uzccommand_layoff;
 
+unit uzcreglog;
 {$INCLUDE def.inc}
-
 interface
-uses
-  uzccommandsabstract,uzeentity,uzcdrawing,uzcdrawings,uzccommandsmanager,
-  uzcstrconsts,uzcutils,zcchangeundocommand,uzbtypes,uzccommandsimpl;
-
+uses uzclog,uzcinterface,uzcmessagedialogs,
+     {$IFNDEF DELPHI}LCLtype,{$ELSE}windows,{$ENDIF}LCLProc,Forms;
 implementation
-const
-  LayOffCommandName='LayOff';
-function LayOff_com(operands:TCommandOperands):TCommandResult;
+
+procedure ShowMessageForLog(errstr:String);
 var
-  _PEntity:PGDBObjEntity;
-  UndoStartMarkerPlaced:boolean;
+   dr:TMsgDialogResult;
 begin
-  UndoStartMarkerPlaced:=false;
-  while commandmanager.getentity(rscmSelectEntity,_PEntity) do
-  begin
-   if _PEntity^.vp.Layer._on then begin
-     zcPlaceUndoStartMarkerIfNeed(UndoStartMarkerPlaced,LayOffCommandName,true);
-     with PushCreateTGChangeCommand(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,_PEntity^.vp.Layer._on)^ do
-     begin
-       _PEntity^.vp.Layer._on:=not _PEntity^.vp.Layer._on;
-       ComitFromObj;
-     end;
-     zcRedrawCurrentDrawing;
-   end;
-  end;
-  zcPlaceUndoEndMarkerIfNeed(UndoStartMarkerPlaced);
-  result:=cmd_ok;
+  dr:=zcMsgDlgInformation(ErrStr,true);
 end;
+procedure ShowWarningForLog(errstr:String);
+var
+   dr:TMsgDialogResult;
+begin
+  dr:=zcMsgDlgWarning(ErrStr,true);
+end;
+procedure ShowErrorForLog(errstr:String);
+var
+   dr:TMsgDialogResult;
+begin
+  dr:=zcMsgDlgError(ErrStr,true);
+end;
+
 initialization
-  CreateCommandFastObjectPlugin(@LayOff_com,LayOffCommandName,CADWG,0);
+  uzclog.HistoryTextOut:=ZCMsgCallBackInterface.Do_HistoryOut();
+  uzclog.MessageBoxTextOut:=@ShowMessageForLog;
+  uzclog.WarningBoxTextOut:=@ShowWarningForLog;
+  uzclog.ErrorBoxTextOut:=@ShowErrorForLog;
+finalization
+  debugln('{I}[UnitsFinalization] Unit "',{$INCLUDE %FILE%},'" finalization');
 end.
+

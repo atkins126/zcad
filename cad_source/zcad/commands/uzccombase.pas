@@ -42,7 +42,6 @@ uses
   uzcinterface,
   uzeconsts,
   uzeentity,
- uzcshared,
  uzeentitiestree,
  uzbtypesbase,uzbmemman,uzcdialogsfiles,
  UUnitManager,uzclog,Varman,
@@ -780,9 +779,7 @@ function MultiObjVarMan_com(operands:TCommandOperands):TCommandResult;
 var
    mem:GDBOpenArrayOfByte;
    pobj:PGDBObjEntity;
-   //op:gdbstring;
-   {size,}modalresult:integer;
-   //us:unicodestring;
+   modalresult:integer;
    u8s:UTF8String;
    astring:ansistring;
    counter:integer;

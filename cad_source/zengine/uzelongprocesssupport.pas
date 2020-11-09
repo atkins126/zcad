@@ -52,12 +52,12 @@ TZELongProcessSupport=class
                          OnLPStartProcVector:TOnLPStartProcVector;
                          OnLPProgressProcVector:TOnLPProgressProcVector;
                          OnLPEndProcVector:TOnLPEndProcVector;
-                         ActiveProcessCount:Integer;
                          procedure DoStartLongProcess(plpi:PTLPInfo;LPHandle:TLPSHandle);
                          procedure DoProgressLongProcess(plpi:PTLPInfo;LPHandle:TLPSHandle;Current:TLPSCounter);
                          procedure DoEndLongProcess(plpi:PTLPInfo;LPHandle:TLPSHandle);
 
                        public
+                         ActiveProcessCount:Integer;
                          function StartLongProcess(Total:TLPSCounter;LPName:TLPName;Context:pointer):TLPSHandle;
                          procedure ProgressLongProcess(LPHandle:TLPSHandle;Current:TLPSCounter);
                          procedure EndLongProcess(LPHandle:TLPSHandle);
@@ -88,14 +88,14 @@ procedure TZELongProcessSupport.DoProgressLongProcess(plpi:PTLPInfo;LPHandle:TLP
 var
   i:integer;
 begin
-  for i:=0 to OnLPStartProcVector.size-1 do
+  for i:=0 to OnLPProgressProcVector.size-1 do
    OnLPProgressProcVector[i](LPHandle,Current);
 end;
 procedure TZELongProcessSupport.DoEndLongProcess(plpi:PTLPInfo;LPHandle:TLPSHandle);
 var
   i:integer;
 begin
-  for i:=0 to OnLPStartProcVector.size-1 do
+  for i:=0 to OnLPEndProcVector.size-1 do
    OnLPEndProcVector[i](LPHandle,plpi^.LPTime);
 end;
 function TZELongProcessSupport.StartLongProcess(Total:TLPSCounter;LPName:TLPName;Context:pointer):TLPSHandle;

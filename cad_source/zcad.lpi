@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="11"/>
+    <Version Value="12"/>
     <General>
       <Flags>
         <SaveClosedFiles Value="False"/>
@@ -10,9 +10,9 @@
         <MainUnitHasTitleStatement Value="False"/>
         <SaveJumpHistory Value="False"/>
         <SaveFoldState Value="False"/>
+        <CompatibilityMode Value="True"/>
       </Flags>
       <SessionStorage Value="InProjectDir"/>
-      <MainUnit Value="0"/>
       <Title Value="zcad"/>
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
@@ -242,14 +242,14 @@
     <RunParams>
       <local>
         <CommandLineParams Value="nosplash updatepo qnll qsi"/>
-        <LaunchingApplication PathPlusParams="/usr/X11R6/bin/xterm -T 'Lazarus Run Output' -e $(LazarusDir)/tools/runwait.sh $(TargetCmdLine)"/>
+        <LaunchingApplication PathPlusParams="/usr/X11R6/bin/xterm -T &apos;Lazarus Run Output&apos; -e $(LazarusDir)/tools/runwait.sh $(TargetCmdLine)"/>
       </local>
       <FormatVersion Value="2"/>
       <Modes Count="1">
         <Mode0 Name="default">
           <local>
             <CommandLineParams Value="nosplash updatepo qnll qsi"/>
-            <LaunchingApplication PathPlusParams="/usr/X11R6/bin/xterm -T 'Lazarus Run Output' -e $(LazarusDir)/tools/runwait.sh $(TargetCmdLine)"/>
+            <LaunchingApplication PathPlusParams="/usr/X11R6/bin/xterm -T &apos;Lazarus Run Output&apos; -e $(LazarusDir)/tools/runwait.sh $(TargetCmdLine)"/>
           </local>
         </Mode0>
       </Modes>
@@ -316,7 +316,7 @@
         <PackageName Value="LCL"/>
       </Item20>
     </RequiredPackages>
-    <Units Count="192">
+    <Units Count="197">
       <Unit0>
         <Filename Value="zcad.pas"/>
         <IsPartOfProject Value="True"/>
@@ -330,7 +330,7 @@
         <IsPartOfProject Value="True"/>
       </Unit2>
       <Unit3>
-        <Filename Value="zcad/uzcshared.pas"/>
+        <Filename Value="zcad/gui/uzcmessagedialogs.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit3>
       <Unit4>
@@ -516,7 +516,7 @@
         <IsPartOfProject Value="True"/>
       </Unit38>
       <Unit39>
-        <Filename Value="zcad/register/uzcregpaths.pas"/>
+        <Filename Value="zcad/register/uzcreglog.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit39>
       <Unit40>
@@ -528,7 +528,7 @@
         <IsPartOfProject Value="True"/>
       </Unit41>
       <Unit42>
-        <Filename Value="zcad/commands/uzccominterface.pas"/>
+        <Filename Value="zcad/commands/uzccommand_loadmenus.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit42>
       <Unit43>
@@ -1136,6 +1136,26 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit191>
+      <Unit192>
+        <Filename Value="zcad/commands/uzccominterface.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit192>
+      <Unit193>
+        <Filename Value="zcad/commands/uzccommand_loadactions.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit193>
+      <Unit194>
+        <Filename Value="zcad/commands/uzccommand_loadpalettes.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit194>
+      <Unit195>
+        <Filename Value="zcad/commands/uzccommand_loadtoolbars.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit195>
+      <Unit196>
+        <Filename Value="zcad/register/uzcregpaths.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit196>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
