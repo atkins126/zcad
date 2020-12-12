@@ -21,55 +21,46 @@ unit uzcmainwindow;
 
 interface
 uses
-  {LCL}
-      Laz2_DOM,AnchorDockPanel,AnchorDocking,AnchorDockOptionsDlg,ButtonPanel,AnchorDockStr,
-       ActnList,LCLType,LCLProc,uzctranslations,LMessages,LCLIntf,
-       Forms, stdctrls, ExtCtrls, ComCtrls,Controls,Classes,SysUtils,LazUTF8,
-       menus,graphics,dialogs,XMLPropStorage,Buttons,Themes,
-       Types,UniqueInstanceBase,simpleipc,{$ifdef windows}windows,{$endif}Laz2_XMLCfg,
-  {FPC}
-       lineinfo,
-  {ZCAD BASE}
-       uzcsysparams,gzctnrvectortypes,uzcgui2color,uzcgui2linewidth,uzcgui2linetypes,uzemathutils,uzelongprocesssupport,
-       {uzegluinterface,}uzgldrawergdi,uzcdrawing,UGDBOpenArrayOfPV,uzedrawingabstract,
+ {LCL}
+  AnchorDockPanel,AnchorDocking,AnchorDockOptionsDlg,ButtonPanel,AnchorDockStr,
+  ActnList,LCLType,LCLProc,uzctranslations,LMessages,LCLIntf,
+  Forms, stdctrls, ExtCtrls, ComCtrls,Controls,Classes,SysUtils,LazUTF8,
+  menus,graphics,Themes,
+  Types,UniqueInstanceBase,simpleipc,Laz2_XMLCfg,
+ {ZCAD BASE}
+       uzcsysparams,gzctnrvectortypes,uzemathutils,uzelongprocesssupport,
+       uzgldrawergdi,uzcdrawing,UGDBOpenArrayOfPV,uzedrawingabstract,
        uzepalette,uzbpaths,uzglviewareadata,uzeentitiesprop,uzcinterface,
        UGDBOpenArrayOfByte,uzbmemman,uzbtypesbase,uzbtypes,
        uzegeometry,uzcsysvars,uzcstrconsts,uzbstrproc,UGDBNamedObjectsArray,uzclog,
        uzedimensionaltypes,varmandef, varman,UUnitManager,uzcsysinfo,strmy,uzestylestexts,uzestylesdim,
+  uzcexceptions,
   {ZCAD SIMPLE PASCAL SCRIPT}
-       languade,
+       //languade,
   {ZCAD ENTITIES}
        uzbgeomtypes,uzeentity,UGDBSelectedObjArray,uzestyleslayers,uzedrawingsimple,
-       uzeblockdef,uzcdrawings,uzcutils,uzestyleslinetypes,uzeconsts,uzeenttext,uzeentdimension,
+       uzeblockdef,uzcdrawings,uzestyleslinetypes,uzeconsts,uzeenttext,uzeentdimension,
   {ZCAD COMMANDS}
        uzccommandsabstract,uzccommandsimpl,uzccommandsmanager,
+       uzccommand_loadlayout,
   {GUI}
-       uzcmenucontextcheckfuncs,uzcguimenuextensions,uzmenusdefaults,uzmenusmanager,uztoolbarsmanager,uzctextenteditor,{uzcoidecorations,}uzcfcommandline,uzctreenode,uzcflineweights,uzcctrllayercombobox,uzcctrlcontextmenu,
-       uzcfcolors,uzcimagesmanager,uzcgui2textstyles,usupportgui,uzcgui2dimstyles,
+       uzcuitypes,
+       uzcmenucontextcheckfuncs,uzctbextmenus,uzmenusdefaults,uzmenusmanager,uztoolbarsmanager,uzctextenteditor,uzcfcommandline,uzctreenode,uzcflineweights,uzcctrllayercombobox,uzcctrlcontextmenu,
+       uzcimagesmanager,usupportgui,uzcuidialogs,
   {}
-       uzcpalettes,zcchangeundocommand,uzgldrawcontext,uzglviewareaabstract,uzcguimanager,uzcinterfacedata,
+       uzgldrawcontext,uzglviewareaabstract,uzcguimanager,uzcinterfacedata,
        uzcenitiesvariablesextender,uzglviewareageneral,UniqueInstanceRaw,
-      uzmacros,uzcviewareacxmenu,uzxmlnodesutils;
+       uzmacros,uzcviewareacxmenu;
   {}
 resourcestring
   rsClosed='Closed';
 type
-  TMyToolbar=class(TToolBar)
-    public
-    destructor Destroy; override;
-  end;
-  TComboFiller=procedure(cb:TCustomComboBox) of object;
 
   TmyAnchorDockSplitter = class(TAnchorDockSplitter)
   public
     constructor Create(TheOwner: TComponent); override;
 
                           end;
-  PTDummyMyActionsArray=^TDummyMyActionsArray;
-  TDummyMyActionsArray=Array [0..0] of TmyAction;
-  TFileHistory=Array [0..9] of TmyAction;
-  TOpenedDrawings=Array [0..9] of TmyAction;
-  TCommandHistory=Array [0..9] of TmyAction;
 
   { TZCADMainWindow }
 
@@ -83,45 +74,28 @@ type
     ToolBarD: TToolBar;
 
     procedure DrawStausBar(Sender: TObject);
+    //onXxxxx handlers
+    procedure _onCreate(Sender: TObject);
 
     public
     MainPanel:TForm;
-    //FToolBar:TToolButtonForm;
     PageControl:TmyPageControl;
     DHPanel:TPanel;
     HScrollBar,VScrollBar:TScrollBar;
     StandartActions:TActionList;
     SystemTimer: TTimer;
     toolbars:tstringlist;
-    updatesbytton,updatescontrols:tlist;
     procedure ZcadException(Sender: TObject; E: Exception);
-    //function findtoolbatdesk(tbn:string):string;
-    //procedure CreateToolbarFromDesk(tb:TToolBar;tbname,tbdesk:string);
-    function CreateCBox(CBName:GDBString;owner:TToolBar;DrawItem:TDrawItemEvent;Change,DropDown,CloseUp:TNotifyEvent;Filler:TComboFiller;w:integer;ts:GDBString):TComboBox;
     procedure CreateHTPB(tb:TToolBar);
-
     procedure ActionUpdate(AAction: TBasicAction; var Handled: Boolean);
-    procedure AfterConstruction; override;
-
-    procedure CreateLayoutbox(tb:TToolBar);
-    //procedure loadmenu(var f:GDBOpenArrayOfByte;var line:GDBString);
-    //procedure loadpopupmenu(var f:GDBOpenArrayOfByte;var line:GDBString);
-    //procedure createmenu(var f:GDBOpenArrayOfByte;var line:GDBString);
-    //procedure setmainmenu(var f:GDBOpenArrayOfByte;var line:GDBString);
-    //procedure loadsubmenu(var f:GDBOpenArrayOfByte;var pm:TMenuItem;var line:GDBString);
-
-    procedure ChangedDWGTabCtrl(Sender: TObject);
+    procedure ChangedDWGTabByClick(Sender: TObject);
+    procedure ChangedDWGTab(Sender: TObject);
     procedure UpdateControls;
-
-    procedure Say(word:gdbstring);
-
-    procedure SetImage(ppanel:TToolBar;b:TToolButton;img:string;autosize:boolean;identifer:string);
-
-    function MessageBox(Text, Caption: PChar; Flags: Longint): Integer;
+    procedure EnableControls(enbl:boolean);
     procedure ShowAllCursors(ShowedForm:TForm);
     procedure RestoreCursors(ShowedForm:TForm);
     procedure CloseDWGPageInterf(Sender: TObject);
-    function CloseDWGPage(Sender: TObject):integer;
+    function CloseDWGPage(Sender: TObject;NeedAskDonShow:boolean;MCtx:TMessagesContext):integer;
 
     procedure PageControlMouseDown(Sender: TObject;Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure correctscrollbars;
@@ -132,9 +106,6 @@ type
     function GetEntsDesc(ents:PGDBObjOpenArrayOfPV):GDBString;
     procedure waSetObjInsp(Sender:{TAbstractViewArea}tobject;GUIAction:TZMessageID);
     procedure WaShowCursor(Sender:TAbstractViewArea;var DC:TDrawContext);
-
-    //onXxxxx handlers
-    procedure _onCreate(Sender: TObject);
 
     //Long process support - draw progressbar. See uzelongprocesssupport unit
     procedure StartLongProcess(LPHandle:TLPSHandle;Total:TLPSCounter;processname:TLPName);
@@ -150,20 +121,10 @@ type
     procedure CreateAnchorDockingInterface;
 
     procedure CreateInterfaceLists;
-    procedure FillColorCombo(cb:TCustomComboBox);
-    procedure FillLTCombo(cb:TCustomComboBox);
-    procedure FillLWCombo(cb:TCustomComboBox);
     procedure InitSystemCalls;
     procedure LoadActions;
     procedure myKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure ChangeCLineW(Sender:Tobject);
-    procedure ChangeCColor(Sender:Tobject);
-    procedure ChangeLType(Sender:Tobject);
-    procedure DropDownColor(Sender:Tobject);
-    procedure DropDownLType(Sender:Tobject);
-    procedure DropUpLType(Sender:Tobject);
-    procedure DropUpColor(Sender:Tobject);
-    procedure ChangeLayout(Sender:Tobject);
+
     procedure idle(Sender: TObject; var Done: Boolean);virtual;
     procedure ReloadLayer(plt:PTGenericNamedObjectsArray);
     procedure GeneralTick(Sender: TObject);
@@ -172,28 +133,11 @@ type
     procedure processfilehistory(filename:string);
     procedure processcommandhistory(Command:string);
     function CreateZCADControl(aName: string;DoDisableAutoSizing:boolean=false):TControl;
-    procedure TBActionCreateFunc(aNode: TDomNode; TB:TToolBar);
-    procedure TBGroupActionCreateFunc(aNode: TDomNode; TB:TToolBar);
-    procedure TBButtonCreateFunc(aNode: TDomNode; TB:TToolBar);
-    procedure TBLayerComboBoxCreateFunc(aNode: TDomNode; TB:TToolBar);
-    procedure TBLayoutComboBoxCreateFunc(aNode: TDomNode; TB:TToolBar);
-    procedure TBColorComboBoxCreateFunc(aNode: TDomNode; TB:TToolBar);
-    procedure TBLTypeComboBoxCreateFunc(aNode: TDomNode; TB:TToolBar);
-    procedure TBLineWComboBoxCreateFunc(aNode: TDomNode; TB:TToolBar);
-    procedure TBTStyleComboBoxCreateFunc(aNode: TDomNode; TB:TToolBar);
-    procedure TBDimStyleComboBoxCreateFunc(aNode: TDomNode; TB:TToolBar);
-    procedure TBVariableCreateFunc(aNode: TDomNode; TB:TToolBar);
-    function TBCreateZCADToolBar(aName,atype: string):TToolBar;
-    procedure ZActionsReader(aName: string;aNode: TDomNode;CategoryOverrider:string;actlist:TActionList);
-    procedure ZAction2VariableReader(aName: string;aNode: TDomNode;CategoryOverrider:string;actlist:TActionList);
 
     procedure DockMasterCreateControl(Sender: TObject; aName: string; var
     AControl: TControl; DoDisableAutoSizing: boolean);
 
     function IsShortcut(var Message: TLMKey): boolean; override;
-    function GetLayerProp(PLayer:Pointer;out lp:TLayerPropRecord):boolean;
-    function GetLayersArray(out la:TLayerArray):boolean;
-    function ClickOnLayerProp(PLayer:Pointer;NumProp:integer;out newlp:TLayerPropRecord):boolean;
 
     procedure setvisualprop(sender:TObject;GUIAction:TZMessageID);
 
@@ -211,18 +155,17 @@ type
     function GetFocusPriority:TControlWithPriority;
                end;
 //procedure UpdateVisible(GUIMode:TZMessageID);
-function LoadLayout_com(Operands:pansichar):GDBInteger;
-function _CloseDWGPage(ClosedDWG:PTZCADDrawing;lincedcontrol:TObject):Integer;
+function _CloseDWGPage(ClosedDWG:PTZCADDrawing;lincedcontrol:TObject;NeedAskDonShow:boolean;MCtx:TMessagesContext):Integer;
 
 var
   ZCADMainWindow: TZCADMainWindow;
-  LayerBox:TZCADLayerComboBox;
-  LineWBox,ColorBox,LTypeBox,TStyleBox,DimStyleBox:TComboBox;
-  LayoutBox:TComboBox;
+  //LayerBox:TZCADLayerComboBox;
+  //LineWBox:TComboBox;
+  //LayoutBox:TComboBox;
   LPTime:Tdatetime;
   pname:GDBString;
   oldlongprocess:integer;
-  OLDColor:integer;
+  //OLDColor:integer;
   ProcessBar:TProgressBar;
   //StoreBackTraceStrFunc:TBackTraceStrFunc;//this unneed after fpc rev 31026 see http://bugs.freepascal.org/view.php?id=13518
   function CloseApp:GDBInteger;
@@ -231,36 +174,12 @@ var
 implementation
 {$R *.lfm}
 
-destructor TmyToolBar.Destroy;
-var
-  I: Integer;
-  c:tcontrol;
-begin
-  for I := 0 to controlCount - 1 do
-    begin
-      c:=controls[I];
-      if assigned(ZCADMainWindow.updatescontrols)  then
-        ZCADMainWindow.updatescontrols.Remove(c);
-      if assigned(ZCADMainWindow.updatesbytton)  then
-        ZCADMainWindow.updatesbytton.Remove(c);
-    end;
-  inherited Destroy;
-end;
-
 constructor TmyAnchorDockSplitter.Create(TheOwner: TComponent);
 begin
   inherited Create(TheOwner);
   self.MinSize:=1;
 end;
 
-procedure setlayerstate(PLayer:PGDBLayerProp;out lp:TLayerPropRecord);
-begin
-     lp._On:=player^._on;
-     lp.Freze:=false;
-     lp.Lock:=player^._lock;
-     lp.Name:=Tria_AnsiToUtf8(player.Name);
-     lp.PLayer:=player;
-end;
 {$ifdef windows}
 procedure TZCADMainWindow.SetTop;
 var
@@ -328,9 +247,9 @@ begin
   if drawings.GetCurrentDWG.wa.param.seldesc.Selectedobjcount=0
   then
       begin
-           if assigned(LinewBox) then
+           {if assigned(LinewBox) then
            if sysvar.dwg.DWG_CLinew^<0 then LineWbox.ItemIndex:=(sysvar.dwg.DWG_CLinew^+3)
-                                       else LinewBox.ItemIndex:=((sysvar.dwg.DWG_CLinew^ div 10)+3);
+                                       else LinewBox.ItemIndex:=((sysvar.dwg.DWG_CLinew^ div 10)+3);}
            {if assigned(LayerBox) then
            LayerBox.ItemIndex:=getsortedindex(SysVar.dwg.DWG_CLayer^);}
            IVars.CColor:=sysvar.dwg.DWG_CColor^;
@@ -427,132 +346,6 @@ begin
       UpdateControls;
 end;
 
-function TZCADMainWindow.ClickOnLayerProp(PLayer:Pointer;NumProp:integer;out newlp:TLayerPropRecord):boolean;
-var
-   cdwg:PTSimpleDrawing;
-   tcl:PGDBLayerProp;
-begin
-     CDWG:=drawings.GetCurrentDWG;
-     result:=false;
-     case numprop of
-                    0:begin
-                        with PushCreateTGChangeCommand(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,PGDBLayerProp(PLayer)^._on)^ do
-                        begin
-                          PGDBLayerProp(PLayer)^._on:=not(PGDBLayerProp(PLayer)^._on);
-                          ComitFromObj;
-                        end;
-                        if PLayer=cdwg^.GetCurrentLayer then
-                          if not PGDBLayerProp(PLayer)^._on then
-                            MessageBox(@rsCurrentLayerOff[1],@rsWarningCaption[1],MB_OK or MB_ICONWARNING);
-                      end;
-                    {1:;}
-                    2:begin
-                        with PushCreateTGChangeCommand(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,PGDBLayerProp(PLayer)^._lock)^ do
-                        begin
-                          PGDBLayerProp(PLayer)^._lock:=not(PGDBLayerProp(PLayer)^._lock);
-                          ComitFromObj;
-                        end;
-                      end;
-                    3:begin
-                           cdwg:=drawings.GetCurrentDWG;
-                           if cdwg<>nil then
-                           begin
-                                if drawings.GetCurrentDWG.wa.param.seldesc.Selectedobjcount=0 then
-                                begin
-                                          if assigned(sysvar.dwg.DWG_CLayer) then
-                                          if sysvar.dwg.DWG_CLayer^<>Player then
-                                          begin
-                                               with PushCreateTGChangeCommand(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,sysvar.dwg.DWG_CLayer^)^ do
-                                               begin
-                                                    sysvar.dwg.DWG_CLayer^:=Player;
-                                                    ComitFromObj;
-                                               end;
-                                          end;
-                                          if not PGDBLayerProp(PLayer)^._on then
-                                                                            MessageBox(@rsCurrentLayerOff[1],@rsWarningCaption[1],MB_OK or MB_ICONWARNING);
-                                          //setvisualprop;
-                                          ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIActionRebuild);
-                                end
-                                else
-                                begin
-                                       tcl:=SysVar.dwg.DWG_CLayer^;
-                                       SysVar.dwg.DWG_CLayer^:=Player;
-                                       commandmanager.ExecuteCommand('SelObjChangeLayerToCurrent',drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
-                                       SysVar.dwg.DWG_CLayer^:=tcl;
-                                       //setvisualprop;
-                                       ZCMsgCallBackInterface.Do_GUIaction(self,ZMsgID_GUIActionRebuild);
-                                end;
-                           result:=true;
-                           end;
-                      end;
-     end;
-     setlayerstate(PLayer,newlp);
-     if not result then
-                       begin
-                         ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIActionRedraw);
-                         //if assigned(UpdateVisibleProc) then UpdateVisibleProc(ZMsgID_GUIActionRedraw);
-                         zcRedrawCurrentDrawing;
-                       end;
-end;
-
-function TZCADMainWindow.GetLayersArray(out la:TLayerArray):boolean;
-var
-   cdwg:PTSimpleDrawing;
-   pcl:PGDBLayerProp;
-   ir:itrec;
-   counter:integer;
-begin
-     result:=false;
-     cdwg:=drawings.GetCurrentDWG;
-     if cdwg<>nil then
-     begin
-         if assigned(cdwg^.wa.getviewcontrol) then
-         begin
-              setlength(la,cdwg^.LayerTable.Count);
-              counter:=0;
-              pcl:=cdwg^.LayerTable.beginiterate(ir);
-              if pcl<>nil then
-              repeat
-                    setlayerstate(pcl,la[counter]);
-                    inc(counter);
-                    pcl:=cdwg^.LayerTable.iterate(ir);
-              until pcl=nil;
-              setlength(la,counter);
-              if counter>0 then
-                               result:=true;
-         end;
-     end;
-end;
-function TZCADMainWindow.GetLayerProp(PLayer:Pointer;out lp:TLayerPropRecord):boolean;
-var
-   cdwg:PTSimpleDrawing;
-begin
-     if player=nil then
-                       begin
-                            result:=false;
-                            cdwg:=drawings.GetCurrentDWG;
-                            if cdwg<>nil then
-                            begin
-                                 if assigned(cdwg^.wa) then
-                                 begin
-                                      if IVars.CLayer<>nil then
-                                      begin
-                                           setlayerstate(IVars.CLayer,lp);
-                                           result:=true;
-                                      end
-                                      else
-                                          lp.Name:=rsDifferent;
-                                end;
-                            end;
-
-                       end
-                   else
-                       begin
-                            result:=true;
-                            setlayerstate(PLayer,lp);
-                       end;
-
-end;
 function FindIndex(taa:PTDummyMyActionsArray;l,h:integer;ca:string):integer;
 var
     i:integer;
@@ -640,6 +433,7 @@ var
    pint:PGDBInteger;
    mem:GDBOpenArrayOfByte;
    i:integer;
+   dr:TZCMsgDialogResult;
    GVA:TGeneralViewArea;
 begin
      result:=false;
@@ -663,13 +457,14 @@ begin
      if not result then
                        begin
                        if drawings.GetCurrentDWG<>nil then
-                                                     i:=ZCADMainWindow.messagebox(@rsQuitQuery[1],@rsQuitCaption[1],MB_YESNO or MB_ICONQUESTION)
+                                                     //i:=ZCADMainWindow.messagebox(@rsQuitQuery[1],@rsQuitCaption[1],MB_YESNO or MB_ICONQUESTION)
+                                                     dr:=zcMsgDlg(rsQuitQuery,zcdiQuestion,[zccbYes,zccbNo],false,nil,rsQuitCaption)
                                                  else
-                                                     i:=IDYES;
+                                                     dr.ModalResult:=ZCmrYes;
                        end
                    else
-                       i:=IDYES;
-     if i=IDYES then
+                       dr.ModalResult:=ZCmrYes;
+     if dr.ModalResult=ZCmrYes then
      begin
           result:=true;
 
@@ -707,24 +502,51 @@ begin
 end;
 
 function CloseApp:GDBInteger;
+var
+  MCtx:TMessagesContext=nil;
+  wa:TGeneralViewArea;
+  ClosedDWG:PTZCADDrawing;
+
+  function GetChangedDrawingsCount:integer;
+  var
+    i:integer;
+  begin
+    result:=0;
+    for i:=0 to ZCADMainWindow.PageControl.PageCount-1 do begin
+      wa:=TGeneralViewArea(FindComponentByType(ZCADMainWindow.PageControl.Pages[i],TGeneralViewArea));
+      if wa<>nil then begin
+        Closeddwg:=PTZCADDrawing(wa.PDWG);
+        if ClosedDWG<>nil then
+          if ClosedDWG.Changed then
+            inc(result);
+       end;
+    end;
+  end;
+
 begin
-     result:=0;
-     if IsRealyQuit then
-     begin
-          if ZCADMainWindow.PageControl<>nil then
-          begin
-               while ZCADMainWindow.PageControl.ActivePage<>nil do
-               begin
-                    if ZCADMainWindow.CloseDWGPage(ZCADMainWindow.PageControl.ActivePage)=IDCANCEL then
-                                                                                             exit;
-               end;
-          end;
-          ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIFreEditorProc);
-          ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIReturnToDefaultObject);
-          ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIBeforeCloseApp);
-          application.terminate;
-     end;
+  result:=0;
+  if IsRealyQuit then
+  begin
+    if ZCADMainWindow.PageControl<>nil then
+    begin
+      if GetChangedDrawingsCount>1 then
+        MCtx:=CreateMessagesContext(rsCloseDrawings);
+      while ZCADMainWindow.PageControl.ActivePage<>nil do
+      begin
+        if ZCADMainWindow.CloseDWGPage(ZCADMainWindow.PageControl.ActivePage,GetChangedDrawingsCount>1,MCtx)=IDCANCEL then begin
+          FreeMessagesContext(MCtx);
+          exit;
+        end;
+      end;
+      FreeMessagesContext(MCtx);
+    end;
+    ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIFreEditorProc);
+    ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIReturnToDefaultObject);
+    ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIBeforeCloseApp);
+    application.terminate;
+  end;
 end;
+
 procedure TZCADMainWindow.asynccloseapp(Data: PtrInt);
 begin
       CloseApp;
@@ -764,63 +586,63 @@ begin
     Dlg.Free;
   end;
 end;
-function _CloseDWGPage(ClosedDWG:PTZCADDrawing;lincedcontrol:TObject):Integer;
+function _CloseDWGPage(ClosedDWG:PTZCADDrawing;lincedcontrol:TObject;NeedAskDonShow:boolean;MCtx:TMessagesContext):Integer;
 var
    viewcontrol:TCADControl;
    s:string;
    TAWA:TAbstractViewArea;
+   dr:TZCMsgDialogResult;
 begin
   if ClosedDWG<>nil then
   begin
-       result:=IDYES;
-       if ClosedDWG.Changed then
-                                 begin
-                                      repeat
-                                      s:=format(rsCloseDWGQuery,[ClosedDWG.FileName]);
-                                      result:=ZCADMainWindow.MessageBox(@s[1],@rsWarningCaption[1],MB_YESNOCANCEL);
-                                      if result=IDCANCEL then exit;
-                                      if result=IDNO then system.break;
-                                      if result=IDYES then
-                                      begin
-                                           result:=dwgQSave_com(ClosedDWG);
-                                      end;
-                                      until result<>cmd_error;
-                                      result:=IDYES;
-                                 end;
-       commandmanager.ChangeModeAndEnd(TGPCloseDWG);
-       viewcontrol:=ClosedDWG.wa.getviewcontrol;
-       if drawings.GetCurrentDWG=pointer(ClosedDwg) then
-                                                   drawings.freedwgvars;
-       drawings.RemoveData(ClosedDWG);
-       drawings.pack;
+    result:=ZCmrYes;
+    if ClosedDWG.Changed then begin
+      repeat
+        s:=format(rsCloseDWGQuery,[ClosedDWG.FileName]);
+        dr:=zcMsgDlg(s,zcdiQuestion,[zccbYes,zccbNo,zccbCancel],NeedAskDonShow,MCTx);
+        result:=dr.ModalResult;
+        //result:=ZCADMainWindow.MessageBox(@s[1],@rsWarningCaption[1],MB_YESNOCANCEL);
+        if result=ZCmrCancel then exit;
+        if result=ZCmrNo then system.break;
+        if result=ZCmrYes then
+          result:=dwgQSave_com(ClosedDWG);
+      until result<>cmd_error;
+      result:=ZCmrYes;
+    end;
+    commandmanager.ChangeModeAndEnd(TGPCloseDWG);
+    viewcontrol:=ClosedDWG.wa.getviewcontrol;
+    if drawings.GetCurrentDWG=pointer(ClosedDwg) then
+                                               drawings.freedwgvars;
+    drawings.RemoveData(ClosedDWG);
+    drawings.pack;
 
-       viewcontrol.free;
+    viewcontrol.free;
 
-       lincedcontrol.Free;
-       tobject(viewcontrol):=ZCADMainWindow.PageControl.ActivePage;
+    lincedcontrol.Free;
+    tobject(viewcontrol):=ZCADMainWindow.PageControl.ActivePage;
 
-       if viewcontrol<>nil then
-       begin
-            TAWA:=TAbstractViewArea(FindComponentByType(viewcontrol,TAbstractViewArea));
-            drawings.CurrentDWG:=pointer(TAWA.PDWG);
-            TAWA.GDBActivate;
-       end
-       else
-           drawings.freedwgvars;
-       ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIFreEditorProc);
-       ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIReturnToDefaultObject);
-       ZCMsgCallBackInterface.TextMessage(rsClosed,TMWOQuickly);
-       ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIActionRebuild);
-       ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIActionRedraw);
-       //if assigned(UpdateVisibleProc) then UpdateVisibleProc(ZMsgID_GUIActionRedraw);
+    if viewcontrol<>nil then
+    begin
+      TAWA:=TAbstractViewArea(FindComponentByType(viewcontrol,TAbstractViewArea));
+      drawings.CurrentDWG:=pointer(TAWA.PDWG);
+      TAWA.GDBActivate;
+    end
+    else
+      drawings.freedwgvars;
+    ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIFreEditorProc);
+    ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIReturnToDefaultObject);
+    ZCMsgCallBackInterface.TextMessage(rsClosed,TMWOQuickly);
+    ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIActionRebuild);
+    ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIActionRedraw);
+    //if assigned(UpdateVisibleProc) then UpdateVisibleProc(ZMsgID_GUIActionRedraw);
   end;
 end;
 procedure TZCADMainWindow.CloseDWGPageInterf(Sender: TObject);
 begin
-     CloseDWGPage(Sender);
+     CloseDWGPage(Sender,false,nil);
 end;
 
-function TZCADMainWindow.CloseDWGPage(Sender: TObject):integer;
+function TZCADMainWindow.CloseDWGPage(Sender: TObject;NeedAskDonShow:boolean;MCtx:TMessagesContext):integer;
 var
    wa:TGeneralViewArea;
    ClosedDWG:PTZCADDrawing;
@@ -829,9 +651,8 @@ begin
   Closeddwg:=nil;
   wa:=TGeneralViewArea(FindComponentByType(TTabSheet(sender),TGeneralViewArea));
   if wa<>nil then
-                      Closeddwg:=PTZCADDrawing(wa.PDWG);
-  result:=_CloseDWGPage(ClosedDWG,Sender);
-
+    Closeddwg:=PTZCADDrawing(wa.PDWG);
+  result:=_CloseDWGPage(ClosedDWG,Sender,NeedAskDonShow,mctx);
 end;
 procedure TZCADMainWindow.PageControlMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -842,7 +663,7 @@ begin
   if i>-1 then
   if ssMiddle in Shift then
   if (Sender is TPageControl) then
-                                  CloseDWGPage((Sender as TPageControl).Pages[I]);
+                                  CloseDWGPage((Sender as TPageControl).Pages[I],false,nil);
 end;
 procedure TZCADMainWindow.ShowFastMenu(Sender: TObject);
 begin
@@ -872,74 +693,6 @@ begin
                                Acontrol.EnableAutoSizing;}
 end;
 
-procedure LoadLayoutFromFile(Filename: string);
-var
-  XMLConfig: TXMLConfigStorage;
-begin
-  try
-    // load the xml config file
-    XMLConfig:=TXMLConfigStorage.Create(Filename,True);
-    try
-      // restore the layout
-      // this will close unneeded forms and call OnCreateControl for all needed
-
-      {if assigned(ZCADMainWindow.updatesbytton) then
-        ZCADMainWindow.updatesbytton.Clear;
-      if assigned(ZCADMainWindow.updatescontrols) then
-        ZCADMainWindow.updatescontrols.Clear;}
-
-      ToolBarsManager.RestoreToolBarsFromConfig(XMLConfig);
-      Application.Processmessages;
-      DockMaster.LoadSettingsFromConfig(XMLConfig);
-      DockMaster.LoadLayoutFromConfig(XMLConfig,false);
-    finally
-      XMLConfig.Free;
-    end;
-  except
-    on E: Exception do begin
-      MessageDlg('Error',
-        'Error loading layout from file '+Filename+':'#13+E.Message,mtError,
-        [mbCancel],0);
-    end;
-  end;
-end;
-function LoadLayout_com(Operands:pansichar):GDBInteger;
-var
-  XMLConfig: TXMLConfigStorage;
-  filename:string;
-  s:string;
-begin
-  if Operands='' then
-                     filename:=sysvar.PATH.LayoutFile^
-                 else
-                     begin
-                     s:=Operands;
-                     filename:={utf8tosys}(ProgramPath+'components/'+s);
-                     end;
-  if not fileexists(filename) then
-                              filename:={utf8tosys}(ProgramPath+'components/defaultlayout.xml');
-  LoadLayoutFromFile(Filename);
-  exit;
-  try
-    // load the xml config file
-    XMLConfig:=TXMLConfigStorage.Create(Filename,True);
-    try
-      // restore the layout
-      // this will close unneeded forms and call OnCreateControl for all needed
-      DockMaster.LoadLayoutFromConfig(XMLConfig,true);
-    finally
-      XMLConfig.Free;
-    end;
-  except
-    on E: Exception do begin
-                            ZCMsgCallBackInterface.TextMessage(rsLayoutLoad+' '+Filename+':'#13+E.Message,TMWOShowError);
-      //MessageDlg('Error',
-      //  'Error loading layout from file '+Filename+':'#13+E.Message,mtError,
-      //  [mbCancel],0);
-    end;
-  end;
-  result:=cmd_ok;
-end;
 procedure TZCADMainWindow.InitSystemCalls;
 begin
   //ShowAllCursorsProc:=self.ShowAllCursors;
@@ -996,41 +749,9 @@ procedure TZCADMainWindow.CreateInterfaceLists;
 begin
   updatesbytton:=tlist.Create;
   updatescontrols:=tlist.Create;
+  enabledcontrols:=tlist.Create;
 end;
 
-procedure TZCADMainWindow.FillColorCombo(cb:TCustomComboBox);
-var
-   i:integer;
-   ts:string;
-begin
-  cb.items.AddObject(rsByBlock, TObject(ClByBlock));
-  cb.items.AddObject(rsByLayer, TObject(ClByLayer));
-  for i := 1 to 7 do
-  begin
-       ts:=palette[i].name;
-       cb.items.AddObject(ts, TObject(i));
-  end;
-  cb.items.AddObject(rsSelectColor, TObject(ClSelColor));
-end;
-
-procedure TZCADMainWindow.FillLTCombo(cb:TCustomComboBox);
-begin
-  cb.items.AddObject(rsByBlock, TObject(0));
-end;
-
-procedure TZCADMainWindow.FillLWCombo(cb:TCustomComboBox);
-var
-   i:integer;
-begin
-  cb.items.AddObject(rsByLayer, TObject(LnWtByLayer));
-  cb.items.AddObject(rsByBlock, TObject(LnWtByBlock));
-  cb.items.AddObject(rsdefault, TObject(LnWtByLwDefault));
-  for i := low(lwarray) to high(lwarray) do
-  begin
-  s:=GetLWNameFromN(i);
-       cb.items.AddObject(s, TObject(lwarray[i]));
-  end;
-end;
 procedure TZCADMainWindow.CreateAnchorDockingInterface;
 var
   action: tmyaction;
@@ -1085,90 +806,20 @@ begin
   end;
 end;
 
-procedure myDumpAddr(Addr: Pointer;var f:system.text);
-//var
-  //func,source:shortstring;
-  //line:longint;
-  //FoundLine:boolean;
-begin
-    //BackTraceStrFunc:=StoreBackTraceStrFunc;//this unneed after fpc rev 31026 see http://bugs.freepascal.org/view.php?id=13518
-  try
-    WriteLn(f,BackTraceStrFunc(Addr));
-  except
-    writeLn(f,SysBackTraceStr(Addr));
-  end;
-end;
-
-
-procedure MyDumpExceptionBackTrace(var f:system.text);
-var
-  FrameCount: integer;
-  Frames: PPointer;
-  FrameNumber:Integer;
-begin
-  WriteLn(f,'Stack trace:');
-  myDumpAddr(ExceptAddr,f);
-  FrameCount:=ExceptFrameCount;
-  Frames:=ExceptFrames;
-  for FrameNumber := 0 to FrameCount-1 do
-    myDumpAddr(Frames[FrameNumber],f);
-end;
-
 procedure TZCADMainWindow.ZcadException(Sender: TObject; E: Exception);
 var
-  f:system.text;
-  crashreportfilename,errmsg:shortstring;
-  //ST:TSystemTime;
-  //i:integer;
+  crashreportfilename,errmsg:string;
 begin
-     crashreportfilename:=TempPath+'zcadcrashreport.txt';
-     system.Assign(f,crashreportfilename);
-     if FileExists(crashreportfilename) then
-                                            system.Append(f)
-                                        else
-                                            system.Rewrite(f);
-     WriteLn(f,'');WriteLn(f,programname+' crashed((');WriteLn(f,'');
-     myDumpExceptionBackTrace(f);
-     system.close(f);
+  ProcessException (Sender,ExceptAddr,ExceptFrameCount,ExceptFrames);
 
-     system.Assign(f,crashreportfilename);
-     system.Append(f);
-     WriteLn(f);
-     WriteLn(f,'Latest log:');
-     programlog.WriteLatestToFile(f);
-     WriteLn(f,'Log end.');
-     system.close(f);
+  crashreportfilename:=GetCrashReportFilename;
+  errmsg:=programname+' raised exception class "'+E.Message+'"'#13#10#13#10'A crash report generated (stack trace and latest log).'#13#10'Please send "'
+         +crashreportfilename+'" file at zamtmn@yandex.ru'#13#10#13#10'Attempt to continue running?';
 
-     system.Assign(f,crashreportfilename);
-     system.Append(f);
-     WriteLn(f);
-     WriteLn(f,'Build and runtime info:');
-     Write(f,'  ZCAD ');WriteLn(f,sysvar.SYS.SYS_Version^);
-     Write(f,'  Build with ');Write(f,sysvar.SYS.SSY_CompileInfo.SYS_Compiler);Write(f,' v');WriteLn(f,sysvar.SYS.SSY_CompileInfo.SYS_CompilerVer);
-     Write(f,'  Target CPU: ');WriteLn(f,sysvar.SYS.SSY_CompileInfo.SYS_CompilerTargetCPU);
-     Write(f,'  Target OS: ');WriteLn(f,sysvar.SYS.SSY_CompileInfo.SYS_CompilerTargetOS);
-     Write(f,'  Compile date: ');WriteLn(f,sysvar.SYS.SSY_CompileInfo.SYS_CompileDate);
-     Write(f,'  Compile time: ');WriteLn(f,sysvar.SYS.SSY_CompileInfo.SYS_CompileTime);
-     Write(f,'  LCL version: ');WriteLn(f,sysvar.SYS.SSY_CompileInfo.SYS_LCLVersion);
-     Write(f,'  Environment version: ');WriteLn(f,sysvar.SYS.SSY_CompileInfo.SYS_EnvironmentVersion);
-     Write(f,'  Program  path: ');WriteLn(f,ProgramPath);
-     Write(f,'  Temporary  path: ');WriteLn(f,TempPath);
-     WriteLn(f,'end.');
-     system.close(f);
-
-     errmsg:=DateTimeToStr(Now);
-     system.Assign(f,crashreportfilename);
-     system.Append(f);
-     WriteLn(f);
-     WriteLn(f,'Date:');
-     WriteLn(f,errmsg);
-     WriteLn(f,'______________________________________________________________________________________');
-     system.close(f);
-     errmsg:=programname+' raised exception class "'+E.Message+'"'#13#10#13#10'A crash report generated (stack trace and latest log).'#13#10'Please send "'
-             +crashreportfilename+'" file at zamtmn@yandex.ru'#13#10#13#10'Attempt to continue running?';
-     if MessageDlg(errmsg,mtError,[mbYes, mbAbort],0)=mrAbort then
-                                                                  halt(0);
+  if zcMsgDlg(errmsg,zcdiError,[zccbYes,zccbCancel]).ModalResult=ZCmrCancel then
+    halt(0);
 end;
+
 function TZCADMainWindow.CreateZCADControl(aName: string;DoDisableAutoSizing:boolean=false):TControl;
 var
   ta:TmyAction;
@@ -1250,7 +901,7 @@ begin
   ZCADMainWindow.PageControl.Constraints.MinHeight:=32;
   ZCADMainWindow.PageControl.Parent:=ZCADMainWindow.MainPanel;
   ZCADMainWindow.PageControl.Align:=alClient;
-  ZCADMainWindow.PageControl.OnChange:=ZCADMainWindow.ChangedDWGTabCtrl;
+  ZCADMainWindow.PageControl.OnChange:=ZCADMainWindow.ChangedDWGTabByClick;
   ZCADMainWindow.PageControl.BorderWidth:=0;
   if assigned(SysVar.INTF.INTF_DwgTabsPosition) then
   begin
@@ -1284,327 +935,6 @@ begin
   ZCADMainWindow.PageControl.OnMouseDown:=ZCADMainWindow.PageControlMouseDown;
   ZCADMainWindow.PageControl.ShowTabs:=SysVar.INTF.INTF_ShowDwgTabs^;
 end;
-procedure TZCADMainWindow.TBActionCreateFunc(aNode: TDomNode; TB:TToolBar);
-var
-  _action:TZAction;
-  ActionName:string;
-begin
-  ActionName:=getAttrValue(aNode,'Name','');
-  _action:=TZAction(StandartActions.ActionByName(ActionName));
-  if _action=nil then begin
-    _action:=TmyAction.Create(self);
-    _action.ActionList:=StandartActions;
-    _action.Name:=ActionName;
-  end;
-  with TToolButton.Create(tb) do
-  begin
-    Action:=_action;
-    ShowCaption:=false;
-    ShowHint:=true;
-    if assigned(_action) then
-      Caption:=_action.imgstr;
-    Parent:=tb;
-    Visible:=true;
-  end;
-end;
-procedure TZCADMainWindow.TBGroupActionCreateFunc(aNode: TDomNode; TB:TToolBar);
-var
-  ActionIndex:integer;
-  SubNode: TDomNode;
-  i:integer;
-  proxy:TPopUpMenyProxyAction;
-  tbutton:TZToolButton;
-  MPF:TMacroProcessFunc;
-begin
-  ActionIndex:=getAttrValue(aNode,'Index',0);
-  tbutton:=TZToolButton.Create(tb);
-  begin
-    //tbutton.style:=tbsButtonDrop;
-    tbutton.ShowCaption:=false;
-    tbutton.ShowHint:=true;
-    tbutton.PopupMenu:=TPopupMenu.Create(application);
-    tbutton.PopupMenu.Images:=StandartActions.Images;
-    {if assigned(_action) then
-      Caption:=_action.imgstr;}
-    tbutton.Parent:=tb;
-    tbutton.Visible:=true;
-
-    if assigned(aNode) then
-      SubNode:=aNode.FirstChild;
-    if assigned(SubNode) then
-      while assigned(SubNode)do
-      begin
-        TMenuDefaults.TryRunMenuCreateFunc(TMenuType.TMT_PopupMenu,self,SubNode.NodeName,SubNode,StandartActions,tmenuitem(tbutton.PopupMenu),mpf);
-        SubNode:=SubNode.NextSibling;
-      end;
-    if (ActionIndex>=0)and(ActionIndex<tbutton.PopupMenu.Items.Count) then
-      tbutton.action:=tbutton.PopupMenu.Items[ActionIndex].action;
-    for i:=0 to tbutton.PopupMenu.Items.Count-1 do
-    begin
-      if assigned(tbutton.PopupMenu.Items[i].action)then begin
-        proxy:=TPopUpMenyProxyAction.Create(Application);
-        proxy.MainAction:=TAction(tbutton.PopupMenu.Items[i].action);
-        proxy.ToolButton:=tbutton;
-        proxy.Assign(tbutton.PopupMenu.Items[i].action);
-        tbutton.PopupMenu.Items[i].action:=proxy;
-        if proxy.MainAction.ImageIndex<>-1 then tbutton.caption:='';
-      end;
-    end;
-    Caption:='';
-  end;
-end;
-
-procedure TZCADMainWindow.TBButtonCreateFunc(aNode: TDomNode; TB:TToolBar);
-var
-  command,img,_hint:string;
-  CreatedButton:TmyCommandToolButton;
-begin
-  command:=getAttrValue(aNode,'Command','');
-  img:=getAttrValue(aNode,'Img','');
-  _hint:=getAttrValue(aNode,'Hint','');
-
-  CreatedButton:=TmyCommandToolButton.Create(tb);
-  CreatedButton.FCommand:=command;
-   if _hint<>'' then
-   begin
-     _hint:=InterfaceTranslate('hint_panel~'+command,hint);
-     CreatedButton.hint:=_hint;
-     CreatedButton.ShowHint:=true;
-   end;
-  SetImage(tb,CreatedButton,img,true,'button_command~'+command);
-  CreatedButton.Parent:=tb;
-end;
-
-procedure TZCADMainWindow.ZActionsReader(aName: string;aNode: TDomNode;CategoryOverrider:string;actlist:TActionList);
-var
-  acnname:string;
-  action:tmyaction;
-  actioncommand,actionshortcut,actionshortcuts,img:string;
-begin
-  acnname:=uppercase(getAttrValue(aNode,'Name',''));
-  action:=tmyaction(actlist.ActionByName(acnname));
-  if action=nil then begin
-    action:=TmyAction.Create(self);
-    action.ActionList:=actlist;
-    action.Name:=acnname;
-  end;
-  action.Caption:=getAttrValue(aNode,'Caption','');
-  action.Caption:=InterfaceTranslate(action.Name+'~caption',action.Caption);
-  action.Hint:=getAttrValue(aNode,'Hint','');
-  if action.Hint<>'' then
-                         action.Hint:=InterfaceTranslate(action.Name+'~hint',action.Hint)
-                     else
-                         action.Hint:=action.Caption;
-  actionshortcut:=getAttrValue(aNode,'ShortCut','');
-  if actionshortcut<>'' then
-                          action.ShortCut:=MyTextToShortCut(actionshortcut);
-  actionshortcuts:=getAttrValue(aNode,'SecondaryShortCuts','');
-  if actionshortcuts<>'' then begin
-    repeat
-          GetPartOfPath(actionshortcut,actionshortcuts,'|');
-          action.SecondaryShortCuts.AddObject(actionshortcut,TObject(MyTextToShortCut(actionshortcut)));
-    until actionshortcuts='';
-  end;
-  actioncommand:=getAttrValue(aNode,'Command','');
-  ParseCommand(actioncommand,action.command,action.options);
-  action.Category:=getAttrValue(aNode,'Category',CategoryOverrider);
-  action.DisableIfNoHandler:=false;
-  img:=getAttrValue(aNode,'Img','');
-  action.ImageIndex:=ImagesManager.GetImageIndex(img);
-  if action.ImageIndex=ImagesManager.defaultimageindex then begin
-    action.ImageIndex:=-1;
-    actlist.SetImage(img,action.Name+'~textimage',TZAction(action));
-  end;
-  action.pfoundcommand:=commandmanager.FindCommand(uppercase(action.command));
-end;
-procedure TZCADMainWindow.ZAction2VariableReader(aName: string;aNode: TDomNode;CategoryOverrider:string;actlist:TActionList);
-var
-  va:TmyVariableAction;
-  actionvariable,actionshortcut,img:string;
-  mask:DWord;
-begin
-  va:=TmyVariableAction.create(self);
-  va.Name:=uppercase(getAttrValue(aNode,'Name',''));
-  va.Caption:=getAttrValue(aNode,'Caption','');
-  va.Caption:=InterfaceTranslate(va.Name+'~caption',va.Caption);
-  va.Hint:=getAttrValue(aNode,'Hint','');
-  if va.Hint<>'' then
-                     va.Hint:=InterfaceTranslate(va.Name+'~hint',va.Hint)
-                 else
-                     va.Hint:=va.Caption;
-  actionshortcut:=getAttrValue(aNode,'ShortCut','');
-  if actionshortcut<>'' then
-                            va.ShortCut:=MyTextToShortCut(actionshortcut);
-  actionvariable:=getAttrValue(aNode,'Variable','');
-  mask:=getAttrValue(aNode,'Mask',0);
-
-  va.AssignToVar(actionvariable,mask);
-
-  img:=getAttrValue(aNode,'Img','');
-  va.ImageIndex:=ImagesManager.GetImageIndex(img);
-  if va.ImageIndex=ImagesManager.defaultimageindex then begin
-    va.ImageIndex:=-1;
-    actlist.SetImage(img,va.Name+'~textimage',TZAction(va));
-  end;
-
-  va.AutoCheck:=true;
-  va.Enabled:=true;
-  va.ActionList:=actlist;
-end;
-procedure TZCADMainWindow.TBLayerComboBoxCreateFunc(aNode: TDomNode; TB:TToolBar);
-var
-  _hint:string;
-  _Width:integer;
-begin
-  _hint:=getAttrValue(aNode,'Hint','');
-  _Width:=getAttrValue(aNode,'Width',100);
-
-  LayerBox:=TZCADLayerComboBox.Create(tb);
-  LayerBox.ImageList:=ImagesManager.IconList;
-
-  LayerBox.Index_Lock:=ImagesManager.GetImageIndex('lock');
-  LayerBox.Index_UnLock:=ImagesManager.GetImageIndex('unlock');
-  LayerBox.Index_Freze:=ImagesManager.GetImageIndex('freze');;
-  LayerBox.Index_UnFreze:=ImagesManager.GetImageIndex('unfreze');
-  LayerBox.Index_ON:=ImagesManager.GetImageIndex('on');
-  LayerBox.Index_OFF:=ImagesManager.GetImageIndex('off');
-
-  LayerBox.fGetLayerProp:=self.GetLayerProp;
-  LayerBox.fGetLayersArray:=self.GetLayersArray;
-  LayerBox.fClickOnLayerProp:=self.ClickOnLayerProp;
-
-  LayerBox.Width:=_Width;
-
-  if _hint<>''then
-  begin
-       _hint:=InterfaceTranslate('hint_panel~LAYERCOMBOBOX',_hint);
-       LayerBox.hint:=(_hint);
-       LayerBox.ShowHint:=true;
-  end;
-  LayerBox.AutoSize:=false;
-  LayerBox.Parent:=tb;
-  LayerBox.Height:=10;
-  updatescontrols.Add(LayerBox);
-end;
-procedure TZCADMainWindow.TBColorComboBoxCreateFunc(aNode: TDomNode; TB:TToolBar);
-var
-  _hint:string;
-  _Width:integer;
-begin
-  _hint:=getAttrValue(aNode,'Hint','');
-  _Width:=getAttrValue(aNode,'Width',100);
-  ColorBox:=CreateCBox('ColorComboBox',tb,TSupportColorCombo.ColorBoxDrawItem,ChangeCColor,DropDownColor,DropUpColor,FillColorCombo,_Width,_hint);
-end;
-procedure TZCADMainWindow.TBLayoutComboBoxCreateFunc(aNode: TDomNode; TB:TToolBar);
-var
-  _hint:string;
-  _Width:integer;
-begin
-  _hint:=getAttrValue(aNode,'Hint','');
-  _Width:=getAttrValue(aNode,'Width',100);
-  //ColorBox:=CreateCBox('ColorComboBox',tb,TSupportColorCombo.ColorBoxDrawItem,ChangeCColor,DropDownColor,DropUpColor,FillColorCombo,_Width,_hint);
-    if assigned(LayoutBox) then
-    ZCMsgCallBackInterface.TextMessage(format(rsReCreating,['LAYOUTBOX']),TMWOShowError);
-  CreateLayoutbox(TB);
-  LayoutBox.Parent:=TB;
-  LayoutBox.AutoSize:=false;
-  if _Width>0 then
-    LayoutBox.Width:=_Width;
-  if _hint<>''then
-  begin
-       _hint:=InterfaceTranslate('combo~LayoutComboBox',_hint);
-       LayoutBox.hint:=(_hint);
-       LayoutBox.ShowHint:=true;
-  end;
-  //LayoutBox.Align:=alRight;
-end;
-procedure TZCADMainWindow.TBLTypeComboBoxCreateFunc(aNode: TDomNode; TB:TToolBar);
-var
-  _hint:string;
-  _Width:integer;
-begin
-  _hint:=getAttrValue(aNode,'Hint','');
-  _Width:=getAttrValue(aNode,'Width',100);
-  LTypeBox:=CreateCBox('LTypeComboBox',tb,TSupportLineTypeCombo.LTypeBoxDrawItem,ChangeLType,DropDownLType,DropUpLType,FillLTCombo,_Width,_hint);
-end;
-procedure TZCADMainWindow.TBLineWComboBoxCreateFunc(aNode: TDomNode; TB:TToolBar);
-var
-  _hint:string;
-  _Width:integer;
-begin
-  _hint:=getAttrValue(aNode,'Hint','');
-  _Width:=getAttrValue(aNode,'Width',100);
-  LineWBox:=CreateCBox('LineWComboBox',tb,TSupportLineWidthCombo.LineWBoxDrawIVarsItem,ChangeCLineW,DropDownColor,DropUpColor,FillLWCombo,_Width,_hint);
-end;
-procedure TZCADMainWindow.TBTStyleComboBoxCreateFunc(aNode: TDomNode; TB:TToolBar);
-var
-  _hint:string;
-  _Width:integer;
-begin
-  _hint:=getAttrValue(aNode,'Hint','');
-  _Width:=getAttrValue(aNode,'Width',100);
-  TStyleBox:=CreateCBox('TStyleComboBox',tb,TSupportTStyleCombo.DrawItemTStyle,TSupportTStyleCombo.ChangeLType,TSupportTStyleCombo.DropDownTStyle,TSupportTStyleCombo.CloseUpTStyle,TSupportTStyleCombo.FillLTStyle,_Width,_hint);
-end;
-procedure TZCADMainWindow.TBDimStyleComboBoxCreateFunc(aNode: TDomNode; TB:TToolBar);
-var
-  _hint:string;
-  _Width:integer;
-begin
-  _hint:=getAttrValue(aNode,'Hint','');
-  _Width:=getAttrValue(aNode,'Width',100);
-  DimStyleBox:=CreateCBox('DimStyleComboBox',tb,TSupportDimStyleCombo.DrawItemTStyle,TSupportDimStyleCombo.ChangeLType,TSupportDimStyleCombo.DropDownTStyle,TSupportDimStyleCombo.CloseUpTStyle,TSupportDimStyleCombo.FillLTStyle,_Width,_hint);
-end;
-
-function TZCADMainWindow.TBCreateZCADToolBar(aName,atype: string):TToolBar;
-begin
-  result:=TmyToolBar.Create(self);
-  ToolBarsManager.SetupDefaultToolBar(aName,atype, result);
-end;
-
-procedure TZCADMainWindow.TBVariableCreateFunc(aNode: TDomNode; TB:TToolBar);
-var
-  _varname,_img,_hint,_shortcut:string;
-  _mask:integer;
-  b:TmyVariableToolButton;
-  shortcut:TShortCut;
-  baction:TmyButtonAction;
-begin
-  _varname:=getAttrValue(aNode,'VarName','');
-  _img:=getAttrValue(aNode,'Img','');
-  _hint:=getAttrValue(aNode,'Hint','');
-  _shortcut:=getAttrValue(aNode,'ShortCut','');
-  _mask:=getAttrValue(aNode,'Mask',0);
-
-  b:=TmyVariableToolButton.Create(tb);
-  b.Style:=tbsCheck;
-  TmyVariableToolButton(b).AssignToVar(_varname,_mask);
-  if _hint<>''then
-  begin
-    _hint:=InterfaceTranslate('hint_panel~'+_varname,_hint);
-    b.hint:=(_hint);
-    b.ShowHint:=true;
-  end;
-  b.ImageIndex:=ImagesManager.GetImageIndex(_img);
-  if b.ImageIndex=ImagesManager.defaultimageindex then begin
-    b.ImageIndex:=-1;
-    SetImage(tb,b,_img,false,'button_variable~'+_varname);;
-  end;
-  //AddToBar(tb,b);
-  b.Parent:=tb;
-  updatesbytton.Add(b);
-  if _shortcut<>'' then
-  begin
-    shortcut:=MyTextToShortCut(_shortcut);
-    if shortcut>0 then
-    begin
-      baction:=TmyButtonAction.Create(StandartActions);
-      baction.button:=b;
-      baction.ShortCut:=shortcut;
-      StandartActions.AddMyAction(baction);
-    end;
-  end;
-end;
-
 procedure SetupFIPCServer;
 begin
   if assigned(UniqueInstanceBase.FIPCServer) then
@@ -1636,15 +966,8 @@ begin
 end;
 procedure TZCADMainWindow._onCreate(Sender: TObject);
 begin
-  {
-  //this unneed after fpc rev 31026 see http://bugs.freepascal.org/view.php?id=13518
-  StoreBackTraceStrFunc:=BackTraceStrFunc;
-  BackTraceStrFunc:=@SysBackTraceStr;
-  }
-  {$if FPC_FULlVERSION>=30002}
-  AllowReuseOfLineInfoData:=false;
-  {$endif}
   ZCADGUIManager.RegisterZCADFormInfo('PageControl',rsDrawingWindowWndName,Tform,types.rect(200,200,600,500),ZCADMainPanelSetupProc,nil,@ZCADMainWindow.MainPanel);
+
   FAppProps := TApplicationProperties.Create(Self);
   FAppProps.OnException := ZcadException;
   FAppProps.CaptureExceptions := True;
@@ -1678,8 +1001,8 @@ begin
   brocenicon:=StandartActions.LoadImage(ProgramPath+'menu/BMP/noimage.bmp');
 
 
-  ToolBarsManager:=TToolBarsManager.create(self,StandartActions,sysvar.INTF.INTF_DefaultControlHeight^);
-  MenusManager:=TGeneralMenuManager.create(self,StandartActions);
+  ToolBarsManager.setup(self,StandartActions,sysvar.INTF.INTF_DefaultControlHeight^);
+  MenusManager.setup(self,StandartActions);
   RegisterGeneralContextCheckFunc('True',@GMCCFTrue);
   RegisterGeneralContextCheckFunc('False',@GMCCFFalse);
   RegisterGeneralContextCheckFunc('DebugMode',@GMCCFDebugMode);
@@ -1688,171 +1011,15 @@ begin
   RegisterGeneralContextCheckFunc('AltPressed',@GMCCFAltPressed);
   RegisterGeneralContextCheckFunc('ActiveDrawing',@GMCCFActiveDrawing);
 
-  ToolBarsManager.RegisterTBItemCreateFunc('Separator',ToolBarsManager.CreateDefaultSeparator);
-  ToolBarsManager.RegisterTBItemCreateFunc('Action',TBActionCreateFunc);
-  ToolBarsManager.RegisterTBItemCreateFunc('GroupAction',TBGroupActionCreateFunc);
-  ToolBarsManager.RegisterTBItemCreateFunc('Button',TBButtonCreateFunc);
-  ToolBarsManager.RegisterTBItemCreateFunc('LayerComboBox',TBLayerComboBoxCreateFunc);
-  ToolBarsManager.RegisterTBItemCreateFunc('LayoutComboBox',TBLayoutComboBoxCreateFunc);
-  ToolBarsManager.RegisterTBItemCreateFunc('ColorComboBox',TBColorComboBoxCreateFunc);
-  ToolBarsManager.RegisterTBItemCreateFunc('LTypeComboBox',TBLTypeComboBoxCreateFunc);
-  ToolBarsManager.RegisterTBItemCreateFunc('LineWComboBox',TBLineWComboBoxCreateFunc);
-  ToolBarsManager.RegisterTBItemCreateFunc('TStyleComboBox',TBTStyleComboBoxCreateFunc);
-  ToolBarsManager.RegisterTBItemCreateFunc('DimStyleComboBox',TBDimStyleComboBoxCreateFunc);
-  ToolBarsManager.RegisterTBItemCreateFunc('Variable',TBVariableCreateFunc);
-
-  ToolBarsManager.RegisterActionCreateFunc('Group',ToolBarsManager.DefaultActionsGroupReader);
-  ToolBarsManager.RegisterActionCreateFunc('ZAction',ZActionsReader);
-  ToolBarsManager.RegisterActionCreateFunc('ZAction2Variable',ZAction2VariableReader);
-
-  ToolBarsManager.RegisterTBCreateFunc('ToolBar',TBCreateZCADToolBar);
-  //ToolBarsManager.LoadToolBarsContent(ProgramPath+'menu/toolbarscontent.xml');
-
   LoadActions;
   toolbars:=tstringlist.Create;
   toolbars.Sorted:=true;
   CreateInterfaceLists;
 
-  TMenuDefaults.RegisterMenuCreateFunc('SubMenu',ZMenuExt.ZMenuExtMainMenuItemReader);
-  TMenuDefaults.RegisterMenuCreateFunc('Menu',ZMenuExt.ZMenuExtMenuItemReader);
-  TMenuDefaults.RegisterMenuCreateFunc('Action',ZMenuExt.ZMenuExtAction);
-  TMenuDefaults.RegisterMenuCreateFunc('FileHistory',ZMenuExt.ZMenuExtFileHistory);
-  TMenuDefaults.RegisterMenuCreateFunc('LastCommands',ZMenuExt.ZMenuExtCommandsHistory);
-  TMenuDefaults.RegisterMenuCreateFunc('Command',ZMenuExt.ZMenuExtCommand);
-  TMenuDefaults.RegisterMenuCreateFunc('Toolbars',ZMenuExt.ZMenuExtToolBars);
-  TMenuDefaults.RegisterMenuCreateFunc('ToolPalettes',ZMenuExt.ZMenuExtToolPalettes);
-  TMenuDefaults.RegisterMenuCreateFunc('Drawings',ZMenuExt.ZMenuExtDrawings);
-  TMenuDefaults.RegisterMenuCreateFunc('SampleFiles',ZMenuExt.ZMenuExtSampleFiles);
-  TMenuDefaults.RegisterMenuCreateFunc('DebugFiles',ZMenuExt.ZMenuExtDebugFiles);
-
-  TMenuDefaults.RegisterMenuCreateFunc('CreateMenu',TMenuDefaults.DefaultCreateMenu);
-  TMenuDefaults.RegisterMenuCreateFunc('InsertMenuContent',TMenuDefaults.DefaultInsertMenuContent);
-  TMenuDefaults.RegisterMenuCreateFunc('InsertMenu',TMenuDefaults.DefaultInsertMenu);
-  TMenuDefaults.RegisterMenuCreateFunc('SetMainMenu',TMenuDefaults.DefaultSetMenu);
-  TMenuDefaults.RegisterMenuCreateFunc('Separator',TMenuDefaults.DefaultCreateMenuSeparator);
-
-  ToolBarsManager.RegisterPaletteCreateFunc('vsIcon',TPaletteHelper.ZPalettevsIconCreator);
-  ToolBarsManager.RegisterPaletteItemCreateFunc('ZVSICommand',TPaletteHelper.ZPalettevsIconItemCreator);
-
-  ToolBarsManager.RegisterPaletteCreateFunc('Tree',TPaletteHelper.ZPaletteTreeCreator);
-  ToolBarsManager.RegisterPaletteItemCreateFunc('ZTreeCommand',TPaletteHelper.ZPaletteTreeItemCreator);
-  ToolBarsManager.RegisterPaletteItemCreateFunc('ZTreeNode',TPaletteHelper.ZPaletteTreeNodeCreator);
-
   commandmanager.executefile('*components/stage0.cmd',drawings.GetCurrentDWG,nil);
 
   CreateAnchorDockingInterface;
   ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIActionRedraw);
-end;
-
-procedure TZCADMainWindow.AfterConstruction;
-
-begin
-    name:='MainForm';
-    OnCreate:=_onCreate;
-    inherited;
-end;
-procedure TZCADMainWindow.SetImage(ppanel:TToolBar;b:TToolButton;img:string;autosize:boolean;identifer:string);
-var
-    bmp:Graphics.TBitmap;
-begin
-     if length(img)>1 then
-     begin
-          if img[1]<>'#' then
-                              begin
-                              img:={SysToUTF8}(ProgramPath)+'menu/BMP/'+img;
-                              bmp:=Graphics.TBitmap.create;
-                              bmp.LoadFromFile(img);
-                              bmp.Transparent:=true;
-                              if not assigned(ppanel.Images) then
-                                                                 ppanel.Images:=standartactions.Images;
-                              b.ImageIndex:=
-                              ppanel.Images.Add(bmp,nil);
-                              freeandnil(bmp);
-                              //-----------b^.SetImageFromFile(img)
-                              end
-                          else
-                              begin
-                              b.caption:=(system.copy(img,2,length(img)-1));
-                              b.caption:=InterfaceTranslate(identifer,b.caption);
-                              if autosize then
-                               if utf8length(img)>3 then
-                                                    b.Font.size:=11-utf8length(img);
-                              end;
-     end;
-                              b.Height:=ppanel.ButtonHeight;
-                              b.Width:=ppanel.ButtonWidth;
-end;
-procedure AddToBar(tb:TToolBar;b:TControl);
-begin
-     if tb.ClientHeight<tb.ClientWidth then
-                                                   begin
-                                                        //b.Left:=100;
-                                                        //b.align:=alLeft
-                                                   end
-                                               else
-                                                   begin
-                                                        //b.top:=100;
-                                                        //b.align:=alTop;
-                                                   end;
-    b.Parent:=tb;
-end;
-function TZCADMainWindow.CreateCBox(CBName:GDBString;owner:TToolBar;DrawItem:TDrawItemEvent;Change,DropDown,CloseUp:TNotifyEvent;Filler:TComboFiller;w:integer;ts:GDBString):TComboBox;
-begin
-  result:=TComboBox.Create(owner);
-  result.Style:=csOwnerDrawFixed;
-  SetComboSize(result,sysvar.INTF.INTF_DefaultControlHeight^-6,CBReadOnly);
-  result.Clear;
-  {result.readonly:=true;//now it deprecated, see in SetComboSize}
-  result.DropDownCount:=50;
-  if w<>0 then
-              result.Width:=w;
-  if ts<>''then
-  begin
-       ts:=InterfaceTranslate('combo~'+CBName,ts);
-       result.hint:=(ts);
-       result.ShowHint:=true;
-  end;
-
-  result.OnDrawItem:=DrawItem;
-  result.OnChange:=Change;
-  result.OnDropDown:=DropDown;
-  result.OnCloseUp:=CloseUp;
-  //result.OnMouseLeave:=setnormalfocus;
-
-  if assigned(Filler)then
-                         Filler(result);
-  result.ItemIndex:=0;
-
-  AddToBar(owner,result);
-  updatescontrols.Add(result);
-end;
-procedure addfiletoLayoutbox(filename:String);
-var
-    s:string;
-begin
-     s:=ExtractFileName(filename);
-     LayoutBox.AddItem(copy(s,1,length(s)-4),nil);
-end;
-procedure TZCADMainWindow.CreateLayoutbox(tb:TToolBar);
-var
-    s:string;
-begin
-  LayoutBox:=TComboBox.Create(tb);
-  LayoutBox.Style:=csDropDownList;
-  LayoutBox.Sorted:=true;
-  FromDirIterator(ProgramPath+'components/','*.xml','',addfiletoLayoutbox,nil);
-  LayoutBox.OnChange:=ChangeLayout;
-
-  s:=extractfilename(sysvar.PATH.LayoutFile^);
-  LayoutBox.ItemIndex:=LayoutBox.Items.IndexOf(copy(s,1,length(s)-4));
-
-end;
-procedure TZCADMainWindow.ChangeLayout(Sender:Tobject);
-var
-    s:string;
-begin
-  s:=ProgramPath+'components/'+LayoutBox.text+'.xml';
-  LoadLayoutFromFile(s);
 end;
 
 procedure TZCADMainWindow.UpdateControls;
@@ -1870,17 +1037,31 @@ begin
           TControl(updatescontrols[i]).Invalidate;
      end;
 end;
+procedure TZCADMainWindow.EnableControls(enbl:boolean);
+var
+    i:integer;
+begin
+  if assigned(enabledcontrols) then
+   for i:=0 to enabledcontrols.Count-1 do
+    if tobject(enabledcontrols[i]) is TControl then
+      (tobject(enabledcontrols[i]) as TControl).Enabled:=enbl;
+end;
 
-procedure  TZCADMainWindow.ChangedDWGTabCtrl(Sender: TObject);
+procedure TZCADMainWindow.ChangedDWGTab(Sender: TObject);
 var
    ogl:TAbstractViewArea;
 begin
-     tcomponent(OGL):=FindComponentByType(TPageControl(sender).ActivePage,TAbstractViewArea);
-     if assigned(OGL) then
-                          OGL.GDBActivate;
-     OGL.param.firstdraw:=true;
-     OGL.draworinvalidate;
-     ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIReturnToDefaultObject);
+  tcomponent(OGL):=FindComponentByType(TPageControl(sender).ActivePage,TAbstractViewArea);
+  if assigned(OGL) then
+    OGL.GDBActivate;
+  OGL.param.firstdraw:=true;
+  OGL.draworinvalidate;
+  ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIReturnToDefaultObject);
+end;
+procedure TZCADMainWindow.ChangedDWGTabByClick(Sender: TObject);
+begin
+  commandmanager.executecommandend;
+  ChangedDWGTab(Sender);
 end;
 
 destructor TZCADMainWindow.Destroy;
@@ -1890,6 +1071,7 @@ begin
   freeandnil(toolbars);
   freeandnil(updatesbytton);
   freeandnil(updatescontrols);
+  freeandnil(enabledcontrols);
   freeandnil(SuppressedShortcuts);
   inherited;
 end;
@@ -1977,7 +1159,7 @@ begin
      ZCMsgCallBackInterface.Do_KeyDown(Sender,Key,Shift);
      if key=0 then exit;
 
-     if ((ActiveControl<>cmdedit)and(ActiveControl<>HistoryLine)and(ActiveControl<>LayerBox)and(ActiveControl<>LineWBox))then
+     if ((ActiveControl<>cmdedit)and(ActiveControl<>HistoryLine){and(ActiveControl<>LayerBox)and(ActiveControl<>LineWBox)})then
      begin
      if (ActiveControl is tedit)or (ActiveControl is tmemo)or (ActiveControl is TComboBox)then
                                                                                               exit;
@@ -1986,11 +1168,10 @@ begin
      if (ActiveControl=TPropEditor(GetPeditorProc).geteditor) then
                                                             exit;}
      end;
-     if ((ActiveControl=LayerBox)or(ActiveControl=LineWBox))then
+    { if ((ActiveControl=LayerBox)or(ActiveControl=LineWBox))then
                                                                  begin
                                                                  ZCMsgCallBackInterface.Do_SetNormalFocus;
-                                                                 //self.setnormalfocus(nil);
-                                                                 end;
+                                                                 end;}
      tempkey:=key;
 
      comtext:='';
@@ -2133,143 +1314,6 @@ begin
                                       exit;
      cb.items.InsertObject(cb.items.Count-1,name,obj);
 end;
-procedure TZCADMainWindow.DropDownColor(Sender:Tobject);
-begin
-     OldColor:=tcombobox(Sender).ItemIndex;
-     tcombobox(Sender).ItemIndex:=-1;
-end;
-procedure TZCADMainWindow.DropUpLType(Sender:Tobject);
-begin
-     tcombobox(Sender).ItemIndex:=0;
-end;
-
-procedure TZCADMainWindow.DropDownLType(Sender:Tobject);
-var
-   i:integer;
-begin
-     if drawings.GetCurrentDWG=nil then exit;
-     SetcomboItemsCount(tcombobox(Sender),drawings.GetCurrentDWG.LTypeStyleTable.Count+1);
-     for i:=0 to drawings.GetCurrentDWG.LTypeStyleTable.Count-1 do
-     begin
-          tcombobox(Sender).Items.Objects[i]:=tobject(drawings.GetCurrentDWG.LTypeStyleTable.getDataMutable(i));
-     end;
-     tcombobox(Sender).Items.Objects[drawings.GetCurrentDWG.LTypeStyleTable.Count]:=LTEditor;
-end;
-procedure TZCADMainWindow.DropUpColor(Sender:Tobject);
-begin
-     if tcombobox(Sender).ItemIndex=-1 then
-                                           tcombobox(Sender).ItemIndex:=OldColor;
-end;
-procedure TZCADMainWindow.ChangeLType(Sender:Tobject);
-var
-   {LTIndex,}index:Integer;
-   CLTSave,plt:PGDBLtypeProp;
-begin
-     index:=tcombobox(Sender).ItemIndex;
-     plt:=PGDBLtypeProp(tcombobox(Sender).items.Objects[index]);
-     //LTIndex:=drawings.GetCurrentDWG.LTypeStyleTable.GetIndexByPointer(plt);
-     if plt=nil then
-                         exit;
-     if plt=lteditor then
-                         begin
-                              commandmanager.ExecuteCommand('LineTypes',drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
-                         end
-     else
-     begin
-     if drawings.GetCurrentDWG.wa.param.seldesc.Selectedobjcount=0
-     then
-     begin
-          SysVar.dwg.DWG_CLType^:={LTIndex}plt;
-     end
-     else
-     begin
-          CLTSave:=SysVar.dwg.DWG_CLType^;
-          SysVar.dwg.DWG_CLType^:={LTIndex}plt;
-          commandmanager.ExecuteCommand('SelObjChangeLTypeToCurrent',drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
-          SysVar.dwg.DWG_CLType^:=CLTSave;
-     end;
-     end;
-     //setvisualprop;
-     ZCMsgCallBackInterface.Do_GUIaction(self,ZMsgID_GUIActionRebuild);
-     //setnormalfocus(nil);
-     ZCMsgCallBackInterface.Do_SetNormalFocus;
-end;
-
-procedure  TZCADMainWindow.ChangeCColor(Sender:Tobject);
-var
-   ColorIndex,CColorSave,index:Integer;
-   mr:integer;
-begin
-     index:=tcombobox(Sender).ItemIndex;
-     ColorIndex:=integer(tcombobox(Sender).items.Objects[index]);
-     if ColorIndex=ClSelColor then
-                           begin
-                               if not assigned(ColorSelectForm)then
-                               Application.CreateForm(TColorSelectForm, ColorSelectForm);
-                               ShowAllCursors(ColorSelectForm);
-                               mr:=ColorSelectForm.run(SysVar.dwg.DWG_CColor^,true){showmodal};
-                               if mr=mrOk then
-                                              begin
-                                              ColorIndex:=ColorSelectForm.ColorInfex;
-                                              if assigned(Sender)then
-                                              begin
-                                              AddToComboIfNeed(tcombobox(Sender),palette[ColorIndex].name,TObject(ColorIndex));
-                                              tcombobox(Sender).ItemIndex:=tcombobox(Sender).Items.Count-2;
-                                              end;
-                                              end
-                                          else
-                                              begin
-                                                   tcombobox(Sender).ItemIndex:=OldColor;
-                                                   ColorIndex:=-1;
-                                              end;
-                               RestoreCursors(ColorSelectForm);
-                               freeandnil(ColorSelectForm);
-                           end;
-     if colorindex<0 then
-                         exit;
-     if drawings.GetCurrentDWG.wa.param.seldesc.Selectedobjcount=0
-     then
-     begin
-          SysVar.dwg.DWG_CColor^:=ColorIndex;
-     end
-     else
-     begin
-          CColorSave:=SysVar.dwg.DWG_CColor^;
-          SysVar.dwg.DWG_CColor^:=ColorIndex;
-          commandmanager.ExecuteCommand('SelObjChangeColorToCurrent',drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
-          SysVar.dwg.DWG_CColor^:=CColorSave;
-     end;
-     //setvisualprop;
-     ZCMsgCallBackInterface.Do_GUIaction(self,ZMsgID_GUIActionRebuild);
-     //setnormalfocus(nil);
-     ZCMsgCallBackInterface.Do_SetNormalFocus;
-end;
-
-procedure  TZCADMainWindow.ChangeCLineW(Sender:Tobject);
-var tcl,index:GDBInteger;
-begin
-  index:=tcombobox(Sender).ItemIndex;
-  index:=integer(tcombobox(Sender).items.Objects[index]);
-  if drawings.GetCurrentDWG.wa.param.seldesc.Selectedobjcount=0
-  then
-  begin
-      SysVar.dwg.DWG_CLinew^:=index;
-  end
-  else
-  begin
-           begin
-                tcl:=SysVar.dwg.DWG_CLinew^;
-                SysVar.dwg.DWG_CLinew^:=index;
-                commandmanager.ExecuteCommand('SelObjChangeLWToCurrent',drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
-                SysVar.dwg.DWG_CLinew^:=tcl;
-           end;
-  end;
-  //setvisualprop;
-  ZCMsgCallBackInterface.Do_GUIaction(self,ZMsgID_GUIActionRebuild);
-  //setnormalfocus(nil);
-  ZCMsgCallBackInterface.Do_SetNormalFocus;
-end;
-
 procedure TZCADMainWindow.GeneralTick(Sender: TObject);
 begin
      if sysvar.SYS.SYS_RunTime<>nil then
@@ -2309,12 +1353,12 @@ begin
      end;
 end;
 
-function TZCADMainWindow.MessageBox(Text, Caption: PChar; Flags: Longint): Integer;
+{function TZCADMainWindow.MessageBox(Text, Caption: PChar; Flags: Longint): Integer;
 begin
      ShowAllCursors(nil);
      result:=application.MessageBox(Text, Caption,Flags);
      RestoreCursors(nil);
-end;
+end;}
 
 procedure TZCADMainWindow.ShowAllCursors;
 begin
@@ -2330,7 +1374,7 @@ begin
      drawings.GetCurrentDWG.wa.hidemousecursor;
 end;
 
-procedure TZCADMainWindow.Say(word:gdbstring);
+{procedure TZCADMainWindow.Say(word:gdbstring);
 begin
      //if sysvar.SYS.SYS_IsHistoryLineCreated^ then
      begin
@@ -2340,7 +1384,7 @@ begin
           HintText.repaint;
           end;
      end;
-end;
+end;}
 procedure TZCADMainWindow.EndLongProcess;
 var
    Time:Tdatetime;
@@ -3007,18 +2051,20 @@ begin
   ZCMsgCallBackInterface.Do_GUIaction(self,ZMsgID_GUIActionRebuild);
   ZCADMainWindow.Caption:=programname+' v'+sysvar.SYS.SYS_Version^+' - ['+drawings.GetCurrentDWG.GetFileName+']';
 
-  if assigned(LayerBox) then
-  LayerBox.enabled:=true;
-  if assigned(LineWBox) then
-  LineWBox.enabled:=true;
-  if assigned(ColorBox) then
-  ColorBox.enabled:=true;
-  if assigned(LTypeBox) then
-  LTypeBox.enabled:=true;
-  if assigned(TStyleBox) then
-  TStyleBox.enabled:=true;
-  if assigned(DimStyleBox) then
-  DimStyleBox.enabled:=true;
+  EnableControls(true);
+
+  {if assigned(LayerBox) then
+  LayerBox.enabled:=true;}
+  {if assigned(LineWBox) then
+  LineWBox.enabled:=true;}
+  {if assigned(ColorBox) then
+  ColorBox.enabled:=true;}
+  {if assigned(LTypeBox) then
+  LTypeBox.enabled:=true;}
+  {if assigned(TStyleBox) then
+  TStyleBox.enabled:=true;}
+  {if assigned(DimStyleBox) then
+  DimStyleBox.enabled:=true;}
 
 
   if assigned(ZCADMainWindow.PageControl) then
@@ -3112,6 +2158,7 @@ begin
                          OpenedDrawings[i].command:='';
              end;
            ZCADMainWindow.Caption:=(programname+' v'+sysvar.SYS.SYS_Version^);
+           EnableControls(false);
            {if assigned(LayerBox)then
            LayerBox.enabled:=false;
            if assigned(LineWBox)then

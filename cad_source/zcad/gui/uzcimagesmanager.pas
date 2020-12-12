@@ -22,7 +22,7 @@ unit uzcimagesmanager;
 interface
 
 uses
-  uzbpaths,Classes, SysUtils, FileUtil, LResources, Forms, Controls, Graphics, Dialogs,
+  uzbpaths,Classes, SysUtils, FileUtil, LResources, Forms, Controls, Graphics,
   Buttons, ExtCtrls, LazUTF8,
   uzbtypes,uzcsysvars,uzcsysinfo,uzbtypesbase,gzctnrstl,usimplegenerics,UGDBOpenArrayOfByte,
   uzbstrproc,LazLogger;
@@ -92,7 +92,7 @@ begin
   FreeAndNil(FIconList);
   FreeAndNil(ImageDataMap);
 end;
-procedure {TImagesManager.}FoundImage(filename:String);
+procedure {TImagesManager.}FoundImage(filename:String;pdata:pointer);
 var
    ID:TImageData;
    PID:TImageName2TImageDataMap.PTValue;

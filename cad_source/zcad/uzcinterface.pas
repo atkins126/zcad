@@ -18,7 +18,8 @@
 unit uzcinterface;
 {$INCLUDE def.inc}
 interface
-uses controls,uzcstrconsts,uzedimensionaltypes,gzctnrstl,zeundostack,varmandef,forms,classes,uzbtypes,LCLType;
+uses controls,uzcstrconsts,uzedimensionaltypes,gzctnrstl,zeundostack,varmandef,
+     uzcuilcl2zc,forms,classes,uzbtypes,LCLType;
 
 const
     CLinePriority=500;
@@ -146,6 +147,7 @@ type
 
 
         procedure TextMessage(msg:String;opt:TTextMessageWriteOptionsSet);
+
         function TextQuestion(Caption,Question:String;Flags: Longint):integer;
         function DoShowModal(MForm:TForm):Integer;
       private
@@ -283,7 +285,7 @@ begin
   result:=application.MessageBox(ps,pc,Flags);
   Do_AfterShowModal(nil);
 end;
-
+{ #todo : TextMessage need rewrite with zcMsgDlg instead MessageBox}
 procedure TZCMsgCallBackInterface.TextMessage(msg:String;opt:TTextMessageWriteOptionsSet);
 var
    Caption: string;
@@ -545,7 +547,7 @@ end;
 function TZCMsgCallBackInterface.DoShowModal(MForm:TForm): Integer;
 begin
      Do_BeforeShowModal(MForm);
-     result:=MForm.ShowModal;
+     result:=TLCLModalResult2TZCMsgModalResult.Convert(MForm.ShowModal);
      Do_BeforeShowModal(MForm);
 end;
 

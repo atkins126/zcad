@@ -26,11 +26,11 @@ uses
   uzcoimultiobjects,uzcenitiesvariablesextender,uzcdrawing,uzepalette,
   uzctextenteditor,uzgldrawcontext,usimplegenerics,UGDBPoint3DArray,
   uzeentpoint,uzeentitiestree,gmap,gvector,garrayutils,gutil,UGDBSelectedObjArray,uzeentityfactory,
-  uzedrawingsimple,uzcsysvars,uzcstrconsts,uzccomdrawdase,
+  uzedrawingsimple,uzcsysvars,uzcstrconsts,
   printers,graphics,uzeentdevice,uzeentwithlocalcs,
   LazUTF8,Clipbrd,LCLType,classes,uzeenttext,uzeentabstracttext,uzestylestexts,
   uzccommandsabstract,uzbstrproc,
-  uzbtypesbase,uzccommandsmanager,uzccombase,
+  uzbtypesbase,uzccommandsmanager,
   uzccommandsimpl,
   uzbtypes,
   uzcdrawings,
@@ -43,7 +43,7 @@ uses
   uzegeometry,
   uzbmemman,
   uzeconsts,
-  uzccommand_move,uzccommand_copy,
+  uzccommand_move,uzccommand_copy,uzccommand_regen,uzccommand_copyclip,
   uzbgeomtypes,uzeentity,uzeentcircle,uzeentline,uzeentgenericsubentry,uzeentmtext,
   uzeentsubordinated,uzeentblockinsert,uzeentpolyline,uzclog,gzctnrvectordata,
   math,uzeenttable,uzctnrvectorgdbstring,
@@ -301,7 +301,7 @@ var
    BIProp:TBlockInsert;
    pc:pgdbobjcircle;
    pb:PGDBObjBlockInsert;
-   PCreatedGDBLine:pgdbobjline;
+
    pold:PGDBObjEntity;
    p3dpl:pgdbobjpolyline;
    p3dplold:PGDBObjEntity;
@@ -334,11 +334,9 @@ var
 
 //procedure startup;
 //procedure Finalize;
-function Line_com_CommandStart(operands:TCommandOperands):TCommandResult;
-procedure Line_com_CommandEnd(_self:pointer);
-function Line_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
-function Line_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
 implementation
+var
+  PCreatedGDBLine:pgdbobjline;
 function GetBlockDefNames(var BDefNames:TZctnrVectorGDBString;selname:GDBString):GDBInteger;
 var pb:PGDBObjBlockdef;
     ir:itrec;
@@ -1960,92 +1958,6 @@ begin
 end;
 
 
-
-
-
-
-function Line_com_CommandStart(operands:TCommandOperands):TCommandResult;
-begin
-  pold:=nil;
-  drawings.GetCurrentDWG^.wa.SetMouseMode((MGet3DPoint) or (MMoveCamera) or (MRotateCamera));
-  ZCMsgCallBackInterface.TextMessage(rscmFirstPoint,TMWOHistoryOut);
-  result:=cmd_ok;
-end;
-
-procedure Line_com_CommandEnd(_self:pointer);
-begin
-end;
-
-function Line_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
-var
-    dc:TDrawContext;
-begin
-  result:=0;
-  if (button and MZW_LBUTTON)<>0 then
-  begin
-    dc:=drawings.GetCurrentDWG^.CreateDrawingRC;
-    PCreatedGDBLine := PGDBObjLine(ENTF_CreateLine(@drawings.GetCurrentDWG^.ConstructObjRoot,@drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray,[wc.x,wc.y,wc.z,wc.x,wc.y,wc.z]));
-    zcSetEntPropFromCurrentDrawingProp(PCreatedGDBLine);
-    PCreatedGDBLine^.FormatEntity(drawings.GetCurrentDWG^,dc);
-  end
-end;
-
-function Line_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
-var po:PGDBObjSubordinated;
-    domethod,undomethod:tmethod;
-    dc:TDrawContext;
-begin
-  result:=mclick;
-  {PCreatedGDBLine^.vp.Layer :=drawings.GetCurrentDWG^.LayerTable.GetCurrentLayer;
-  PCreatedGDBLine^.vp.lineweight := sysvar.dwg.DWG_CLinew^;}
-  zcSetEntPropFromCurrentDrawingProp(PCreatedGDBLine);
-  PCreatedGDBLine^.CoordInOCS.lEnd:= wc;
-  dc:=drawings.GetCurrentDWG^.CreateDrawingRC;
-  PCreatedGDBLine^.FormatEntity(drawings.GetCurrentDWG^,dc);
-  po:=nil;
-  if osp<>nil then
-  begin
-       if (PGDBObjEntity(osp^.PGDBObject)<>nil)and(osp^.PGDBObject<>pold)
-       then
-       begin
-            PGDBObjEntity(osp^.PGDBObject)^.formatentity(drawings.GetCurrentDWG^,dc);
-            //PGDBObjEntity(osp^.PGDBObject)^.ObjToGDBString('Found: ','');
-            ZCMsgCallBackInterface.TextMessage(PGDBObjline(osp^.PGDBObject)^.ObjToGDBString('Found: ',''),TMWOHistoryOut);
-            po:=PGDBObjEntity(osp^.PGDBObject)^.getowner;
-            pold:=osp^.PGDBObject;
-       end
-  end else pold:=nil;
-  //pl^.RenderFeedback;
-  if (button and MZW_LBUTTON)<>0 then
-  begin
-    PCreatedGDBLine^.RenderFeedback(drawings.GetCurrentDWG^.pcamera^.POSCOUNT,drawings.GetCurrentDWG^.pcamera^,@drawings.GetCurrentDWG^.myGluProject2,dc);
-    if po<>nil then
-    begin
-    PCreatedGDBLine^.bp.ListPos.Owner:=po;
-    //drawings.ObjRoot.ObjArray.add(addr(pl));
-    PGDBObjGenericSubEntry(po)^.ObjArray.AddPEntity(PCreatedGDBLine^);
-    end
-    else
-    begin
-    PCreatedGDBLine^.bp.ListPos.Owner:=drawings.GetCurrentROOT;
-    //drawings.ObjRoot.ObjArray.add(addr(pl));
-    SetObjCreateManipulator(domethod,undomethod);
-    with PushMultiObjectCreateCommand(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,tmethod(domethod),tmethod(undomethod),1)^ do
-    begin
-         AddObject(PCreatedGDBLine);
-         comit;
-    end;
-    //drawings.GetCurrentROOT^.AddObjectToObjArray{ObjArray.add}(addr(PCreatedGDBLine));
-    end;
-    drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.Count := 0;
-    result:=1;
-    //Line_com_BeforeClick(wc,mc,button,osp);
-    zcRedrawCurrentDrawing;
-    //commandend;
-    //commandmanager.executecommandend;
-  end;
-end;
-
 function Mirror_com.CalcTransformMatrix(p1,p2: GDBvertex):DMatrix4D;
 var
     dist,p3:gdbvertex;
@@ -3044,7 +2956,6 @@ begin
   PEProp.Action:=TSPE_Insert;
 
   CreateCommandRTEdObjectPlugin(@Circle_com_CommandStart,@Circle_com_CommandEnd,nil,nil,@Circle_com_BeforeClick,@Circle_com_AfterClick,nil,nil,'Circle2',0,0);
-  CreateCommandRTEdObjectPlugin(@Line_com_CommandStart,@Line_com_CommandEnd,nil,nil,@Line_com_BeforeClick,@Line_com_AfterClick,nil,nil,'Line',0,0);
   CreateCommandRTEdObjectPlugin(@_3DPolyEd_com_CommandStart,nil,nil,nil,@_3DPolyEd_com_BeforeClick,@_3DPolyEd_com_BeforeClick,nil,nil,'PolyEd',0,0);
   CreateCommandRTEdObjectPlugin(@Insert_com_CommandStart,@Insert_com_CommandEnd,nil,nil,@Insert_com_BeforeClick,@Insert_com_BeforeClick,nil,nil,'Insert',0,0);
 

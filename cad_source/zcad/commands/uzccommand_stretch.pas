@@ -42,7 +42,7 @@ uses
   uzeentity,
  uzbtypesbase,uzbmemman,uzcdialogsfiles,
  UUnitManager,uzclog,Varman,
- uzbgeomtypes,dialogs,uzcinfoform,
+ uzbgeomtypes,uzcinfoform,
  uzeentpolyline,uzeentlwpolyline,UGDBSelectedObjArray,
  uzegeometry,uzelongprocesssupport,uzccommand_selectframe,uzccommand_ondrawinged;
 
@@ -136,6 +136,7 @@ begin
                                 @Stretch_com_AfterClick,nil,nil,'Stretch',0,0);
 end;
 initialization
+  debugln('{I}[UnitsInitialization] Unit "',{$INCLUDE %FILE%},'" initialization');
   startup;
 finalization
   debugln('{I}[UnitsFinalization] Unit "',{$INCLUDE %FILE%},'" finalization');

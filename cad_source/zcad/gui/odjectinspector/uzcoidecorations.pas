@@ -22,11 +22,12 @@ unit uzcoidecorations;
 interface
 
 uses
-  zcobjectinspectorui,uzctypesdecorations,uzccommandsabstract,zcobjectinspectoreditors,uzcsysinfo,uzepalette,UEnumDescriptor,zcobjectinspector,uzcinfoform,Forms,uzestyleslinetypes,sysutils,uzctreenode,uzcfsnapeditor,uzccominterface,
+  zcobjectinspectorui,uzctypesdecorations,uzccommandsabstract,zcobjectinspectoreditors,uzcsysinfo,uzepalette,UEnumDescriptor,zcobjectinspector,uzcinfoform,Forms,uzestyleslinetypes,sysutils,uzctreenode,uzcfsnapeditor,
   Graphics,LCLType,Themes,uzeconsts,UGDBNamedObjectsArray,uzctnrvectorgdbstring,
   varmandef,Varman,uzcfcolors,uzestyleslayers,uzbtypes,uzcflineweights,uzbtypesbase,usupportgui,
   StdCtrls,uzcdrawings,uzcstrconsts,Controls,Classes,uzbstrproc,uzcsysvars,uzccommandsmanager,
-  uzcsysparams,gzctnrvectortypes,uzbgeomtypes,uzcinterface,uzcoimultiobjects,uzcgui2color,uzcgui2linewidth,uzcgui2linetypes;
+  uzcsysparams,gzctnrvectortypes,uzbgeomtypes,uzcinterface,uzcoimultiobjects,uzcgui2color,uzcgui2linewidth,uzcgui2linetypes,
+  uzccommand_layer,uzcuitypes;
 type
     AsyncCommHelper=class
                          class procedure GetVertex(Pinstance:PtrInt);
@@ -222,7 +223,7 @@ begin
      SetHeightControl(ColorSelectForm,sysvar.INTF.INTF_DefaultControlHeight^);
      ZCMsgCallBackInterface.Do_BeforeShowModal(ColorSelectForm);
      mr:=ColorSelectForm.run(PTGDBPaletteColor(PInstance)^,true){showmodal};
-     if mr=mrOk then
+     if mr=ZCmrOk then
                     begin
                     PTGDBPaletteColor(PInstance)^:=ColorSelectForm.ColorInfex;
                     end;
@@ -336,7 +337,7 @@ begin
 
      InfoForm.memo.text:=pgdbstring(PInstance)^;
      modalresult:=ZCMsgCallBackInterface.DOShowModal(InfoForm);
-     if modalresult=MrOk then
+     if modalresult=ZCMrOk then
                          begin
                               pgdbstring(PInstance)^:=InfoForm.memo.text;
                               StoreBoundsToSavedUnit('TEdWND',InfoForm.BoundsRect);
@@ -358,7 +359,7 @@ begin
 
      InfoForm.memo.text:=ConvertFromDxfString(pgdbstring(PInstance)^);
      modalresult:=ZCMsgCallBackInterface.DOShowModal(InfoForm);
-     if modalresult=MrOk then
+     if modalresult=ZCMrOk then
                          begin
                               pgdbstring(PInstance)^:=ConvertToDxfString(InfoForm.memo.text);
                               StoreBoundsToSavedUnit('TEdWND',InfoForm.BoundsRect);
@@ -530,6 +531,7 @@ begin
      AddEditorToType(SysUnit.TypeName2PTD('String'),TBaseTypesEditors.BaseCreateEditor);
      AddEditorToType(SysUnit.TypeName2PTD('AnsiString'),TBaseTypesEditors.BaseCreateEditor);
      AddEditorToType(SysUnit.TypeName2PTD('GDBAnsiString'),TBaseTypesEditors.BaseCreateEditor);
+     AddEditorToType(SysUnit.TypeName2PTD('UnicodeString'),TBaseTypesEditors.BaseCreateEditor);
      AddEditorToType(SysUnit.TypeName2PTD('GDBFloat'),TBaseTypesEditors.BaseCreateEditor);
      AddEditorToType(SysUnit.TypeName2PTD('Pointer'),TBaseTypesEditors.BaseCreateEditor);
      AddEditorToType(SysUnit.TypeName2PTD('GDBPtrUInt'),TBaseTypesEditors.BaseCreateEditor);

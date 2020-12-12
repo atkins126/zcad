@@ -31,7 +31,7 @@ type
   TPaletteCreateFunc=function (aName,aCaption,aType: string;TBNode:TDomNode;var PaletteControl:TPaletteControlBaseType;DoDisableAlign:boolean):TPaletteControlBaseType of object;
   TPaletteItemCreateFunc=procedure (aNode: TDomNode;rootnode:TPersistent;palette:TPaletteControlBaseType) of object;
   TTBCreateFunc=function (aName,aType: string):TToolBar of object;
-  TTBItemCreateFunc=procedure (aNode: TDomNode; TB:TToolBar) of object;
+  TTBItemCreateFunc=procedure (fmf:TForm;actlist:TActionList;aNode: TDomNode; TB:TToolBar) of object;
   TTBRegisterInAPPFunc=procedure (fmf:TForm;actlist:TActionList;aTBNode: TDomNode;aName,aType: string;Data:Pointer) of object;
 
   TPaletteCreateFuncRegister=specialize TDictionary <string,TPaletteCreateFunc>;
@@ -59,9 +59,10 @@ type
     PaletteItemCreateFuncRegister:TPaletteItemCreateFuncRegister;
 
     public
-    constructor Create(mainform:TForm;actlist:TActionList;defbuttonheight:integer);
+    constructor Create;
     destructor Destroy;override;
 
+    procedure Setup(mainform:TForm;actlist:TActionList;defbuttonheight:integer);
     procedure SaveToolBarsToConfig(Config: TConfigStorage);
     procedure RestoreToolBarsFromConfig(Config: TConfigStorage);
     procedure ShowFloatToolbar(TBName:String;r:trect);
@@ -86,12 +87,12 @@ type
     function AddContentToToolbar(tb:TToolBar;aName:string):TToolBar;
     function DoTBCreateFunc(aName,aType:string):TToolBar;
     function DoToolPaletteCreateFunc(aControlName,aInternalName:string;TBNode:TDomNode;var PaletteControl:TPaletteControlBaseType;DoDisableAlign:boolean):TPaletteControlBaseType;
-    procedure DoTBItemCreateFunc(aNodeName:string; aNode: TDomNode; TB:TToolBar);
+    procedure DoTBItemCreateFunc(fmf:TForm;actlist:TActionList;aNodeName:string; aNode: TDomNode; TB:TToolBar);
     procedure DoToolPaletteItemCreateFunc(aNodeName:string; aNode: TDomNode;rootnode:TPersistent;PC:TPaletteControlBaseType);
 
     procedure SetupDefaultToolBar(aName,atype: string; tb:TToolBar);
     function CreateDefaultToolBar(aName,atype: string):TToolBar;
-    procedure CreateDefaultSeparator(aNode: TDomNode; TB:TToolBar);
+    procedure CreateDefaultSeparator(fmf:TForm;actlist:TActionList;aNode: TDomNode; TB:TToolBar);
     procedure CreateDefaultAction(aNode: TDomNode; TB:TToolBar);
     procedure FloatDockSiteClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure SetActionChecked(aName:string;newChecked:boolean);
@@ -344,7 +345,7 @@ begin
   result:=TToolBar.Create(fmainform);
   SetupDefaultToolBar(aName,atype,result);
 end;
-procedure TToolBarsManager.CreateDefaultSeparator(aNode: TDomNode; TB:TToolBar);
+procedure TToolBarsManager.CreateDefaultSeparator(fmf:TForm;actlist:TActionList;aNode: TDomNode; TB:TToolBar);
 begin
  with TToolButton.Create(TB) do
  begin
@@ -371,11 +372,9 @@ begin
   end;
 end;
 
-constructor TToolBarsManager.Create(mainform:TForm;actlist:TActionList;defbuttonheight:integer);
+constructor TToolBarsManager.Create;
 begin
-  fmainform:=mainform;
-  factionlist:=actlist;
-  fdefbuttonheight:=defbuttonheight;
+  Setup(nil,nil,21);
 
   TBConfig:=nil;
   PalettesConfig:=nil;
@@ -385,6 +384,14 @@ begin
   TBItemCreateFuncRegister:=nil;
   ActionCreateFuncRegister:=nil;
 end;
+
+procedure TToolBarsManager.Setup(mainform:TForm;actlist:TActionList;defbuttonheight:integer);
+begin
+  fmainform:=mainform;
+  factionlist:=actlist;
+  fdefbuttonheight:=defbuttonheight;
+end;
+
 destructor TToolBarsManager.Destroy;
 begin
     if assigned(TBConfig) then
@@ -448,13 +455,13 @@ begin
   ActionCreateFuncRegister.add(uppercase(aNodeName),ActionCreateFunc);
 end;
 
-procedure TToolBarsManager.DoTBItemCreateFunc(aNodeName:string; aNode: TDomNode; TB:TToolBar);
+procedure TToolBarsManager.DoTBItemCreateFunc(fmf:TForm;actlist:TActionList;aNodeName:string; aNode: TDomNode; TB:TToolBar);
 var
   tbicf:TTBItemCreateFunc;
 begin
   if assigned(TBItemCreateFuncRegister) then
     if TBItemCreateFuncRegister.TryGetValue(uppercase(aNodeName),tbicf)then
-      tbicf(aNode,TB);
+      tbicf(fmf,actlist,aNode,TB);
 end;
 
 procedure TToolBarsManager.DoToolPaletteItemCreateFunc(aNodeName:string; aNode: TDomNode;rootnode:TPersistent;PC:TPaletteControlBaseType);
@@ -761,7 +768,7 @@ begin
   TBSubNode:=TBNode.FirstChild;
   while assigned(TBSubNode)do
   begin
-     DoTBItemCreateFunc(TBSubNode.NodeName,TBSubNode,tb);
+     DoTBItemCreateFunc(fmainform,factionlist,TBSubNode.NodeName,TBSubNode,tb);
      TBSubNode:=TBSubNode.NextSibling;
   end;
 end;
@@ -1044,8 +1051,8 @@ begin
 end;
 
 initialization
-{if not assigned(ToolBarsManager) then
-  ToolBarsManager.Create;}
+  //if not assigned(ToolBarsManager) then
+  ToolBarsManager:=TToolBarsManager.create;
 
 finalization
   if assigned(ToolBarsManager) then

@@ -26,11 +26,11 @@ uses
   uzcoimultiobjects,uzcdrawing,uzepalette,
   uzgldrawcontext,
   uzeentpoint,uzeentityfactory,
-  uzedrawingsimple,uzcsysvars,uzcstrconsts,uzccomdrawdase,
+  uzedrawingsimple,uzcsysvars,uzcstrconsts,
   printers,graphics,uzeentdevice,
   LazUTF8,Clipbrd,LCLType,classes,uzeenttext,
   uzccommandsabstract,uzbstrproc,
-  uzbtypesbase,uzccommandsmanager,uzccombase,
+  uzbtypesbase,uzccommandsmanager,
   uzccommandsimpl,
   uzbtypes,
   uzcdrawings,
@@ -236,6 +236,7 @@ procedure Finalize;
 begin
 end;
 initialization
+  debugln('{I}[UnitsInitialization] Unit "',{$INCLUDE %FILE%},'" initialization');
   startup;
 finalization
   debugln('{I}[UnitsFinalization] Unit "',{$INCLUDE %FILE%},'" finalization');

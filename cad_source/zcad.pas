@@ -35,11 +35,12 @@ program zcad;
 {$INCLUDE buildmode.inc}
 uses
   {$IFDEF REPORTMMEMORYLEAKS}heaptrc,{$ENDIF}
+  uzcexceptions,
   Interfaces,forms, classes,
   uzcfsplash,
   uzcsysvars,
 
-  uzbmemman,uzclog,
+  uzbmemman,uzclog,uzcregexceptions,
   uzcsysparams,uzcsysinfo,
   uzbpaths,
 
@@ -116,7 +117,6 @@ uses
 
   //commandline,
 
-  uzccombase,
   uzccommand_selectframe,
   uzccommand_ondrawinged,
   uzccommand_stretch,
@@ -135,7 +135,72 @@ uses
   uzccommand_loadpalettes,
   uzccommand_loadtoolbars,
   uzccommand_loadactions,
+  uzccommand_newdwg,
+  uzccommand_nextdrawing,uzccommand_prevdrawing,
+  uzccommand_closedwg,
+  uzccommand_load,
+  uzccommand_mergeblocks,
+  uzccommand_merge,
+  uzccommand_saveas,
+  uzccommand_qsave,
+  uzccommand_cancel,
+  uzccommand_zoom,
+  uzccommand_zoomwindow,
+  uzccommand_pan,
+  uzccommand_view,
+  uzccommand_camreset,
+  uzccommand_undo,uzccommand_redo,
+  uzccommand_selectall,uzccommand_deselectall,
+  uzccommand_regen,
+  uzccommand_updatepo,
+  uzccommand_treestat,
+  uzccommand_copyclip,
+  uzccommand_multiselect2objinsp,
+  uzccommand_selobjchangelayertocurrent,uzccommand_selobjchangelwtocurrent,
+  uzccommand_selobjchangecolortocurrent,uzccommand_selobjchangeltypetocurrent,
+  uzccommand_selobjchangetstyletocurrent,uzccommand_selobjchangedimstyletocurrent,
+  uzccommand_polydiv,
+  uzccommand_selectobjectbyaddres,
+  uzccommand_selectonmouseobjects,
+  uzccommand_multiobjvarman,uzccommand_objvarman,uzccommand_blockdefvarman,
+  uzccommand_unitsman,
+  uzccommand_rebuildtree,
+  uzccommand_changeprojtype,
+  uzccommand_storefrustum,
+  uzccommand_snapproperties,
+  uzccommand_polytest,
 
+  uzccommand_loadlayout,uzccommand_savelayout,
+  uzccommand_quit,
+  uzccommand_units,uzccommand_layer,uzccommand_textstyles,uzccommand_dimstyles,
+  uzccommand_linetypes,uzccommand_colors,
+
+  uzccommand_clearfilehistory,
+
+  uzccommand_show,uzccommand_showtoolbar,
+
+  uzccommand_setobjinsp,
+  uzccommand_memsummary,
+  uzccommand_executefile,
+  uzccommand_debclip,
+  uzccommand_import,
+  uzccommand_commandlist,
+  uzccommand_saveoptions,
+  uzccommand_showpage,
+  uzccommand_options,
+  uzccommand_about,uzccommand_help,
+  uzccommand_get3dpoint,uzccommand_get3dpoint_drawrect,uzccommand_getrect,
+  uzccommand_dist,
+
+  uzccommand_line,uzccommand_line2,uzccommand_circle,uzccommand_arc,
+  uzccommand_polygon,uzccommand_rectangle,
+  uzccommand_matchprop,
+  uzccommand_dimlinear,uzccommand_dimaligned,uzccommand_dimdiameter,
+  uzccommand_dimradius,
+
+  uzccommand_exampleinsertdevice,uzccommand_examplecreatelayer,
+
+  uzccommand_ld,
 
   {$IFDEF ELECTROTECH}
   //**for velec func**//
@@ -148,10 +213,8 @@ uses
 
   //uzccomexample2,
   //uzventsuperline,
-  uzccomexample,
   uzccomobjectinspector,
   //uzccomexperimental,
-  uzccominterface,
 
   {$IFDEF ELECTROTECH}
   uzcregelectrotechfeatures,
@@ -162,7 +225,7 @@ uses
   uzcplugins,
   //zcregisterobjectinspector,
   uzcmainwindow,
-  uzcmessagedialogs,
+  uzcuidialogs,
   uzcstrconsts,
   uzeiopalette,
   uzctextpreprocessorimpl,
@@ -173,8 +236,10 @@ uses
   uzglviewareaogl,uzglviewareagdi,uzglviewareacanvas,
   {$IFDEF WINDOWS}{uzglviewareadx,}{$ENDIF}
 
+  uzctbexttoolbars, uzctbextmenus, uzctbextpalettes,
+
   uzcinterface,
-  uzccomdbgappexplorer;
+  uzccommand_dbgappexplorer;
 
 resourcestring
  rsStartAutorun='Execute *components\autorun.cmd';

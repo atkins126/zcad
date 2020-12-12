@@ -3,8 +3,8 @@ unit uzcfselector;
 interface
 
 uses
-  uzbstrproc,uzcdrawings,uzbtypes,Classes, SysUtils, FileUtil, LResources, Forms, Controls, Graphics, Dialogs,
-  ButtonPanel, types, lclintf,lcltype, ComCtrls;
+  uzbstrproc,uzcdrawings,uzbtypes,Classes, SysUtils, FileUtil, LResources, Forms, Controls, Graphics,
+  ButtonPanel, types, lclintf,lcltype, ComCtrls, uzcuilcl2zc;
 
 type
 
@@ -88,6 +88,7 @@ begin
     result:=showmodal;
     if data=nil then
                     result:=mrcancel;
+    result:=TLCLModalResult2TZCMsgModalResult.Convert(result);
 end;
 
 end.

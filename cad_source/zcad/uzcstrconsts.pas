@@ -104,6 +104,7 @@ resourcestring
   rscmSpecifyPoint='Specify point:';
   rscmSpecifyFirstPoint='Specify first point:';
   rscmSpecifySecondPoint='Specify second point:';
+  rscmSpecifyNextPoint='Specify next point:';
   rscmSpecifyThirdPoint='Specify third point:';
   rscmSpecifyInsertPoint='Specify insert point:';
   rscmSpecifyScale='Specify scale:';
@@ -138,6 +139,7 @@ resourcestring
   rscmNoBlockDefInDWG='No BlockDef "%s" in the drawing';
   rscmNoBlockDefInDWGCXMenu='No BlockDef "%s" in the drawing. Use context menu';
   rscmInDwgBlockDefNotDeffined='In drawing not defined any BlockDefs!';
+  rscmCmdMustHaveOperand='Command must have operand(s)!';
 
   rscmSelEntBeforeComm='Entities must be selected before run the command';
   rscmSelDevBeforeComm='Device must be selected before run the command';
@@ -148,6 +150,10 @@ resourcestring
   rscmSegmentLengthTotalLength='Segment length: %s summary length: %s';
 
   rscmCommandOnlyCTXMenu='The command works only from context menu';
+
+
+  {task names}
+  rsCloseDrawings='Close drawings';
 
   {messages}
   rsDWGAlreadyContainsData='Drawing already contains data. Load anyway?';
@@ -167,7 +173,7 @@ resourcestring
   rsLineTypeUsedIn='Line type "%s" used in: %d-model, %d-blockdef table';
   rsLineTypeDesk=';;Pattern length %f'#13#10'%s';
   rsSysLineTypeWarning='This is system line type!';
-  rsQuitQuery='Do yo want to quit ZCAD?';
+  rsQuitQuery='Do you want to quit ZCAD?';
   rsCloseDWGQuery='Drawing "%s" not saved. Save?';
   rsCurrentLayerOff='The current layer is turned off';
 

@@ -5,12 +5,12 @@ unit uzcflinetypes;
 interface
 
 uses
-  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls,
+  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, StdCtrls,
   ButtonPanel, Buttons, ExtCtrls, ComCtrls, Spin,
 
   uzcinterface,uzcgui2linetypes,uzcflinetypesload,uzcsysvars, uzedrawingsimple,uzbtypesbase,uzbtypes,
   uzestyleslinetypes,uzcdrawings,uzcimagesmanager,uzcsysinfo,uzbstrproc,usupportgui,uzeutils,
-  gzctnrvectortypes,uzbpaths,uzcstrconsts,UGDBNamedObjectsArray;
+  gzctnrvectortypes,uzbpaths,uzcstrconsts,UGDBNamedObjectsArray,uzcuitypes;
 
 type
 
@@ -257,7 +257,7 @@ procedure TLineTypesForm._LoadLT(Sender: TObject);
 begin
      LineTypesLoadForm:=TLineTypesLoadForm.Create(nil);
      //SetHeightControl(LineWeightSelectWindow,22);
-     if LineTypesLoadForm.run(FindInSupportPath(SupportPath,'zcad.lin'))=mrok then
+     if LineTypesLoadForm.run(FindInSupportPath(SupportPath,'zcad.lin'))=ZCmrok then
         Memo1.Text:=LineTypesLoadForm.text;
      Freeandnil(LineTypesLoadForm);
 end;

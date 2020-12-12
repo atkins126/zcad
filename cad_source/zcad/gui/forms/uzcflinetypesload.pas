@@ -3,8 +3,8 @@ unit uzcflinetypesload;
 interface
 
 uses
-  uzbstrproc,uzcdrawings,uzbtypes,Classes, SysUtils, FileUtil, LResources, Forms, Controls, Graphics, Dialogs,
-  ButtonPanel, lclintf,lcltype, EditBtn, ComCtrls,uzedrawingsimple;
+  uzbstrproc,uzcdrawings,uzbtypes,Classes, SysUtils, FileUtil, LResources, Forms, Controls, Graphics,
+  ButtonPanel, lclintf,lcltype, EditBtn, ComCtrls,uzedrawingsimple, uzcuilcl2zc;
 
 type
 
@@ -98,7 +98,7 @@ begin
      LoadFromFile(filename);
      FileNameEdit1.FileName:=filename;
      FileNameEdit1.InitialDir:=ExtractFilePath(filename);
-     result:=showmodal;
+     result:=TLCLModalResult2TZCMsgModalResult.Convert(showmodal);
 end;
 
 end.

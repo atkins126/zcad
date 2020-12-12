@@ -19,27 +19,27 @@
 unit uzcreglog;
 {$INCLUDE def.inc}
 interface
-uses uzclog,uzcinterface,uzcmessagedialogs,
+uses uzclog,uzcinterface,uzcuidialogs,uzcuitypes,
      {$IFNDEF DELPHI}LCLtype,{$ELSE}windows,{$ENDIF}LCLProc,Forms;
 implementation
 
 procedure ShowMessageForLog(errstr:String);
 var
-   dr:TMsgDialogResult;
+   dr:TZCMsgDialogResult;
 begin
-  dr:=zcMsgDlgInformation(ErrStr,true);
+  dr:=zcMsgDlg(ErrStr,zcdiInformation,[],true);
 end;
 procedure ShowWarningForLog(errstr:String);
 var
-   dr:TMsgDialogResult;
+   dr:TZCMsgDialogResult;
 begin
-  dr:=zcMsgDlgWarning(ErrStr,true);
+  dr:=zcMsgDlg(ErrStr,zcdiWarning,[],true);
 end;
 procedure ShowErrorForLog(errstr:String);
 var
-   dr:TMsgDialogResult;
+   dr:TZCMsgDialogResult;
 begin
-  dr:=zcMsgDlgError(ErrStr,true);
+  dr:=zcMsgDlg(ErrStr,zcdiError,[],true);
 end;
 
 initialization

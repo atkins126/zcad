@@ -5,7 +5,7 @@ unit uzcfnavigatordevices;
 interface
 
 uses
-  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, ComCtrls,
+  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, ComCtrls,
   StdCtrls, ActnList, laz.VirtualTrees,
   uzbtypes,gzctnrvectortypes,uzbgeomtypes ,uzegeometry, uzccommandsmanager,
   uzcinterface,uzeconsts,uzeentity,uzcimagesmanager,uzcdrawings,uzbtypesbase,
@@ -15,7 +15,7 @@ uses
   GraphType,generics.collections,uzglviewareaabstract,Menus,
   uzcfnavigatordevicescxmenu,uzbpaths,Toolwin,uzcctrlpartenabler,StrUtils,
   uzctextenteditor,uzcinfoform,uzcsysparams,uzcsysvars,uzetextpreprocessor,
-  Masks,uzelongprocesssupport,uzeentitiestypefilter;
+  Masks,uzelongprocesssupport,uzeentitiestypefilter,uzcuitypes;
 
 resourcestring
   rsStandaloneDevices='Standalone devices';
@@ -334,7 +334,7 @@ begin
   if assigned(SysVar.INTF.INTF_DefaultEditorFontHeight) then
     InfoForm.memo.Font.Height:=SysVar.INTF.INTF_DefaultEditorFontHeight^;
   modalresult:=ZCMsgCallBackInterface.DOShowModal(InfoForm);
-  if modalresult=MrOk then begin
+  if modalresult=ZCMrOk then begin
     parts:=ReplaceStr(InfoForm.memo.text,#13#10,'|');
     StoreBoundsToSavedUnit('PartsEdWND',InfoForm.BoundsRect);
     result:=true;
