@@ -19,11 +19,11 @@
 unit UObjectDescriptor;
 {$INCLUDE def.inc}
 {$MODE DELPHI}
-{$ASMMODE intel}
 interface
 uses LCLProc,gzctnrvectorobjects,URecordDescriptor,UGDBOpenArrayOfByte,sysutils,
      gzctnrvectortypes,uzedimensionaltypes,UBaseTypeDescriptor,TypeDescriptors,
-     strmy,uzctnrvectorgdbstring,gzctnrvectorp,gzctnrvectordata,uzbtypesbase,varmandef,uzbtypes,uzbmemman,uzbstrproc;
+     strmy,uzctnrvectorgdbstring,objects,gzctnrvectordata,uzbtypesbase,
+     varmandef,uzbtypes,uzbmemman,uzbstrproc,TypInfo;
 type
 GDBTOperandStoreMode=GDBByte;
 GDBOperandDesc=record
@@ -65,7 +65,7 @@ ObjectDescriptor=object(RecordDescriptor)
 
 
                        constructor init(tname:string;pu:pointer);
-                       function CreateProperties(const f:TzeUnitsFormat;mode:PDMode;PPDA:PTPropertyDeskriptorArray;Name:TInternalScriptString;PCollapsed:Pointer;ownerattrib:Word;var bmode:Integer;var addr:Pointer;ValKey,ValType:TInternalScriptString):PTPropertyDeskriptorArray;virtual;
+                       function CreateProperties(const f:TzeUnitsFormat;mode:PDMode;PPDA:PTPropertyDeskriptorArray;Name:TInternalScriptString;PCollapsed:Pointer;ownerattrib:Word;var bmode:Integer;const addr:Pointer;ValKey,ValType:TInternalScriptString):PTPropertyDeskriptorArray;virtual;
                        procedure CopyTo(RD:PTUserTypeDescriptor);
                        procedure RegisterVMT(pv:Pointer);
                        procedure RegisterDefaultConstructor(pv:Pointer);
@@ -83,6 +83,9 @@ ObjectDescriptor=object(RecordDescriptor)
                        function GetTypeAttributes:TTypeAttr;virtual;
                        procedure SavePasToMem(var membuf:GDBOpenArrayOfByte;PInstance:Pointer;prefix:TInternalScriptString);virtual;
                        procedure MagicFreeInstance(PInstance:Pointer);virtual;
+                       procedure RegisterTypeinfo(ti:PTypeInfo);virtual;
+                       procedure CorrectFieldsOffset(ti: PTypeInfo);
+                       procedure CorrectCurrentFieldsOffset(td:PTypeData;var i:integer);
                  end;
 PTGenericVectorData=^TGenericVectorData;
 TGenericVectorData=GZVectorData<byte>;
@@ -167,6 +170,60 @@ begin
      //RunMetod('Done',PInstance);
      inherited;
 end;
+procedure ObjectDescriptor.RegisterTypeinfo(ti:PTypeInfo);
+begin
+     if TypeName='TMSEditor' then begin
+          if TypeName='TMSEditor' then
+                    ti:=ti;
+     end;
+     CorrectFieldsOffset(ti);
+end;
+procedure ObjectDescriptor.CorrectCurrentFieldsOffset(td:PTypeData;var i:integer);
+var
+   mf: PManagedField;
+   j:integer;
+   pfd:pFieldDescriptor;
+   ti:PTypeInfo;
+   pti:PTypeInfo;
+   ptd:PTypeData;
+begin
+     {pti:=td^.ParentInfo;
+     ptd:=GetTypeData(pti);}
+     mf:=@td.ManagedFldCount;
+     inc(pointer(mf),sizeof(td.ManagedFldCount));
+     for j:=0 to td.ManagedFldCount-1 do
+     begin
+          ti:=mf.TypeRef;
+          if j=0 then begin
+            if ti.Kind=tkObject then begin
+              CorrectCurrentFieldsOffset(GetTypeData(ti),i);
+              dec(i);
+            end;
+          end else begin
+            pfd:=Fields.getDataMutable(i);
+            if Pfd.Offset<>mf.FldOffset then
+               Pfd.Offset:=mf.FldOffset;
+            Pfd.Offset:=mf.FldOffset;
+          end;
+          inc(i);
+          inc(mf);
+     end;
+end;
+procedure ObjectDescriptor.CorrectFieldsOffset(ti:PTypeInfo);
+var
+   td:PTypeData;
+   mf: PManagedField;
+   i,j:integer;
+   etd:PRecordDescriptor;
+   pfd:pFieldDescriptor;
+begin
+     td:=GetTypeData(ti);
+     self.SizeInGDBBytes:=td.RecSize;
+     //exit;
+     i:=0;
+     CorrectCurrentFieldsOffset(td,i);
+end;
+
 
 procedure ObjectDescriptor.AddProperty(var pd:PropertyDescriptor);
 begin
@@ -538,6 +595,9 @@ begin
       m_function:SimpleProcOfObj(tm);
       m_constructor:
                                                         begin
+                                                             //CallVoidConstructor(Ctor: codepointer; Obj: pointer; VMT: pointer): pointer;inline;
+                                                             CallVoidConstructor(tm.Code,obj,pvmt);
+                                                             (*
                                                              {$IFDEF DELPHI}
                                                              begin
                                                              asm
@@ -594,7 +654,7 @@ begin
                                                              //self.initnul;
                                                               end;
                                                             {$endif CPU64}
-                                                            {$ENDIF}
+                                                            {$ENDIF}*)
                                                         end;
                   end;
         //if parent<>nil then PobjectDescriptor(parent)^.RunMetod(mn,obj);
@@ -669,6 +729,7 @@ begin
      baddr:=addr;
      //b2addr:=baddr;
      ts:=inherited CreateProperties(f,PDM_Field,PPDA,Name,PCollapsed,ownerattrib,bmode,addr,valkey,valtype);
+     exit;
 
      pp:=Properties.beginiterate(ir);
      if pp<>nil then

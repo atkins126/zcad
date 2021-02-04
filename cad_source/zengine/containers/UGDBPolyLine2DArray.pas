@@ -22,10 +22,10 @@ interface
 uses uzbgeomtypes,uzbtypesbase,gzctnrvectordata,sysutils,uzbtypes, uzegeometry,
      gzctnrvectortypes,math;
 type
-{REGISTEROBJECTTYPE GDBPolyline2DArray}
 {Export+}
+{REGISTEROBJECTTYPE GDBPolyline2DArray}
 PGDBPolyline2DArray=^GDBPolyline2DArray;
-GDBPolyline2DArray={$IFNDEF DELPHI}packed{$ENDIF} object(GZVectorData{-}<GDBVertex2D>{//})(*OpenArrayOfData=GDBVertex2D*)
+GDBPolyline2DArray= object(GZVectorData{-}<GDBVertex2D>{//})(*OpenArrayOfData=GDBVertex2D*)
                       closed:GDBBoolean;(*saved_to_shd*)
                       constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger;c:GDBBoolean);
 

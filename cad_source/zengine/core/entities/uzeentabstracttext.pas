@@ -27,7 +27,8 @@ type
 //jstm(*'TopCenter'*)=2,
 {EXPORT+}
 PGDBTextProp=^GDBTextProp;
-GDBTextProp=packed record
+{REGISTERRECORDTYPE GDBTextProp}
+GDBTextProp=record
                   size:GDBDouble;(*saved_to_shd*)
                   oblique:GDBDouble;(*saved_to_shd*)
                   wfactor:GDBDouble;(*saved_to_shd*)
@@ -37,7 +38,8 @@ GDBTextProp=packed record
                   backward:GDBBoolean;
             end;
 PGDBObjAbstractText=^GDBObjAbstractText;
-GDBObjAbstractText={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjPlainWithOX)
+{REGISTEROBJECTTYPE GDBObjAbstractText}
+GDBObjAbstractText= object(GDBObjPlainWithOX)
                          textprop:GDBTextProp;(*saved_to_shd*)
                          P_drawInOCS:GDBvertex;(*saved_to_shd*)(*oi_readonly*)(*hidden_in_objinsp*)
                          DrawMatrix:DMatrix4D;(*oi_readonly*)(*hidden_in_objinsp*)

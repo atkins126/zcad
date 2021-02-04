@@ -26,6 +26,7 @@ const IgnoreSHP=#13;
       starttoken='{EXPORT+}';
       endtoken='{EXPORT-}';
       objregtoken='{REGISTEROBJECTTYPE ';
+      recregtoken='{REGISTERRECORDTYPE ';
       PathPrefixToket='pathprefix=';
       OutputFileToket='outputfile=';
       ProcessFilesToken='processfiles=';
@@ -130,7 +131,10 @@ writestring(createdfilehandle,'unit '+filename+';');
 writestring(createdfilehandle,'{$INCLUDE def.inc}');
 writestring(createdfilehandle,'{Этот модуль создан автоматически. НЕ РЕДАКТИРОВАТЬ}');
 writestring(createdfilehandle,'interface');
-writestring(createdfilehandle,'uses UObjectDescriptor,Varman,TypeDescriptors,'+unitname+';');
+if uppercase(unitname)<>'VARMAN' then
+  writestring(createdfilehandle,'uses UObjectDescriptor,Varman,TypeDescriptors,'+unitname+';')
+else
+  writestring(createdfilehandle,'uses UObjectDescriptor,Varman,TypeDescriptors;');
 writestring(createdfilehandle,'implementation');
 writestring(createdfilehandle,'var');
 writestring(createdfilehandle,'pt:PObjectDescriptor;');
@@ -138,6 +142,7 @@ writestring(createdfilehandle,'initialization');
 writestring(createdfilehandle,'if assigned(SysUnit) then');
 writestring(createdfilehandle,'begin');
 writestring(createdfilehandle,'     pt:=SysUnit.ObjectTypeName2PTD('''+objname+''');');
+writestring(createdfilehandle,'     pt^.RegisterTypeinfo(TypeInfo('+objname+'));');
 writestring(createdfilehandle,'     pt^.RegisterObject(TypeOf('+objname+'),@'+objname+'.initnul);');
 writestring(createdfilehandle,'     pt^.AddMetod('''',''initnul'','''',@'+objname+'.initnul,m_constructor);');
 writestring(createdfilehandle,'end;');
@@ -145,6 +150,31 @@ writestring(createdfilehandle,'end.');
 closeoutfile(createdfilehandle);
 writestring(allgeneratedfiles,filename+',');
 end;
+
+procedure CreateRecRegistrationFile(filename,objname,unitname:string;allgeneratedfiles:cardinal);
+var
+    createdfilehandle:cardinal;
+begin
+createdfilehandle:=createoutfile(AutoRegisterPath+filename+'.pas');
+writestring(createdfilehandle,'unit '+filename+';');
+writestring(createdfilehandle,'{$INCLUDE def.inc}');
+writestring(createdfilehandle,'{Этот модуль создан автоматически. НЕ РЕДАКТИРОВАТЬ}');
+writestring(createdfilehandle,'interface');
+writestring(createdfilehandle,'uses URecordDescriptor,Varman,TypeDescriptors,'+unitname+';');
+writestring(createdfilehandle,'implementation');
+writestring(createdfilehandle,'var');
+writestring(createdfilehandle,'pr:PRecordDescriptor;');
+writestring(createdfilehandle,'initialization');
+writestring(createdfilehandle,'if assigned(SysUnit) then');
+writestring(createdfilehandle,'begin');
+writestring(createdfilehandle,'     pr:=SysUnit.ObjectTypeName2PTD('''+objname+''');');
+writestring(createdfilehandle,'     pr^.RegisterTypeinfo(TypeInfo('+objname+'));');
+writestring(createdfilehandle,'end;');
+writestring(createdfilehandle,'end.');
+closeoutfile(createdfilehandle);
+writestring(allgeneratedfiles,filename+',');
+end;
+
 
 procedure processfileabstract(name:string;handle:cardinal);
 var f:filestream;
@@ -179,6 +209,20 @@ begin
                                                  end;
                             CreateRegistrationFile('areg'+line,line,fn,allgeneratedfiles);
                             alreadyinuses:=true;
+                            line:='';
+                       end;
+         find:=pos(recregtoken,uppercase(line));
+         if find>0 then
+                       begin
+                            find:=find+length(objregtoken);
+                            line:=copy(line,find,length(line)-find);
+                                                 begin
+                                                      fn:=ExtractFileName(name);
+                                                      fn:=copy(fn,1,pos('.',fn)-1);
+                                                 end;
+                            CreateRecRegistrationFile('areg'+line,line,fn,allgeneratedfiles);
+                            alreadyinuses:=true;
+                            line:='';
                        end;
          find:=pos('OBJECT',uppercase(line));
          if find>0 then inobj:=true;

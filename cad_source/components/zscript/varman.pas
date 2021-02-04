@@ -19,14 +19,14 @@
 unit Varman;
 {$INCLUDE def.inc}
 {$MODE DELPHI}
-{$ASMMODE intel}
 
 interface
 uses
   UEnumDescriptor,uzctnrvectorgdbpointer,gzctnrvectordata,gzctnrvectorpobjects,LCLProc,uabstractunit,
   SysUtils,UBaseTypeDescriptor,uzbtypesbase,uzbtypes,UGDBOpenArrayOfByte,
   gzctnrvectortypes,uzctnrvectorgdbstring,varmandef,gzctnrstl,uzbmemman,
-  TypeDescriptors,URecordDescriptor,UObjectDescriptor,uzbstrproc,classes,typinfo,UPointerDescriptor;
+  TypeDescriptors,URecordDescriptor,UObjectDescriptor,uzbstrproc,classes,typinfo,UPointerDescriptor,
+  uzctnrobjectschunk;
 type
     td=record
              template:GDBString;
@@ -142,7 +142,8 @@ TFieldName=(FNUser,FNProgram);
 TFieldNames=set of TFieldName;
 {EXPORT+}
 ptypemanager=^typemanager;
-typemanager={$IFNDEF DELPHI}packed{$ENDIF} object(typemanagerdef)
+{REGISTEROBJECTTYPE typemanager}
+typemanager=object(typemanagerdef)
                   protected
                   n2i:TNameToIndex;
                   public
@@ -162,10 +163,11 @@ typemanager={$IFNDEF DELPHI}packed{$ENDIF} object(typemanagerdef)
                   function AddTypeByRef(var _type:UserTypeDescriptor):TArrayIndex;virtual;
             end;
 Tvardescarray=GZVectorData{-}<vardesk>{//};
+{REGISTEROBJECTTYPE varmanager}
 pvarmanager=^varmanager;
-varmanager={$IFNDEF DELPHI}packed{$ENDIF} object(varmanagerdef)
+varmanager=object(varmanagerdef)
             vardescarray:{GDBOpenArrayOfData}Tvardescarray;
-            vararray:GDBOpenArrayOfByte;
+            vararray:{GDBOpenArrayOfByte}TObjectsChunk;
                  constructor init;
                  function findvardesc(varname:TInternalScriptString): pvardesk;virtual;
                  function findvardescbyinst(varinst:GDBPointer):pvardesk;virtual;
@@ -178,7 +180,8 @@ varmanager={$IFNDEF DELPHI}packed{$ENDIF} object(varmanagerdef)
 TunitPart=(TNothing,TInterf,TImpl,TProg);
 PTUnit=^TUnit;
 PTSimpleUnit=^TSimpleUnit;
-TSimpleUnit={$IFNDEF DELPHI}packed{$ENDIF} object(TAbstractUnit)
+{REGISTEROBJECTTYPE TSimpleUnit}
+TSimpleUnit=object(TAbstractUnit)
                   Name:TInternalScriptString;
                   InterfaceUses:TZctnrVectorGDBPointer;
                   InterfaceVariables: varmanager;
@@ -197,11 +200,13 @@ TSimpleUnit={$IFNDEF DELPHI}packed{$ENDIF} object(TAbstractUnit)
                   procedure CopyFrom(source:PTSimpleUnit);virtual;
             end;
 PTObjectUnit=^TObjectUnit;
-TObjectUnit={$IFNDEF DELPHI}packed{$ENDIF} object(TSimpleUnit)
+{REGISTEROBJECTTYPE TObjectUnit}
+TObjectUnit=object(TSimpleUnit)
                   //function SaveToMem(var membuf:GDBOpenArrayOfByte):PUserTypeDescriptor;virtual;
                   procedure free;virtual;
             end;
-TUnit={$IFNDEF DELPHI}packed{$ENDIF} object(TSimpleUnit)
+{REGISTEROBJECTTYPE TUnit}
+TUnit=object(TSimpleUnit)
             InterfaceTypes:typemanager;
             //ImplementationUses:GDBInteger;
             ImplementationTypes:typemanager;
@@ -896,11 +901,9 @@ begin
                                                   end
                                               else
                                                   begin
-                                                       {$IFDEF BREACKPOINTSONERRORS}
-                                                       asm
-                                                          int 3;
-                                                       end;
-                                                      {$ENDIF}
+                                                    {$IFDEF LOUDERRORS}
+                                                       Raise Exception.Create('Something wrong');
+                                                    {$ENDIF}
                                                   end;
                                if uppercase(functionname)='FORMAT' then
                                                                    functionname:=functionname;
@@ -984,10 +987,8 @@ begin
                                   end
                               else
                                   begin
-                                       {$IFDEF BREACKPOINTSONERRORS}
-                                       asm
-                                          int 3;
-                                       end;
+                                       {$IFDEF LOUDERRORS}
+                                         Raise Exception.Create('Something wrong');
                                       {$ENDIF}
                                   end;
               //if parseresult<>nil then begin parseresult^.FreeAndDone;GDBfreeMem(gdbpointer(parseresult));end;
@@ -1586,10 +1587,8 @@ begin
                                                      end;
                                   p:=InterfaceUses.iterate(ir);
                             until p=nil;
-  {$IFDEF BREACKPOINTSONERRORS}
-     asm
-        //int 3;
-     end;
+  {$IFDEF LOUDERRORS}
+    //Raise Exception.Create('Something wrong');
   {$ENDIF}
                        end;
 

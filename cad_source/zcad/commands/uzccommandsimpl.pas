@@ -32,12 +32,14 @@ type
   comfunc=function:GDBInteger;
   comfuncwithoper=function(operands:TCommandOperands):TCommandResult;
 {Export+}
-  CommandFastObject = {$IFNDEF DELPHI}packed{$ENDIF} object(CommandFastObjectDef)
+{REGISTEROBJECTTYPE CommandFastObject}
+  CommandFastObject =  object(CommandFastObjectDef)
     procedure CommandInit; virtual;
     procedure CommandEnd; virtual;
   end;
   PCommandFastObjectPlugin=^CommandFastObjectPlugin;
-  CommandFastObjectPlugin = {$IFNDEF DELPHI}packed{$ENDIF} object(CommandFastObjectDef)
+  {REGISTEROBJECTTYPE CommandFastObjectPlugin}
+  CommandFastObjectPlugin =  object(CommandFastObjectDef)
     onCommandStart:comfuncwithoper;
     constructor Init(name:pansichar;func:comfuncwithoper);
     procedure CommandStart(Operands:TCommandOperands); virtual;
@@ -45,7 +47,8 @@ type
     procedure CommandEnd; virtual;
   end;
   pCommandRTEdObject=^CommandRTEdObject;
-  CommandRTEdObject = {$IFNDEF DELPHI}packed{$ENDIF} object(CommandRTEdObjectDef)
+  {REGISTEROBJECTTYPE CommandRTEdObject}
+  CommandRTEdObject =  object(CommandRTEdObjectDef)
     saveosmode:GDBInteger;(*hidden_in_objinsp*)
     commanddata:TTypedData;(*'Command options'*)
     procedure CommandStart(Operands:TCommandOperands); virtual;
@@ -60,7 +63,8 @@ type
     //function AfterClick(wc: GDBvertex; mc: GDBvertex2DI; button: GDBByte;osp:pos_record): GDBInteger; virtual; abstract;
   end;
   pCommandRTEdObjectPlugin=^CommandRTEdObjectPlugin;
-  CommandRTEdObjectPlugin = {$IFNDEF DELPHI}packed{$ENDIF} object(CommandRTEdObject)
+  {REGISTEROBJECTTYPE CommandRTEdObjectPlugin}
+  CommandRTEdObjectPlugin =  object(CommandRTEdObject)
     onCommandStart:comfuncwithoper;
     onCommandEnd,onCommandCancel,onFormat:comproc;(*hidden_in_objinsp*)
     onBeforeClick,onAfterClick:commousefunc;(*hidden_in_objinsp*)
@@ -77,7 +81,8 @@ type
     function AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger; virtual;
     procedure DrawHeplGeometry;virtual;
   end;
-  TOSModeEditor={$IFNDEF DELPHI}packed{$ENDIF} object(GDBaseObject)
+  {REGISTEROBJECTTYPE TOSModeEditor}
+  TOSModeEditor= object(GDBaseObject)
               osm:TOSMode;(*'Snap'*)
               trace:TTraceMode;(*'Trace'*)
               procedure Format;virtual;

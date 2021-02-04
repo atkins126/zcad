@@ -24,17 +24,20 @@ uses XMLConf,XMLPropStorage,LazConfigStorage,fileutil,
 {$INCLUDE zcadrev.inc}
 type
 {EXPORT+}
-  TmyFileVersionInfo=packed record
+  {REGISTERRECORDTYPE TmyFileVersionInfo}
+  TmyFileVersionInfo=record
     major,minor,release,build,revision:GDBInteger;
     versionstring:GDBstring;
   end;
-  tsavedparams=packed record
+  {REGISTERRECORDTYPE tsavedparams}
+  tsavedparams=record
     UniqueInstance:GDBBoolean;(*'Unique instance'*)
     NoSplash:GDBBoolean;(*'No splash screen'*)
     NoLoadLayout:GDBBoolean;(*'No load layout'*)
     UpdatePO:GDBBoolean;(*'Update PO file'*)
   end;
-  tnotsavedparams=packed record
+  {REGISTERRECORDTYPE tnotsavedparams}
+  tnotsavedparams=record
     ScreenX:GDBInteger;(*'Screen X'*)(*oi_readonly*)
     ScreenY:GDBInteger;(*'Screen Y'*)(*oi_readonly*)
     otherinstancerun:GDBBoolean;(*'Other instance run'*)(*oi_readonly*)
@@ -43,7 +46,8 @@ type
     DefaultHeight:GDBInteger;(*'Default controls height'*)(*oi_readonly*)
   end;
   ptsysparam=^tsysparam;
-  tsysparam=packed record
+  {REGISTERRECORDTYPE tsysparam}
+  tsysparam=record
     saved:tsavedparams;(*'Saved params'*)
     notsaved:tnotsavedparams;(*'Not saved params'*)(*oi_readonly*)
   end;

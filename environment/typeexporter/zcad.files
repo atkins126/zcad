@@ -12,10 +12,10 @@ components/zcontainers/gzctnrvectorp.pas
 components/zcontainers/gzctnrvectorpdata.pas
 components/zcontainers/gzctnrvectorpobjects.pas
 components/zcontainers/gzctnrvectorobjects.pas
-components/zcontainers/gzctnrvectorsimple.pas
 components/zcontainers/uzctnrvectorgdbstring.pas
 components/zcontainers/UGDBOpenArrayOfByte.pas
 components/zcontainers/uzctnrvectorgdbpointer.pas
+components/zcontainers/uzctnrobjectschunk.pas
 components/zcontainers/gzctnrtree.pas
 zengine/containers/UGDBOpenArrayOfPV.pas
 zengine/containers/UGDBVisibleOpenArray.pas
@@ -25,7 +25,6 @@ zengine/containers/UGDBPoint3DArray.pas
 zengine/containers/UGDBPolyLine2DArray.pas
 zengine/containers/UGDBPolyPoint2DArray.pas
 zengine/containers/UGDBSelectedObjArray.pas
-zengine/containers/uzctnrobjectschunk.pas
 zengine/fonts/uzefontbase.pas
 zengine/fonts/uzefontshx.pas
 zengine/fonts/uzefont.pas
@@ -100,10 +99,11 @@ zcad/devicebase/uzcdevicebaseabstract.pas
 zcad/devicebase/uzcdevicebase.pas
 zcad/commands/uzccommandsabstract.pas
 zcad/commands/uzccommandsimpl.pas
+zcad/commands/uzccmdfloatinsert.pas
+zcad/commands/uzccommand_text.pas
 zcad/commands/uzccommand_move.pas
 zcad/commands/uzccommand_copy.pas
 zcad/commands/uzccomdraw.pas
-zcad/commands/uzccomexample.pas
 zengine/containers/UGDBTracePropArray.pas
 zengine/zgl/drawers/uzglviewareadata.pas
 components/zscript/UUnitManager.pas

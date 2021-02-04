@@ -35,7 +35,8 @@ X<----X(text)----->X (10,20,30)
 type
 {EXPORT+}
 PGDBObjRadialDimension=^GDBObjRadialDimension;
-GDBObjRadialDimension={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjDiametricDimension)
+{REGISTEROBJECTTYPE GDBObjRadialDimension}
+GDBObjRadialDimension= object(GDBObjDiametricDimension)
                         constructor init(own:GDBPointer;layeraddres:PGDBLayerProp;LW:GDBSmallint);
                         constructor initnul(owner:PGDBObjGenericWithSubordinated);
                         function GetObjTypeName:GDBString;virtual;

@@ -22,12 +22,12 @@ interface
 uses uzbtypesbase,sysutils,uzbtypes,uzegeometry,
      uzeconsts,UGDBNamedObjectsArray,uzbstrproc;
 type
-{REGISTEROBJECTTYPE GDBLayerArray}
 {EXPORT+}
 PPGDBLayerPropObjInsp=^PGDBLayerPropObjInsp;
 PGDBLayerPropObjInsp={GDBPtrUInt}GDBPointer;
 PGDBLayerProp=^GDBLayerProp;
-GDBLayerProp={$IFNDEF DELPHI}packed{$ENDIF} object(GDBNamedObject)
+{REGISTEROBJECTTYPE GDBLayerProp}
+GDBLayerProp= object(GDBNamedObject)
                color:GDBByte;(*saved_to_shd*)(*'Color'*)
                lineweight:GDBSmallint;(*saved_to_shd*)(*'Line weight'*)
                LT:GDBPointer;(*saved_to_shd*)(*'Line type'*)
@@ -44,7 +44,8 @@ GDBLayerProp={$IFNDEF DELPHI}packed{$ENDIF} object(GDBNamedObject)
 PGDBLayerPropArray=^GDBLayerPropArray;
 GDBLayerPropArray=packed array [0..0] of PGDBLayerProp;
 PGDBLayerArray=^GDBLayerArray;
-GDBLayerArray={$IFNDEF DELPHI}packed{$ENDIF} object(GDBNamedObjectsArray{-}<PGDBLayerProp,GDBLayerProp>{//})(*OpenArrayOfData=GDBLayerProp*)
+{REGISTEROBJECTTYPE GDBLayerArray}
+GDBLayerArray= object(GDBNamedObjectsArray{-}<PGDBLayerProp,GDBLayerProp>{//})(*OpenArrayOfData=GDBLayerProp*)
                     constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger;psyslt:GDBPointer);
                     constructor initnul;
 

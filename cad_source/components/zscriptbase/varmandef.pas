@@ -23,7 +23,7 @@ interface
 uses
   LCLProc,SysUtils,UGDBTree,gzctnrstl,uzctnrvectorgdbstring,strutils,uzbtypesbase,
   uzedimensionaltypes,UGDBOpenArrayOfByte,uzbtypes,
-  gzctnrvectortypes,Classes,Controls,StdCtrls,Graphics,types;
+  gzctnrvectortypes,Classes,Controls,StdCtrls,Graphics,types,TypInfo;
 const
   {Ttypenothing=-1;
   Ttypecustom=1;
@@ -61,7 +61,7 @@ PDMode=(PDM_Field,PDM_Property);
 PUserTypeDescriptor=^UserTypeDescriptor;
 TPropEditor=class;
 TEditorMode=(TEM_Integrate,TEM_Nothing);
-TEditorDesc=packed record
+TEditorDesc=record
                   Editor:TPropEditor;
                   Mode:TEditorMode;
             end;
@@ -75,18 +75,18 @@ TGetPrefferedFastEditorSize=function (PInstance:Pointer;ARect:TRect):TSize;
 TDrawFastEditor=procedure (canvas:TCanvas;r:trect;PInstance:Pointer;state:TFastEditorState;boundr:trect);
 TRunFastEditor=procedure (PInstance:Pointer);
 
-TDecoratedProcs=packed record
+TDecoratedProcs=record
                 OnGetValueAsString:TOnGetValueAsString;
                 OnCreateEditor:TOnCreateEditor;
                 OnDrawProperty:TOnDrawProperty;
                 end;
-TFastEditorProcs=packed record
+TFastEditorProcs=record
                 OnGetPrefferedFastEditorSize:TGetPrefferedFastEditorSize;
                 OnDrawFastEditor:TDrawFastEditor;
                 OnRunFastEditor:TRunFastEditor;
                 UndoInsideFastEditor:Boolean;
                 end;
-TFastEditorRunTimeData=packed record
+TFastEditorRunTimeData=record
                       Procs:TFastEditorProcs;
                       FastEditorState:TFastEditorState;
                       FastEditorDrawed:GDBBoolean;
@@ -173,6 +173,7 @@ UserTypeDescriptor=object(GDBaseObject)
                          procedure IncAddr(var addr:GDBPointer);virtual;
                          function GetFactTypedef:PUserTypeDescriptor;virtual;
                          procedure Format;virtual;
+                         procedure RegisterTypeinfo(ti:PTypeInfo);virtual;
                    end;
 TPropEditor=class(TComponent)
                  public
@@ -208,11 +209,13 @@ TTraceAngle=(
               TTA45(*'45 deg'*),
               TTA30(*'30 deg'*)
              );
-TTraceMode=packed record
+{REGISTERRECORDTYPE TTraceMode}
+TTraceMode=record
                  Angle:TTraceAngle;(*'Angle'*)
                  ZAxis:GDBBoolean;(*'Z Axis'*)
            end;
-TOSMode=packed record
+{REGISTERRECORDTYPE TOSMode}
+TOSMode=record
               kosm_inspoint:GDBBoolean;(*'Insertion'*)
               kosm_endpoint:GDBBoolean;(*'Endpoint'*)
               kosm_midpoint:GDBBoolean;(*'Midpoint'*)
@@ -228,25 +231,28 @@ TOSMode=packed record
               kosm_apparentintersection:GDBBoolean;(*'Apparent intersection'*)
               kosm_paralel:GDBBoolean;(*'Paralel'*)
         end;
-  indexdesk =packed  record
+  indexdesk=record
     indexmin, count: GDBInteger;
   end;
   arrayindex =packed  array[1..2] of indexdesk;
   parrayindex = ^arrayindex;
   PTTypedData=^TTypedData;
-  TTypedData=packed record
+  {REGISTERRECORDTYPE TTypedData}
+  TTypedData=record
                    Instance: GDBPointer;
                    PTD:{-}PUserTypeDescriptor{/GDBPointer/};
              end;
   TVariableAttributes=GDBInteger;
-  vardesk =packed  record
+  {REGISTERRECORDTYPE vardesk}
+  vardesk =record
     name: TInternalScriptString;
     username: TInternalScriptString;
     data: TTypedData;
     attrib:TVariableAttributes;
   end;
 ptypemanagerdef=^typemanagerdef;
-typemanagerdef={$IFNDEF DELPHI}packed{$ENDIF} object(GDBaseObject)
+{REGISTEROBJECTTYPE typemanagerdef}
+typemanagerdef=object(GDBaseObject)
                   procedure readbasetypes;virtual;abstract;
                   procedure readexttypes(fn: TInternalScriptString);virtual;abstract;
                   function _TypeName2Index(name: TInternalScriptString): GDBInteger;virtual;abstract;
@@ -259,7 +265,8 @@ typemanagerdef={$IFNDEF DELPHI}packed{$ENDIF} object(GDBaseObject)
                   function AddTypeByRef(var _type:UserTypeDescriptor):TArrayIndex;virtual;abstract;
             end;
 pvarmanagerdef=^varmanagerdef;
-varmanagerdef={$IFNDEF DELPHI}packed{$ENDIF} object(GDBaseObject)
+{REGISTEROBJECTTYPE varmanagerdef}
+varmanagerdef=object(GDBaseObject)
                  {vardescarray:GDBOpenArrayOfData;
                  vararray:GDBOpenArrayOfByte;}
                  function findvardesc(varname:TInternalScriptString): pvardesk;virtual;abstract;
@@ -480,6 +487,9 @@ begin
      result:=@self;
 end;
 procedure UserTypeDescriptor.Format;
+begin
+end;
+procedure UserTypeDescriptor.RegisterTypeinfo(ti:PTypeInfo);
 begin
 end;
 procedure UserTypeDescriptor.SavePasToMem(var membuf:GDBOpenArrayOfByte;PInstance:Pointer;prefix:TInternalScriptString);

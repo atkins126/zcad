@@ -23,7 +23,8 @@ uses uzbgeomtypes,gzctnrvectordata,sysutils,uzbtypesbase,uzbtypes;
 {Export+}
 type
   ptraceprop=^traceprop;
-  traceprop=packed record
+  {REGISTERRECORDTYPE traceprop}
+  traceprop=record
     trace:gdbboolean;
     tmouse: GDBDouble;
     dmouse: GDBInteger;
@@ -31,7 +32,8 @@ type
     dispraycoord: GDBVertex;
     worldraycoord: GDBVertex;
   end;
-GDBtracepropArray={$IFNDEF DELPHI}packed{$ENDIF} object(GZVectorData{-}<traceprop>{//})
+  {REGISTEROBJECTTYPE GDBtracepropArray}
+GDBtracepropArray= object(GZVectorData{-}<traceprop>{//})
              end;
 {Export-}
 implementation

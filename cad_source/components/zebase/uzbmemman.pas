@@ -125,10 +125,8 @@ begin
                 begin
                      debugln('{F}ERROR:GDBGetMem(0)');
                      //programlog.LogOutStr('ERROR:GDBGetMem(0)',0,LM_Fatal);
-                     {$IFDEF BREACKPOINTSONERRORS}
-                     asm
-                        //int 3;
-                     end;
+                     {$IFDEF LOUDERRORS}
+                       Raise Exception.Create('GDBGetMem size=0');
                      {$ENDIF}
                 end;
   {$ENDIF}
@@ -142,10 +140,8 @@ begin
                begin
                     debugln('{F}ERROR:GDBFreeMem(nil)');
                     //programlog.LogOutStr('ERROR:GDBFreeMem(nil)',0,LM_Error);
-                    {$IFDEF BREACKPOINTSONERRORS}
-                    asm
-                       int 3;
-                    end;
+                    {$IFDEF LOUDERRORS}
+                      Raise Exception.Create('GDBGetMem p=nil');
                     {$ENDIF}
 
                end;
@@ -189,11 +185,8 @@ begin
             lastallocated:=0;
       end;
   {$ENDIF}
-  {$IFDEF BREACKPOINTSONERRORS}
-  //if (p)=debp then
-  //                   asm
-  //                      int 3;
-  //                   end;
+    //Raise Exception.Create('Something wrong');
+  {$IFDEF LOUDERRORS}
   {$ENDIF}
   if p<> nil then freemem(p);
   p:=nil;

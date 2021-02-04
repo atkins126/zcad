@@ -24,7 +24,7 @@ uses LCLProc,uzgprimitivescreator,uzgprimitives,uzglvectorobject,uzefontbase,uze
   gzctnrvectortypes,uzbgeomtypes,uzbtypes,uzegeometry,gzctnrstl;
 type
 PTTTFSymInfo=^TTTFSymInfo;
-TTTFSymInfo=packed record
+TTTFSymInfo=record
                       GlyphIndex:Integer;
                       PSymbolInfo:PGDBSymdolInfo;
                       //-ttf-//TrianglesDataInfo:TTrianglesDataInfo;
@@ -33,7 +33,8 @@ TTTFSymInfo=packed record
 TMapChar=TMyMapGen<integer,TTTFSymInfo{$IFNDEF DELPHI},LessInteger{$ENDIF}>;
 {EXPORT+}
 PTTFFont=^TTFFont;
-TTFFont={$IFNDEF DELPHI}packed{$ENDIF} object({SHXFont}BASEFont)
+{REGISTEROBJECTTYPE TTFFont}
+TTFFont= object({SHXFont}BASEFont)
               ftFont: TFreeTypeFont;
               MapChar:TMapChar;
               MapCharIterator:TMapChar.TIterator;

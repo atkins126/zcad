@@ -41,7 +41,8 @@ type
 TInteractiveProcObjBuild=procedure(const PInteractiveData:GDBPointer;Point:GDBVertex;Click:GDBBoolean);
 {Export+}
     TGetPointMode=(TGPWait{point},TGPWaitEnt,TGPEnt,TGPPoint,TGPCancel,TGPOtherCommand, TGPCloseDWG,TGPCloseApp);
-    TInteractiveData=packed record
+    {REGISTERRECORDTYPE TInteractiveData}
+    TInteractiveData=record
                        GetPointMode:TGetPointMode;(*hidden_in_objinsp*)
                        BasePoint,currentPointValue,GetPointValue:GDBVertex;(*hidden_in_objinsp*)
                        DrawFromBasePoint:Boolean;(*hidden_in_objinsp*)
@@ -53,7 +54,8 @@ TInteractiveProcObjBuild=procedure(const PInteractiveData:GDBPointer;Point:GDBVe
   TCStartAttr=GDBInteger;{атрибут разрешения\запрещения запуска команды}
     TCEndAttr=GDBInteger;{атрибут действия по завершению команды}
   PCommandObjectDef = ^CommandObjectDef;
-  CommandObjectDef ={$IFNDEF DELPHI}packed{$ENDIF} object (GDBaseObject)
+  {REGISTEROBJECTTYPE CommandObjectDef}
+  CommandObjectDef=object (GDBaseObject)
     CommandName:GDBString;(*hidden_in_objinsp*)
     CommandGDBString:GDBString;(*hidden_in_objinsp*)
     savemousemode: GDBByte;(*hidden_in_objinsp*)
@@ -77,13 +79,15 @@ TInteractiveProcObjBuild=procedure(const PInteractiveData:GDBPointer;Point:GDBVe
     function IsRTECommand:GDBBoolean;virtual;
     procedure CommandContinue; virtual;
   end;
-  CommandFastObjectDef ={$IFNDEF DELPHI}packed{$ENDIF} object(CommandObjectDef)
+  {REGISTEROBJECTTYPE CommandFastObjectDef}
+  CommandFastObjectDef = object(CommandObjectDef)
     UndoTop:TArrayIndex;(*hidden_in_objinsp*)
     procedure CommandInit; virtual;abstract;
     procedure CommandEnd; virtual;abstract;
   end;
   PCommandRTEdObjectDef=^CommandRTEdObjectDef;
-  CommandRTEdObjectDef = {$IFNDEF DELPHI}packed{$ENDIF} object(CommandFastObjectDef)
+  {REGISTEROBJECTTYPE CommandRTEdObjectDef}
+  CommandRTEdObjectDef =  object(CommandFastObjectDef)
     procedure CommandStart(Operands:TCommandOperands); virtual;abstract;
     procedure CommandEnd; virtual;abstract;
     procedure CommandCancel; virtual;abstract;

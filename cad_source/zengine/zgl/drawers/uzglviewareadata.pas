@@ -20,15 +20,19 @@ unit uzglviewareadata;
 {$INCLUDE def.inc}
 
 interface
-uses uzegeometry,uzeconsts,uzbgeomtypes,uzbtypesbase,uzbtypes, UGDBPoint3DArray,UGDBTracePropArray;
+uses
+  uzegeometry,uzeconsts,uzbgeomtypes,uzbtypesbase,uzbtypes, UGDBPoint3DArray,
+  UGDBTracePropArray,uzgldrawcontext;
 const
 MZW_LBUTTON=1;
 MZW_SHIFT=128;
 MZW_CONTROL=64;
 type
+  TShowCursorHandler=procedure (var DC:TDrawContext) of object;
 {Export+}
   pmousedesc = ^mousedesc;
-  mousedesc = packed record
+  {REGISTERRECORDTYPE mousedesc}
+  mousedesc = record
     mode: GDBByte;
     mouse, mouseglue: GDBvertex2DI;
     glmouse:GDBvertex2DI;
@@ -43,7 +47,8 @@ type
   end;
 
   PSelectiondesc = ^Selectiondesc;
-  Selectiondesc = packed record
+  {REGISTERRECORDTYPE Selectiondesc}
+  Selectiondesc = record
     OnMouseObject,LastSelectedObject:GDBPointer;
     Selectedobjcount:GDBInteger;
     MouseFrameON: GDBBoolean;
@@ -52,12 +57,13 @@ type
     Frame13d, Frame23d: GDBVertex;
     BigMouseFrustum:ClipArray;
   end;
-type
-  tcpdist = packed record
+  {REGISTERRECORDTYPE tcpdist}
+  tcpdist = record
     cpnum: GDBInteger;
     cpdist: GDBInteger;
   end;
-  traceprop2 = packed record
+  {REGISTERRECORDTYPE traceprop2}
+  traceprop2 = record
     tmouse: GDBDouble;
     dmouse: GDBInteger;
     dir: GDBVertex;
@@ -65,11 +71,13 @@ type
     worldraycoord: GDBVertex;
   end;
   arrtraceprop = packed array[0..0] of traceprop;
-  GDBArraytraceprop_GDBWord = packed record
+  {REGISTERRECORDTYPE GDBArraytraceprop_GDBWord}
+  GDBArraytraceprop_GDBWord = record
     count: GDBWord;
     arr: arrtraceprop;
   end;
-  objcontrolpoint = packed record
+  {REGISTERRECORDTYPE objcontrolpoint}
+  objcontrolpoint = record
     objnum: GDBInteger;
     newobjnum: GDBInteger;
     ostype: real;
@@ -79,14 +87,16 @@ type
   end;
   arrayobjcontrolpoint = packed array[0..0] of objcontrolpoint;
   popenarrayobjcontrolpoint_GDBWordwm = ^openarrayobjcontrolpoint_GDBWordwm;
-  openarrayobjcontrolpoint_GDBWordwm = packed record
+  {REGISTERRECORDTYPE openarrayobjcontrolpoint_GDBWordwm}
+  openarrayobjcontrolpoint_GDBWordwm = record
     count, max: GDBWord;
     arraycp: arrayobjcontrolpoint;
   end;
 
   PGDBOpenArraytraceprop_GDBWord = ^GDBArraytraceprop_GDBWord;
   pos_record=^os_record;
-  os_record = packed record
+  {REGISTERRECORDTYPE os_record}
+  os_record = record
     worldcoord: GDBVertex;
     dispcoord: GDBVertex;
     dmousecoord: GDBVertex;
@@ -97,11 +107,13 @@ type
     radius: GDBFloat;
     PGDBObject:GDBPointer;
   end;
-  totrackarray = packed record
+  {REGISTERRECORDTYPE totrackarray}
+  totrackarray = record
     otrackarray: packed array[0..3] of os_record;
     total, current: GDBInteger;
   end;
-  TCSIcon=packed record
+  {REGISTERRECORDTYPE TCSIcon}
+  TCSIcon=record
                CSIconCoord: GDBvertex;
                CSIconX,CSIconY,CSIconZ: GDBvertex;
                CSX, CSY, CSZ: GDBvertex2DI;
@@ -109,7 +121,7 @@ type
          end;
 
   POGLWndtype = ^OGLWndtype;
-  OGLWndtype = packed object(GDBaseObject)
+  OGLWndtype = object(GDBaseObject)
     polarlinetrace: GDBInteger;
     pointnum, axisnum: GDBInteger;
     CSIcon:TCSIcon;

@@ -23,7 +23,8 @@ uses uzbgeomtypes,uzgldrawcontext,uzbtypesbase,gzctnrvectordata,sysutils,uzbtype
 type
 {Export+}
 PGDBOOutbound2DIArray=^GDBOOutbound2DIArray;
-GDBOOutbound2DIArray={$IFNDEF DELPHI}packed{$ENDIF} object(GZVectorData{-}<GDBvertex2DI>{//})
+{REGISTEROBJECTTYPE GDBOOutbound2DIArray}
+GDBOOutbound2DIArray= object(GZVectorData{-}<GDBvertex2DI>{//})
                       procedure DrawGeometry(var DC:TDrawContext);virtual;
                       function InRect(Frame1, Frame2: GDBvertex2DI):TInBoundingVolume;virtual;
                       function perimetr:GDBDouble;virtual;

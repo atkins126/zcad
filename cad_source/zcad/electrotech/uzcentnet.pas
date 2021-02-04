@@ -19,10 +19,10 @@ resourcestring
 const
      UNNAMEDNET='NET';
 type
-{REGISTEROBJECTTYPE GDBObjNet}
 {Export+}
 PGDBObjNet=^GDBObjNet;
-GDBObjNet={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjConnected)
+{REGISTEROBJECTTYPE GDBObjNet}
+GDBObjNet= object(GDBObjConnected)
                  graf:GDBGraf;
                  riserarray:TZctnrVectorPGDBaseObjects;
                  constructor initnul(owner:PGDBObjGenericWithSubordinated);

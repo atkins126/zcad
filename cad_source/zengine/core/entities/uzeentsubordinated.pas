@@ -25,7 +25,8 @@ uses strutils,uzgldrawcontext,uzeentityextender,uzetextpreprocessor,uzedrawingde
      gzctnrvectortypes,uzbtypesbase,sysutils,uzestyleslayers,usimplegenerics,uzeffdxfsupport;
 type
 {EXPORT+}
-GDBObjExtendable={$IFNDEF DELPHI}packed{$ENDIF} object(GDBaseObject)
+{REGISTEROBJECTTYPE GDBObjExtendable}
+GDBObjExtendable= object(GDBaseObject)
                                  EntExtensions:{-}TEntityExtensions{/GDBPointer/};
                                  procedure AddExtension(ExtObj:PTBaseEntityExtender;ObjSize:GDBInteger);
                                  function GetExtension(_ExtType:pointer):{PTBaseEntityExtender}pointer;
@@ -34,7 +35,8 @@ end;
 
 PGDBObjSubordinated=^GDBObjSubordinated;
 PGDBObjGenericWithSubordinated=^GDBObjGenericWithSubordinated;
-GDBObjGenericWithSubordinated={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjExtendable)
+{REGISTEROBJECTTYPE GDBObjGenericWithSubordinated}
+GDBObjGenericWithSubordinated= object(GDBObjExtendable)
                                     {OU:TFaceTypedData;(*'Variables'*)}
                                     procedure ImEdited(pobj:PGDBObjSubordinated;pobjinarray:GDBInteger;var drawing:TDrawingDef);virtual;
                                     procedure ImSelected(pobj:PGDBObjSubordinated;pobjinarray:GDBInteger);virtual;
@@ -57,20 +59,24 @@ GDBObjGenericWithSubordinated={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjExtend
 
 
 end;
-TEntityAdress=packed record
+{REGISTERRECORDTYPE TEntityAdress}
+TEntityAdress=record
                           Owner:PGDBObjGenericWithSubordinated;(*'Adress'*)
                           SelfIndex:TArrayIndex;(*'Position'*)
               end;
-TTreeAdress=packed record
+{REGISTERRECORDTYPE TTreeAdress}
+TTreeAdress=record
                           Owner:GDBPointer;(*'Adress'*)
                           SelfIndex:TArrayIndex;(*'Position'*)
               end;
-GDBObjBaseProp=packed record
+{REGISTERRECORDTYPE GDBObjBaseProp}
+GDBObjBaseProp=record
                       ListPos:TEntityAdress;(*'List'*)
                       TreePos:TTreeAdress;(*'Tree'*)
                  end;
 TOSnapModeControl=(On,Off,AsOwner);
-GDBObjSubordinated={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjGenericWithSubordinated)
+{REGISTEROBJECTTYPE GDBObjSubordinated}
+GDBObjSubordinated= object(GDBObjGenericWithSubordinated)
                          bp:GDBObjBaseProp;(*'Owner'*)(*oi_readonly*)(*hidden_in_objinsp*)
                          OSnapModeControl:TOSnapModeControl;(*'OSnap mode control'*)
                          function GetOwner:PGDBObjSubordinated;virtual;abstract;

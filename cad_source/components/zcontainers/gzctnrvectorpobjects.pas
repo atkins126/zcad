@@ -23,11 +23,12 @@ uses gzctnrvectorpdata,gzctnrvector,
      typinfo,uzbtypes,uzbmemman;
 type
 {Export+}
+{------------REGISTEROBJECTTYPE GZVectorPObects}
 GZVectorPObects{-}<PTObj,TObj>{//}
-                             ={$IFNDEF DELPHI}packed{$ENDIF} object(GZVectorPData{-}<PTObj,TObj>{//})
+                             =object(GZVectorPData{-}<PTObj,TObj>{//})
                              function CreateObject:PTObj;
                 end;
-TZctnrVectorPGDBaseObjects=packed object(GZVectorPData{-}<PGDBaseObject,GDBaseObject>{//})
+TZctnrVectorPGDBaseObjects=object(GZVectorPData{-}<PGDBaseObject,GDBaseObject>{//})
                               end;
 PGDBOpenArrayOfPObjects=^TZctnrVectorPGDBaseObjects;
 {Export-}

@@ -5,12 +5,10 @@ uses uzcinterface,uzbpaths,uzctranslations,gvector,varmandef,CsvDocument,uzcdevi
      LazUTF8,uzcsysinfo,strmy,uzbtypesbase,uzbtypes,UUnitManager,varman,sysutils,
      typedescriptors,URecordDescriptor,UObjectDescriptor,uzclog;
 type
-{REGISTEROBJECTTYPE DeviceDbBaseObject}
-{REGISTEROBJECTTYPE ElDeviceBaseObject}
-{REGISTEROBJECTTYPE CableDeviceBaseObject}
 {EXPORT+}
 PDeviceDbBaseObject=^DeviceDbBaseObject;
-DeviceDbBaseObject={$IFNDEF DELPHI}packed{$ENDIF} object(DbBaseObject)
+{REGISTEROBJECTTYPE DeviceDbBaseObject}
+DeviceDbBaseObject= object(DbBaseObject)
                        UID:GDBString;(*'**Уникальный идентификатор'*)(*oi_readonly*)
 
                        NameShortTemplate:GDBString;(*'**Формат короткого названия'*)(*oi_readonly*)
@@ -23,12 +21,14 @@ DeviceDbBaseObject={$IFNDEF DELPHI}packed{$ENDIF} object(DbBaseObject)
                        procedure Format;virtual;
                        procedure SetOtherFields(PField,PTypeDescriptor:GDBPointer);virtual;
                  end;
-ElDeviceBaseObject={$IFNDEF DELPHI}packed{$ENDIF} object(DeviceDbBaseObject)
+{REGISTEROBJECTTYPE ElDeviceBaseObject}
+ElDeviceBaseObject= object(DeviceDbBaseObject)
                                    Pins:GDBString;(*'**Клеммы'*)
                                    constructor initnul;
                                    procedure Format;virtual;
                              end;
-CableDeviceBaseObject={$IFNDEF DELPHI}packed{$ENDIF} object(DeviceDbBaseObject)
+{REGISTEROBJECTTYPE CableDeviceBaseObject}
+CableDeviceBaseObject= object(DeviceDbBaseObject)
                                    CoreCrossSection:GDBDouble;(*'**Сечение жилы'*)
                                    NumberOfCores:GDBDouble;(*'**Количество жил'*)
                                    OuterDiameter:GDBDouble;(*'**Наружный диаметр'*)
@@ -50,6 +50,7 @@ procedure finalize;}
 const
      firstfilename='_startup.pas';
 var devman:DeviceManager;
+procedure startup;
 implementation
 constructor CableDeviceBaseObject.initnul;
 begin
@@ -232,14 +233,17 @@ begin
      if assigned(sysunit) then
      begin
      pt:=SysUnit.ObjectTypeName2PTD('DbBaseObject');
+     pt^.RegisterTypeinfo(TypeInfo(DbBaseObject));
      pt^.RegisterVMT(TypeOf(DbBaseObject));
      pt^.AddMetod('','initnul','',@DbBaseObject.initnul,m_constructor);
 
      pt:=SysUnit.ObjectTypeName2PTD('ElDeviceBaseObject');
+     pt^.RegisterTypeinfo(TypeInfo(ElDeviceBaseObject));
      pt^.RegisterVMT(TypeOf(ElDeviceBaseObject));
      pt^.AddMetod('','initnul','',@ElDeviceBaseObject.initnul,m_constructor);
 
      pt:=SysUnit.ObjectTypeName2PTD('CableDeviceBaseObject');
+     pt^.RegisterTypeinfo(TypeInfo(CableDeviceBaseObject));
      pt^.RegisterVMT(TypeOf(CableDeviceBaseObject));
      pt^.AddMetod('','initnul','',@CableDeviceBaseObject.initnul,m_constructor);
 
@@ -255,5 +259,5 @@ procedure finalize;
 begin
 end;
 begin
-  startup;
+  //startup;
 end.

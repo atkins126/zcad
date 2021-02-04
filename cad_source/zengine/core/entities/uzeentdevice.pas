@@ -29,10 +29,10 @@ uses uzestyleslayers,uzepalette,uzeobjectextender,uabstractunit,uzeentityfactory
      LazLogger,uzestrconsts;
 
 type
-{REGISTEROBJECTTYPE GDBObjDevice}
 {EXPORT+}
 PGDBObjDevice=^GDBObjDevice;
-GDBObjDevice={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjBlockInsert)
+{REGISTEROBJECTTYPE GDBObjDevice}
+GDBObjDevice= object(GDBObjBlockInsert)
                    VarObjArray:GDBObjEntityOpenArray;(*oi_readonly*)(*hidden_in_objinsp*)
                    lstonmouse:PGDBObjEntity;(*oi_readonly*)(*hidden_in_objinsp*)
                    function Clone(own:GDBPointer):PGDBObjEntity;virtual;

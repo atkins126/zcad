@@ -157,7 +157,7 @@ var
 begin
      if FontChange then
      begin
-          newfont:=FontManager.addFonf(FindInPaths(sysvarPATHFontsPath,pstring(FontsSelector.Enums.getDataMutable(FontsSelector.Selected))^));
+          newfont:=FontManager.addFont('',pstring(FontsSelector.Enums.getDataMutable(FontsSelector.Selected))^);
           if  newfont<>PGDBTextStyle(TListItem(Item).Data)^.pfont then
           begin
                CreateUndoStartMarkerNeeded;
@@ -166,9 +166,9 @@ begin
                PGDBTextStyle(TListItem(Item).Data)^.pfont:=newfont;
                ComitFromObj;
                end;
-               with PushCreateTGChangeCommand(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,PGDBTextStyle(TListItem(Item).Data)^.dxfname)^ do
+               with PushCreateTGChangeCommand(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,PGDBTextStyle(TListItem(Item).Data)^.FontFile)^ do
                begin
-               PGDBTextStyle(TListItem(Item).Data)^.dxfname:=PGDBTextStyle(TListItem(Item).Data)^.pfont^.Name;
+               PGDBTextStyle(TListItem(Item).Data)^.FontFile:=PGDBTextStyle(TListItem(Item).Data)^.pfont^.Name;
                ComitFromObj;
                end;
           end;
@@ -235,17 +235,40 @@ procedure TTextStylesForm.FillFontsSelector(currentitem:string;currentitempfont:
 var i:integer;
     s:string;
     CurrentFontIndex:integer;
+    //currTTFfont:TGeneralFontFileDesc;
+    //currTTFfontPair:TFontName2FontFileMap.TPair;
+    iter:TFontName2FontFileMap.TIterator;
 begin
      CurrentFontIndex:=-1;
      FontsSelector.Enums.Free;
-     if FontsFilter<>TFTF_SHX then
-     for i:=0 to FontManager.ttffontfiles.Count-1 do
-     begin
-          S:=FontManager.ttffontfiles[i];
+     if FontsFilter<>TFTF_SHX then begin
+       iter:=FontManager.FontFiles.min;
+       if assigned(iter) then
+       repeat
+          S:=iter.Value.FontFile;
           if S=currentitem then
-           CurrentFontIndex:=FontsSelector.Enums.Count;
-          S:=extractfilename(S);
+            CurrentFontIndex:=FontsSelector.Enums.Count;
+          S:=iter.Value.Name;//extractfilename(S);
           FontsSelector.Enums.PushBackData(S);
+       until (not iter.Next);
+       if iter<>nil then
+         iter.destroy;
+
+       {for currTTFfontPair in FontManager.FontFiles do begin
+         S:=currTTFfontPair.Value.FontFile;
+         if S=currentitem then
+           CurrentFontIndex:=FontsSelector.Enums.Count;
+         S:=currTTFfontPair.Value.Name;//extractfilename(S);
+         FontsSelector.Enums.PushBackData(S);
+       end;}
+       {for i:=0 to FontManager.ttffontfiles.Count-1 do
+       begin
+            S:=FontManager.ttffontfiles[i];
+            if S=currentitem then
+             CurrentFontIndex:=FontsSelector.Enums.Count;
+            S:=extractfilename(S);
+            FontsSelector.Enums.PushBackData(S);
+       end;}
      end;
      if FontsFilter<>TFTF_TTF then
      for i:=0 to FontManager.shxfontfiles.Count-1 do

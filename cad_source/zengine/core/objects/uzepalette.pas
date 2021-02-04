@@ -23,14 +23,16 @@ uses uzbtypesbase;
 type
 {EXPORT+}
   PTRGB=^TRGB;
-  TRGB=packed record
+  {REGISTERRECORDTYPE TRGB}
+  TRGB=record
             r:GDBByte;(*'Red'*)
             g:GDBByte;(*'Green'*)
             b:GDBByte;(*'Blue'*)
             a:GDBByte;(*'Alpha'*)
       end;
   PTDXFCOLOR=^TDXFCOLOR;
-  TDXFCOLOR=packed record
+  {REGISTERRECORDTYPE TDXFCOLOR}
+  TDXFCOLOR=record
             RGB:TRGB;(*'Color'*)
             name:GDBString;(*'Name'*)
       end;

@@ -23,14 +23,16 @@ uses gzctnrvectortypes,uzbtypesbase,uzbtypes,gzctnrvectordata,sysutils;
 type
 {EXPORT+}
 PGDBBOMItem=^GDBBOMItem;
-GDBBOMItem=packed record
+{REGISTERRECORDTYPE GDBBOMItem}
+GDBBOMItem=record
                  Material:GDBString;
                  Amount:GDBDouble;
                  Names:GDBString;
                  processed:GDBBoolean;
                 end;
 PBbillOfMaterial=^GDBBbillOfMaterial;
-GDBBbillOfMaterial={$IFNDEF DELPHI}packed{$ENDIF} object(GZVectorData{-}<GDBBOMItem>{//})(*OpenArrayOfData=GDBNumItem*)
+{REGISTEROBJECTTYPE GDBBbillOfMaterial}
+GDBBbillOfMaterial= object(GZVectorData{-}<GDBBOMItem>{//})(*OpenArrayOfData=GDBNumItem*)
                        constructor init(m:GDBInteger);
                        procedure freeelement(PItem:PT);virtual;
                        //function getnamenumber(_Name:GDBString):GDBstring;

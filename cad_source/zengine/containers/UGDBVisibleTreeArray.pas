@@ -24,7 +24,8 @@ uses uzeentitiestree,UGDBVisibleOpenArray,uzbtypesbase,uzbtypes,sysutils,uzegeom
 type
 {Export+}
 PGDBObjEntityTreeArray=^GDBObjEntityTreeArray;
-GDBObjEntityTreeArray={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjEntityOpenArray)(*OpenArrayOfPObj*)
+{REGISTEROBJECTTYPE GDBObjEntityTreeArray}
+GDBObjEntityTreeArray= object(GDBObjEntityOpenArray)(*OpenArrayOfPObj*)
                             ObjTree:TEntTreeNode;
                             constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger);
                             constructor initnul;

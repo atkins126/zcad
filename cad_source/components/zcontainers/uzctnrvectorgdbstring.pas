@@ -23,7 +23,8 @@ uses gzctnrvectortypes,uzbtypesbase,uzbtypes,gzctnrvectorsimple,uzbstrproc,sysut
 type
 {EXPORT+}
     PTZctnrVectorGDBString=^TZctnrVectorGDBString;
-    TZctnrVectorGDBString={$IFNDEF DELPHI}packed{$ENDIF} object(GZVectorSimple{-}<GDBString>{//})(*OpenArrayOfData=GDBString*)
+    {REGISTEROBJECTTYPE TZctnrVectorGDBString}
+    TZctnrVectorGDBString=object(GZVectorSimple{-}<GDBString>{//})(*OpenArrayOfData=GDBString*)
                           constructor init(m:GDBInteger);
                           procedure loadfromfile(fname:GDBString);
                           function findstring(s:GDBString;ucase:gdbboolean):boolean;
@@ -35,12 +36,14 @@ type
                           function GetTextWithEOL:GDBString;
                     end;
     PTEnumData=^TEnumData;
-    TEnumData=packed record
+    {REGISTERRECORDTYPE TEnumData}
+    TEnumData=record
                     Selected:GDBInteger;
                     Enums:TZctnrVectorGDBString;
               end;
     PTEnumDataWithOtherData=^TEnumDataWithOtherData;
-    TEnumDataWithOtherData=packed record
+    {REGISTERRECORDTYPE TEnumDataWithOtherData}
+    TEnumDataWithOtherData=record
                     Selected:GDBInteger;
                     Enums:TZctnrVectorGDBString;
                     PData:GDBPointer;

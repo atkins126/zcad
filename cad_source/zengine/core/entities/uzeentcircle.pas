@@ -27,14 +27,15 @@ uses
 type
 //PProjPoint:PGDBPolyPoint2DArray;
 //PProjPoint:{-}PGDBPolyPoint2DArray{/GDBPointer/};
-{REGISTEROBJECTTYPE GDBObjCircle}
 {Export+}
   ptcirclertmodify=^tcirclertmodify;
-  tcirclertmodify=packed record
+  {REGISTERRECORDTYPE tcirclertmodify}
+  tcirclertmodify=record
                         r,p_insert:GDBBoolean;
                   end;
 PGDBObjCircle=^GDBObjCircle;
-GDBObjCircle={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjWithLocalCS)
+{REGISTEROBJECTTYPE GDBObjCircle}
+GDBObjCircle= object(GDBObjWithLocalCS)
                  Radius:GDBLength;(*'Radius'*)(*saved_to_shd*)
                  q0:GDBvertex;(*oi_readonly*)(*hidden_in_objinsp*)
                  q1:GDBvertex;(*oi_readonly*)(*hidden_in_objinsp*)

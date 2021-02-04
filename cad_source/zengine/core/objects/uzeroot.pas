@@ -25,10 +25,10 @@ Uses
    uzeconsts,uzeentity,uzeentgenericsubentry,uzeentconnected,uzeentsubordinated,
    gzctnrvectortypes,uzbgeomtypes,uzegeometry;
 type
-{REGISTEROBJECTTYPE GDBObjRoot}
 {Export+}
 PGDBObjRoot=^GDBObjRoot;
-GDBObjRoot={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjGenericSubEntry)
+{REGISTEROBJECTTYPE GDBObjRoot}
+GDBObjRoot= object(GDBObjGenericSubEntry)
                  constructor initnul;
                  destructor done;virtual;
                  //function ImEdited(pobj:PGDBObjSubordinated;pobjinarray:GDBInteger):GDBInteger;virtual;

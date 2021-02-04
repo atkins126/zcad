@@ -31,7 +31,8 @@ PGDBObjEntity=^GDBObjEntity;
 {-}TSelect2Stage=procedure(PEntity,PGripsCreator:PGDBObjEntity;var SelectedObjCount:GDBInteger)of object;{//}
 {-}TDeSelect2Stage=procedure(PV:PGDBObjEntity;var SelectedObjCount:GDBInteger)of object;{//}
 PTExtAttrib=^TExtAttrib;
-TExtAttrib=packed record
+{REGISTERRECORDTYPE TExtAttrib}
+TExtAttrib=record
                  OwnerHandle:GDBQWord;
                  MainFunctionHandle:GDBQWord;
                  dwgHandle:GDBQWord;
@@ -39,7 +40,8 @@ TExtAttrib=packed record
                  Upgrade:TEntUpgradeInfo;
                  ExtAttrib2:GDBBoolean;
            end;
-GDBObjEntity={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjSubordinated)
+{REGISTEROBJECTTYPE GDBObjEntity}
+GDBObjEntity= object(GDBObjSubordinated)
                     vp:GDBObjVisualProp;(*'General'*)(*saved_to_shd*)
                     Selected:GDBBoolean;(*'Selected'*)(*hidden_in_objinsp*)
                     Visible:TActulity;(*'Visible'*)(*oi_readonly*)(*hidden_in_objinsp*)

@@ -22,7 +22,8 @@ interface
 uses uzeentity;
 type
 {EXPORT+}
-GDBObj3d={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjEntity)
+{REGISTEROBJECTTYPE GDBObj3d}
+GDBObj3d= object(GDBObjEntity)
          end;
 {EXPORT-}
 implementation

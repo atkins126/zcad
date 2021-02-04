@@ -41,7 +41,8 @@ TRestoreMode=(
               WND_Texture(*'Texture'*)
              );
 PTOpenglData=^TOpenglData;
-TOpenglData=packed record
+{REGISTERRECORDTYPE TOpenglData}
+TOpenglData=record
           RD_Renderer:GDBString;(*'Device'*)(*oi_readonly*)
           RD_Version:GDBString;(*'Version'*)(*oi_readonly*)
           RD_Extensions:GDBString;(*'Extensions'*)(*oi_readonly*)

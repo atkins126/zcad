@@ -32,14 +32,10 @@ uses
     uzccommandsabstract,
     LCLProc;
 type
-{TDWGProps=packed record
-                Name:GDBString;
-                Number:GDBInteger;
-          end;}
-{REGISTEROBJECTTYPE TZCADDrawingsManager}
 {EXPORT+}
 PTZCADDrawingsManager=^TZCADDrawingsManager;
-TZCADDrawingsManager={$IFNDEF DELPHI}packed{$ENDIF} object(TZctnrVectorPGDBaseObjects)
+{REGISTEROBJECTTYPE TZCADDrawingsManager}
+TZCADDrawingsManager= object(TZctnrVectorPGDBaseObjects)
                     CurrentDWG:{PTZCADDrawing}PTSimpleDrawing;
                     ProjectUnits:TUnitManager;
                     FileNameCounter:integer;
@@ -627,7 +623,7 @@ begin
                     newti:=_to.TextStyleTable.FindStyle(tsname,poldstyle^.UsedInLTYPE);
                     if newti{<0}=nil then
                                    begin
-                                        newti:=_to.TextStyleTable.addstyle(poldstyle.name,poldstyle.pfont.Name,poldstyle.prop,poldstyle.UsedInLTYPE);
+                                        newti:=_to.TextStyleTable.addstyle(poldstyle.name,poldstyle.pfont.Name,poldstyle.FontFamily,poldstyle.prop,poldstyle.UsedInLTYPE);
                                         pnevstyle:=PGDBTextStyle({_to.TextStyleTable.getDataMutable}(newti));
                                         pnevstyle^:=poldstyle^;
                                    end;
@@ -751,13 +747,13 @@ begin
   psp:=_source.vp.LineType.shapearray.beginiterate(ir);
   if psp<>nil then
   repeat
-        _to.TextStyleTable.addstyle(psp^.param.PStyle.name,psp^.param.PStyle.pfont.Name,psp^.param.PStyle.prop,psp^.param.PStyle.UsedInLTYPE);
+        _to.TextStyleTable.addstyle(psp^.param.PStyle.name,psp^.param.PStyle.pfont.Name,psp^.param.PStyle.FontFamily,psp^.param.PStyle.prop,psp^.param.PStyle.UsedInLTYPE);
         psp:=_source.vp.LineType.shapearray.iterate(ir);
   until psp=nil;
   ptp:=_source.vp.LineType.textarray.beginiterate(ir);
   if ptp<>nil then
   repeat
-        _to.TextStyleTable.addstyle(ptp^.param.PStyle.name,ptp^.param.PStyle.pfont.Name,ptp^.param.PStyle.prop,ptp^.param.PStyle.UsedInLTYPE);
+        _to.TextStyleTable.addstyle(ptp^.param.PStyle.name,ptp^.param.PStyle.pfont.Name,ptp^.param.PStyle.FontFamily,ptp^.param.PStyle.prop,ptp^.param.PStyle.UsedInLTYPE);
         ptp:=_source.vp.LineType.textarray.iterate(ir);
   until ptp=nil;
      _dest.vp.LineType:=_to.LTypeStyleTable.createltypeifneed(_source.vp.LineType,_to.TextStyleTable);
@@ -951,10 +947,6 @@ begin
 
      _dest.formatentity(_to^,dc);
 end;
-procedure addf(fn:gdbstring);
-begin
-     FontManager.addFonf(fn);
-end;
 
 procedure startup(preloadedfile1,preloadedfile2:GDBString);
 var
@@ -973,21 +965,15 @@ begin
 
   LTypeManager.LoadFromFile(FindInPaths(SupportPath,'zcad.lin'),TLOLoad);
 
-  //FontManager.addFonf('C:\Program Files\AutoCAD 2010\Fonts\times.shx');
-  //FontManager.addFonf('C:\Program Files\AutoCAD 2010\Fonts\GENISO.SHX');
-  //FontManager.addFonf('C:\Program Files\AutoCAD 2010\Fonts\amgdt.shx');
 
   //FromDirIterator({sysparam.programpath+'fonts/'}'C:\Program Files\AutoCAD 2010\Fonts\','*.shx','',addf,nil);
 
   FontManager.CreateBaseFont;
-  FontManager.addFonf(FindInPaths(sysvarPATHFontsPath,'ltypeshp.shx'));
+  FontManager.addFonfByFile(FindInPaths(sysvarPATHFontsPath,'ltypeshp.shx'));
 
 
   //pbasefont:=FontManager.getAddres(sysvar.SYS.SYS_AlternateFont^);
 
-  //FontManager.addFonf(sysparam.programpath+'fonts/gewind.shx');
-  //FontManager.addFonf('gothice.shx');
-  //FontManager.addFonf('romant.shx');
 
   //pbasefont:=FontManager.getAddres('gewind.shx');
   //pbasefont:=FontManager.{FindFonf}getAddres('amgdt.shx');

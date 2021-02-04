@@ -50,13 +50,15 @@ uses
 type
 {EXPORT+}
   PTCopyObjectDesc=^TCopyObjectDesc;
-  TCopyObjectDesc=packed record
+  {REGISTERRECORDTYPE TCopyObjectDesc}
+  TCopyObjectDesc=record
                  sourceEnt,tmpProxy,copyEnt:PGDBObjEntity;
                  end;
   ptpcoavector=^tpcoavector;
   tpcoavector={-}specialize{//}
               GZVectorData{-}<TCopyObjectDesc>{//};
-  move_com = {$IFNDEF DELPHI}packed{$ENDIF} object(CommandRTEdObject)
+  {REGISTEROBJECTTYPE move_com}
+  move_com =  object(CommandRTEdObject)
     t3dp: gdbvertex;
     pcoa:ptpcoavector;
     //constructor init;

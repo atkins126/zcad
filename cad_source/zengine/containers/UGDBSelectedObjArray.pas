@@ -25,13 +25,15 @@ uses uzbgeomtypes,uzepalette,uzgldrawcontext,uzecamera,uzeentwithmatrix,uzeentit
 type
 {Export+}
 PSelectedObjDesc=^SelectedObjDesc;
-SelectedObjDesc=packed record
+{REGISTERRECORDTYPE SelectedObjDesc}
+SelectedObjDesc=record
                       objaddr:PGDBObjEntity;
                       pcontrolpoint:PGDBControlPointArray;
                       ptempobj:PGDBObjEntity;
                 end;
 PGDBSelectedObjArray=^GDBSelectedObjArray;
-GDBSelectedObjArray={$IFNDEF DELPHI}packed{$ENDIF} object(GZVectorData{-}<selectedobjdesc>{//})
+{REGISTEROBJECTTYPE GDBSelectedObjArray}
+GDBSelectedObjArray= object(GZVectorData{-}<selectedobjdesc>{//})
                           SelectedCount:GDBInteger;
 
                           function addobject(PEntity:PGDBObjEntity):pselectedobjdesc;virtual;

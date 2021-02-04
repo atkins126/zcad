@@ -24,7 +24,8 @@ uses
      uzgeomentity,uzegeometry;
 type
 {Export+}
-TGeomEntity3D={$IFNDEF DELPHI}packed{$ENDIF} object(TGeomEntity)
+{REGISTEROBJECTTYPE TGeomEntity3D}
+TGeomEntity3D= object(TGeomEntity)
                                              end;
 {Export-}
 implementation

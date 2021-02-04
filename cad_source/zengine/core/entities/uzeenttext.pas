@@ -27,10 +27,10 @@ uses
     uzeconsts,uzglviewareadata,uzegeometry,uzeffdxfsupport,uzbmemman,uzeentsubordinated,LazLogger,
     uzbgeomtypes,uzestylestexts;
 type
-{REGISTEROBJECTTYPE GDBObjText}
 {Export+}
 PGDBObjText=^GDBObjText;
-GDBObjText={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjAbstractText)
+{REGISTEROBJECTTYPE GDBObjText}
+GDBObjText= object(GDBObjAbstractText)
                  Content:TDXFEntsInternalStringType;
                  Template:TDXFEntsInternalStringType;(*saved_to_shd*)
                  TXTStyleIndex:{-}PGDBTextStyle{/PGDBTextStyleObjInsp/};(*saved_to_shd*)(*'Style'*)

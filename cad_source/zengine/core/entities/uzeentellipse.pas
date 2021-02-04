@@ -25,14 +25,15 @@ uses
     uzbgeomtypes,UGDBOpenArrayOfByte,varman,varmandef,uzbtypes,uzeconsts,
     uzglviewareadata,uzegeometry,uzeffdxfsupport,uzbmemman,uzeentplain;
 type
-{REGISTEROBJECTTYPE GDBObjEllipse}
 {Export+}
   ptEllipsertmodify=^tEllipsertmodify;
-  tEllipsertmodify=packed record
+  {REGISTERRECORDTYPE tEllipsertmodify}
+  tEllipsertmodify=record
                         p1,p2,p3:GDBVertex2d;
                   end;
 PGDBObjEllipse=^GDBObjEllipse;
-GDBObjEllipse={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjPlain)
+{REGISTEROBJECTTYPE GDBObjEllipse}
+GDBObjEllipse= object(GDBObjPlain)
                  RR:GDBDouble;(*saved_to_shd*)
                  MajorAxis:GDBvertex;
                  Ratio:GDBDouble;(*saved_to_shd*)

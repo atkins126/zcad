@@ -36,7 +36,7 @@ uses
   uzbpaths,uzctnrvectorgdbstring,math,Masks,uzclog,uzbstrproc,
   uzeentmtext,uzeblockdef,UGDBPoint3DArray,uzcdevicebaseabstract,uzelongprocesssupport,LazLogger,
   generics.Collections,
-  uzccommand_treestat,uzccommand_line2;
+  uzccommand_treestat,uzccommand_line2,uzccmdfloatinsert;
 type
 {Export+}
   TFindType=(
@@ -46,28 +46,33 @@ type
                TFT_variable(*'??указанной переменной'*)
              );
 PTBasicFinter=^TBasicFinter;
-TBasicFinter=packed record
+{REGISTERRECORDTYPE TBasicFinter}
+TBasicFinter=record
                    IncludeCable:GDBBoolean;(*'Include filter'*)
                    IncludeCableMask:GDBString;(*'Include mask'*)
                    ExcludeCable:GDBBoolean;(*'Exclude filter'*)
                    ExcludeCableMask:GDBString;(*'Exclude mask'*)
              end;
   PTFindDeviceParam=^TFindDeviceParam;
-  TFindDeviceParam=packed record
+  {REGISTERRECORDTYPE TFindDeviceParam}
+  TFindDeviceParam=record
                         FindType:TFindType;(*'Find in'*)
                         FindMethod:GDBBoolean;(*'Use symbols *, ?'*)
                         FindString:GDBString;(*'Text'*)
                     end;
-     GDBLine=packed record
+  {REGISTERRECORDTYPE GDBLine}
+     GDBLine=record
                   lBegin,lEnd:GDBvertex;
               end;
   PTELCableComParam=^TELCableComParam;
-  TELCableComParam=packed record
+  {REGISTERRECORDTYPE TELCableComParam}
+  TELCableComParam=record
                         Traces:TEnumData;(*'Trace'*)
                         PCable:{PGDBObjCable}GDBPointer;(*'Cabel'*)
                         PTrace:{PGDBObjNet}GDBPointer;(*'Trace (pointer)'*)
                    end;
-  TELLeaderComParam=packed record
+  {REGISTERRECORDTYPE TELLeaderComParam}
+  TELLeaderComParam=record
                         Scale:GDBDouble;(*'Scale'*)
                         Size:GDBInteger;(*'Size'*)
                         twidth:GDBDouble;(*'Width'*)
@@ -3006,7 +3011,7 @@ begin
        FDoc:=TCSVDocument.Create;
        FDoc.Delimiter:=';';
        FDoc.LoadFromFile(utf8tosys(s));
-       lph:=lps.StartLongProcess(FDoc.RowCount,'Create cables',nil);
+       lph:=lps.StartLongProcess('Create cables',nil,FDoc.RowCount);
        netarray.init({$IFDEF DEBUGBUILD}'{6FC12C96-F62C-47A3-A5B4-35D9564DB25E}',{$ENDIF}100);
        for row:=0 to FDoc.RowCount-1 do
        begin
@@ -3367,7 +3372,7 @@ var
     DC:TDrawContext;
     lph:TLPSHandle;
 begin
-  lph:=lps.StartLongProcess(drawings.GetCurrentROOT.ObjArray.count,'Regenerate ZCAD entities',nil);
+  lph:=lps.StartLongProcess('Regenerate ZCAD entities',nil,drawings.GetCurrentROOT.ObjArray.count);
   drawing:=drawings.GetCurrentDwg;
   dc:=drawings.GetCurrentDwg^.CreateDrawingRC;
   pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);

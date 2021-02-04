@@ -35,21 +35,25 @@ const
      LLTriangleId=6;}
 type
 {Export+}
-ZGLOptimizerData={$IFNDEF DELPHI}packed{$ENDIF}record
+{REGISTERRECORDTYPE ZGLOptimizerData}
+ZGLOptimizerData=record
                                                      ignoretriangles:boolean;
                                                      ignorelines:boolean;
                                                      symplify:boolean;
                                                end;
-TEntIndexesData={$IFNDEF DELPHI}packed{$ENDIF}record
+{REGISTERRECORDTYPE TEntIndexesData}
+TEntIndexesData=record
                                                     GeomIndexMin,GeomIndexMax:GDBInteger;
                                                     IndexsIndexMin,IndexsIndexMax:GDBInteger;
                                               end;
-TEntIndexesOffsetData={$IFNDEF DELPHI}packed{$ENDIF}record
+{REGISTERRECORDTYPE TEntIndexesOffsetData}
+TEntIndexesOffsetData=record
                                                     GeomIndexOffset:GDBInteger;
                                                     IndexsIndexOffset:GDBInteger;
                                               end;
 PTLLPrimitive=^TLLPrimitive;
-TLLPrimitive={$IFNDEF DELPHI}packed{$ENDIF} object
+{---REGISTEROBJECTTYPE TLLPrimitive}
+TLLPrimitive= object(GDBaseObject)
                        function getPrimitiveSize:GDBInteger;virtual;
                        procedure getEntIndexs(var GeomData:ZGLGeomData;out eid:TEntIndexesData);virtual;
                        procedure CorrectIndexes(const offset:TEntIndexesOffsetData);virtual;
@@ -59,7 +63,8 @@ TLLPrimitive={$IFNDEF DELPHI}packed{$ENDIF} object
                        function CalcTrueInFrustum(frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):GDBInteger;virtual;
                    end;
 PTLLLine=^TLLLine;
-TLLLine={$IFNDEF DELPHI}packed{$ENDIF} object(TLLPrimitive)
+{---REGISTEROBJECTTYPE TLLLine}
+TLLLine= object(TLLPrimitive)
               P1Index:TLLVertexIndex;{P2Index=P1Index+1}
               function draw(drawer:TZGLAbstractDrawer;var rc:TDrawContext;var GeomData:ZGLGeomData;var LLPArray:TLLPrimitivesArray;var OptData:ZGLOptimizerData):GDBInteger;virtual;
               function CalcTrueInFrustum(frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):GDBInteger;virtual;
@@ -67,21 +72,24 @@ TLLLine={$IFNDEF DELPHI}packed{$ENDIF} object(TLLPrimitive)
               procedure CorrectIndexes(const offset:TEntIndexesOffsetData);virtual;
         end;
 PTLLTriangle=^TLLTriangle;
-TLLTriangle={$IFNDEF DELPHI}packed{$ENDIF} object(TLLPrimitive)
+{---REGISTEROBJECTTYPE TLLTriangle}
+TLLTriangle= object(TLLPrimitive)
               P1Index:TLLVertexIndex;
               function draw(drawer:TZGLAbstractDrawer;var rc:TDrawContext;var GeomData:ZGLGeomData;var LLPArray:TLLPrimitivesArray;var OptData:ZGLOptimizerData):GDBInteger;virtual;
               procedure getEntIndexs(var GeomData:ZGLGeomData;out eid:TEntIndexesData);virtual;
               procedure CorrectIndexes(const offset:TEntIndexesOffsetData);virtual;
         end;
 PTLLFreeTriangle=^TLLFreeTriangle;
-TLLFreeTriangle={$IFNDEF DELPHI}packed{$ENDIF} object(TLLPrimitive)
+{---REGISTEROBJECTTYPE TLLFreeTriangle}
+TLLFreeTriangle= object(TLLPrimitive)
               P1IndexInIndexesArray:TLLVertexIndex;
               function draw(drawer:TZGLAbstractDrawer;var rc:TDrawContext;var GeomData:ZGLGeomData;var LLPArray:TLLPrimitivesArray;var OptData:ZGLOptimizerData):GDBInteger;virtual;
               procedure getEntIndexs(var GeomData:ZGLGeomData;out eid:TEntIndexesData);virtual;
               procedure CorrectIndexes(const offset:TEntIndexesOffsetData);virtual;
         end;
 PTLLTriangleStrip=^TLLTriangleStrip;
-TLLTriangleStrip={$IFNDEF DELPHI}packed{$ENDIF} object(TLLPrimitive)
+{---REGISTEROBJECTTYPE TLLTriangleStrip}
+TLLTriangleStrip= object(TLLPrimitive)
               P1IndexInIndexesArray:TLLVertexIndex;
               IndexInIndexesArraySize:TLLVertexIndex;
               function draw(drawer:TZGLAbstractDrawer;var rc:TDrawContext;var GeomData:ZGLGeomData;var LLPArray:TLLPrimitivesArray;var OptData:ZGLOptimizerData):GDBInteger;virtual;
@@ -91,25 +99,29 @@ TLLTriangleStrip={$IFNDEF DELPHI}packed{$ENDIF} object(TLLPrimitive)
               constructor init;
         end;
 PTLLTriangleFan=^TLLTriangleFan;
-TLLTriangleFan={$IFNDEF DELPHI}packed{$ENDIF} object(TLLTriangleStrip)
+{---REGISTEROBJECTTYPE TLLTriangleFan}
+TLLTriangleFan= object(TLLTriangleStrip)
               function draw(drawer:TZGLAbstractDrawer;var rc:TDrawContext;var GeomData:ZGLGeomData;var LLPArray:TLLPrimitivesArray;var OptData:ZGLOptimizerData):GDBInteger;virtual;
         end;
 PTLLPoint=^TLLPoint;
-TLLPoint={$IFNDEF DELPHI}packed{$ENDIF} object(TLLPrimitive)
+{---REGISTEROBJECTTYPE TLLPoint}
+TLLPoint= object(TLLPrimitive)
               PIndex:TLLVertexIndex;
               function draw(drawer:TZGLAbstractDrawer;var rc:TDrawContext;var GeomData:ZGLGeomData;var LLPArray:TLLPrimitivesArray;var OptData:ZGLOptimizerData):GDBInteger;virtual;
               procedure getEntIndexs(var GeomData:ZGLGeomData;out eid:TEntIndexesData);virtual;
               procedure CorrectIndexes(const offset:TEntIndexesOffsetData);virtual;
         end;
 PTSymbolSParam=^TSymbolSParam;
-TSymbolSParam=packed record
+{REGISTERRECORDTYPE TSymbolSParam}
+TSymbolSParam=record
                    FirstSymMatr:DMatrix4D;
                    sx,Rotate,Oblique,NeededFontHeight{,offsety}:GDBFloat;
                    pfont:pointer;
                    IsCanSystemDraw:GDBBoolean;
              end;
 PTLLSymbol=^TLLSymbol;
-TLLSymbol={$IFNDEF DELPHI}packed{$ENDIF} object(TLLPrimitive)
+{---REGISTEROBJECTTYPE TLLSymbol}
+TLLSymbol= object(TLLPrimitive)
               SymSize:GDBInteger;
               LineIndex:TArrayIndex;
               Attrib:TLLPrimitiveAttrib;
@@ -125,7 +137,8 @@ TLLSymbol={$IFNDEF DELPHI}packed{$ENDIF} object(TLLPrimitive)
               function CalcTrueInFrustum(frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):GDBInteger;virtual;
         end;
 PTLLSymbolLine=^TLLSymbolLine;
-TLLSymbolLine={$IFNDEF DELPHI}packed{$ENDIF} object(TLLPrimitive)
+{---REGISTEROBJECTTYPE TLLSymbolLine}
+TLLSymbolLine= object(TLLPrimitive)
               SimplyDrawed:GDBBoolean;
               MaxSqrSymH:GDBFloat;
               SymbolsParam:TSymbolSParam;
@@ -134,11 +147,13 @@ TLLSymbolLine={$IFNDEF DELPHI}packed{$ENDIF} object(TLLPrimitive)
               constructor init;
         end;
 PTLLSymbolEnd=^TLLSymbolEnd;
-TLLSymbolEnd={$IFNDEF DELPHI}packed{$ENDIF} object(TLLPrimitive)
+{---REGISTEROBJECTTYPE TLLSymbolEnd}
+TLLSymbolEnd= object(TLLPrimitive)
               function draw(drawer:TZGLAbstractDrawer;var rc:TDrawContext;var GeomData:ZGLGeomData;var LLPArray:TLLPrimitivesArray;var OptData:ZGLOptimizerData):GDBInteger;virtual;
                    end;
 PTLLPolyLine=^TLLPolyLine;
-TLLPolyLine={$IFNDEF DELPHI}packed{$ENDIF} object(TLLPrimitive)
+{---REGISTEROBJECTTYPE TLLPolyLine}
+TLLPolyLine= object(TLLPrimitive)
               P1Index,Count,SimplifiedContourIndex,SimplifiedContourSize:TLLVertexIndex;
               Closed:GDBBoolean;
               function draw(drawer:TZGLAbstractDrawer;var rc:TDrawContext;var GeomData:ZGLGeomData;var LLPArray:TLLPrimitivesArray;var OptData:ZGLOptimizerData):GDBInteger;virtual;

@@ -29,11 +29,13 @@ type
 //GDBObjGenericSubEntry=object(GDBObj3d)
 {Export+}
 PTDrawingPreCalcData=^TDrawingPreCalcData;
-TDrawingPreCalcData=packed record
+{REGISTERRECORDTYPE TDrawingPreCalcData}
+TDrawingPreCalcData=record
                           InverseObjMatrix:DMatrix4D;
                     end;
 PGDBObjGenericSubEntry=^GDBObjGenericSubEntry;
-GDBObjGenericSubEntry={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjWithMatrix)
+{REGISTEROBJECTTYPE GDBObjGenericSubEntry}
+GDBObjGenericSubEntry= object(GDBObjWithMatrix)
                             ObjArray:GDBObjEntityTreeArray;(*saved_to_shd*)
                             ObjCasheArray:GDBObjOpenArrayOfPV;
                             ObjToConnectedArray:GDBObjOpenArrayOfPV;

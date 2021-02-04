@@ -32,12 +32,14 @@ type
 
 {EXPORT+}
 PTGDBTableItemFormat=^TGDBTableItemFormat;
-TGDBTableItemFormat=packed record
+{REGISTERRECORDTYPE TGDBTableItemFormat}
+TGDBTableItemFormat=record
                  Width,TextWidth:GDBDouble;
                  CF:TTableCellJustify;
                 end;
 PGDBObjTable=^GDBObjTable;
-GDBObjTable={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjComplex)
+{REGISTEROBJECTTYPE GDBObjTable}
+GDBObjTable= object(GDBObjComplex)
             PTableStyle:PTGDBTableStyle;
             tbl:GDBTableArray;
             w,h:GDBDouble;

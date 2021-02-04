@@ -27,12 +27,14 @@ type
 //pprojoutbound:{-}PGDBOOutbound2DIArray{/GDBPointer/};
 {EXPORT+}
 PGDBObj2dprop=^GDBObj2dprop;
-GDBObj2dprop=packed record
+{REGISTERRECORDTYPE GDBObj2dprop}
+GDBObj2dprop=record
                    Basis:GDBBasis;(*'Basis'*)(*saved_to_shd*)
                    P_insert:GDBCoordinates3D;(*'Insertion point OCS'*)(*saved_to_shd*)
              end;
 PGDBObjWithLocalCS=^GDBObjWithLocalCS;
-GDBObjWithLocalCS={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjWithMatrix)
+{REGISTEROBJECTTYPE GDBObjWithLocalCS}
+GDBObjWithLocalCS= object(GDBObjWithMatrix)
                Local:GDBObj2dprop;(*'Object orientation'*)(*saved_to_shd*)
 
                //**получить на чтение координаты в мировой системе координат

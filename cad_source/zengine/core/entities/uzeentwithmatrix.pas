@@ -25,7 +25,8 @@ uses uzgldrawcontext,uzedrawingdef,uzecamera,uzeentity,uzbtypesbase,uzbtypes,
 type
 {EXPORT+}
 PGDBObjWithMatrix=^GDBObjWithMatrix;
-GDBObjWithMatrix={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjEntity)
+{REGISTEROBJECTTYPE GDBObjWithMatrix}
+GDBObjWithMatrix= object(GDBObjEntity)
                        ObjMatrix:DMatrix4D;(*'OCS Matrix'*)(*oi_readonly*)(*hidden_in_objinsp*)
                        constructor initnul(owner:PGDBObjGenericWithSubordinated);
                        function GetMatrix:PDMatrix4D;virtual;

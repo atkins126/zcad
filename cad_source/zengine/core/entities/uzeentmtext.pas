@@ -29,10 +29,10 @@ uses
 const maxdxfmtextlen=250;
 type
 //procedure CalcObjMatrix;virtual;
-{REGISTEROBJECTTYPE GDBObjMText}
 {Export+}
 PGDBObjMText=^GDBObjMText;
-GDBObjMText={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjText)
+{REGISTEROBJECTTYPE GDBObjMText}
+GDBObjMText= object(GDBObjText)
                  width:GDBDouble;(*saved_to_shd*)
                  linespace:GDBDouble;(*saved_to_shd*)(*oi_readonly*)
                  linespacef:GDBDouble;(*saved_to_shd*)

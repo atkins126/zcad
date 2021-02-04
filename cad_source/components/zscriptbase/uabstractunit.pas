@@ -25,7 +25,8 @@ uses
 type
 {Export+}
   PTAbstractUnit=^TAbstractUnit;
-  TAbstractUnit={$IFNDEF DELPHI}packed{$ENDIF} object(GDBaseobject)
+  {REGISTEROBJECTTYPE TAbstractUnit}
+  TAbstractUnit=object(GDBaseobject)
             end;
 {Export-}
 implementation

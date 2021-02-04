@@ -21,10 +21,10 @@ unit UGDBVisibleOpenArray;
 interface
 uses gzctnrvectortypes,uzbgeomtypes,uzeentity,uzecamera,uzbtypesbase,UGDBOpenArrayOfPV,sysutils,uzbtypes,uzegeometry,uzbmemman;
 type
-{REGISTEROBJECTTYPE GDBObjEntityOpenArray}
 {Export+}
 PGDBObjEntityOpenArray=^GDBObjEntityOpenArray;
-GDBObjEntityOpenArray={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjOpenArrayOfPV)(*OpenArrayOfPObj*)
+{REGISTEROBJECTTYPE GDBObjEntityOpenArray}
+GDBObjEntityOpenArray= object(GDBObjOpenArrayOfPV)(*OpenArrayOfPObj*)
                       function AddPEntity(var entity:GDBObjEntity):TArrayIndex;virtual;
                       procedure CloneEntityTo(PEA:PGDBObjEntityOpenArray;own:GDBPointer);virtual;
                       procedure SetInFrustumFromTree(const frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:GDBInteger; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:GDBDouble);virtual;

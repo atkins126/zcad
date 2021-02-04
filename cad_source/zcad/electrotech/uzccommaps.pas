@@ -19,7 +19,7 @@ uses
   uzbgeomtypes,varman,uzeentdevice,uzeentmtext,math,
   uzcentcable,UUnitManager,
   gzctnrvectortypes,uzccomelectrical,URecordDescriptor,TypeDescriptors,LazLogger,
-  gzctnrstl,gutil;
+  gzctnrstl,gutil,uzccmdfloatinsert;
 
 const
   tabledy=-65.2763;
@@ -40,7 +40,8 @@ type
   LessDouble=TLess<double>;
   TIntersections=GKey2DataMap<double,TIntersectedCom,LessDouble>;
   TPointMap=GKey2DataMap<GDBAnsiString,TMAPPoint,LessGDBAnsiString>;
-  TProfileBuildCom={$IFNDEF DELPHI}packed{$ENDIF} object(FloatInsert_com)
+  {REGISTEROBJECTTYPE TProfileBuildCom}
+  TProfileBuildCom= object(FloatInsert_com)
     PointMap:TPointMap;
     PlanScale,VertScale,HorScale:double;
     k:double;

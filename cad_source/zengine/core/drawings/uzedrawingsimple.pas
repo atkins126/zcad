@@ -29,7 +29,8 @@ type
 TMainBlockCreateProc=procedure (_to:PTDrawingDef;name:GDBString) of object;
 {EXPORT+}
 PTSimpleDrawing=^TSimpleDrawing;
-TSimpleDrawing={$IFNDEF DELPHI}packed{$ENDIF} object(TAbstractDrawing)
+{REGISTEROBJECTTYPE TSimpleDrawing}
+TSimpleDrawing= object(TAbstractDrawing)
                        pObjRoot:PGDBObjGenericSubEntry;
                        mainObjRoot:GDBObjRoot;(*saved_to_shd*)
                        LayerTable:GDBLayerArray;(*saved_to_shd*)
@@ -288,7 +289,7 @@ begin
      tp.oblique:=0;
      tp.size:=1;
      tp.wfactor:=1;
-     pts:=TextStyleTable.addstyle(psp.FontName,psp.FontName,tp,true);
+     pts:=TextStyleTable.addstyle(psp.FontName,'',psp.FontName,tp,true);
 end;
 
 begin

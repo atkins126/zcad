@@ -22,8 +22,9 @@ interface
 uses gzctnrvectortypes,{uzbtypesbase,}sysutils,gzctnrvector,gzctnrvectorsimple;
 type
 {Export+}
-GZVectorP{-}<T>{//}={$IFNDEF DELPHI}packed{$ENDIF}
-                                 object(GZVectorSimple{-}<T>{//})
+{---------REGISTEROBJECTTYPE GZVectorP}
+GZVectorP{-}<T>{//}=object
+                          (GZVectorSimple{-}<T>{//})
                                        Deleted:TArrayIndex;(*hidden_in_objinsp*)
                                        function iterate (var ir:itrec):Pointer;virtual;
                                        function beginiterate(out ir:itrec):Pointer;virtual;

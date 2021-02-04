@@ -34,19 +34,21 @@ PTDashInfo=^TDashInfo;
 TDashInfo=(TDIDash,TDIText,TDIShape);
 TOuterDashInfo=(TODIUnknown,TODIShape,TODIPoint,TODILine,TODIBlank);
 TAngleDir=(TACAbs,TACRel,TACUpRight);
-shxprop=packed record
+{REGISTERRECORDTYPE shxprop}
+shxprop=record
                 Height,Angle,X,Y:GDBDouble;
                 AD:TAngleDir;
                 PStyle:PGDBTextStyle;
                 PstyleIsHandle:GDBBoolean;
         end;
-
-BasicSHXDashProp={$IFNDEF DELPHI}packed{$ENDIF} object(GDBaseObject)
+{REGISTEROBJECTTYPE BasicSHXDashProp}
+BasicSHXDashProp= object(GDBaseObject)
                 param:shxprop;
                 constructor initnul;
           end;
 PTextProp=^TextProp;
-TextProp={$IFNDEF DELPHI}packed{$ENDIF} object(BasicSHXDashProp)
+{REGISTEROBJECTTYPE TextProp}
+TextProp= object(BasicSHXDashProp)
                 Text,Style:GDBString;
                 txtL,txtH:GDBDouble;
                 //PFont:PGDBfont;
@@ -54,27 +56,33 @@ TextProp={$IFNDEF DELPHI}packed{$ENDIF} object(BasicSHXDashProp)
                 destructor done;virtual;
           end;
 PShapeProp=^ShapeProp;
-ShapeProp={$IFNDEF DELPHI}packed{$ENDIF} object(BasicSHXDashProp)
+{REGISTEROBJECTTYPE ShapeProp}
+ShapeProp= object(BasicSHXDashProp)
                 SymbolName,FontName:GDBString;
                 Psymbol:PGDBsymdolinfo;
                 constructor initnul;
                 destructor done;virtual;
           end;
-GDBDashInfoArray={$IFNDEF DELPHI}packed{$ENDIF} object(GZVectorData{-}<TDashInfo>{//})(*OpenArrayOfData=TDashInfo*)
+{REGISTEROBJECTTYPE GDBDashInfoArray}
+GDBDashInfoArray= object(GZVectorData{-}<TDashInfo>{//})(*OpenArrayOfData=TDashInfo*)
                end;
-GDBDoubleArray={$IFNDEF DELPHI}packed{$ENDIF} object(GZVectorData{-}<GDBDouble>{//})(*OpenArrayOfData=GDBDouble*)
+{REGISTEROBJECTTYPE GDBDoubleArray}
+GDBDoubleArray= object(GZVectorData{-}<GDBDouble>{//})(*OpenArrayOfData=GDBDouble*)
                 constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger);
                end;
-GDBShapePropArray={$IFNDEF DELPHI}packed{$ENDIF} object(GZVectorObjects{-}<ShapeProp>{//})(*OpenArrayOfObject=ShapeProp*)
+{REGISTEROBJECTTYPE GDBShapePropArray}
+GDBShapePropArray= object(GZVectorObjects{-}<ShapeProp>{//})(*OpenArrayOfObject=ShapeProp*)
                 constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger);
                end;
-GDBTextPropArray={$IFNDEF DELPHI}packed{$ENDIF} object(GZVectorObjects{-}<TextProp>{//})(*OpenArrayOfObject=TextProp*)
+{REGISTEROBJECTTYPE GDBTextPropArray}
+GDBTextPropArray= object(GZVectorObjects{-}<TextProp>{//})(*OpenArrayOfObject=TextProp*)
                 constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger);
                end;
 PPGDBLtypePropObjInsp=^PGDBLtypePropObjInsp;
 PGDBLtypePropObjInsp=GDBPointer;
 PGDBLtypeProp=^GDBLtypeProp;
-GDBLtypeProp={$IFNDEF DELPHI}packed{$ENDIF} object(GDBNamedObject)
+{REGISTEROBJECTTYPE GDBLtypeProp}
+GDBLtypeProp= object(GDBNamedObject)
                len:GDBDouble;(*'Length'*)
                h:GDBDouble;(*'Height'*)
                Mode:TLTMode;
@@ -95,7 +103,8 @@ GDBLtypeProp={$IFNDEF DELPHI}packed{$ENDIF} object(GDBNamedObject)
 PGDBLtypePropArray=^GDBLtypePropArray;
 GDBLtypePropArray=packed array [0..0] of GDBLtypeProp;
 PGDBLtypeArray=^GDBLtypeArray;
-GDBLtypeArray={$IFNDEF DELPHI}packed{$ENDIF} object(GDBNamedObjectsArray{-}<PGDBLtypeProp,GDBLtypeProp>{//})(*OpenArrayOfData=GDBLtypeProp*)
+{REGISTEROBJECTTYPE GDBLtypeArray}
+GDBLtypeArray= object(GDBNamedObjectsArray{-}<PGDBLtypeProp,GDBLtypeProp>{//})(*OpenArrayOfData=GDBLtypeProp*)
                     constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger);
                     constructor initnul;
                     procedure LoadFromFile(fname:GDBString;lm:TLoadOpt);

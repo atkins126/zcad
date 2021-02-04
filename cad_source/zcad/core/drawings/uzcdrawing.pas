@@ -29,7 +29,8 @@ uses
 type
 {EXPORT+}
 PTZCADDrawing=^TZCADDrawing;
-TZCADDrawing={$IFNDEF DELPHI}packed{$ENDIF} object(TSimpleDrawing)
+{REGISTEROBJECTTYPE TZCADDrawing}
+TZCADDrawing= object(TSimpleDrawing)
 
            FileName:GDBString;
            Changed:GDBBoolean;

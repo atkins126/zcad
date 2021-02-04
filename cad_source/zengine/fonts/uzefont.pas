@@ -25,7 +25,8 @@ uses math,uzgldrawerabstract,uzgprimitivescreator,uzgprimitives,{uzgprimitivessa
 type
 {EXPORT+}
 PGDBfont=^GDBfont;
-GDBfont={$IFNDEF DELPHI}packed{$ENDIF} object(GDBNamedObject)
+{REGISTEROBJECTTYPE GDBfont}
+GDBfont= object(GDBNamedObject)
     fontfile:GDBString;
     Internalname:GDBString; // Международное полное имя с описанием авора
     family:GDBString;

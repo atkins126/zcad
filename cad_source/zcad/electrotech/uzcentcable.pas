@@ -25,17 +25,20 @@ type
 {Export+}
 
 PTNodeProp=^TNodeProp;
-TNodeProp=packed record
+{REGISTERRECORDTYPE TNodeProp}
+TNodeProp=record
                 //**Точка в котором кабель был усечен устройством исчез и появился
                 PrevP,NextP:GDBVertex;
                 //**Устройство коннектор которого попадает в узел кабеля
                 DevLink:PGDBObjDevice;
           end;
-TNodePropArray={$IFNDEF DELPHI}packed{$ENDIF} object(GZVectorData{-}<TNodeProp>{//})
+{REGISTEROBJECTTYPE TNodePropArray}
+TNodePropArray= object(GZVectorData{-}<TNodeProp>{//})
 end;
 
 PGDBObjCable=^GDBObjCable;
-GDBObjCable={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjCurve)
+{REGISTEROBJECTTYPE GDBObjCable}
+GDBObjCable= object(GDBObjCurve)
                  {**Список устройств DevLink коннектор которых попадает в узел кабеля,
                     а так же показывается PrevP,NextP точка в котором кабель был усечен устройством
                     и точка в которой появился**}

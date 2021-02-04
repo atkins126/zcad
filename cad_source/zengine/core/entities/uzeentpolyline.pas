@@ -25,10 +25,10 @@ uses uzeentityfactory,uzgldrawcontext,uzedrawingdef,uzecamera,UGDBVectorSnapArra
      uzeentity,UGDBOpenArrayOfByte,uzbtypes,uzeconsts,uzglviewareadata,
      uzbgeomtypes,uzegeometry,uzeffdxfsupport,sysutils,uzbmemman;
 type
-{REGISTEROBJECTTYPE GDBObjPolyline}
 {Export+}
 PGDBObjPolyline=^GDBObjPolyline;
-GDBObjPolyline={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjCurve)
+{REGISTEROBJECTTYPE GDBObjPolyline}
+GDBObjPolyline= object(GDBObjCurve)
                  Closed:GDBBoolean;(*saved_to_shd*)
                  constructor init(own:GDBPointer;layeraddres:PGDBLayerProp;LW:GDBSmallint;c:GDBBoolean);
                  constructor initnul(owner:PGDBObjGenericWithSubordinated);

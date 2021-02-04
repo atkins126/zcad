@@ -27,11 +27,13 @@ type
 {Export+}
 PZGLGraphix=^ZGLGraphix;
 PZPolySegmentData=^ZPolySegmentData;
-ZPolySegmentData={$IFNDEF DELPHI}packed{$ENDIF} record
+{REGISTERRECORDTYPE ZPolySegmentData}
+ZPolySegmentData= record
                                                       startpoint,endpoint,dir:GDBVertex;
                                                       length,nlength,naccumlength,accumlength:GDBDouble;
                                                 end;
-ZSegmentator={$IFNDEF DELPHI}packed{$ENDIF}object(GZVectorData{-}<ZPolySegmentData>{//})
+{REGISTEROBJECTTYPE ZSegmentator}
+ZSegmentator=object(GZVectorData{-}<ZPolySegmentData>{//})
                                                  dir,cp:GDBvertex;
                                                  cdp,angle:GDBDouble;
                                                  pcurrsegment:PZPolySegmentData;
@@ -44,7 +46,8 @@ ZSegmentator={$IFNDEF DELPHI}packed{$ENDIF}object(GZVectorData{-}<ZPolySegmentDa
                                                  procedure normalize(l:GDBDouble);
                                                  procedure draw(var rc:TDrawContext;length:GDBDouble;paint:boolean;var dr:TLLDrawResult);
                                            end;
-ZGLGraphix={$IFNDEF DELPHI}packed{$ENDIF} object(ZGLVectorObject)
+{REGISTEROBJECTTYPE ZGLGraphix}
+ZGLGraphix= object(ZGLVectorObject)
                 procedure DrawGeometry(var rc:TDrawContext);virtual;
                 procedure DrawNiceGeometry(var rc:TDrawContext);virtual;
                 constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar{$ENDIF});

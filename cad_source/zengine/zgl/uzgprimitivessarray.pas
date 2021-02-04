@@ -23,7 +23,8 @@ uses uzctnrobjectschunk;
 type
 {Export+}
 PTLLPrimitivesArray=^TLLPrimitivesArray;
-TLLPrimitivesArray={$IFNDEF DELPHI}packed{$ENDIF} object(TObjectsChunk)(*OpenArrayOfData=GDBByte*)
+{REGISTEROBJECTTYPE TLLPrimitivesArray}
+TLLPrimitivesArray= object(TObjectsChunk)(*OpenArrayOfData=GDBByte*)
              end;
 {Export-}
 implementation

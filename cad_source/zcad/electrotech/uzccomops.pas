@@ -19,7 +19,7 @@ uses
   uzbgeomtypes,varman,uzccablemanager,uzeentdevice,uzeentmtext,math,
   uzcenitiesvariablesextender,uzeroot,uzglviewareadata,uzcentcable,UUnitManager,
   gzctnrvectortypes,uzccomelectrical,URecordDescriptor,TypeDescriptors,LazLogger,
-  uzcstrconsts;
+  uzcstrconsts,uzccmdfloatinsert;
 
 type
   TPlaceParam=record
@@ -60,7 +60,8 @@ type
                            TARDM_ShortAxis(*'Short axis'*),
                            TARDM_AllAxis(*'All xxis'*));
   PTOPSPlaceSmokeDetectorOrtoParam=^TOPSPlaceSmokeDetectorOrtoParam;
-  TOPSPlaceSmokeDetectorOrtoParam=packed record
+  {REGISTERRECORDTYPE TOPSPlaceSmokeDetectorOrtoParam}
+  TOPSPlaceSmokeDetectorOrtoParam=record
                                         InsertType:TInsertType;(*'Insert'*)
                                         Scale:GDBDouble;(*'Plan scale'*)
                                         ScaleBlock:GDBDouble;(*'Blocks scale'*)
@@ -83,7 +84,8 @@ type
                                         olddt:TOPSDatType;(*hidden_in_objinsp*)
                                   end;
   PTOrtoDevPlaceParam=^TOrtoDevPlaceParam;
-  TOrtoDevPlaceParam=packed record
+  {REGISTERRECORDTYPE TOrtoDevPlaceParam}
+  TOrtoDevPlaceParam=record
                                         Name:GDBString;(*'Block'*)(*oi_readonly*)
                                         ScaleBlock:GDBDouble;(*'Blocks scale'*)
                                         CountType:TODPCountType;(*'Type of placement'*)
@@ -95,10 +97,12 @@ type
                                         NormalizePoint:GDBBoolean;(*'Normalize to grid (if enabled)'*)
 
                      end;
-     GDBLine=packed record
+  {REGISTERRECORDTYPE GDBLineOps}
+     GDBLineOps=record
                   lBegin,lEnd:GDBvertex;
               end;
-  OPS_SPBuild={$IFNDEF DELPHI}packed{$ENDIF} object(FloatInsert_com)
+   {REGISTEROBJECTTYPE OPS_SPBuild}
+  OPS_SPBuild= object(FloatInsert_com)
     procedure Command(Operands:TCommandOperands); virtual;
   end;
 {Export-}
@@ -210,7 +214,7 @@ begin
      end;
 end;
 procedure place2(pva:PGDBObjEntityOpenArray;basepoint, dir: gdbvertex; count: integer; length,sd,dd: GDBDouble; name: pansichar;angle:GDBDouble;norm:GDBBoolean;scaleblock:GDBDouble;ps:TPlaceSensorsStrategy);
-var //line2: gdbline;
+var //line2: GDBLineOps;
     i: integer;
     d: TPlaceParam;
 begin
@@ -242,7 +246,7 @@ begin
 end;
 procedure placedatcic(pva:PGDBObjEntityOpenArray;p1, p2: gdbvertex; InitialSD, InitialDD: GDBDouble; name: pansichar;norm:GDBBoolean;scaleblock: GDBDouble;ps:TPlaceSensorsStrategy);
 var dx, dy: GDBDouble;
-  FirstLine, SecondLine: gdbline;
+  FirstLine, SecondLine: GDBLineOps;
   FirstCount, SecondCount, i: integer;
   dir: gdbvertex;
   mincount:integer;
@@ -1130,7 +1134,7 @@ begin
 end;
 procedure placedev(pva:PGDBObjEntityOpenArray;p1, p2: gdbvertex; nmax, nmin: GDBInteger; name: pansichar;a:gdbdouble;aa:gdbboolean;Norm:GDBBoolean);
 var dx, dy: GDBDouble;
-  line1, line2: gdbline;
+  line1, line2: GDBLineOps;
   l1, l2, i: integer;
   dir: gdbvertex;
 //  mincount:integer;

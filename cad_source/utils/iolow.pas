@@ -13,7 +13,8 @@ type
   popenarrayc = ^openarrayc;
   openarrayc = array[0..0] of ansichar;
 {EXPORT+}
-  filestream = {$IFNDEF DELPHI}packed{$ENDIF} object
+{REGISTEROBJECTTYPE filestream}
+  filestream =  object
     name:TMyString;
     bufer:{-}popenarrayc{/GDBPointer/};
     filesize,

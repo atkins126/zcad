@@ -42,7 +42,8 @@ GDBYCoordinate=GDBDouble;
 PGDBZCoordinate=^GDBZCoordinate;
 GDBZCoordinate=GDBDouble;
 PGDBvertex=^GDBvertex;
-GDBvertex=packed record
+{REGISTERRECORDTYPE GDBvertex}
+GDBvertex=record
                 x:GDBXCoordinate;(*saved_to_shd*)
                 y:GDBYCoordinate;(*saved_to_shd*)
                 z:GDBZCoordinate;(*saved_to_shd*)
@@ -52,80 +53,96 @@ GDBCoordinates3D=GDBvertex;
 PGDBLength=^GDBLength;
 GDBLength=GDBDouble;
 PGDBQuaternion=^GDBQuaternion;
-GDBQuaternion=packed record
+{REGISTERRECORDTYPE GDBQuaternion}
+GDBQuaternion=record
    ImagPart: GDBvertex;
    RealPart: GDBDouble;
               end;
-GDBBasis=packed record
+{REGISTERRECORDTYPE GDBBasis}
+GDBBasis=record
                 ox:GDBvertex;(*'OX Axis'*)(*saved_to_shd*)
                 oy:GDBvertex;(*'OY Axis'*)(*saved_to_shd*)
                 oz:GDBvertex;(*'OZ Axis'*)(*saved_to_shd*)
           end;
 PGDBvertex3S=^GDBvertex3S;
-GDBvertex3S=packed record
+{REGISTERRECORDTYPE GDBvertex3S}
+GDBvertex3S=record
                 x:GDBFloat;(*saved_to_shd*)
                 y:GDBFloat;(*saved_to_shd*)
                 z:GDBFloat;(*saved_to_shd*)
           end;
 PGDBvertex4S=^GDBvertex4S;
-GDBvertex4S=packed record
+{REGISTERRECORDTYPE GDBvertex4S}
+GDBvertex4S=record
                 x:GDBFloat;(*saved_to_shd*)
                 y:GDBFloat;(*saved_to_shd*)
                 z:GDBFloat;(*saved_to_shd*)
                 w:GDBFloat;(*saved_to_shd*)
           end;
 PGDBLineProp=^GDBLineProp;
-GDBLineProp=packed record
+{REGISTERRECORDTYPE GDBLineProp}
+GDBLineProp=record
                   lBegin:GDBCoordinates3D;(*'Begin'*)(*saved_to_shd*)
                   lEnd:GDBCoordinates3D;(*'End'*)(*saved_to_shd*)
               end;
 PGDBvertex4D=^GDBvertex4D;
-GDBvertex4D=packed record
+{REGISTERRECORDTYPE GDBvertex4D}
+GDBvertex4D=record
                 x,y,z,w:GDBDouble;
             end;
-GDBvertex4F=packed record
+{REGISTERRECORDTYPE GDBvertex4F}
+GDBvertex4F=record
                 x,y,z,w:GDBFloat;
             end;
 PGDBvertex2D=^GDBvertex2D;
-GDBvertex2D=packed record
+{REGISTERRECORDTYPE GDBvertex2D}
+GDBvertex2D=record
                 x:GDBDouble;(*saved_to_shd*)
                 y:GDBDouble;(*saved_to_shd*)
             end;
 PGDBSnap2D=^GDBSnap2D;
-GDBSnap2D=packed record
+{REGISTERRECORDTYPE GDBSnap2D}
+GDBSnap2D=record
                 Base:GDBvertex2D;(*'Base'*)(*saved_to_shd*)
                 Spacing:GDBvertex2D;(*'Spacing'*)(*saved_to_shd*)
             end;
 PGDBFontVertex2D=^GDBFontVertex2D;
-GDBFontVertex2D=packed record
+{REGISTERRECORDTYPE GDBFontVertex2D}
+GDBFontVertex2D=record
                 x:FontFloat;(*saved_to_shd*)
                 y:FontFloat;(*saved_to_shd*)
             end;
 PGDBPolyVertex2D=^GDBPolyVertex2D;
-GDBPolyVertex2D=packed record
+{REGISTERRECORDTYPE GDBPolyVertex2D}
+GDBPolyVertex2D=record
                       coord:GDBvertex2D;
                       count:GDBInteger;
                 end;
 PGDBPolyVertex3D=^GDBPolyVertex3D;
-GDBPolyVertex3D=packed record
+{REGISTERRECORDTYPE GDBPolyVertex3D}
+GDBPolyVertex3D=record
                       coord:GDBvertex;
                       count:GDBInteger;
                       LineNumber:GDBInteger;
                 end;
 PGDBvertex2S=^GDBvertex2S;
-GDBvertex2S=packed record
+{REGISTERRECORDTYPE GDBvertex2S}
+GDBvertex2S=record
                    x,y:GDBFloat;
              end;
-GDBvertex2DI=packed record
+{REGISTERRECORDTYPE GDBvertex2DI}
+GDBvertex2DI=record
                    x,y:GDBInteger;
              end;
 
 {Bounding volume}
-TBoundingBox=packed record
+{REGISTERRECORDTYPE TBoundingBox}
+TBoundingBox=record
                       LBN:GDBvertex;(*'Near'*)
                       RTF:GDBvertex;(*'Far'*)
                 end;
-TBoundingRect=packed record
+{REGISTERRECORDTYPE TBoundingRect}
+TBoundingRect=record
                       LB:GDBvertex2D;(*'Near'*)
                       RT:GDBvertex2D;(*'Far'*)
                 end;
@@ -139,18 +156,22 @@ GDBQuad2d=packed array[0..3] of GDBvertex2D;
 GDBQuad3d=OutBound4V;
 PGDBLineProj=^GDBLineProj;
 GDBLineProj=packed array[0..6] of GDBvertex2D;
-GDBplane=packed record
+{REGISTERRECORDTYPE GDBplane}
+GDBplane=record
                normal:GDBvertex;
                d:GDBDouble;
          end;
-GDBray=packed record
+{REGISTERRECORDTYPE GDBray}
+GDBray=record
              start,dir:GDBvertex;
        end;
-GDBPiece=packed record
+{REGISTERRECORDTYPE GDBPiece}
+GDBPiece=record
              lbegin,dir,lend:GDBvertex;
        end;
 ptarcrtmodify=^tarcrtmodify;
-tarcrtmodify=packed record
+{REGISTERRECORDTYPE tarcrtmodify}
+tarcrtmodify=record
                       p1,p2,p3:GDBVertex2d;
                 end;
 {EXPORT-}

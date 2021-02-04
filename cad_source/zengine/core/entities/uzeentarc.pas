@@ -24,10 +24,10 @@ uses
     uzeentity,UGDBOutbound2DIArray,UGDBPoint3DArray,UGDBOpenArrayOfByte,uzbtypes,
     uzbgeomtypes,uzeconsts,uzglviewareadata,uzegeometry,uzeffdxfsupport,uzbmemman,uzeentplain;
 type
-{REGISTEROBJECTTYPE GDBObjArc}
 {Export+}
+{REGISTEROBJECTTYPE GDBObjArc}
 PGDBObjArc=^GDBObjARC;
-GDBObjArc={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjPlain)
+GDBObjArc= object(GDBObjPlain)
                  R:GDBDouble;(*saved_to_shd*)
                  StartAngle:GDBDouble;(*saved_to_shd*)
                  EndAngle:GDBDouble;(*saved_to_shd*)

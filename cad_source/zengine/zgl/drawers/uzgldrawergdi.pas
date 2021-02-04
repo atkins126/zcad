@@ -39,7 +39,8 @@ const
   NeedScreenInvalidrect=true;
 type
 {EXPORT+}
-TGDIPrimitivesCounter=packed record
+{REGISTERRECORDTYPE TGDIPrimitivesCounter}
+TGDIPrimitivesCounter=record
           Lines:GDBInteger;
           Triangles:GDBInteger;
           Quads:GDBInteger;
@@ -49,7 +50,8 @@ TGDIPrimitivesCounter=packed record
     end;
 TTextRenderingType=(TRT_System,TRT_ZGL,TRT_Both);
 PTGDIData=^TGDIData;
-TGDIData=packed record
+{REGISTERRECORDTYPE TGDIData}
+TGDIData=record
           RD_TextRendering:TTextRenderingType;
           RD_DrawDebugGeometry:GDBBoolean;
           DebugCounter:TGDIPrimitivesCounter;
@@ -65,7 +67,8 @@ TGDIFontCacheKey=record
                        Handle:HFONT;
                   end;}
 PTLLGDISymbol=^TLLGDISymbol;
-TLLGDISymbol={$IFNDEF DELPHI}packed{$ENDIF} object(TLLSymbol)
+{---REGISTEROBJECTTYPE TLLGDISymbol}
+TLLGDISymbol= object(TLLSymbol)
               procedure drawSymbol(drawer:TZGLAbstractDrawer;var rc:TDrawContext;var GeomData:ZGLGeomData;var LLPArray:TLLPrimitivesArray;var OptData:ZGLOptimizerData;const PSymbolsParam:PTSymbolSParam);virtual;
         end;
 TLLGDIPrimitivesCreator=class(TLLPrimitivesCreator)
@@ -494,6 +497,7 @@ function TLLGDIPrimitivesCreator.CreateLLSymbol(var pa:TLLPrimitivesArray):TArra
 var
    pgdisymbol:PTLLGDISymbol;
 begin
+  pa.AlignDataSize;
      result:=pa.count;
      pointer(pgdisymbol):=pa.getDataMutable(pa.AllocData(sizeof(TLLGDISymbol)));
      pgdisymbol.init;

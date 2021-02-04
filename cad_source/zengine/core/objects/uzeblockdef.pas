@@ -22,10 +22,10 @@ uses gzctnrvectortypes,uzeentity,uzeentityfactory,uzgldrawcontext,uzeobjectexten
      uzeentsubordinated,uzeffdxfsupport,UGDBOpenArrayOfByte,uzbtypesbase,sysutils,uzbtypes,
      uzbgeomtypes,uzbmemman,uzegeometry,uzestyleslayers,uzeconsts,uzeentgenericsubentry,LazLogger;
 type
-{REGISTEROBJECTTYPE GDBObjBlockdef}
 {Export+}
 PGDBObjBlockdef=^GDBObjBlockdef;
-GDBObjBlockdef={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjGenericSubEntry)
+{REGISTEROBJECTTYPE GDBObjBlockdef}
+GDBObjBlockdef= object(GDBObjGenericSubEntry)
                      Name:GDBString;(*saved_to_shd*)
                      VarFromFile:GDBString;(*saved_to_shd*)
                      Base:GDBvertex;(*saved_to_shd*)

@@ -23,7 +23,8 @@ Uses uzeentity,uzeentgenericsubentry,UGDBOpenArrayOfPV,uzedrawingdef;
 type
 {Export+}
 PGDBObjConnected=^GDBObjConnected;
-GDBObjConnected={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjGenericSubEntry)
+{REGISTEROBJECTTYPE GDBObjConnected}
+GDBObjConnected= object(GDBObjGenericSubEntry)
                       procedure addtoconnect(pobj:pgdbobjEntity;var ConnectedArray:GDBObjOpenArrayOfPV);virtual;
                       procedure connectedtogdb(ConnectedArea:PGDBObjGenericSubEntry;var drawing:TDrawingDef);virtual;abstract;
                 end;

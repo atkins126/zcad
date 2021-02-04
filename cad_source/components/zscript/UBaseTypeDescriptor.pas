@@ -19,7 +19,6 @@
 unit UBaseTypeDescriptor;
 {$INCLUDE def.inc}
 {$MODE DELPHI}
-{ASMMODE intel}
 interface
 uses
       typinfo,LCLProc,Graphics,classes,Themes,
@@ -77,7 +76,7 @@ BaseTypeDescriptor<T,TManipulator>=object(TUserTypeDescriptor)
 
                          function GetValueAsString(pinstance:Pointer):TInternalScriptString;virtual;
                          function GetFormattedValueAsString(PInstance:Pointer; const f:TzeUnitsFormat):TInternalScriptString;virtual;
-                         function CreateProperties(const f:TzeUnitsFormat;mode:PDMode;PPDA:PTPropertyDeskriptorArray;Name:TInternalScriptString;PCollapsed:Pointer;ownerattrib:Word;var bmode:Integer;var addr:Pointer;ValKey,ValType:TInternalScriptString):PTPropertyDeskriptorArray;virtual;
+                         function CreateProperties(const f:TzeUnitsFormat;mode:PDMode;PPDA:PTPropertyDeskriptorArray;Name:TInternalScriptString;PCollapsed:Pointer;ownerattrib:Word;var bmode:Integer;const addr:Pointer;ValKey,ValType:TInternalScriptString):PTPropertyDeskriptorArray;virtual;
                          procedure SetValueFromString(PInstance:Pointer;Value:TInternalScriptString);virtual;
                    end;
 TBTM_Boolean=TBoolTypeManipulator<Boolean>;
@@ -140,7 +139,7 @@ TEnumDataDescriptor=object(BaseTypeDescriptor<TEnumData,{TOrdinalTypeManipulator
                      constructor init;
                      function GetValueAsString(pinstance:Pointer):TInternalScriptString;virtual;
                      procedure SetValueFromString(PInstance:Pointer;_Value:TInternalScriptString);virtual;
-                     function CreateProperties(const f:TzeUnitsFormat;mode:PDMode;PPDA:PTPropertyDeskriptorArray;Name:TInternalScriptString;PCollapsed:Pointer;ownerattrib:Word;var bmode:Integer;var addr:Pointer;ValKey,ValType:TInternalScriptString):PTPropertyDeskriptorArray;virtual;
+                     function CreateProperties(const f:TzeUnitsFormat;mode:PDMode;PPDA:PTPropertyDeskriptorArray;Name:TInternalScriptString;PCollapsed:Pointer;ownerattrib:Word;var bmode:Integer;const addr:Pointer;ValKey,ValType:TInternalScriptString):PTPropertyDeskriptorArray;virtual;
                      destructor Done;virtual;
                end;
 (*function MyDataToStr(data:LongInt):string;overload;
@@ -249,9 +248,9 @@ begin
                                       if (ppd^._ppda<>ppda)
                                       //or (ppd^._bmode<>bmode)
                                                              then
-                                                                 asm
-                                                                    //int 3;
-                                                                 end;
+                                                             {$IFDEF LOUDERRORS}
+                                                               //Raise Exception.Create('Something wrong');
+                                                             {$ENDIF}
 
 
                                  end;
@@ -273,7 +272,7 @@ begin
                                 //inc(pGDBByte(addr),SizeInGDBBytes);
                                 //if bmode=property_build then PPDA^.add(@ppd);
                            end;
-     IncAddr(addr);
+     //IncAddr(addr);
 end;
 class function TOrdinalTypeManipulator<T>.GetValueAsString(const data:T):TInternalScriptString;
 begin
@@ -451,9 +450,7 @@ begin
                                       {if (ppd^._ppda<>ppda)
                                       //or (ppd^._bmode<>bmode)
                                                              then
-                                                                 asm
-                                                                    //int 3;
-                                                                 end;}
+                                                               Raise Exception.Create('Something wrong');}
 
 
                                  end;
@@ -479,7 +476,7 @@ begin
                                 //inc(pGDBByte(addr),SizeInGDBBytes);
                                 //if bmode=property_build then PPDA^.add(@ppd);
                            end;
-     IncAddr(addr);
+     //IncAddr(addr);
 end;
 procedure BaseTypeDescriptor<T,TManipulator>.SetValueFromString;
 begin

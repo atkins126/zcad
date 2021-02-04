@@ -25,7 +25,8 @@ uses //uzgprimitivessarray,//math,//uzglgeomdata,//uzgldrawcontext,//uzgvertex3s
 type
 {Export+}
 PTGeomEntity=^TGeomEntity;
-TGeomEntity={$IFNDEF DELPHI}packed{$ENDIF} object(GDBaseObject)
+{REGISTEROBJECTTYPE TGeomEntity}
+TGeomEntity= object(GDBaseObject)
                                              function GetBB:TBoundingBox;virtual;abstract;
                                            end;
 {Export-}

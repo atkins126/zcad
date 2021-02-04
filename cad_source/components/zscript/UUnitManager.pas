@@ -27,7 +27,8 @@ uses LCLProc,uzbpaths,uzbstrproc,Varman,languade,gzctnrvectorobjects,SysUtils,
 type
 {EXPORT+}
     PTUnitManager=^TUnitManager;
-    TUnitManager={$IFNDEF DELPHI}packed{$ENDIF} object(GZVectorObjects{-}<TUnit>{//})
+    {REGISTEROBJECTTYPE TUnitManager}
+    TUnitManager=object(GZVectorObjects{-}<TUnit>{//})
                        currentunit:PTUnit;
                        NextUnitManager:PTUnitManager;
                        constructor init;
@@ -469,7 +470,7 @@ begin
                                                                                  debugln('{W}Record "'+typename+'" not packed');
 
                                                                                end;
-                                                  if (typename) = 'GDBvertex'
+                                                  if (typename) = 'tmemdeb'
                                                   then
                                                        typename:=typename;
                                                   //GDBStringtypearray := chr(Trecord);

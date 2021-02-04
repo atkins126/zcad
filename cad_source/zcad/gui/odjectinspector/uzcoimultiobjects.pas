@@ -44,7 +44,8 @@ type
   TMSTextsStylesDetector=TEnumDataWithOtherData;
   TMSEntsLayersDetector=TEnumDataWithOtherData;
   TMSEntsLinetypesDetector=TEnumDataWithOtherData;
-  TMSEditor={$IFNDEF DELPHI}packed{$ENDIF} object(TWrapper2ObjInsp)
+  {REGISTEROBJECTTYPE TMSEditor}
+  TMSEditor= object(TWrapper2ObjInsp)
                 TxtEntType:TMSPrimitiveDetector;(*'Process primitives'*)
                 VariableProcessSelector:TVariableProcessSelector;(*'Process variables'*)
                 VariablesUnit:TObjectUnit;(*'Variables'*)
@@ -84,6 +85,7 @@ procedure SelectOnlyThisEntsByLayer(PInstance:GDBPointer);
 procedure SelectOnlyThisEntsByLinetype(PInstance:GDBPointer);
 var
    MSEditor:TMSEditor;
+   i:integer;
 implementation
 constructor  TMSEditor.init;
 begin
@@ -984,6 +986,8 @@ begin
 end;
 initialization
   startup;
+  i:=SizeOf(TObjectUnit);
+  i:=SizeOf(TObjectUnit);
 finalization
   debugln('{I}[UnitsFinalization] Unit "',{$INCLUDE %FILE%},'" finalization');
   finalize;

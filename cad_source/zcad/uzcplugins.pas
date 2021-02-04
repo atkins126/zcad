@@ -23,14 +23,16 @@ uses uzbtypesbase,sysutils, dynlibs, uzclog,uzbmemman,gzctnrvectordata,uzeentity
      LazLogger;
 type
     {Export+}
-  PluginVersionInfo=packed record
+  {REGISTERRECORDTYPE PluginVersionInfo}
+  PluginVersionInfo=record
     PluginName: pansichar;
     PluginVersion: GDBInteger;
   end;
   GetVersFunc=function: PluginVersionInfo;
   Initfunc=function: GDBInteger;
   pmoduledesc=^moduledesc;
-  moduledesc=packed record
+  {REGISTERRECORDTYPE moduledesc}
+  moduledesc=record
     modulename:pansichar;
     modulehandle:thandle;
     ininfunction:function(path:pansichar):GDBInteger;
@@ -38,11 +40,13 @@ type
   end;
   arraymoduledesc=packed array[0..0] of moduledesc;
   popenarraymoduledesc=^openarraymoduledesc;
-  openarraymoduledesc=packed record
+  {REGISTERRECORDTYPE openarraymoduledesc}
+  openarraymoduledesc=record
     count:GDBInteger;
     modarr:arraymoduledesc;
   end;
-  copyobjectdesc=packed record
+  {REGISTERRECORDTYPE copyobjectdesc}
+  copyobjectdesc=record
                  oldnum,newnum:PGDBOBJENTITY;
                  end;
   copyobjectarray=packed array [0..0] of copyobjectdesc;
@@ -52,7 +56,8 @@ type
                           copyobjectarray:copyobjectarray;
                     end;
   PGDBPluginsArray=^GDBPluginsArray;
-  GDBPluginsArray={$IFNDEF DELPHI}packed{$ENDIF} object(GZVectorData<moduledesc>)
+  {REGISTEROBJECTTYPE GDBPluginsArray}
+  GDBPluginsArray= object(GZVectorData<moduledesc>)
                         constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger);
                         procedure loadplugins(path: GDBString);
                   end;

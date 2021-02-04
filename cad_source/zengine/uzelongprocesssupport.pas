@@ -58,7 +58,7 @@ TZELongProcessSupport=class
                          procedure DoEndLongProcess(plpi:PTLPInfo;LPHandle:TLPSHandle);
 
                        public
-                         function StartLongProcess(Total:TLPSCounter;LPName:TLPName;Context:pointer):TLPSHandle;
+                         function StartLongProcess(LPName:TLPName;Context:pointer;Total:TLPSCounter=0):TLPSHandle;
                          procedure ProgressLongProcess(LPHandle:TLPSHandle;Current:TLPSCounter);
                          procedure EndLongProcess(LPHandle:TLPSHandle);
 
@@ -69,15 +69,18 @@ TZELongProcessSupport=class
                          destructor Destroy;override;
                          function isProcessed:boolean;
                          function isFirstProcess:boolean;
-                         //function getLPName(index:integer):TLPName;
+                         function getLPName(index:integer):TLPName;
                        end;
 var
   LPS:TZELongProcessSupport;
 implementation
-{function TZELongProcessSupport.getLPName(index:integer):TLPName;
+function TZELongProcessSupport.getLPName(index:integer):TLPName;
 begin
-  result:=LPInfoVector.Mutable[index].LPName;
-end;}
+  if index<LPInfoVector.Size then
+    result:=LPInfoVector.Mutable[index].LPName
+  else
+    result:='';
+end;
 
 function TZELongProcessSupport.isProcessed:boolean;
 begin
@@ -110,7 +113,7 @@ begin
   for i:=0 to OnLPEndProcVector.size-1 do
    OnLPEndProcVector[i](LPHandle,plpi^.LPTime);
 end;
-function TZELongProcessSupport.StartLongProcess(Total:TLPSCounter;LPName:TLPName;Context:pointer):TLPSHandle;
+function TZELongProcessSupport.StartLongProcess(LPName:TLPName;Context:pointer;Total:TLPSCounter):TLPSHandle;
 var
   LPI:TLPInfo;
   PLPI:PTLPInfo;

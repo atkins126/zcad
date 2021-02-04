@@ -24,7 +24,8 @@ uses gzctnrvector,gzctnrvectorpobjects,uzbtypesbase,uzbtypes,sysutils,
 type
 {EXPORT+}
 PGDBTableArray=^GDBTableArray;
-GDBTableArray={$IFNDEF DELPHI}packed{$ENDIF} object(GZVectorPObects{-}<PTZctnrVectorGDBString,TZctnrVectorGDBString>{//})(*OpenArrayOfData=TZctnrVectorGDBString*)
+{REGISTEROBJECTTYPE GDBTableArray}
+GDBTableArray= object(GZVectorPObects{-}<PTZctnrVectorGDBString,TZctnrVectorGDBString>{//})(*OpenArrayOfData=TZctnrVectorGDBString*)
                     columns,rows:GDBInteger;
                     constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}c,r:GDBInteger);
                     //function copyto(var source:GDBOpenArrayOfData{-}<TZctnrVectorGDBString>{//}):GDBInteger;virtual;

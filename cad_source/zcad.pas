@@ -63,12 +63,13 @@ uses
   //
   //next line load system.pas
   //
-  uzcregother,//loading rtl/system.pas and setup SysVar
+  uzcregsystempas,//loading rtl/system.pas
+  {$INCLUDE allgeneratedfiles.inc}//correct defs in system.pas
+  uzcregother,//setup SysVar
   UUnitManager,
   uzefontmanager,
   uzeffshx,uzeffttf,
 
-  {$INCLUDE allgeneratedfiles.inc}
 
   uzcdrawings,
 
@@ -192,7 +193,15 @@ uses
   uzccommand_get3dpoint,uzccommand_get3dpoint_drawrect,uzccommand_getrect,
   uzccommand_dist,
 
-  uzccommand_line,uzccommand_line2,uzccommand_circle,uzccommand_arc,
+  uzccommand_line,uzccommand_circle,uzccommand_arc,
+
+  uzccommand_line2,uzccommand_circle2,//old commands
+
+  uzccommand_scale,uzccommand_rotate,uzccommand_erase,
+  uzccommand_inverseselected,uzccommand_cutclip,
+
+  uzccommand_polyed,
+
   uzccommand_polygon,uzccommand_rectangle,
   uzccommand_matchprop,
   uzccommand_dimlinear,uzccommand_dimaligned,uzccommand_dimdiameter,
@@ -201,6 +210,8 @@ uses
   uzccommand_exampleinsertdevice,uzccommand_examplecreatelayer,
 
   uzccommand_ld,
+
+  uzccommand_text,
 
   {$IFDEF ELECTROTECH}
   //**for velec func**//
@@ -262,6 +273,7 @@ begin
   //инициализация drawings
   FontManager.EnumerateFontFiles;
   uzcdrawings.startup('*rtl/dwg/DrawingVars.pas','');
+  uzcdevicebase.startup;
 
   Application.Scaled:=False;
   Application.MainFormOnTaskBar:=true;

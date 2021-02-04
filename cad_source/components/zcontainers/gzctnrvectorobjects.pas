@@ -23,8 +23,9 @@ uses uzbtypesbase,gzctnrvectordata,
      uzbtypes,uzbmemman;
 type
 {Export+}
-GZVectorObjects{-}<T>{//}={$IFNDEF DELPHI}packed{$ENDIF}
-                      object(GZVectorData{-}<T>{//})
+{-----------REGISTEROBJECTTYPE GZVectorObjects}
+GZVectorObjects{-}<T>{//}=object
+                                (GZVectorData{-}<T>{//})
                              function CreateObject:PGDBaseObject;
                              procedure free;virtual;
                        end;

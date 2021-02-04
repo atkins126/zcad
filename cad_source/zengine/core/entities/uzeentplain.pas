@@ -24,7 +24,8 @@ uses
  uzbgeomtypes,uzgldrawcontext,uzegeometry,uzeentwithlocalcs,uzbtypesbase,uzbtypes;
 type
 {EXPORT+}
-GDBObjPlain={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjWithLocalCS)
+{REGISTEROBJECTTYPE GDBObjPlain}
+GDBObjPlain= object(GDBObjWithLocalCS)
                   Outbound:OutBound4V;(*oi_readonly*)(*hidden_in_objinsp*)
 
                   procedure DrawGeometry(lw:GDBInteger;var DC:TDrawContext{infrustumactualy:TActulity;subrender:GDBInteger});virtual;

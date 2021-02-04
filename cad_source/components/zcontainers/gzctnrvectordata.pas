@@ -22,10 +22,11 @@ interface
 uses gzctnrvector;
 type
 {Export+}
-GZVectorData{-}<T>{//}={$IFNDEF DELPHI}packed{$ENDIF}
-                                 object(GZVector{-}<T>{//})
-                                   procedure freewithproc(freeproc:TProcessProc);virtual;
-                                 end;
+{--------REGISTEROBJECTTYPE GZVectorData}
+GZVectorData{-}<T>{//}=object
+                         (GZVector{-}<T>{//})
+                         procedure freewithproc(freeproc:TProcessProc);virtual;
+                       end;
 {Export-}
 implementation
 procedure GZVectorData<T>.freewithproc;

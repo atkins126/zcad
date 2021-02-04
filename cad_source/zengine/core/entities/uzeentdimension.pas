@@ -27,7 +27,8 @@ uses uzemathutils,uzgldrawcontext,uzeentabstracttext,uzestylestexts,UGDBXYZWStri
 type
 {EXPORT+}
 PTDXFDimData2D=^TDXFDimData2D;
-TDXFDimData2D=packed record
+{REGISTERRECORDTYPE TDXFDimData2D}
+TDXFDimData2D=record
   P10:GDBVertex2D;
   P11:GDBVertex2D;
   P12:GDBVertex2D;
@@ -37,7 +38,8 @@ TDXFDimData2D=packed record
   P16:GDBVertex2D;
 end;
 PTDXFDimData=^TDXFDimData;
-TDXFDimData=packed record
+{REGISTERRECORDTYPE TDXFDimData}
+TDXFDimData=record
   P10InWCS:GDBVertex;
   P11InOCS:GDBVertex;
   P12InOCS:GDBVertex;
@@ -48,7 +50,8 @@ TDXFDimData=packed record
   TextMoved:GDBBoolean;
 end;
 PGDBObjDimension=^GDBObjDimension;
-GDBObjDimension={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjComplex)
+{REGISTEROBJECTTYPE GDBObjDimension}
+GDBObjDimension= object(GDBObjComplex)
                       DimData:TDXFDimData;
                       PDimStyle:{-}PGDBDimStyle{/PGDBDimStyleObjInsp/};
                       PProjPoint:PTDXFDimData2D;

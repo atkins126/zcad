@@ -28,12 +28,13 @@ uses gzctnrvectorpobjects,gzctnrvectordata,uzeentityfactory,uzeentsubordinated,
      gzctnrvectortypes,uzbgeomtypes,uzeffdxfsupport,sysutils,UGDBLineWidthArray,UGDBSelectedObjArray;
 type
 //----------------snaparray:GDBVectorSnapArray;(*hidden_in_objinsp*)
-{REGISTEROBJECTTYPE GDBObjLWPolyline}
 {Export+}
-TWidth3D_in_WCS_Vector={$IFNDEF DELPHI}packed{$ENDIF} object(GZVectorData{-}<GDBQuad3d>{//})
+{REGISTEROBJECTTYPE TWidth3D_in_WCS_Vector}
+TWidth3D_in_WCS_Vector= object(GZVectorData{-}<GDBQuad3d>{//})
                 end;
 PGDBObjLWPolyline=^GDBObjLWpolyline;
-GDBObjLWPolyline={$IFNDEF DELPHI}packed{$ENDIF} object(GDBObjWithLocalCS)
+{REGISTEROBJECTTYPE GDBObjLWPolyline}
+GDBObjLWPolyline= object(GDBObjWithLocalCS)
                  Closed:GDBBoolean;(*saved_to_shd*)
                  Vertex2D_in_OCS_Array:GDBpolyline2DArray;(*saved_to_shd*)
                  Vertex3D_in_WCS_Array:GDBPoint3dArray;

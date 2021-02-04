@@ -50,7 +50,8 @@ uses
 const
      modelspacename:GDBSTring='**Модель**';
 type
-  Print_com={$IFNDEF DELPHI}packed{$ENDIF} object(CommandRTEdObject)
+  {REGISTEROBJECTTYPE Print_com}
+  Print_com= object(CommandRTEdObject)
     VS:GDBInteger;
     p1,p2:GDBVertex;
     procedure CommandContinue; virtual;

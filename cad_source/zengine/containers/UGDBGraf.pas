@@ -27,7 +27,8 @@ type
 PTLinkType=^TLinkType;
 TLinkType=(LT_Normal,LT_OnlyLink);
 pgrafelement=^grafelement;
-grafelement={$IFNDEF DELPHI}packed{$ENDIF} object(GDBaseObject)
+{REGISTEROBJECTTYPE grafelement}
+grafelement= object(GDBaseObject)
                   linkcount:GDBInteger;
                   point:gdbvertex;
                   link:GDBObjOpenArrayOfPV;
@@ -41,7 +42,8 @@ grafelement={$IFNDEF DELPHI}packed{$ENDIF} object(GDBaseObject)
                   procedure addline(pv:pgdbobjEntity);
                   function IsConnectedTo(node:pgrafelement):pgdbobjEntity;
             end;
-GDBGraf={$IFNDEF DELPHI}packed{$ENDIF} object(GZVectorData{-}<grafelement>{//})(*OpenArrayOfData=grafelement*)
+{REGISTEROBJECTTYPE GDBGraf}
+GDBGraf= object(GZVectorData{-}<grafelement>{//})(*OpenArrayOfData=grafelement*)
                 constructor init(m:GDBInteger);
                 function addge(v:gdbvertex):pgrafelement;
                 procedure clear;virtual;

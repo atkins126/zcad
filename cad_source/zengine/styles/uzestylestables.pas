@@ -27,14 +27,17 @@ TTableCellJustify=(jcl(*'TopLeft'*),
               jcc(*'TopCenter'*),
               jcr(*'TopRight'*));
 PTGDBTableCellStyle=^TGDBTableCellStyle;
-TGDBTableCellStyle=packed record
+{REGISTERRECORDTYPE TGDBTableCellStyle}
+TGDBTableCellStyle=record
                           Width,TextWidth:GDBDouble;
                           CF:TTableCellJustify;
                     end;
-GDBCellFormatArray={$IFNDEF DELPHI}packed{$ENDIF} object(GZVectorData{-}<TGDBTableCellStyle>{//})(*OpenArrayOfData=TGDBTableCellStyle*)
+{REGISTEROBJECTTYPE GDBCellFormatArray}
+GDBCellFormatArray= object(GZVectorData{-}<TGDBTableCellStyle>{//})(*OpenArrayOfData=TGDBTableCellStyle*)
                    end;
 PTGDBTableStyle=^TGDBTableStyle;
-TGDBTableStyle={$IFNDEF DELPHI}packed{$ENDIF} object(GDBNamedObject)
+{REGISTEROBJECTTYPE TGDBTableStyle}
+TGDBTableStyle= object(GDBNamedObject)
                      rowheight:gdbinteger;
                      textheight:gdbdouble;
                      tblformat:GDBCellFormatArray;
@@ -43,7 +46,8 @@ TGDBTableStyle={$IFNDEF DELPHI}packed{$ENDIF} object(GDBNamedObject)
                      destructor Done;virtual;
                end;
 PGDBTableStyleArray=^GDBTableStyleArray;
-GDBTableStyleArray={$IFNDEF DELPHI}packed{$ENDIF} object(GDBNamedObjectsArray{-}<PTGDBTableStyle,TGDBTableStyle>{//})(*OpenArrayOfData=TGDBTableStyle*)
+{REGISTEROBJECTTYPE GDBTableStyleArray}
+GDBTableStyleArray= object(GDBNamedObjectsArray{-}<PTGDBTableStyle,TGDBTableStyle>{//})(*OpenArrayOfData=TGDBTableStyle*)
                     constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger);
                     constructor initnul;
                     function AddStyle(name:GDBString):PTGDBTableStyle;

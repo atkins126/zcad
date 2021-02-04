@@ -48,7 +48,7 @@ uses
   uzeentsubordinated,uzeentblockinsert,uzeentpolyline,uzclog,gzctnrvectordata,
   math,uzeenttable,uzctnrvectorgdbstring,
   uzeentcurve,uzeentlwpolyline,UBaseTypeDescriptor,uzeblockdef,Varman,URecordDescriptor,TypeDescriptors,UGDBVisibleTreeArray
-  ,uzelongprocesssupport,LazLogger;
+  ,uzelongprocesssupport,LazLogger,uzccommand_circle2,uzccommand_erase,uzccmdfloatinsert;
 const
      modelspacename:GDBSTring='**Модель**';
 type
@@ -57,55 +57,16 @@ type
                        TEP_Erase(*'Erase'*),
                        TEP_leave(*'Leave'*)
                        );
-
-         TBlockInsert=packed record
+         {REGISTERRECORDTYPE TBlockInsert}
+         TBlockInsert=record
                             Blocks:TEnumData;(*'Block'*)
                             Scale:GDBvertex;(*'Scale'*)
                             Rotation:GDBDouble;(*'Rotation'*)
                       end;
-         TSubPolyEdit=(
-                       TSPE_Insert(*'Insert vertex'*),
-                       TSPE_Remove(*'Remove vertex'*),
-                       TSPE_Scissor(*'Cut into two parts'*)
-                       );
-         TPolyEditMode=(
-                       TPEM_Nearest(*'Paste in nearest segment'*),
-                       TPEM_Select(*'Choose a segment'*)
-                       );
          PTMirrorParam=^TMirrorParam;
-         TMirrorParam=packed record
+         {REGISTERRECORDTYPE TMirrorParam}
+         TMirrorParam=record
                             SourceEnts:TEntityProcess;(*'Source entities'*)
-                      end;
-
-         TPolyEdit=packed record
-                            Action:TSubPolyEdit;(*'Action'*)
-                            Mode:TPolyEditMode;(*'Mode'*)
-                            vdist:gdbdouble;(*hidden_in_objinsp*)
-                            ldist:gdbdouble;(*hidden_in_objinsp*)
-                            nearestvertex:GDBInteger;(*hidden_in_objinsp*)
-                            nearestline:GDBInteger;(*hidden_in_objinsp*)
-                            dir:gdbinteger;(*hidden_in_objinsp*)
-                            setpoint:gdbboolean;(*hidden_in_objinsp*)
-                            vvertex:gdbvertex;(*hidden_in_objinsp*)
-                            lvertex1:gdbvertex;(*hidden_in_objinsp*)
-                            lvertex2:gdbvertex;(*hidden_in_objinsp*)
-                      end;
-         TIMode=(
-                 TIM_Text(*'Text'*),
-                 TIM_MText(*'MText'*)
-                );
-         PTTextInsertParams=^TTextInsertParams;
-         TTextInsertParams=packed record
-                            mode:TIMode;(*'Entity'*)
-                            Style:TEnumData;(*'Style'*)
-                            justify:TTextJustify;(*'Justify'*)
-                            h:GDBDouble;(*'Height'*)
-                            WidthFactor:GDBDouble;(*'Width factor'*)
-                            Oblique:GDBDouble;(*'Oblique'*)
-                            Width:GDBDouble;(*'Width'*)
-                            LineSpace:GDBDouble;(*'Line space factor'*)
-                            text:GDBAnsiString;(*'Text'*)
-                            runtexteditor:GDBBoolean;(*'Run text editor'*)
                       end;
          BRMode=(
                  BRM_Block(*'Block'*),
@@ -113,7 +74,8 @@ type
                  BRM_BD(*'Block and Device'*)
                 );
          PTBlockReplaceParams=^TBlockReplaceParams;
-         TBlockReplaceParams=packed record
+         {REGISTERRECORDTYPE TBlockReplaceParams}
+         TBlockReplaceParams=record
                             Process:BRMode;(*'Process'*)
                             CurrentFindBlock:GDBString;(*'**CurrentFind'*)(*oi_readonly*)(*hidden_in_objinsp*)
                             Find:TEnumData;(*'Find'*)
@@ -125,12 +87,14 @@ type
                             SaveVariableText:GDBBoolean;(*'Save variable text'*)
                       end;
          PTBlockScaleParams=^TBlockScaleParams;
-         TBlockScaleParams=packed record
+         {REGISTERRECORDTYPE TBlockScaleParams}
+         TBlockScaleParams=record
                              Scale:GDBVertex;(*'New scale'*)
                              Absolytly:GDBBoolean;(*'Absolytly'*)
                            end;
          PTBlockRotateParams=^TBlockRotateParams;
-         TBlockRotateParams=packed record
+         {REGISTERRECORDTYPE TBlockRotateParams}
+         TBlockRotateParams=record
                              Rotate:GDBDouble;(*'Rotation angle'*)
                              Absolytly:GDBBoolean;(*'Absolytly'*)
                            end;
@@ -146,7 +110,8 @@ type
                  TST_UNSORTED(*'Unsorted'*)
                 );
          PTNumberingParams=^TNumberingParams;
-         TNumberingParams=packed record
+         {REGISTERRECORDTYPE TNumberingParams}
+         TNumberingParams=record
                             SortMode:TST;(*''*)
                             InverseX:GDBBoolean;(*'Inverse X axis dir'*)
                             InverseY:GDBBoolean;(*'Inverse Y axis dir'*)
@@ -158,107 +123,78 @@ type
                             NumberVar:GDBString;(*'Number variable'*)
                       end;
          PTExportDevWithAxisParams=^TExportDevWithAxisParams;
-         TExportDevWithAxisParams=packed record
+         {REGISTERRECORDTYPE TExportDevWithAxisParams}
+         TExportDevWithAxisParams=record
                             AxisDeviceName:GDBString;(*'AxisDeviceName'*)
                       end;
   PTBEditParam=^TBEditParam;
-  TBEditParam=packed record
+  {REGISTERRECORDTYPE TBEditParam}
+  TBEditParam=record
                     CurrentEditBlock:GDBString;(*'Current block'*)(*oi_readonly*)
                     Blocks:TEnumData;(*'Select block'*)
               end;
   ptpcoavector=^tpcoavector;
   tpcoavector={-}specialize{//}
               GZVectorData{-}<TCopyObjectDesc>{//};
-  mirror_com = {$IFNDEF DELPHI}packed{$ENDIF} object(copy_com)
+  {REGISTEROBJECTTYPE mirror_com}
+  mirror_com =  object(copy_com)
     function CalcTransformMatrix(p1,p2: GDBvertex):DMatrix4D; virtual;
     function AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger; virtual;
   end;
-
-  rotate_com = {$IFNDEF DELPHI}packed{$ENDIF} object(move_com)
-    function AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger; virtual;
-    procedure CommandContinue; virtual;
-    procedure rot(a:GDBDouble; button: GDBByte);
-    procedure showprompt(mklick:integer);virtual;
-  end;
-  scale_com = {$IFNDEF DELPHI}packed{$ENDIF} object(move_com)
-    function AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger; virtual;
-    procedure scale(a:GDBDouble; button: GDBByte);
-    procedure showprompt(mklick:integer);virtual;
-    procedure CommandContinue; virtual;
-  end;
-  copybase_com = {$IFNDEF DELPHI}packed{$ENDIF} object(CommandRTEdObject)
+  {REGISTEROBJECTTYPE copybase_com}
+  copybase_com =  object(CommandRTEdObject)
     procedure CommandStart(Operands:TCommandOperands); virtual;
     function BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger; virtual;
   end;
-  FloatInsert_com = {$IFNDEF DELPHI}packed{$ENDIF} object(CommandRTEdObject)
-    procedure CommandStart(Operands:TCommandOperands); virtual;
-    procedure Build(Operands:TCommandOperands); virtual;
-    procedure Command(Operands:TCommandOperands); virtual;abstract;
-    function DoEnd(pdata:GDBPointer):GDBBoolean;virtual;
-    function BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger; virtual;
-  end;
-  TFIWPMode=(FIWPCustomize,FIWPRun);
-  FloatInsertWithParams_com = {$IFNDEF DELPHI}packed{$ENDIF} object(FloatInsert_com)
-    CMode:TFIWPMode;
-    procedure CommandStart(Operands:TCommandOperands); virtual;
-    procedure BuildDM(Operands:TCommandOperands); virtual;
-    procedure Run(pdata:GDBPlatformint); virtual;
-    function MouseMoveCallback(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger; virtual;
-    //procedure Command(Operands:pansichar); virtual;abstract;
-    //function BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; button: GDBByte;osp:pos_record): GDBInteger; virtual;
-  end;
-  PasteClip_com = {$IFNDEF DELPHI}packed{$ENDIF} object(FloatInsert_com)
+  {REGISTEROBJECTTYPE PasteClip_com}
+  PasteClip_com =  object(FloatInsert_com)
     procedure Command(Operands:TCommandOperands); virtual;
   end;
-
-  TextInsert_com={$IFNDEF DELPHI}packed{$ENDIF} object(FloatInsert_com)
-                       pt:PGDBObjText;
-                       //procedure Build(Operands:pansichar); virtual;
-                       procedure CommandStart(Operands:TCommandOperands); virtual;
-                       procedure CommandEnd; virtual;
-                       procedure Command(Operands:TCommandOperands); virtual;
-                       procedure BuildPrimitives; virtual;
-                       procedure Format;virtual;
-                       function DoEnd(pdata:GDBPointer):GDBBoolean;virtual;
-  end;
-
-  BlockReplace_com={$IFNDEF DELPHI}packed{$ENDIF} object(CommandRTEdObject)
+  {REGISTEROBJECTTYPE BlockReplace_com}
+  BlockReplace_com= object(CommandRTEdObject)
                          procedure CommandStart(Operands:TCommandOperands); virtual;
                          procedure BuildDM(Operands:TCommandOperands); virtual;
                          procedure Format;virtual;
                          procedure Run(pdata:{pointer}GDBPlatformint); virtual;
                    end;
-  BlockScale_com={$IFNDEF DELPHI}packed{$ENDIF} object(CommandRTEdObject)
+  {REGISTEROBJECTTYPE BlockScale_com}
+  BlockScale_com= object(CommandRTEdObject)
                          procedure CommandStart(Operands:TCommandOperands); virtual;
                          procedure BuildDM(Operands:TCommandOperands); virtual;
                          procedure Run(pdata:{pointer}GDBPlatformint); virtual;
                    end;
-  BlockRotate_com={$IFNDEF DELPHI}packed{$ENDIF} object(CommandRTEdObject)
+  {REGISTEROBJECTTYPE BlockRotate_com}
+  BlockRotate_com= object(CommandRTEdObject)
                          procedure CommandStart(Operands:TCommandOperands); virtual;
                          procedure BuildDM(Operands:TCommandOperands); virtual;
                          procedure Run(pdata:{pointer}GDBPlatformint); virtual;
                    end;
-  ATO_com={$IFNDEF DELPHI}packed{$ENDIF} object(CommandRTEdObject)
+  {REGISTEROBJECTTYPE ATO_com}
+  ATO_com= object(CommandRTEdObject)
                          powner:PGDBObjDevice;
                          procedure CommandStart(Operands:TCommandOperands); virtual;
                          procedure ShowMenu;virtual;
                          procedure Run(pdata:GDBPlatformint); virtual;
           end;
-  CFO_com={$IFNDEF DELPHI}packed{$ENDIF} object(ATO_com)
+  {REGISTEROBJECTTYPE CFO_com}
+  CFO_com= object(ATO_com)
                          procedure ShowMenu;virtual;
                          procedure Run(pdata:GDBPlatformint); virtual;
           end;
-  Number_com={$IFNDEF DELPHI}packed{$ENDIF} object(CommandRTEdObject)
+  {REGISTEROBJECTTYPE Number_com}
+  Number_com= object(CommandRTEdObject)
                          procedure CommandStart(Operands:TCommandOperands); virtual;
                          procedure ShowMenu;virtual;
                          procedure Run(pdata:GDBPlatformint); virtual;
              end;
-  ExportDevWithAxis_com={$IFNDEF DELPHI}packed{$ENDIF} object(CommandRTEdObject)
+  {REGISTEROBJECTTYPE ExportDevWithAxis_com}
+  ExportDevWithAxis_com= object(CommandRTEdObject)
                          procedure CommandStart(Operands:TCommandOperands); virtual;
                          procedure ShowMenu;virtual;
                          procedure Run(pdata:GDBPlatformint); virtual;
              end;
-  ITT_com = {$IFNDEF DELPHI}packed{$ENDIF} object(FloatInsert_com)
+  {REGISTEROBJECTTYPE ITT_com}
+  ITT_com =  object(FloatInsert_com)
     procedure Command(Operands:TCommandOperands); virtual;
   end;
 {EXPORT-}
@@ -296,18 +232,14 @@ devcoordsort=specialize TOrderingArrayUtils<devcoordarray, tdevcoord, TGDBVertex
 devnamesort=specialize TOrderingArrayUtils<devnamearray, tdevname, TGDBNameLess>;
 var
    MirrorParam:TMirrorParam;
-   PEProp:TPolyEdit;
    pworkvertex:pgdbvertex;
    BIProp:TBlockInsert;
-   pc:pgdbobjcircle;
    pb:PGDBObjBlockInsert;
 
    pold:PGDBObjEntity;
    p3dpl:pgdbobjpolyline;
    p3dplold:PGDBObjEntity;
    mirror:mirror_com;
-   rotate:rotate_com;
-   scale:Scale_com;
    copybase:copybase_com;
    PasteClip:PasteClip_com;
 
@@ -316,8 +248,6 @@ var
    pbeditcom:pCommandRTEdObjectPlugin;
    BEditParam:TBEditParam;
 
-   TextInsert:TextInsert_com;
-   TextInsertParams:TTextInsertParams;
    BlockReplace:BlockReplace_com;
    BlockReplaceParams:TBlockReplaceParams;
    ATO:ATO_com;
@@ -335,8 +265,7 @@ var
 //procedure startup;
 //procedure Finalize;
 implementation
-var
-  PCreatedGDBLine:pgdbobjline;
+
 function GetBlockDefNames(var BDefNames:TZctnrVectorGDBString;selname:GDBString):GDBInteger;
 var pb:PGDBObjBlockdef;
     ir:itrec;
@@ -426,36 +355,6 @@ begin
            pb:=drawings.GetCurrentDWG^.TextStyleTable.iterate(ir);
            inc(i);
      until pb=nil;
-end;
-procedure FloatInsertWithParams_com.BuildDM(Operands:TCommandOperands);
-begin
-
-end;
-procedure FloatInsertWithParams_com.CommandStart(Operands:TCommandOperands);
-begin
-     CommandRTEdObject.CommandStart(Operands);
-     CMode:=FIWPCustomize;
-     BuildDM(Operands);
-end;
-procedure FloatInsertWithParams_com.Run(pdata:GDBPlatformint);
-begin
-     cmode:=FIWPRun;
-     self.Build('');
-end;
-function FloatInsertWithParams_com.MouseMoveCallback(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger;
-begin
-     if CMode=FIWPRun then
-                          inherited MouseMoveCallback(wc,mc,button,osp);
-     result:=cmd_ok;
-end;
-procedure FloatInsert_com.Build(Operands:TCommandOperands);
-begin
-     Command(operands);
-     if drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.Count-drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.Deleted<=0
-     then
-         begin
-              commandmanager.executecommandend;
-         end
 end;
 {BlockScale_com=object(CommandRTEdObject)
                        procedure CommandStart(Operands:pansichar); virtual;
@@ -1302,203 +1201,6 @@ begin
      Commandmanager.executecommandend;
 end;
 
-procedure TextInsert_com.BuildPrimitives;
-begin
-     if drawings.GetCurrentDWG^.TextStyleTable.GetRealCount>0 then
-     begin
-     drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.free;
-     case TextInsertParams.mode of
-           TIM_Text:
-           begin
-             PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('Oblique',0,FA_READONLY);
-             PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('WidthFactor',0,FA_READONLY);
-
-             PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('Width',FA_READONLY,0);
-             PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('LineSpace',FA_READONLY,0);
-
-                pt := GDBPointer(AllocEnt(GDBTextID));
-                pt^.init(@drawings.GetCurrentDWG^.ConstructObjRoot,drawings.GetCurrentDWG^.GetCurrentLayer,sysvar.dwg.DWG_CLinew^,'',nulvertex,2.5,0,1,0,jstl);
-                zcSetEntPropFromCurrentDrawingProp(pt);
-           end;
-           TIM_MText:
-           begin
-                PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('Oblique',FA_READONLY,0);
-                PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('WidthFactor',FA_READONLY,0);
-
-                PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('Width',0,FA_READONLY);
-                PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('LineSpace',0,FA_READONLY);
-
-                pt := GDBPointer(AllocEnt(GDBMTextID));
-                pgdbobjmtext(pt)^.init(@drawings.GetCurrentDWG^.ConstructObjRoot,drawings.GetCurrentDWG^.GetCurrentLayer,sysvar.dwg.DWG_CLinew^,
-                                  '',nulvertex,2.5,0,1,0,jstl,10,1);
-                zcSetEntPropFromCurrentDrawingProp(pt);
-           end;
-
-     end;
-     drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.AddPEntity(pt^);
-     end;
-end;
-procedure TextInsert_com.CommandStart(Operands:TCommandOperands);
-begin
-     inherited;
-     if drawings.GetCurrentDWG^.TextStyleTable.GetRealCount<1 then
-     begin
-          ZCMsgCallBackInterface.TextMessage(rscmInDwgTxtStyleNotDeffined,TMWOShowError);
-          commandmanager.executecommandend;
-     end;
-end;
-procedure TextInsert_com.CommandEnd;
-begin
-
-end;
-
-procedure TextInsert_com.Command(Operands:TCommandOperands);
-var
-   s:string;
-   i:integer;
-begin
-       if drawings.GetCurrentDWG^.TextStyleTable.GetRealCount>0 then
-     begin
-     if TextInsertParams.Style.Selected>=TextInsertParams.Style.Enums.Count then
-                                                                                begin
-                                                                                     s:=drawings.GetCurrentDWG^.GetCurrentTextStyle^.Name;
-                                                                                end
-                                                                            else
-                                                                                begin
-                                                                                     s:=TextInsertParams.Style.Enums.getData(TextInsertParams.Style.Selected);
-                                                                                end;
-      //TextInsertParams.Style.Enums.Clear;
-      TextInsertParams.Style.Enums.free;
-      i:=GetStyleNames(TextInsertParams.Style.Enums,s);
-      if i<0 then
-                 TextInsertParams.Style.Selected:=0;
-      ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIActionRedraw);
-      BuildPrimitives;
-     drawings.GetCurrentDWG^.wa.SetMouseMode((MGet3DPoint) or (MMoveCamera) or (MRotateCamera));
-     format;
-     end;
-end;
-function TextInsert_com.DoEnd(pdata:GDBPointer):GDBBoolean;
-begin
-     result:=false;
-     dec(self.mouseclic);
-     zcRedrawCurrentDrawing;
-     if TextInsertParams.runtexteditor then
-                                           RunTextEditor(pdata,drawings.GetCurrentDWG^);
-     //redrawoglwnd;
-     build('');
-end;
-
-procedure TextInsert_com.Format;
-var
-   DC:TDrawContext;
-begin
-     if ((pt^.GetObjType=GDBTextID)and(TextInsertParams.mode=TIM_MText))
-     or ((pt^.GetObjType=GDBMTextID)and(TextInsertParams.mode=TIM_Text)) then
-                                                                        BuildPrimitives;
-     pt^.vp.Layer:=drawings.GetCurrentDWG^.GetCurrentLayer;
-     pt^.vp.LineWeight:=sysvar.dwg.DWG_CLinew^;
-     //pt^.TXTStyleIndex:=drawings.GetCurrentDWG^.TextStyleTable.getMutableData(TextInsertParams.Style.Selected);
-     pt^.TXTStyleIndex:=drawings.GetCurrentDWG^.TextStyleTable.FindStyle(pgdbstring(TextInsertParams.Style.Enums.getDataMutable(TextInsertParams.Style.Selected))^,false);
-     pt^.textprop.size:=TextInsertParams.h;
-     pt^.Content:='';
-     pt^.Template:=(TextInsertParams.text);
-
-     case TextInsertParams.mode of
-     TIM_Text:
-              begin
-                   pt^.textprop.oblique:=TextInsertParams.Oblique;
-                   pt^.textprop.wfactor:=TextInsertParams.WidthFactor;
-                   byte(pt^.textprop.justify):=byte(TextInsertParams.justify);
-              end;
-     TIM_MText:
-              begin
-                   pgdbobjmtext(pt)^.width:=TextInsertParams.Width;
-                   pgdbobjmtext(pt)^.linespace:=TextInsertParams.LineSpace;
-
-                   if TextInsertParams.LineSpace<0 then
-                                               pgdbobjmtext(pt)^.linespacef:=(-TextInsertParams.LineSpace*3/5)/TextInsertParams.h
-                                           else
-                                               pgdbobjmtext(pt)^.linespacef:=TextInsertParams.LineSpace;
-
-                   //linespace := textprop.size * linespacef * 5 / 3;
-
-                   byte(pt^.textprop.justify):=byte(TextInsertParams.justify);
-              end;
-
-     end;
-     dc:=drawings.GetCurrentDWG^.CreateDrawingRC;
-     pt^.FormatEntity(drawings.GetCurrentDWG^,dc);
-end;
-procedure FloatInsert_com.CommandStart(Operands:TCommandOperands);
-begin
-     inherited CommandStart(Operands);
-     build(operands);
-end;
-function FloatInsert_com.DoEnd(pdata:GDBPointer):GDBBoolean;
-begin
-     result:=true;
-end;
-
-function FloatInsert_com.BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger;
-var
-    dist:gdbvertex;
-    dispmatr:DMatrix4D;
-    ir:itrec;
-    tv,pobj: pGDBObjEntity;
-    domethod,undomethod:tmethod;
-    dc:TDrawContext;
-begin
-
-      //drawings.GetCurrentDWG^.ConstructObjRoot.ObjMatrix:=dispmatr;
-      dist.x := wc.x;
-      dist.y := wc.y;
-      dist.z := wc.z;
-
-      dispmatr:=onematrix;
-      PGDBVertex(@dispmatr[3])^:=dist;
-
-      drawings.GetCurrentDWG^.ConstructObjRoot.ObjMatrix:=dispmatr;
-
-  if (button and MZW_LBUTTON)<>0 then
-  begin
-   pobj:=drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.beginiterate(ir);
-   if pobj<>nil then
-   repeat
-          begin
-              //if pobj^.selected then
-              begin
-                tv:=drawings.CopyEnt(drawings.GetCurrentDWG,drawings.GetCurrentDWG,pobj);
-                if tv^.IsHaveLCS then
-                                    PGDBObjWithLocalCS(tv)^.CalcObjMatrix;
-                tv^.transform(dispmatr);
-                tv^.build(drawings.GetCurrentDWG^);
-                tv^.YouChanged(drawings.GetCurrentDWG^);
-
-                SetObjCreateManipulator(domethod,undomethod);
-                with PushMultiObjectCreateCommand(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,tmethod(domethod),tmethod(undomethod),1)^ do
-                begin
-                     AddObject(tv);
-                     FreeArray:=false;
-                     //comit;
-                end;
-
-              end;
-          end;
-          pobj:=drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.iterate(ir);
-   until pobj=nil;
-
-   dc:=drawings.GetCurrentDWG^.CreateDrawingRC;
-   drawings.GetCurrentROOT^.calcbb(dc);
-
-   //CopyToClipboard;
-
-   drawings.GetCurrentDWG^.ConstructObjRoot.ObjMatrix:=onematrix;
-   //commandend;
-   if DoEnd(tv) then commandmanager.executecommandend;
-  end;
-  result:=cmd_ok;
-end;
 procedure pasteclip_com.Command(Operands:TCommandOperands);
 var //res:longbool;
     //uFormat:longword;
@@ -1793,171 +1495,6 @@ begin
                          pb:=nil;
                     end;
 end;
-function Erase_com(operands:TCommandOperands):TCommandResult;
-var pv:pGDBObjEntity;
-    ir:itrec;
-    count:integer;
-    domethod,undomethod:tmethod;
-begin
-  if (drawings.GetCurrentROOT^.ObjArray.count = 0)or(drawings.GetCurrentDWG^.wa.param.seldesc.Selectedobjcount=0) then exit;
-  count:=0;
-  pv:=drawings.GetCurrentROOT^.ObjArray.beginiterate(ir);
-  if pv<>nil then
-  repeat
-    if pv^.Selected then
-                        begin
-                             //pv^.YouDeleted;
-                             inc(count);
-                        end
-                    else
-                        pv^.DelSelectedSubitem(drawings.GetCurrentDWG^);
-
-  pv:=drawings.GetCurrentROOT^.ObjArray.iterate(ir);
-  until pv=nil;
-  if count>0 then
-  begin
-  SetObjCreateManipulator(undomethod,domethod);
-  with PushMultiObjectCreateCommand(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,tmethod(domethod),tmethod(undomethod),count)^ do
-  begin
-    pv:=drawings.GetCurrentROOT^.ObjArray.beginiterate(ir);
-    if pv<>nil then
-    repeat
-      if pv^.Selected then
-                          begin
-                               AddObject(pv);
-                               pv^.Selected:=false;
-                          end;
-    pv:=drawings.GetCurrentROOT^.ObjArray.iterate(ir);
-    until pv=nil;
-       //AddObject(pc);
-       FreeArray:=false;
-       comit;
-       //UnDo;
-  end;
-  end;
-  drawings.GetCurrentDWG^.wa.param.seldesc.Selectedobjcount:=0;
-  drawings.GetCurrentDWG^.wa.param.seldesc.OnMouseObject:=nil;
-  drawings.GetCurrentDWG^.wa.param.seldesc.LastSelectedObject:=nil;
-  drawings.GetCurrentDWG^.wa.param.lastonmouseobject:=nil;
-  ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIReturnToDefaultObject);
-  clearcp;
-  zcRedrawCurrentDrawing;
-  result:=cmd_ok;
-end;
-function CutClip_com(operands:TCommandOperands):TCommandResult;
-begin
-   copyclip_com(EmptyCommandOperands);
-   Erase_com(EmptyCommandOperands);
-   result:=cmd_ok;
-end;
-function InverseSelected_com(operands:TCommandOperands):TCommandResult;
-var pv:pGDBObjEntity;
-    ir:itrec;
-    count:integer;
-    //domethod,undomethod:tmethod;
-begin
-  //if (drawings.GetCurrentROOT^.ObjArray.count = 0)or(drawings.GetCurrentDWG^.OGLwindow1.param.seldesc.Selectedobjcount=0) then exit;
-  count:=0;
-  pv:=drawings.GetCurrentROOT^.ObjArray.beginiterate(ir);
-  if pv<>nil then
-  repeat
-    if pv^.Selected then
-                        begin
-                             pv^.deselect(drawings.GetCurrentDWG^.wa.param.SelDesc.Selectedobjcount,@drawings.CurrentDWG^.DeSelector);
-                             inc(count);
-                        end
-                    else
-                        begin
-                          pv^.select(drawings.GetCurrentDWG^.wa.param.SelDesc.Selectedobjcount,@drawings.CurrentDWG^.selector);
-                          inc(count);
-                        end;
-
-  pv:=drawings.GetCurrentROOT^.ObjArray.iterate(ir);
-  until pv=nil;
-  drawings.GetCurrentDWG^.wa.param.seldesc.Selectedobjcount:=count;
-  drawings.GetCurrentDWG^.wa.param.seldesc.OnMouseObject:=nil;
-  drawings.GetCurrentDWG^.wa.param.seldesc.LastSelectedObject:=nil;
-  drawings.GetCurrentDWG^.wa.param.lastonmouseobject:=nil;
-  //{objinsp.GDBobjinsp.}ReturnToDefault;
-  //clearcp;
-  zcRedrawCurrentDrawing;
-  result:=cmd_ok;
-end;
-
-{var i, newend, objdel: GDBInteger;
-begin
-  if drawings.ObjRoot.ObjArray.count = 0 then exit;
-  newend := 0;
-  objdel := 0;
-  for i := 0 to drawings.ObjRoot.ObjArray.count - 1 do
-  begin
-    if newend <> i then PGDBObjEntityArray(drawings.ObjRoot.ObjArray.PArray)[newend] := PGDBObjEntityArray(drawings.ObjRoot.ObjArray.PArray)[i];
-    if PGDBObjEntityArray(drawings.ObjRoot.ObjArray.PArray)[i].selected = false then inc(newend)
-    else inc(objdel);
-  end;
-  drawings.ObjRoot.ObjArray.count := drawings.ObjRoot.ObjArray.count - objdel;
-  clearcp;
-  redrawoglwnd;
-end;}
-function Circle_com_CommandStart(operands:TCommandOperands):TCommandResult;
-begin
-  drawings.GetCurrentDWG^.wa.SetMouseMode((MGet3DPoint) or (MMoveCamera) or (MRotateCamera));
-  ZCMsgCallBackInterface.TextMessage(rscmCenterPointCircle,TMWOHistoryOut);
-  result:=cmd_ok;
-end;
-
-procedure Circle_com_CommandEnd(_self:pointer);
-begin
-end;
-
-function Circle_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
-var
-  dc:TDrawContext;
-begin
-  if (button and MZW_LBUTTON)<>0 then
-  begin
-    dc:=drawings.GetCurrentDWG^.CreateDrawingRC;
-    ZCMsgCallBackInterface.TextMessage(rscmPointOnCircle,TMWOHistoryOut);
-
-    pc := PGDBObjCircle(ENTF_CreateCircle(@drawings.GetCurrentDWG^.ConstructObjRoot,@drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray,[wc.x,wc.y,wc.z,0]));
-    zcSetEntPropFromCurrentDrawingProp(pc);
-    //pc := GDBPointer(drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.CreateInitObj(GDBCircleID,drawings.GetCurrentROOT));
-    //GDBObjSetCircleProp(pc,drawings.GetCurrentDWG^.LayerTable.GetCurrentLayer,sysvar.dwg.DWG_CLType^,sysvar.dwg.DWG_CColor^, sysvar.dwg.DWG_CLinew^, wc, 0);
-
-    dc:=drawings.GetCurrentDWG^.CreateDrawingRC;
-    pc^.Formatentity(drawings.GetCurrentDWG^,dc);
-    pc^.RenderFeedback(drawings.GetCurrentDWG^.pcamera^.POSCOUNT,drawings.GetCurrentDWG^.pcamera^,@drawings.GetCurrentDWG^.myGluProject2,dc);
-  end;
-  result:=0;
-end;
-
-function Circle_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
-var
-    domethod,undomethod:tmethod;
-    dc:TDrawContext;
-begin
-  result:=mclick;
-  dc:=drawings.GetCurrentDWG^.CreateDrawingRC;
-  zcSetEntPropFromCurrentDrawingProp(pc);
-  pc^.Radius := Vertexlength(pc^.local.P_insert, wc);
-  pc^.Formatentity(drawings.GetCurrentDWG^,dc);
-  pc^.RenderFeedback(drawings.GetCurrentDWG^.pcamera^.POSCOUNT,drawings.GetCurrentDWG^.pcamera^,@drawings.GetCurrentDWG^.myGluProject2,dc);
-  if (button and MZW_LBUTTON)<>0 then
-  begin
-
-         SetObjCreateManipulator(domethod,undomethod);
-         with PushMultiObjectCreateCommand(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,tmethod(domethod),tmethod(undomethod),1)^ do
-         begin
-              AddObject(pc);
-              comit;
-         end;
-
-    drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.Count := 0;
-    commandmanager.executecommandend;
-  end;
-end;
-
-
 function Mirror_com.CalcTransformMatrix(p1,p2: GDBvertex):DMatrix4D;
 var
     dist,p3:gdbvertex;
@@ -1992,557 +1529,6 @@ begin
    end;
    result:=cmd_ok;
 end;
-procedure rotate_com.CommandContinue;
-var v1:vardesk;
-    td:gdbdouble;
-begin
-   if (commandmanager.GetValueHeap{-vs})>0 then
-   begin
-   v1:=commandmanager.PopValue;
-   td:=Pgdbdouble(v1.data.Instance)^*pi/180;
-   rot(td,MZW_LBUTTON);
-   end;
-end;
-procedure rotate_com.showprompt(mklick:integer);
-begin
-     case mklick of
-     0:inherited;
-     1:ZCMsgCallBackInterface.TextMessage(rscmPickOrEnterAngle,TMWOHistoryOut);
-     end;
-end;
-procedure rotate_com.rot(a:GDBDouble; button: GDBByte);
-var
-    dispmatr,im,rotmatr:DMatrix4D;
-    ir:itrec;
-    pcd:PTCopyObjectDesc;
-    //v1,v2:GDBVertex2d;
-    m:tmethod;
-    dc:TDrawContext;
-begin
-  dispmatr:=uzegeometry.CreateTranslationMatrix(createvertex(-t3dp.x,-t3dp.y,-t3dp.z));
-  rotmatr:=uzegeometry.CreateRotationMatrixZ(sin(a),cos(a));
-  rotmatr:=uzegeometry.MatrixMultiply(dispmatr,rotmatr);
-  dispmatr:=uzegeometry.CreateTranslationMatrix(createvertex(t3dp.x,t3dp.y,t3dp.z));
-  dispmatr:=uzegeometry.MatrixMultiply(rotmatr,dispmatr);
-  dc:=drawings.GetCurrentDWG^.CreateDrawingRC;
-
-if (button and MZW_LBUTTON)=0 then
-                 begin
-                      //drawings.GetCurrentDWG^.ConstructObjRoot.ObjMatrix:=dispmatr;
-                      drawings.GetCurrentDWG^.ConstructObjRoot.ObjMatrix:=dispmatr;
-                       {pcd:=pcoa^.beginiterate(ir);
-                       if pcd<>nil then
-                       repeat
-                            pcd.clone^.TransformAt(pcd.obj,@dispmatr);
-                            pcd.clone^.format;
-                            pcd:=pcoa^.iterate(ir);
-                       until pcd=nil;}
-                 end
-            else
-                begin
-                  im:=dispmatr;
-                  uzegeometry.MatrixInvert(im);
-                  PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack.PushStartMarker('Rotate');
-                  with PushCreateTGMultiObjectChangeCommand(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,dispmatr,im,pcoa^.Count)^ do
-                  begin
-                   pcd:=pcoa^.beginiterate(ir);
-                  if pcd<>nil then
-                  repeat
-                      m:=TMethod(@pcd^.sourceEnt^.Transform);
-                      {m.Data:=pcd.obj;
-                      m.Code:=pointer(pcd.obj^.Transform);}
-                      AddMethod(m);
-
-                      dec(pcd^.sourceEnt^.vp.LastCameraPos);
-                      //pcd.obj^.Format;
-
-                      pcd:=pcoa^.iterate(ir);
-                  until pcd=nil;
-                  comit;
-                  end;
-                  PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack.PushEndMarker;
-                end;
-if (button and MZW_LBUTTON)<>0 then
-begin
-drawings.GetCurrentROOT^.FormatAfterEdit(drawings.GetCurrentDWG^,dc);
-drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.free;
-commandend;
-commandmanager.executecommandend;
-end;
-
-end;
-
-function rotate_com.AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger;
-var
-    //dispmatr,im,rotmatr:DMatrix4D;
-    //ir:itrec;
-    //pcd:PTCopyObjectDesc;
-    a:double;
-    v1,v2:GDBVertex2d;
-    //m:tmethod;
-begin
-      v2.x:=wc.x;
-      v2.y:=wc.y;
-      v1.x:=t3dp.x;
-      v1.y:=t3dp.y;
-      a:=uzegeometry.Vertexangle(v1,v2);
-
-      rot(a,button);
-
-      //dispmatr:=onematrix;
-      result:=cmd_ok;
-end;
-procedure scale_com.CommandContinue;
-var v1:vardesk;
-    td:gdbdouble;
-begin
-   if (commandmanager.GetValueHeap{-vs})>0 then
-   begin
-   v1:=commandmanager.PopValue;
-   td:=Pgdbdouble(v1.data.Instance)^;
-   scale(td,MZW_LBUTTON);
-   end;
-end;
-
-procedure scale_com.showprompt(mklick:integer);
-begin
-     case mklick of
-     0:inherited;
-     1:ZCMsgCallBackInterface.TextMessage(rscmPickOrEnterScale,TMWOHistoryOut);
-     end;
-end;
-procedure scale_com.scale(a:GDBDouble; button: GDBByte);
-var
-    dispmatr,im,rotmatr:DMatrix4D;
-    ir:itrec;
-    pcd:PTCopyObjectDesc;
-    //v:GDBVertex;
-    m:tmethod;
-    dc:TDrawContext;
-begin
-if a<eps then a:=1;
-
-dispmatr:=uzegeometry.CreateTranslationMatrix(createvertex(-t3dp.x,-t3dp.y,-t3dp.z));
-
-rotmatr:=onematrix;
-rotmatr[0][0]:=a;
-rotmatr[1][1]:=a;
-rotmatr[2][2]:=a;
-
-rotmatr:=uzegeometry.MatrixMultiply(dispmatr,rotmatr);
-dispmatr:=uzegeometry.CreateTranslationMatrix(createvertex(t3dp.x,t3dp.y,t3dp.z));
-dispmatr:=uzegeometry.MatrixMultiply(rotmatr,dispmatr);
-dc:=drawings.GetCurrentDWG^.CreateDrawingRC;
-{pcd:=pcoa^.beginiterate(ir);
-if pcd<>nil then
-repeat
-  pcd.clone^.TransformAt(pcd.obj,@dispmatr);
-  pcd.clone^.format;
-  if button = 1 then
-                    begin
-                    pcd.clone^.rtsave(pcd.obj);
-                    pcd.obj^.Format;
-                    end;
-
-  pcd:=pcoa^.iterate(ir);
-until pcd=nil;}
-if (button and MZW_LBUTTON)=0 then
-                  begin
-                        drawings.GetCurrentDWG^.ConstructObjRoot.ObjMatrix:=dispmatr;
-                        {pcd:=pcoa^.beginiterate(ir);
-                        if pcd<>nil then
-                        repeat
-                             pcd.clone^.TransformAt(pcd.obj,@dispmatr);
-                             pcd.clone^.format;
-                             pcd:=pcoa^.iterate(ir);
-                        until pcd=nil;}
-                  end
-             else
-                 begin
-                   im:=dispmatr;
-                   uzegeometry.MatrixInvert(im);
-                   PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack.PushStartMarker('Scale');
-                   with PushCreateTGMultiObjectChangeCommand(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,dispmatr,im,pcoa^.Count)^ do
-                   begin
-                    pcd:=pcoa^.beginiterate(ir);
-                   if pcd<>nil then
-                   repeat
-                       m:=TMEthod(@pcd^.sourceEnt^.Transform);
-                       {m.Data:=pcd.obj;
-                       m.Code:=pointer(pcd.obj^.Transform);}
-                       AddMethod(m);
-
-                       dec(pcd^.sourceEnt^.vp.LastCameraPos);
-                       //pcd.obj^.Format;
-
-                       pcd:=pcoa^.iterate(ir);
-                   until pcd=nil;
-                   comit;
-                   end;
-                   PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack.PushEndMarker;
-                 end;
-
-if (button and MZW_LBUTTON)<>0 then
-begin
-drawings.GetCurrentROOT^.FormatAfterEdit(drawings.GetCurrentDWG^,dc);
-drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.free;
-commandend;
-commandmanager.executecommandend;
-end;
-end;
-
-function scale_com.AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger;
-var
-    //dispmatr,im,rotmatr:DMatrix4D;
-    //ir:itrec;
-    //pcd:PTCopyObjectDesc;
-    a:double;
-    //v:GDBVertex;
-    //m:tmethod;
-begin
-      //v:=uzegeometry.VertexSub(t3dp,wc);
-      a:=uzegeometry.Vertexlength(t3dp,wc);
-      scale(a,button);
-      result:=cmd_ok;
-end;
-
-function _3DPolyEd_com_CommandStart(operands:TCommandOperands):TCommandResult;
-var
-   pobj:pgdbobjentity;
-   ir:itrec;
-begin
-  p3dpl:=nil;
-  pc:=nil;
-  PCreatedGDBLine:=nil;
-  pworkvertex:=nil;
-  PEProp.setpoint:=false;
-  pobj:=drawings.GetCurrentROOT^.ObjArray.beginiterate(ir);
-   if pobj<>nil then
-   repeat
-          begin
-              if pobj^.selected
-              and (
-                   (pobj^.GetObjType=GDBPolylineID)
-                 or(pobj^.GetObjType=GDBCableID)
-                   )
-              then
-                  begin
-                       p3dpl:=pointer(pobj);
-                       system.Break;
-                  end;
-          end;
-          pobj:=drawings.GetCurrentROOT^.ObjArray.iterate(ir);
-   until pobj=nil;
-   if p3dpl=nil then
-                   begin
-                        ZCMsgCallBackInterface.TextMessage(rscmPolyNotSel,TMWOHistoryOut);
-                        commandmanager.executecommandend;
-                   end
-               else
-                   begin
-                        ZCMsgCallBackInterface.Do_PrepareObject(nil,drawings.GetUnitsFormat,SysUnit^.TypeName2PTD('TPolyEdit'),@PEProp,drawings.GetCurrentDWG);
-                        drawings.GetCurrentDWG^.wa.SetMouseMode((MGet3DPoint) or (MMoveCamera) or (MRotateCamera));
-                        drawings.GetCurrentDWG^.SelObjArray.Free;
-                   end;
-  result:=cmd_ok;
-end;
-
-
-function _3DPolyEd_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
-var
-    ptv,ptvprev:pgdbvertex;
-    ir:itrec;
-    v,l:gdbdouble;
-    domethod,undomethod:tmethod;
-    polydata:tpolydata;
-    _tv:gdbvertex;
-    p3dpl2:pgdbobjpolyline;
-    i:integer;
-    dc:TDrawContext;
-begin
-  if (button and MZW_LBUTTON)<>0 then
-                    button:=button;
-  if PEProp.Action=TSPE_Remove then
-                                   PEProp.setpoint:=false;
-
-  if (pc<>nil)or(PCreatedGDBLine<>nil) then
-                 begin
-                      drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.free;
-                      pc:=nil;
-                      PCreatedGDBLine:=nil;
-                 end;
-  dc:=drawings.GetCurrentDWG^.CreateDrawingRC;
-  result:={mclick}0;
-  if not PEProp.setpoint then
-  begin
-  PEProp.nearestvertex:=-1;
-  PEProp.dir:=0;
-  PEProp.nearestline:=-1;
-  PEProp.vdist:=+Infinity;
-  PEProp.ldist:=+Infinity;
-  ptvprev:=nil;
-  ptv:=p3dpl^.vertexarrayinwcs.beginiterate(ir);
-  if ptv<>nil then
-  repeat
-        v:=SqrVertexlength(wc,ptv^);
-        if v<PEProp.vdist then
-                       begin
-                            PEProp.vdist:=v;
-                            PEProp.nearestvertex:=ir.itc;
-                            PEProp.vvertex:=ptv^;
-                       end;
-        if ptvprev<>nil then
-                            begin
-                                 l:=sqr(distance2piece(wc,ptvprev^,ptv^));
-                                 if l<PEProp.ldist then
-                                                begin
-                                                     PEProp.ldist:=l;
-                                                     PEProp.nearestline:=ir.itc;
-                                                     PEProp.lvertex1:=ptvprev^;
-                                                     PEProp.lvertex2:=ptv^;
-                                                end;
-                            end;
-        ptvprev:=ptv;
-        ptv:=p3dpl^.vertexarrayinwcs.iterate(ir);
-  until ptv=nil;
-  end;
-  if (PEProp.Action=TSPE_Remove) then
-  begin
-  if PEProp.nearestvertex>-1 then
-                          begin
-
-                          pc := PGDBObjCircle(ENTF_CreateCircle(@drawings.GetCurrentDWG^.ConstructObjRoot,@drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray,[PEProp.vvertex.x,PEProp.vvertex.y,PEProp.vvertex.z,10*drawings.GetCurrentDWG^.pcamera^.prop.zoom]));
-                          zcSetEntPropFromCurrentDrawingProp(pc);
-                          //pc := GDBPointer(drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.CreateInitObj(GDBCircleID,drawings.GetCurrentROOT));
-                          //GDBObjSetCircleProp(pc,drawings.GetCurrentDWG^.LayerTable.GetCurrentLayer,sysvar.dwg.DWG_CLType^,sysvar.dwg.DWG_CColor^,sysvar.dwg.DWG_CLinew^, PEProp.vvertex,10*drawings.GetCurrentDWG^.pcamera^.prop.zoom);
-
-                          pc^.Formatentity(drawings.GetCurrentDWG^,dc);
-                          end;
-  end;
-  if (PEProp.Action=TSPE_Insert) then
-                                     begin
-                                          if abs(PEProp.vdist-PEProp.ldist)>sqreps then
-                                          begin
-                                               PCreatedGDBLine := PGDBObjLine(ENTF_CreateLine(@drawings.GetCurrentDWG^.ConstructObjRoot,@drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray,[PEProp.lvertex1.x,PEProp.lvertex1.y,PEProp.lvertex1.z,wc.x,wc.y,wc.z]));
-                                               zcSetEntPropFromCurrentDrawingProp(PCreatedGDBLine);
-                                               //PCreatedGDBLine := GDBPointer(drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.CreateInitObj(GDBLineID,drawings.GetCurrentROOT));
-                                               //GDBObjSetLineProp(PCreatedGDBLine,drawings.GetCurrentDWG^.LayerTable.GetCurrentLayer,sysvar.dwg.DWG_CLType^,sysvar.dwg.DWG_CColor^, sysvar.dwg.DWG_CLinew^, PEProp.lvertex1, wc);
-
-                                               PCreatedGDBLine^.Formatentity(drawings.GetCurrentDWG^,dc);
-
-                                               PCreatedGDBLine := PGDBObjLine(ENTF_CreateLine(@drawings.GetCurrentDWG^.ConstructObjRoot,@drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray,[PEProp.lvertex2.x,PEProp.lvertex2.y,PEProp.lvertex2.z,wc.x,wc.y,wc.z]));
-                                               zcSetEntPropFromCurrentDrawingProp(PCreatedGDBLine);
-                                               //PCreatedGDBLine := GDBPointer(drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.CreateInitObj(GDBLineID,drawings.GetCurrentROOT));
-                                               //GDBObjSetLineProp(PCreatedGDBLine,drawings.GetCurrentDWG^.LayerTable.GetCurrentLayer,sysvar.dwg.DWG_CLType^,sysvar.dwg.DWG_CColor^,sysvar.dwg.DWG_CLinew^, PEProp.lvertex2, wc);
-
-                                               PCreatedGDBLine^.Formatentity(drawings.GetCurrentDWG^,dc);
-                                               PEProp.dir:=-1;
-                                          end
-                                     else
-                                         begin
-                                              if PEProp.nearestvertex=0 then
-                                              begin
-                                                   PCreatedGDBLine := PGDBObjLine(ENTF_CreateLine(@drawings.GetCurrentDWG^.ConstructObjRoot,@drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray,[PEProp.lvertex1.x,PEProp.lvertex1.y,PEProp.lvertex1.z,wc.x,wc.y,wc.z]));
-                                                   zcSetEntPropFromCurrentDrawingProp(PCreatedGDBLine);
-
-                                                   //PCreatedGDBLine := GDBPointer(drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.CreateInitObj(GDBLineID,drawings.GetCurrentROOT));
-                                                   //GDBObjSetLineProp(PCreatedGDBLine,drawings.GetCurrentDWG^.LayerTable.GetCurrentLayer,sysvar.dwg.DWG_CLType^,sysvar.dwg.DWG_CColor^, sysvar.dwg.DWG_CLinew^, PEProp.lvertex1, wc);
-                                                   PCreatedGDBLine^.Formatentity(drawings.GetCurrentDWG^,dc);
-                                                   PEProp.nearestline:=PEProp.nearestvertex;
-                                                   PEProp.dir:=-1;
-                                              end
-                                              else if PEProp.nearestvertex=p3dpl^.vertexarrayinwcs.Count-1 then
-                                              begin
-                                                   PCreatedGDBLine := PGDBObjLine(ENTF_CreateLine(@drawings.GetCurrentDWG^.ConstructObjRoot,@drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray,[PEProp.lvertex2.x,PEProp.lvertex2.y,PEProp.lvertex2.z,wc.x,wc.y,wc.z]));
-                                                   zcSetEntPropFromCurrentDrawingProp(PCreatedGDBLine);
-                                                   //PCreatedGDBLine := GDBPointer(drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.CreateInitObj(GDBLineID,drawings.GetCurrentROOT));
-                                                   //GDBObjSetLineProp(PCreatedGDBLine,drawings.GetCurrentDWG^.LayerTable.GetCurrentLayer,sysvar.dwg.DWG_CLType^,sysvar.dwg.DWG_CColor^, sysvar.dwg.DWG_CLinew^, PEProp.lvertex2, wc);
-                                                   PCreatedGDBLine^.Formatentity(drawings.GetCurrentDWG^,dc);
-                                                   PEProp.nearestline:=PEProp.nearestvertex;
-                                                   PEProp.dir:=1;
-                                              end
-
-                                         end;
-                                     end;
-  if (PEProp.Action=TSPE_Scissor) then
-  begin
-  if PEProp.vdist>PEProp.ldist+bigeps then
-                                   begin
-                                        _tv:=NearestPointOnSegment(wc,PEProp.lvertex1,PEProp.lvertex2);
-                                        pc := PGDBObjCircle(ENTF_CreateCircle(@drawings.GetCurrentDWG^.ConstructObjRoot,@drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray,[_tv.x,_tv.y,_tv.z,10*drawings.GetCurrentDWG^.pcamera^.prop.zoom]));
-                                        zcSetEntPropFromCurrentDrawingProp(pc);
-                                        //pc := GDBPointer(drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.CreateInitObj(GDBCircleID,drawings.GetCurrentROOT));
-                                        //GDBObjSetCircleProp(pc,drawings.GetCurrentDWG^.LayerTable.GetCurrentLayer,sysvar.dwg.DWG_CLType^,sysvar.dwg.DWG_CColor^, sysvar.dwg.DWG_CLinew^, _tv, 10*drawings.GetCurrentDWG^.pcamera^.prop.zoom);
-                                        pc^.Formatentity(drawings.GetCurrentDWG^,dc);
-
-                                        PCreatedGDBLine := PGDBObjLine(ENTF_CreateLine(@drawings.GetCurrentDWG^.ConstructObjRoot,@drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray,[_tv.x,_tv.y,_tv.z,wc.x,wc.y,wc.z]));
-                                        zcSetEntPropFromCurrentDrawingProp(PCreatedGDBLine);
-                                        //PCreatedGDBLine := GDBPointer(drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.CreateInitObj(GDBLineID,drawings.GetCurrentROOT));
-                                        //GDBObjSetLineProp(PCreatedGDBLine,drawings.GetCurrentDWG^.LayerTable.GetCurrentLayer,sysvar.dwg.DWG_CLType^,sysvar.dwg.DWG_CColor^, sysvar.dwg.DWG_CLinew^, _tv, wc);
-
-                                        //PCreatedGDBLine := GDBPointer(drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.CreateObj(GDBLineID,drawings.GetCurrentROOT));
-                                        //GDBObjLineInit(drawings.GetCurrentROOT,PCreatedGDBLine,drawings.GetCurrentDWG^.LayerTable.GetCurrentLayer, sysvar.dwg.DWG_CLinew^, _tv, wc);
-                                        PCreatedGDBLine^.Formatentity(drawings.GetCurrentDWG^,dc);
-                                   end
-                               else
-                               begin
-                                   pc := PGDBObjCircle(ENTF_CreateCircle(@drawings.GetCurrentDWG^.ConstructObjRoot,@drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray,[PEProp.vvertex.x,PEProp.vvertex.y,PEProp.vvertex.z,40*drawings.GetCurrentDWG^.pcamera^.prop.zoom]));
-                                   zcSetEntPropFromCurrentDrawingProp(pc);
-                                   //pc := GDBPointer(drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.CreateInitObj(GDBCircleID,drawings.GetCurrentROOT));
-                                   //GDBObjSetCircleProp(pc,drawings.GetCurrentDWG^.LayerTable.GetCurrentLayer,sysvar.dwg.DWG_CLType^,sysvar.dwg.DWG_CColor^, sysvar.dwg.DWG_CLinew^, PEProp.vvertex, 40*drawings.GetCurrentDWG^.pcamera^.prop.zoom);
-                                   pc^.Formatentity(drawings.GetCurrentDWG^,dc);
-                               end
-
-  end;
-  if (button and MZW_LBUTTON)<>0 then
-  begin
-       if (PEProp.Action=TSPE_Remove)and(PEProp.nearestvertex<>-1) then
-                                        begin
-                                             if p3dpl^.vertexarrayinocs.Count>2 then
-                                             begin
-                                                  polydata.index:=PEProp.nearestvertex;
-                                                  if PEProp.nearestvertex=p3dpl^.vertexarrayinocs.GetCount then
-                                                                                polydata.index:=polydata.index+1;
-                                                  {polydata.nearestvertex:=PEProp.nearestvertex;
-                                                  polydata.nearestline:=polydata.nearestvertex;
-                                                  polydata.dir:=PEProp.dir;
-                                                  polydata.dir:=-1;
-                                                  if PEProp.nearestvertex=0 then
-                                                                                polydata.dir:=-1;
-                                                  if PEProp.nearestvertex=p3dpl^.vertexarrayinocs.GetCount then
-                                                                                polydata.dir:=1;}
-                                                  polydata.wc:=PEProp.vvertex;
-                                                  domethod:=tmethod(@p3dpl^.DeleteVertex);
-                                                  {tmethod(domethod).Code:=pointer(p3dpl.DeleteVertex);
-                                                  tmethod(domethod).Data:=p3dpl;}
-                                                  undomethod:=tmethod(@p3dpl^.InsertVertex);
-                                                  {tmethod(undomethod).Code:=pointer(p3dpl.InsertVertex);
-                                                  tmethod(undomethod).Data:=p3dpl;}
-                                                  with PushCreateTGObjectChangeCommand2(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,polydata,tmethod(domethod),tmethod(undomethod))^ do
-                                                  begin
-                                                       comit;
-                                                  end;
-
-
-
-
-                                                  //p3dpl^.vertexarrayinocs.DeleteElement(PEProp.nearestvertex);
-                                                  p3dpl^.YouChanged(drawings.GetCurrentDWG^);
-                                                  drawings.GetCurrentROOT^.FormatAfterEdit(drawings.GetCurrentDWG^,dc);
-                                                  //p3dpl^.Format;
-                                                  zcRedrawCurrentDrawing;
-                                             end
-                                             else
-                                                 ZCMsgCallBackInterface.TextMessage(rscm2VNotRemove,TMWOHistoryOut);
-                                        end;
-       if (PEProp.Action=TSPE_Insert)and(PEProp.nearestline<>-1)and(PEProp.dir<>0) then
-                                        begin
-                                             if (PEProp.setpoint)or(PEProp.Mode=TPEM_Nearest) then
-                                                                    begin
-                                                                         polydata.{nearestvertex}index:=PEProp.nearestline;
-                                                                         if PEProp.dir=1 then
-                                                                                      inc(polydata.{nearestvertex}index);
-                                                                         //polydata.nearestline:=PEProp.nearestline;
-                                                                         //polydata.dir:=PEProp.dir;
-                                                                         polydata.wc:=wc;
-                                                                         domethod:=tmethod(@p3dpl^.InsertVertex);
-                                                                         {tmethod(domethod).Code:=pointer(p3dpl.InsertVertex);
-                                                                         tmethod(domethod).Data:=p3dpl;}
-                                                                         undomethod:=tmethod(@p3dpl^.DeleteVertex);
-                                                                         {tmethod(undomethod).Code:=pointer(p3dpl.DeleteVertex);
-                                                                         tmethod(undomethod).Data:=p3dpl;}
-                                                                         with PushCreateTGObjectChangeCommand2(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,polydata,tmethod(domethod),tmethod(undomethod))^ do
-                                                                         begin
-                                                                              comit;
-                                                                         end;
-
-                                                                         //p3dpl^.vertexarrayinocs.InsertElement(PEProp.nearestline,PEProp.dir,@wc);
-                                                                         p3dpl^.YouChanged(drawings.GetCurrentDWG^);
-                                                                         drawings.GetCurrentROOT^.FormatAfterEdit(drawings.GetCurrentDWG^,dc);
-                                                                         //p3dpl^.Format;
-                                                                         zcRedrawCurrentDrawing;
-                                                                         PEProp.setpoint:=false;
-                                                                    end
-                                                                else
-                                                                    begin
-                                                                         PEProp.setpoint:=true;
-                                                                    end;
-
-
-                                        end;
-
-       if (PEProp.Action=TSPE_Scissor) then
-       begin
-       if PEProp.vdist>PEProp.ldist+bigeps then
-                                        begin
-                                        p3dpl2 := pointer(p3dpl^.Clone(p3dpl^.bp.ListPos.Owner));
-                                        drawings.GetCurrentROOT^.AddObjectToObjArray(@p3dpl2);
-                                        _tv:=NearestPointOnSegment(wc,PEProp.lvertex1,PEProp.lvertex2);
-                                        for i:=0 to p3dpl^.VertexArrayInOCS.count-1 do
-                                          begin
-                                               if i<PEProp.nearestline then
-                                                                             p3dpl2^.VertexArrayInOCS.DeleteElement(0);
-                                               if i>PEProp.nearestline-1 then
-                                                                             p3dpl^.VertexArrayInOCS.DeleteElement(PEProp.nearestline{+1});
-
-                                          end;
-                                        (*if p3dpl2^.VertexArrayInOCS.Count>1 then
-                                                                               p3dpl2^.VertexArrayInOCS.InsertElement({0}1,{1,}_tv)
-                                                                           else*)
-                                                                               p3dpl2^.VertexArrayInOCS.InsertElement(0,{-1,}_tv);
-                                        p3dpl^.VertexArrayInOCS.InsertElement(p3dpl^.VertexArrayInOCS.Count,{1,}_tv);
-                                        p3dpl2^.Formatentity(drawings.GetCurrentDWG^,dc);
-                                        p3dpl^.Formatentity(drawings.GetCurrentDWG^,dc);
-                                        drawings.GetCurrentROOT^.ObjArray.ObjTree.CorrectNodeBoundingBox(p3dpl2^);
-                                        end
-                                    else
-                                    begin
-                                         if (PEProp.nearestvertex=0)or(PEProp.nearestvertex=p3dpl^.VertexArrayInOCS.Count-1) then
-                                         begin
-                                              ZCMsgCallBackInterface.TextMessage(rscmNotCutHere,TMWOShowError);
-                                              exit;
-                                         end;
-                                         p3dpl2 := pointer(p3dpl^.Clone(p3dpl^.bp.ListPos.Owner));
-                                         drawings.GetCurrentROOT^.AddObjectToObjArray(@p3dpl2);
-
-                                         for i:=0 to p3dpl^.VertexArrayInOCS.count-1 do
-                                           begin
-                                                if i<PEProp.nearestvertex then
-                                                                              p3dpl2^.VertexArrayInOCS.DeleteElement(0);
-                                                if i>PEProp.nearestvertex then
-                                                                              p3dpl^.VertexArrayInOCS.DeleteElement(PEProp.nearestvertex+1);
-
-                                           end;
-                                         p3dpl2^.Formatentity(drawings.GetCurrentDWG^,dc);
-                                         p3dpl^.Formatentity(drawings.GetCurrentDWG^,dc);
-                                         drawings.GetCurrentROOT^.ObjArray.ObjTree.CorrectNodeBoundingBox(p3dpl2^);
-                                    end
-
-       end;
-      zcRedrawCurrentDrawing;
-      //drawings.GetCurrentDWG^.OGLwindow1.draw;
-
-  end
-end;
-
-{function _3DPolyEd_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
-var po:PGDBObjSubordinated;
-begin
-  exit;
-  result:=mclick;
-  p3dpl^.vp.Layer :=drawings.LayerTable.GetCurrentLayer;
-  p3dpl^.vp.lineweight := sysvar.dwg.DWG_CLinew^;
-  //p3dpl^.CoordInOCS.lEnd:= wc;
-  p3dpl^.Format;
-  if button = 1 then
-  begin
-    p3dpl^.AddVertex(wc);
-    p3dpl^.RenderFeedback;
-    drawings.GetCurrentDWG^.ConstructObjRoot.Count := 0;
-    result:=1;
-    redrawoglwnd;
-  end;
-end;}
 function Insert2_com(operands:TCommandOperands):TCommandResult;
 var
     s:gdbstring;
@@ -2917,11 +1903,11 @@ begin
      lc:=0;
      parray.init({$IFDEF DEBUGBUILD}'{527C1C8F-E832-43F9-B8C4-2733AD9EAF67}',{$ENDIF}10000);
      LinesMap:=MapPointOnCurve3DPropArray.Create;
-     lph:=lps.StartLongProcess(10,'Search intersections and storing data',nil);
+     lph:=lps.StartLongProcess('Search intersections and storing data',nil);
      FindAllIntersectionsInNode(@drawings.GetCurrentDWG^.pObjRoot^.ObjArray.ObjTree,lineAABBtests,linelinetests,intersectcount,@parray,LinesMap);
      lps.EndLongProcess(lph);
 
-     lph:=lps.StartLongProcess(10,'Placing points',nil);
+     lph:=lps.StartLongProcess('Placing points',nil);
        pv:=parray.beginiterate(ir);
        if pv<>nil then
        repeat
@@ -2930,7 +1916,7 @@ begin
        until pv=nil;
      lps.EndLongProcess(lph);
 
-     lph:=lps.StartLongProcess(10,'Cutting lines',nil);
+     lph:=lps.StartLongProcess('Cutting lines',nil);
       PlaceLines(LinesMap,lm,lc);
      lps.EndLongProcess(lph);
      ZCMsgCallBackInterface.TextMessage('Lines modified: '+inttostr(lm),TMWOHistoryOut);
@@ -2938,7 +1924,7 @@ begin
 
 
 
-     lph:=lps.StartLongProcess(10,'Freeing memory',nil);
+     lph:=lps.StartLongProcess('Freeing memory',nil);
      parray.done;
      LinesMap.Free;
      lps.EndLongProcess(lph);
@@ -2953,35 +1939,13 @@ begin
   BIProp.Blocks.Enums.init(100);
   BIProp.Scale:=uzegeometry.OneVertex;
   BIProp.Rotation:=0;
-  PEProp.Action:=TSPE_Insert;
 
-  CreateCommandRTEdObjectPlugin(@Circle_com_CommandStart,@Circle_com_CommandEnd,nil,nil,@Circle_com_BeforeClick,@Circle_com_AfterClick,nil,nil,'Circle2',0,0);
-  CreateCommandRTEdObjectPlugin(@_3DPolyEd_com_CommandStart,nil,nil,nil,@_3DPolyEd_com_BeforeClick,@_3DPolyEd_com_BeforeClick,nil,nil,'PolyEd',0,0);
   CreateCommandRTEdObjectPlugin(@Insert_com_CommandStart,@Insert_com_CommandEnd,nil,nil,@Insert_com_BeforeClick,@Insert_com_BeforeClick,nil,nil,'Insert',0,0);
 
-  copy.init('Copy',0,0);
   mirror.init('Mirror',0,0);
   mirror.SetCommandParam(@MirrorParam,'PTMirrorParam');
-  move.init('Move',0,0);
-  rotate.init('Rotate',0,0);
-  rotate.NotUseCommandLine:=false;
-  scale.init('Scale',0,0);
-  scale.NotUseCommandLine:=false;
   copybase.init('CopyBase',CADWG or CASelEnts,0);
   PasteClip.init('PasteClip',0,0);
-
-  TextInsert.init('Text',0,0);
-  TextInsertParams.Style.Enums.init(10);
-  TextInsertParams.Style.Selected:=0;
-  TextInsertParams.h:=2.5;
-  TextInsertParams.Oblique:=0;
-  TextInsertParams.WidthFactor:=1;
-  TextInsertParams.justify:=uzbtypes.jstl;
-  TextInsertParams.text:='text';
-  TextInsertParams.runtexteditor:=false;
-  TextInsertParams.Width:=100;
-  TextInsertParams.LineSpace:=1;
-  TextInsert.SetCommandParam(@TextInsertParams,'PTTextInsertParams');
 
   BlockReplace.init('BlockReplace',0,0);
   BlockReplaceParams.Find.Enums.init(10);
@@ -2992,13 +1956,9 @@ begin
   BlockReplaceParams.SaveOrientation:=true;
   BlockReplace.SetCommandParam(@BlockReplaceParams,'PTBlockReplaceParams');
 
-
-  CreateCommandFastObjectPlugin(@Erase_com,'Erase',CADWG,0);
-  CreateCommandFastObjectPlugin(@CutClip_com,'CutClip',CADWG or CASelEnts,0);
   CreateCommandFastObjectPlugin(@Insert2_com,'Insert2',CADWG,0);
   CreateCommandFastObjectPlugin(@PlaceAllBlocks_com,'PlaceAllBlocks',CADWG,0);
   CreateCommandFastObjectPlugin(@BlocksList_com,'BlocksList',CADWG,0);
-  CreateCommandFastObjectPlugin(@InverseSelected_com,'InverseSelected',CADWG or CASelEnts,0);
   //CreateCommandFastObjectPlugin(@bedit_com,'BEdit');
   pbeditcom:=CreateCommandRTEdObjectPlugin(@bedit_com,nil,nil,@bedit_format,nil,nil,nil,nil,'BEdit',0,0);
   BEditParam.Blocks.Enums.init(100);
@@ -3046,7 +2006,6 @@ procedure Finalize;
 begin
   BIProp.Blocks.Enums.done;
   BEditParam.Blocks.Enums.done;
-  TextInsertParams.Style.Enums.done;
 end;
 initialization
   startup;
