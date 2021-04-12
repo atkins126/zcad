@@ -32,10 +32,10 @@ type
     constructor Create;
     destructor Destroy;override;
     procedure AddType(EntType:TObjID);
-    procedure AddTypeName(EntTypeName:GDBString);//не работает
+    procedure AddTypeName(EntTypeName:GDBString);
     procedure AddTypeNameMask(EntTypeNameMask:GDBString);
     procedure SubType(EntType:TObjID);
-    procedure SubTypeName(EntTypeName:GDBString);//не работает
+    procedure SubTypeName(EntTypeName:GDBString);
     procedure SubTypeNameMask(EntTypeNameMask:GDBString);
     procedure SetFilter;
     procedure ResetFilter;
@@ -64,7 +64,7 @@ end;
 procedure TEntsTypeFilter.AddTypeName(EntTypeName:GDBString);
 var EntInfoData:TEntInfoData;
 begin
-  if DXFName2EntInfoData.TryGetValue(EntTypeName,EntInfoData) then
+  if ENTName2EntInfoData.TryGetValue(UpperCase(EntTypeName),EntInfoData) then
     Include.CountKey(EntInfoData.EntityID,1);
 end;
 
@@ -94,7 +94,7 @@ end;
 procedure TEntsTypeFilter.SubTypeName(EntTypeName:GDBString);
 var EntInfoData:TEntInfoData;
 begin
-  if DXFName2EntInfoData.TryGetValue(EntTypeName,EntInfoData) then
+  if ENTName2EntInfoData.TryGetValue(UpperCase(EntTypeName),EntInfoData) then
     Exclude.CountKey(EntInfoData.EntityID,1);
 end;
 

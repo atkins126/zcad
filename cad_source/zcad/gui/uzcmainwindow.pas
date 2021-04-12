@@ -431,7 +431,7 @@ end;
 function IsRealyQuit:GDBBoolean;
 var
    pint:PGDBInteger;
-   mem:GDBOpenArrayOfByte;
+   //mem:GDBOpenArrayOfByte;
    i:integer;
    dr:TZCMsgDialogResult;
    GVA:TGeneralViewArea;
@@ -490,10 +490,10 @@ begin
      if assigned(InfoForm) then
                          StoreBoundsToSavedUnit('TEdWND_',InfoForm.BoundsRect);
 
-          mem.init({$IFDEF DEBUGBUILD}'{71D987B4-8C57-4C62-8C12-CFC24A0A9C9A}',{$ENDIF}1024);
+          (*mem.init({$IFDEF DEBUGBUILD}'{71D987B4-8C57-4C62-8C12-CFC24A0A9C9A}',{$ENDIF}1024);
           SavedUnit^.SavePasToMem(mem);
           mem.SaveToFile(expandpath(ProgramPath+'rtl'+PathDelim+'savedvar.pas'));
-          mem.done;
+          mem.done;*)
           end;
      end
      else
@@ -598,7 +598,7 @@ begin
     result:=ZCmrYes;
     if ClosedDWG.Changed then begin
       repeat
-        s:=format(rsCloseDWGQuery,[ClosedDWG.FileName]);
+        s:=format(rsCloseDWGQuery,[StringReplace(ClosedDWG.FileName,'\','\\',[rfReplaceAll])]);
         dr:=zcMsgDlg(s,zcdiQuestion,[zccbYes,zccbNo,zccbCancel],NeedAskDonShow,MCTx);
         result:=dr.ModalResult;
         //result:=ZCADMainWindow.MessageBox(@s[1],@rsWarningCaption[1],MB_YESNOCANCEL);

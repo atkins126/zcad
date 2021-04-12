@@ -23,7 +23,7 @@ uses uzcfnavigatordevices,uzcfcommandline,uzbpaths,TypeDescriptors,uzctranslatio
      uzbtypes,varmandef,uzeconsts,uzeentdevice,uzcnavigatorsnodedesk,
      uzeentity,zcobjectinspector,uzcguimanager,uzcenitiesvariablesextender,uzbstrproc,
      Types,Controls,uzcdrawings,Varman,UUnitManager,uzcsysvars,uzcsysinfo,LazLogger,laz.VirtualTrees,
-     uzcstrconsts,uzcfnavigatordevicescxmenu,uzcmainwindow,MacroDefIntf,sysutils;
+     uzcstrconsts,uzcfnavigatordevicescxmenu,uzcmainwindow,MacroDefIntf,sysutils,fgl;
 resourcestring
   rsDevices='Devices';
   rsRisers='Risers';
@@ -216,30 +216,27 @@ function CreateNavigatorDevices:TForm;
 begin
  result:=tform(TNavigatorDevices.NewInstance);
  TNavigatorDevices(result).BP.TreeBuildMap:='+NMO_Prefix|+NMO_BaseName|+@@[NMO_Name]';
- TNavigatorDevices(result).BP.IncludeEntities:='+Device';
- TNavigatorDevices(result).BP.IncludeProperties:='';//'+*|-%%[Name]=EL_CABLE_*';
+ TNavigatorDevices(result).BP.IncludeEntities:='IncludeEntityName(''Device'')';
+ TNavigatorDevices(result).BP.IncludeProperties:='';
+ TNavigatorDevices(result).BP.Header:='SetColumnsCount(3,2);SetColumnParams(0,''Tree'',''@@[NMO_Name]'',''tmpGUIParamSave_NavDev_C0'',1);SetColumnParams(1,''Name'',''NMO_Name'',''tmpGUIParamSave_NavDev_C1'',1);SetColumnParams(2,''Comment'',''NMO_Name'',''tmpGUIParamSave_NavDev_C2'',1)';
  TNavigatorDevices(result).BP.UseMainFunctions:=True;
 end;
 function CreateNavigatorRisers:TForm;
 begin
  result:=tform(TNavigatorRisers.NewInstance);
- TNavigatorRisers(result).BP.TreeBuildMap:='{+@@[RiserName]:@@[Elevation]:@@[Text]}';
- //TNavigatorRisers(result).BP.IncludeEntities:='IncludeEnt(Device)';
- TNavigatorRisers(result).BP.IncludeEntities:='+Device';
- TNavigatorRisers(result).BP.IncludeProperties:='+%%[Name]=EL_CABLE_*';
+ TNavigatorRisers(result).BP.TreeBuildMap:='+@@[RiserName]:@@[Elevation]:@@[Text]';
+ TNavigatorRisers(result).BP.IncludeEntities:='IncludeEntityName(''Device'')';
+ TNavigatorRisers(result).BP.IncludeProperties:='IncludeIfMask(%%(''Name''),''EL_CABLE_*'')';
  TNavigatorRisers(result).BP.UseMainFunctions:=False;
 end;
 function CreateNavigatorCables:TForm;
 begin
  result:=tform(TNavigatorCables.NewInstance);
- {TNavigatorCables(result).TreeBuildMap:='+NMO_BaseName|+@@[NMO_Name]:@@[CABLE_Segment]';
- TNavigatorRisers(result).IncludeEntities:='+GDBObjCable';
- TNavigatorRisers(result).IncludeProperties:='+*';
- TNavigatorCables(result).UseMainFunctions:=False;}
-
- TNavigatorCables(result).BP.TreeBuildMap:='+%%[Layer]';
- TNavigatorRisers(result).BP.IncludeEntities:='';
- TNavigatorRisers(result).BP.IncludeProperties:='';
+ TNavigatorCables(result).BP.TreeBuildMap:='+NMO_Prefix|+NMO_BaseName|+@@[NMO_Name]';
+ TNavigatorRisers(result).BP.IncludeEntities:='IncludeEntityName(''Cable'');'#13#10'IncludeEntityName(''Device'')';
+ TNavigatorRisers(result).BP.IncludeProperties:='IncludeIfSame(Or(SameMask(%%(''Name''),''CABLE_*''),SameMask(%%(''EntityName''),''Cable'')))';
+ //TNavigatorRisers(result).BP.IncludeProperties:='IncludeIfSame(SameMask(%%(''EntityName''),''Cable''))';
+ //TNavigatorRisers(result).BP.IncludeProperties:='IncludeIfSame(''+'')';
  TNavigatorCables(result).BP.UseMainFunctions:=False;
 end;
 

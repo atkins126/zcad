@@ -10,9 +10,21 @@ uses
   uzbtypes,uzegeometry, uzccommandsmanager,
   uzcinterface,uzeentity,uzcimagesmanager,uzcdrawings,
   uzcenitiesvariablesextender,varmandef,uzbstrproc,uzcmainwindow,uzctreenode,
-  Varman;
-
+  Varman,
+  {uzeparser,uzeentitiestypefilter,}strutils,Masks,
+  uzcoimultiproperties,uzedimensionaltypes;
 type
+  TExtColumnParams=record
+    Pattern:string;
+    SaveWidthVar:string;
+  end;
+  TExtColumnsParams=array of TExtColumnParams;
+  PTExtTreeParam=^TExtTreeParam;
+  TExtTreeParam=record
+    ExtColumnsParams:TExtColumnsParams;
+  end;
+
+
   TCreateEntityNodeFunc=function(Tree: TVirtualStringTree;basenode:PVirtualNode;pent:pGDBObjEntity;Name:string):PVirtualNode of object;
   TBaseRootNodeDesk=class;
   TFilterEntityProc=function(pent:pGDBObjEntity):Boolean of object;
@@ -314,5 +326,8 @@ begin
    RootNode:=nil;
    inherited;
 end;
+
+initialization
+finalization;
 end.
 

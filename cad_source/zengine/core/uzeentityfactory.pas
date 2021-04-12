@@ -22,7 +22,8 @@ unit uzeentityfactory;
 
 interface
 uses uzeentsubordinated,usimplegenerics,uzedrawingdef,uzeconsts,gzctnrstl,
-     uzbmemman,uzbtypesbase,uzbtypes,{uzeentgenericsubentry,}uzeentity,LazLogger;
+     uzbmemman,uzbtypesbase,uzbtypes,{uzeentgenericsubentry,}uzeentity,LazLogger,
+     SysUtils;
 type
 TAllocEntFunc=function:GDBPointer;
 TAllocAndInitEntFunc=function (owner:PGDBObjGenericWithSubordinated): PGDBObjEntity;
@@ -65,6 +66,7 @@ procedure RegisterEntityUpgradeInfo(const _EntityID:TObjID;
                                     const _EntityUpgradeFunc:TEntityUpgradeFunc);
 var
   DXFName2EntInfoData:TDXFName2EntInfoDataMap;
+  ENTName2EntInfoData:TDXFName2EntInfoDataMap;
   ObjID2EntInfoData:TObjID2EntInfoDataMap;
   EntUpgradeKey2EntUpgradeData:TEntUpgradeDataMap;
   NeedInit:boolean=true;
@@ -90,6 +92,7 @@ begin
      if needinit then
      begin
        DXFName2EntInfoData:=TDXFName2EntInfoDataMap.create;
+       ENTName2EntInfoData:=TDXFName2EntInfoDataMap.Create;
        ObjID2EntInfoData:=TObjID2EntInfoDataMap.create;
        EntUpgradeKey2EntUpgradeData:=TEntUpgradeDataMap.Create;
        NeedInit:=false;
@@ -111,6 +114,10 @@ begin
 
      if dxfent then
        DXFName2EntInfoData.RegisterKey(_DXFName,EntInfoData);
+     if _DXFName='' then
+       ENTName2EntInfoData.RegisterKey(uppercase(_UserName),EntInfoData)
+     else
+       ENTName2EntInfoData.RegisterKey(_DXFName,EntInfoData);
      ObjID2EntInfoData.RegisterKey(_EntityID,EntInfoData);
 end;
 
@@ -156,6 +163,7 @@ begin
      if needinit then
      begin
        DXFName2EntInfoData:=TDXFName2EntInfoDataMap.create;
+       ENTName2EntInfoData:=TDXFName2EntInfoDataMap.Create;
        ObjID2EntInfoData:=TObjID2EntInfoDataMap.create;
        EntUpgradeKey2EntUpgradeData:=TEntUpgradeDataMap.Create;
        NeedInit:=false;
@@ -187,6 +195,7 @@ initialization
   if needinit then
   begin
     DXFName2EntInfoData:=TDXFName2EntInfoDataMap.create;
+    ENTName2EntInfoData:=TDXFName2EntInfoDataMap.Create;
     ObjID2EntInfoData:=TObjID2EntInfoDataMap.create;
     EntUpgradeKey2EntUpgradeData:=TEntUpgradeDataMap.Create;
     NeedInit:=false;
