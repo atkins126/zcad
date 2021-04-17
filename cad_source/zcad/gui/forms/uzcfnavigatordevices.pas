@@ -21,11 +21,17 @@ uses
 resourcestring
   rsStandaloneDevices='Standalone devices';
 
+const
+  TreeBuildMapSaveVarSuffix='_TreeBuildMap';
+  IncludeEntitiesSaveVarSuffix='_IncludeEntities';
+  IncludePropertiesSaveVarSuffix='_IncludeProperties';
+  TreePropertiesSaveVarSuffix='_TreeProperties';
+
 type
   TBuildParam=record
-    TreeBuildMap:string;
-    IncludeEntities,IncludeProperties:string;
-    Header:string;
+    TreeBuildMap:ansistring;
+    IncludeEntities,IncludeProperties:ansistring;
+    TreeProperties:ansistring;
     UseMainFunctions:Boolean;
   end;
   TStringPartEnabler=TPartEnabler<String>;
@@ -43,10 +49,12 @@ type
     Refresh:TAction;
     IncludeEnts:TAction;
     IncludeProps:TAction;
+    TreeProps:TAction;
     function CreateEntityNode(Tree: TVirtualStringTree;basenode:PVirtualNode;pent:pGDBObjEntity;Name:string):PVirtualNode;virtual;
     procedure RefreshTree(Sender: TObject);
     procedure EditIncludeEnts(Sender: TObject);
     procedure EditIncludeProperties(Sender: TObject);
+    procedure EditTreeProperties(Sender: TObject);
     procedure AutoRefreshTree(sender:TObject;GUIAction:TZMessageID);
     procedure TVDblClick(Sender: TObject);
     procedure TVOnMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
@@ -92,6 +100,7 @@ type
     procedure CreateFilters;
     procedure EraseRoots;
     procedure FreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure SetTreeProp;
     procedure VTFocuschanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
 
     function EntsFilter(pent:pGDBObjEntity):Boolean;virtual;
@@ -126,7 +135,20 @@ begin
   for i:=low(ExtTreeParam.ExtColumnsParams) to high(ExtTreeParam.ExtColumnsParams) do
     if ExtTreeParam.ExtColumnsParams[i].SaveWidthVar<>'' then
       StoreIntegerToSavedUnit(ExtTreeParam.ExtColumnsParams[i].SaveWidthVar,SuffWidth,NavTree.Header.Columns[i].Width);
-  FreeAndNil(EntsTypeFilter);
+
+  StoreAnsiStringToSavedUnit(Name,TreeBuildMapSaveVarSuffix,BP.TreeBuildMap);
+  StoreAnsiStringToSavedUnit(Name,IncludeEntitiesSaveVarSuffix,BP.IncludeEntities);
+  StoreAnsiStringToSavedUnit(Name,IncludePropertiesSaveVarSuffix,BP.IncludeProperties);
+  StoreAnsiStringToSavedUnit(Name,TreePropertiesSaveVarSuffix,BP.TreeProperties);
+
+  if Assigned(EntsTypeFilter) then
+    FreeAndNil(EntsTypeFilter);
+  if Assigned(Ent2NodeMap) then
+    FreeAndNil(Ent2NodeMap);
+  if assigned (StandaloneNodeStates) then
+    FreeAndNil(StandaloneNodeStates);
+  if assigned (EntityIncluder) then
+    FreeAndNil(EntityIncluder);
   inherited;
 end;
 
@@ -296,6 +318,25 @@ begin
   if Assigned(pnd) then
      system.Finalize(pnd^);
 end;
+
+procedure TNavigatorDevices.SetTreeProp;
+var
+  data: TNavParamData;
+  params: TParserNavParam.TGeneralParsedText;
+begin
+  NavTree.BeginUpdate;
+  params:=ParserNavParam.GetTokens(bp.TreeProperties);
+  data.NavTree:=NavTree;
+  data.ColumnCount:=0;
+  data.PExtTreeParam:=@ExtTreeParam;
+  NavTree.Header.Columns.Clear;
+  NavTree.Header.AutoSizeIndex:=0;
+  if assigned(params) then
+    params.Doit(data);
+  params.free;
+  NavTree.EndUpdate;
+end;
+
 procedure TNavigatorDevices.VTFocuschanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
 var
   pnd:PTNodeData;
@@ -374,8 +415,6 @@ procedure TNavigatorDevices._onCreate(Sender: TObject);
 var
   po:TVTPaintOptions;
   i:integer;
-  params:TParserNavParam.TGeneralParsedText;
-  data:TNavParamData;
 begin
 
    umf:=TmyVariableAction.Create(self);
@@ -391,7 +430,7 @@ begin
    TreeEnabler:=TStringPartEnabler.Create(self);
    TreeEnabler.EdgeBorders:=[{ebLeft,ebTop,ebRight,ebBottom}];
    TreeEnabler.AutoSize:=true;
-   TreeEnabler.actns:=[umf,IncludeEnts,IncludeProps,Refresh];
+   TreeEnabler.actns:=[umf,IncludeEnts,IncludeProps,TreeProps,Refresh];
 
    TreeEnabler.OnPartChanged:=RefreshTree;
    TreeEnabler.GetCountFunc:=GetPartsCount;
@@ -415,21 +454,13 @@ begin
    NavTree.OnMeasureTextWidth:=MeasureTextWidth;
    NavTree.OnDrawText:=DrawText;
    po:=NavTree.TreeOptions.PaintOptions;
-   po:=po-[toShowFilteredNodes,toHideSelection]+[toPopupMode];
+   po:=po-[toShowFilteredNodes,toHideSelection]+[toPopupMode,toShowVertGridLines,toShowHorzGridLines];
    NavTree.TreeOptions.PaintOptions:=po;
+   NavTree.TreeOptions.SelectionOptions:=NavTree.TreeOptions.SelectionOptions+[toFullRowSelect];
    MainFunctionIconIndex:=-1;
    BuggyIconIndex:=-1;
 
-   params:=ParserNavParam.GetTokens(bp.Header);
-   data.NavTree:=NavTree;
-   data.ColumnCount:=0;
-   data.PExtTreeParam:=@ExtTreeParam;
-   NavTree.Header.Columns.Clear;
-   //NavTree.Header.Columns.ItemClass:=TMyVirtualTreeColumn;
-   NavTree.Header.AutoSizeIndex:=0;
-   if assigned(params) then
-     params.Doit(data);
-   params.free;
+   SetTreeProp;
 
    {NavTree.Header.AutoSizeIndex := 0;
    NavTree.Header.MainColumn := 1;
@@ -451,6 +482,7 @@ var
   pentvarext:PTVariablesExtender;
   myContentRect:TRect;
 begin
+  if Column>0 then exit;
   pnd:=Sender.GetNodeData(Node);
   if pnd<>nil then
   if pnd^.pent<>nil then
@@ -488,7 +520,8 @@ begin
       SaveCellRectLeft:=CellRect.Left;
       myCellRect:=CellRect;
       DefaultDraw:=false;
-      myCellRect.Left:=myCellRect.Left+2*ImagesManager.IconList.Width;
+      if Column=0 then
+        myCellRect.Left:=myCellRect.Left+2*ImagesManager.IconList.Width;
       TargetCanvas.TextRect(myCellRect,myCellRect.Left,myCellRect.Top,CellText);
       //DrawText(TargetCanvas.Handle, PChar(Text), Length(Text), CellRect, DrawFormat);
       //ImagesManager.IconList.Draw(TargetCanvas,ContentRect.Left,(ContentRect.Bottom-ImagesManager.IconList.Width) div 2,ImagesManager.GetImageIndex(GetEntityVariableValue(pnd^.pent,'ENTID_Function','bug'),BuggyIconIndex),gdeNormal);
@@ -552,7 +585,14 @@ begin
    RefreshTree(nil);
  end;
 end;
-
+procedure TNavigatorDevices.EditTreeProperties(Sender: TObject);
+begin
+ if not isvisible then exit;
+ if RunEditor('Tree properties editor','TreePropertiesEdWND',BP.TreeProperties) then begin
+   SetTreeProp;
+   RefreshTree(nil);
+ end;
+end;
 procedure TNavigatorDevices.RefreshTree(Sender: TObject);
 var
   pv:pGDBObjEntity;
@@ -602,8 +642,8 @@ begin
 
    if assigned(StandaloneNodeStates) then
    begin
-   StandaloneNode.RestoreState(StandaloneNodeStates);
-   freeandnil(StandaloneNodeStates);
+     StandaloneNode.RestoreState(StandaloneNodeStates);
+     FreeAndNil(StandaloneNodeStates);
    end;
 
    LPS.EndLongProcess(lpsh);
@@ -630,7 +670,7 @@ begin
     end else begin
       NavTree.ClearSelection;
       if assigned (StandaloneNodeStates) then
-        freeandnil(StandaloneNodeStates);
+        FreeAndNil(StandaloneNodeStates);
       if assigned (StandaloneNode) then
       StandaloneNodeStates:=StandaloneNode.SaveState;
     end;
@@ -721,14 +761,19 @@ procedure TNavigatorDevices.NavGetText(Sender: TBaseVirtualTree; Node: PVirtualN
 var
   pnd:PTNodeData;
 begin
+  if Column<0 then
+    Column:=0;
   pnd := Sender.GetNodeData(Node);
   if assigned(pnd) then
   begin
     //celltext:=pnd^.name;
-  if pnd^.pent=nil then
-    celltext:=pnd^.name
-  else
-    celltext:=GetEntityVariableValue(pnd^.pent,'NMO_Name',rsNameAbsent);
+  if pnd^.pent=nil then begin
+    if Column=0 then
+      celltext:=pnd^.name
+    else
+      celltext:='';
+  end else
+    celltext:=textformat(ExtTreeParam.ExtColumnsParams[Column].Pattern,pnd^.pent);//GetEntityVariableValue(pnd^.pent,'NMO_Name',rsNameAbsent);
   end;
 end;
 procedure TNavigatorDevices.getImageIndex;
@@ -749,6 +794,11 @@ var
   pnd:PTNodeData;
   pentvarext:PTVariablesExtender;
 begin
+  if Column>0 then begin
+    ImageIndex:=-1;
+    exit;
+  end;
+
   getImageIndex;
      if (assigned(CombinedNode))and(node=CombinedNode.RootNode) then
                                        ImageIndex:=CombinedNode.ficonindex
@@ -820,11 +870,15 @@ begin
   end;
   if assigned(StandaloneNode) then
   begin
+    if Assigned(StandaloneNodeStates)then
+      FreeAndNil(StandaloneNodeStates);
     StandaloneNodeStates:=StandaloneNode.SaveState;
     FreeAndNil(StandaloneNode);
   end;
-  FreeAndNil(Ent2NodeMap);
-  FreeAndNil(EntityIncluder);
+  if assigned(Ent2NodeMap) then
+    FreeAndNil(Ent2NodeMap);
+  if assigned(EntityIncluder) then
+    FreeAndNil(EntityIncluder);
 end;
 
 procedure SelectSubNodes(nav:TVirtualStringTree;pnode:PVirtualNode);

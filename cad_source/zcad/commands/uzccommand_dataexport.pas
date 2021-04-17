@@ -59,7 +59,7 @@ type
 
   TParserExporterString=AnsiString;
   TParserExporterChar=AnsiChar;
-  TExporterParser=TParser<TParserExporterString,TParserExporterChar,TDataExport,TCharToOptChar<TParserExporterChar>>;
+  TExporterParser=TGZParser<TParserExporterString,TParserExporterChar,TDataExport,TCharToOptChar<TParserExporterChar>>;
 
   TExport=class(TExporterParser.TParserTokenizer.TStaticProcessor)
     class procedure StaticDoit(const Source:TParserExporterString;
@@ -295,6 +295,7 @@ begin
   propertyname:=ParsedOperands.GetResult(Data);
   if MultiPropertiesManager.MultiPropertyDictionary.MyGetValue(propertyname,mp) then begin
     {bip}mp.PIiterateData:=mp.BeforeIterateProc(mp,@VU);
+    { #todo : нужно делать копию mp, но пока пусть так }
   end else
     mp:=nil;
 end;
@@ -304,7 +305,7 @@ begin
   if mp<>nil then begin
     if @mp.AfterIterateProc<>nil then
       mp.AfterIterateProc({bip}mp.PIiterateData,mp);
-    mp.Free;
+    //mp.Free;{ #todo : нужно делать копию mp, но пока пусть так }
   end;
   inherited;
 end;
@@ -458,4 +459,5 @@ initialization
 finalization
   debugln('{I}[UnitsFinalization] Unit "',{$INCLUDE %FILE%},'" finalization');
   ExporterParser.Free;
+  VU.done;
 end.

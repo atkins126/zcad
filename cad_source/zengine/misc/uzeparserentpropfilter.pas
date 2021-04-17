@@ -18,7 +18,7 @@ type
 
   TParserEntityPropFilterString=AnsiString;
   TParserEntityPropFilterChar=AnsiChar;
-  TParserEntityPropFilter=TParser<TParserEntityPropFilterString,TParserEntityPropFilterChar,TPropFilterData,TCharToOptChar<AnsiChar>>;
+  TParserEntityPropFilter=TGZParser<TParserEntityPropFilterString,TParserEntityPropFilterChar,TPropFilterData,TCharToOptChar<AnsiChar>>;
 
   TIncludeIfMask=class(TParserEntityPropFilter.TParserTokenizer.TStaticProcessor)
     class procedure StaticDoit(const Source:TParserEntityPropFilterString;
@@ -288,6 +288,7 @@ begin
   propertyname:=ParsedOperands.GetResult(Data);
   if MultiPropertiesManager.MultiPropertyDictionary.MyGetValue(propertyname,mp) then begin
     {bip}mp.PIiterateData:=mp.BeforeIterateProc(mp,@VU);
+    //mp.Free;{ #todo : нужно делать копию mp, но пока пусть так }
   end else
     mp:=nil;
 end;
@@ -297,7 +298,7 @@ begin
   if mp<>nil then begin
     if @mp.AfterIterateProc<>nil then
       mp.AfterIterateProc({bip}mp.PIiterateData,mp);
-    mp.Free;
+    //mp.Free;{ #todo : нужно делать копию mp, но пока пусть так }
   end;
 end;
 
@@ -319,5 +320,6 @@ initialization
   ParserEntityPropFilter.RegisterToken(#13,#0,#0,nil,nil,[TOSeparator,TOCanBeOmitted]);
 finalization;
   ParserEntityPropFilter.Free;
+  VU.done;
 end.
 
