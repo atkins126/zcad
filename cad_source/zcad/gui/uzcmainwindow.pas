@@ -26,7 +26,7 @@ uses
   ActnList,LCLType,LCLProc,uzctranslations,LMessages,LCLIntf,
   Forms, stdctrls, ExtCtrls, ComCtrls,Controls,Classes,SysUtils,LazUTF8,
   menus,graphics,Themes,
-  Types,UniqueInstanceBase,simpleipc,Laz2_XMLCfg,
+  Types,UniqueInstanceBase,simpleipc,Laz2_XMLCfg,LCLVersion,
  {ZCAD BASE}
        uzcsysparams,gzctnrvectortypes,uzemathutils,uzelongprocesssupport,
        uzgldrawergdi,uzcdrawing,UGDBOpenArrayOfPV,uzedrawingabstract,
@@ -788,6 +788,10 @@ begin
 
 
   {Наcтраиваем докинг}
+  {$IF lcl_fullversion>2001200}
+    DockMaster.FloatingWindowsOnTop:=true;
+    DockMaster.MainDockForm:=Self;
+  {$ENDIF}
   DockMaster.SplitterClass:=TmyAnchorDockSplitter;
   DockMaster.ManagerClass:=TAnchorDockManager;
   DockMaster.OnCreateControl:=DockMasterCreateControl;
@@ -1906,7 +1910,9 @@ begin
     ZCMsgCallBackInterface.Do_SetNormalFocus;
   pdwg:=drawings.GetCurrentDWG;
   if pdwg<>nil then
-  if pdwg.wa<>nil then begin
+  if pdwg.wa<>nil then
+  if pdwg.wa.getviewcontrol<>nil then
+  begin
   bb:=pdwg.GetCurrentROOT.vp.BoundingBox;
   size:=round(pdwg.wa.getviewcontrol.ClientWidth*pdwg.GetPcamera^.prop.zoom);
   position:=round(-pdwg.GetPcamera^.prop.point.x);

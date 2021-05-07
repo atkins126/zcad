@@ -212,17 +212,17 @@ end;
 
 initialization
   ParserEntityTypeFilter:=TParserEntityTypeFilter.create;
-  BracketTockenId:=ParserEntityTypeFilter.RegisterToken('(','(',')',TIncludeEntityNameMask,ParserEntityTypeFilter,[TONestedBracke,TOIncludeBrackeOpen,TOSeparator]);
-  ParserEntityTypeFilter.RegisterToken('IncludeEntityMask',#0,#0,TIncludeEntityNameMask,ParserEntityTypeFilter,[TOWholeWordOnly],BracketTockenId);
-  ParserEntityTypeFilter.RegisterToken('IncludeEntityName',#0,#0,TIncludeEntityName,ParserEntityTypeFilter,[TOWholeWordOnly],BracketTockenId);
-  ParserEntityTypeFilter.RegisterToken('ExcludeEntityMask',#0,#0,TExcludeEntityNameMask,ParserEntityTypeFilter,[TOWholeWordOnly],BracketTockenId);
-  ParserEntityTypeFilter.RegisterToken('ExcludeEntityName',#0,#0,TExcludeEntityName,ParserEntityTypeFilter,[TOWholeWordOnly],BracketTockenId);
-  ParserEntityTypeFilter.RegisterToken('''','''','''',ParserEntityTypeFilter.TParserTokenizer.TStringProcessor,nil,[TOIncludeBrackeOpen]);
-  ParserEntityTypeFilter.RegisterToken(',',#0,#0,nil,nil,[TOSeparator]);
-  ParserEntityTypeFilter.RegisterToken(';',#0,#0,nil,nil,[TOSeparator]);
-  ParserEntityTypeFilter.RegisterToken(' ',#0,#0,nil,nil,[TOSeparator,TOCanBeOmitted]);
-  ParserEntityTypeFilter.RegisterToken(#10,#0,#0,nil,nil,[TOSeparator,TOCanBeOmitted]);
-  ParserEntityTypeFilter.RegisterToken(#13,#0,#0,nil,nil,[TOSeparator,TOCanBeOmitted]);
+  BracketTockenId:=ParserEntityTypeFilter.RegisterToken('(','(',')',TIncludeEntityNameMask,ParserEntityTypeFilter,TGONestedBracke or TGOIncludeBrackeOpen or TGOSeparator);
+  ParserEntityTypeFilter.RegisterToken('IncludeEntityMask',#0,#0,TIncludeEntityNameMask,ParserEntityTypeFilter,TGOWholeWordOnly,BracketTockenId);
+  ParserEntityTypeFilter.RegisterToken('IncludeEntityName',#0,#0,TIncludeEntityName,ParserEntityTypeFilter,TGOWholeWordOnly,BracketTockenId);
+  ParserEntityTypeFilter.RegisterToken('ExcludeEntityMask',#0,#0,TExcludeEntityNameMask,ParserEntityTypeFilter,TGOWholeWordOnly,BracketTockenId);
+  ParserEntityTypeFilter.RegisterToken('ExcludeEntityName',#0,#0,TExcludeEntityName,ParserEntityTypeFilter,TGOWholeWordOnly,BracketTockenId);
+  ParserEntityTypeFilter.RegisterToken('''','''','''',ParserEntityTypeFilter.TParserTokenizer.TStringProcessor,nil,TGOIncludeBrackeOpen);
+  ParserEntityTypeFilter.RegisterToken(',',#0,#0,nil,nil,TGOSeparator);
+  ParserEntityTypeFilter.RegisterToken(';',#0,#0,nil,nil,TGOSeparator);
+  ParserEntityTypeFilter.RegisterToken(' ',#0,#0,nil,nil,TGOSeparator or TGOCanBeOmitted);
+  ParserEntityTypeFilter.RegisterToken(#10,#0,#0,nil,nil,TGOSeparator or TGOCanBeOmitted);
+  ParserEntityTypeFilter.RegisterToken(#13,#0,#0,nil,nil,TGOSeparator or TGOCanBeOmitted);
   //ParserEntityTypeFilter.RegisterToken('ExcludeEntityNameMask(','(',')',TEntityFilterExcluder,[TOIncludeBrackeOpen]);
 finalization;
   ParserEntityTypeFilter.Free;
