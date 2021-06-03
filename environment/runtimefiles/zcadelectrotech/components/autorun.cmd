@@ -18,6 +18,8 @@ MergeBlocks(_OPS.dxf)
 MergeBlocks(_KIP.dxf)
 MergeBlocks(_ss.dxf)
 MergeBlocks(_spds.dxf)
+MergeBlocks(_vl_el.dxf)
+MergeBlocks(_vl_table.dxf)
 
 ;------------------------
 ;Создание пустого чертежа
@@ -35,4 +37,4 @@ MergeBlocks(_spds.dxf)
 ;-----------------------------------
 ;Показ окна "О программе" при старте
 ;-----------------------------------
-About
+;About
