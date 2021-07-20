@@ -34,7 +34,7 @@ uses
        UGDBOpenArrayOfByte,uzbmemman,uzbtypesbase,uzbtypes,
        uzegeometry,uzcsysvars,uzcstrconsts,uzbstrproc,UGDBNamedObjectsArray,uzclog,uzblog,
        uzedimensionaltypes,varmandef, varman,UUnitManager,uzcsysinfo,strmy,uzestylestexts,uzestylesdim,
-  uzcexceptions,
+  uzbexceptionscl,uzbexceptionsgui,
   {ZCAD SIMPLE PASCAL SCRIPT}
        //languade,
   {ZCAD ENTITIES}
@@ -113,7 +113,6 @@ type
     procedure EndLongProcess(LPHandle:TLPSHandle;TotalLPTime:TDateTime);
 
     public
-    FAppProps:TApplicationProperties;
     SuppressedShortcuts:TXMLConfig;
     rt:GDBInteger;
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
@@ -976,9 +975,7 @@ begin
   with programlog.Enter('TZCADMainWindow._onCreate',LM_Debug,LMD) do begin try
   ZCADGUIManager.RegisterZCADFormInfo('PageControl',rsDrawingWindowWndName,Tform,types.rect(200,200,600,500),ZCADMainPanelSetupProc,nil,@ZCADMainWindow.MainPanel);
 
-  FAppProps := TApplicationProperties.Create(Self);
-  FAppProps.OnException := ZcadException;
-  FAppProps.CaptureExceptions := True;
+  TZGuiExceptionsHandler.InstallHandler(ZcadException);
 
   SuppressedShortcuts:=TXMLConfig.Create(nil);
   SuppressedShortcuts.Filename:=ProgramPath+'components/suppressedshortcuts.xml';
@@ -1159,6 +1156,7 @@ procedure TZCADMainWindow.myKeyDown(Sender: TObject; var Key: Word; Shift: TShif
 var
   tempkey:word;
   comtext:string;
+  needinput:boolean;
 begin
   with programlog.Enter('TZCADMainWindow.myKeyDown',LM_Debug,LMD) do begin try
     ZCMsgCallBackInterface.Do_KeyDown(Sender,Key,Shift);
@@ -1184,9 +1182,13 @@ begin
     tempkey:=key;
 
     comtext:='';
+    needinput:=false;
+    if commandmanager.pcommandrunning<>nil then
+      if commandmanager.pcommandrunning.IData.GetPointMode=TGPWaitInput then
+        needinput:=true;
     if assigned(cmdedit) then
       comtext:=cmdedit.text;
-    if comtext='' then begin
+    if (comtext='') and (not needinput) then begin
       if assigned(drawings.GetCurrentDWG) then
         if assigned(drawings.GetCurrentDWG.wa) then
           if assigned(drawings.GetCurrentDWG.wa.getviewcontrol)then
@@ -1481,7 +1483,7 @@ begin
                                                                     begin
                                                                          {if assigned(sysvarRDRemoveSystemCursorFromWorkArea)
                                                                          then}
-                                                                             RemoveCursorIfNeed(Sender.getviewcontrol,sysvarRDRemoveSystemCursorFromWorkArea)
+                                                                             RemoveCursorIfNeed(Sender.getviewcontrol,(sysvarRDRemoveSystemCursorFromWorkArea)and((Sender.param.md.mode and not(MNone or MMoveCamera or MRotateCamera))<>0))
                                                                          {else
                                                                              RemoveCursorIfNeed(getviewcontrol,true)}
                                                                     end;
@@ -1491,7 +1493,7 @@ begin
                                                                                      begin
                                                                                           {if assigned(sysvarRDRemoveSystemCursorFromWorkArea)
                                                                                           then}
-                                                                                              RemoveCursorIfNeed(Sender.getviewcontrol,sysvarRDRemoveSystemCursorFromWorkArea)
+                                                                                              RemoveCursorIfNeed(Sender.getviewcontrol,(sysvarRDRemoveSystemCursorFromWorkArea)and((Sender.param.md.mode and not(MNone or MMoveCamera or MRotateCamera))<>0))
                                                                                           {else
                                                                                               RemoveCursorIfNeed(getviewcontrol,true)}
                                                                                      end;

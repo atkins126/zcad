@@ -16,68 +16,45 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>)
 }
 {$mode delphi}
-unit uzccommand_memsummary;
+unit uzccommand_entslist;
 
 {$INCLUDE def.inc}
 
 interface
 uses
-  SysUtils,
-  LazLogger,
+  LazLogger,SysUtils,
   uzccommandsabstract,uzccommandsimpl,
-  UGDBNumerator,
-  gzctnrvectortypes,
-  uzcinfoform,
-  uzbmemman,
+  gzctnrvectortypes,uzctnrvectorgdbstring,
+  //uzccommandsmanager,
+  uzeentityfactory,
   uzcinterface;
 
 implementation
 
-function MemSummary_com(operands:TCommandOperands):TCommandResult;
+function EntsList_com(operands:TCommandOperands):TCommandResult;
 var
-    memcount:GDBNumerator;
-    pmemcounter:PGDBNumItem;
-    ir:itrec;
-    s:AnsiString;
-    I:Integer;
-    InfoForm:TInfoForm;
+   p:PCommandObjectDef;
+   ir:itrec;
+   clist:TZctnrVectorGDBString;
+   iterator:ObjID2EntInfoData.TIterator;
 begin
-
-     InfoForm:=TInfoForm.create(nil);
-     InfoForm.DialogPanel.HelpButton.Hide;
-     InfoForm.DialogPanel.CancelButton.Hide;
-     InfoForm.DialogPanel.CloseButton.Hide;
-     InfoForm.caption:=('Memory is used to:');
-     memcount.init(100);
-     for i := 0 to memdesktotal do
-     begin
-          if not(memdeskarr[i].free) then
-          begin
-               pmemcounter:=memcount.addnumerator(memdeskarr[i].getmemguid);
-               inc(pmemcounter^.Nymber,memdeskarr[i].size);
-           end;
-     end;
-     memcount.sort;
-
-     pmemcounter:=memcount.beginiterate(ir);
-     if pmemcounter<>nil then
-     repeat
-
-           s:=pmemcounter^.Name+' '+inttostr(pmemcounter^.Nymber);
-           InfoForm.Memo.lines.Add(s);
-           pmemcounter:=memcount.iterate(ir);
-     until pmemcounter=nil;
-
-
-     ZCMsgCallBackInterface.DOShowModal(InfoForm);
-     InfoForm.Free;
-     memcount.Done;
-    result:=cmd_ok;
+   clist.init(200);
+   iterator:=ObjID2EntInfoData.Min;
+   if assigned(iterator) then
+   repeat
+         clist.PushBackData(format('%s | %s',[iterator.Data.Value.UserName,iterator.Data.Value.DXFName]));
+   until not iterator.Next;
+   if assigned(iterator) then
+     iterator.destroy;
+   clist.sort;
+   ZCMsgCallBackInterface.TextMessage(clist.GetTextWithEOL,TMWOHistoryOut);
+   clist.done;
+   result:=cmd_ok;
 end;
 
 initialization
   debugln('{I}[UnitsInitialization] Unit "',{$INCLUDE %FILE%},'" initialization');
-  CreateCommandFastObjectPlugin(@MemSummary_com,'MeMSummary',0,0);
+  CreateCommandFastObjectPlugin(@EntsList_com,'EntsList',0,0);
 finalization
   debugln('{I}[UnitsFinalization] Unit "',{$INCLUDE %FILE%},'" finalization');
 end.

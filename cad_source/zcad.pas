@@ -35,12 +35,16 @@ program zcad;
 {$INCLUDE buildmode.inc}
 uses
   {$IFDEF REPORTMMEMORYLEAKS}heaptrc,{$ENDIF}
-  uzcexceptions,
+  //first, setup crash report file path (uzcregexceptionsfile) and instll exceptions handler for console and gui
+  uzcregexceptionsfile,uzbexceptionscl,uzbexceptionsgui,
+  //second, install data providers for crash report
+  uzcregexceptions,
+
   Interfaces,forms, classes,LCLVersion,
   uzcfsplash,
   uzcsysvars,
 
-  uzbmemman,uzclog,uzcregexceptions,
+  uzbmemman,uzclog,
   uzcsysparams,uzcsysinfo,
   uzbpaths,
 
@@ -131,7 +135,10 @@ uses
   uzccommand_3dpoly,
   uzccommand_print,
   uzccommand_blockpreviewexport,
+  uzccommand_blocksinbasepreviewexport,
   uzccommand_layoff,
+  uzccommand_insertlayersfrombase,
+  uzccommand_cllayeron,uzccommand_cllayeroff,
   uzccommand_loadmenus,
   uzccommand_loadpalettes,
   uzccommand_loadtoolbars,
@@ -181,11 +188,11 @@ uses
   uzccommand_show,uzccommand_showtoolbar,
 
   uzccommand_setobjinsp,
-  uzccommand_memsummary,
+  uzccommand_dbgmemsummary,
   uzccommand_executefile,
   uzccommand_debclip,
   uzccommand_import,
-  uzccommand_commandlist,
+  uzccommand_commandlist,uzccommand_entslist,
   uzccommand_saveoptions,
   uzccommand_showpage,
   uzccommand_options,
@@ -213,7 +220,7 @@ uses
 
   uzccommand_text,
   uzccommand_exporttexttocsv,
-  uzccommand_dataexport,
+  uzccommand_dataexport,uzccommand_dataimport,
 
   {$IFDEF ELECTROTECH}
   //**for velec func**//
@@ -301,6 +308,7 @@ begin
   {MainFormN.show;
   CLine.Show;}
 
+  TZGuiExceptionsHandler.EnableLCLCaptureExceptions;
   Application.run;
 
   sysvar.SYS.SYS_RunTime:=nil;

@@ -19,7 +19,7 @@ unit uzcinterface;
 {$INCLUDE def.inc}
 interface
 uses controls,uzcstrconsts,uzedimensionaltypes,gzctnrstl,zeundostack,varmandef,
-     uzcuilcl2zc,forms,classes,uzbtypes,LCLType,SysUtils;
+     uzcuilcl2zc,uzcuitypes,forms,classes,uzbtypes,LCLType,SysUtils;
 
 const
     CLinePriority=500;
@@ -91,6 +91,8 @@ type
 
     TTextMessageWriteOptionsSet=set of TTextMessageWriteOptions;
 
+    TTextQuestionFunc=function(Caption,Question:TZCMsgStr;buttons:TZCMsgCommonButtons;icon:TZCMsgDlgIcon):TZCMsgCommonButton;
+
 const
     TMWOHistoryOut=[TMWOToConsole,TMWOToLog];
     TMWOShowError=[TMWOToConsole,TMWOToLog,TMWOToModal,TMWOError];
@@ -110,6 +112,24 @@ type
     end;
 
     TZCMsgCallBackInterface=class
+      private
+        ZMessageIDSeed:TZMessageID;
+        HistoryOutHandlers:TProcedure_String_HandlersVector;
+        LogErrorHandlers:TProcedure_String_HandlersVector;
+        StatusLineTextOutHandlers:TProcedure_String_HandlersVector;
+
+        BeforeShowModalHandlers:TMethod_TForm_HandlersVector;
+        AfterShowModalHandlers:TMethod_TForm_HandlersVector;
+
+        GUIModeHandlers:TProcedure_TZMessageID_HandlersVector;
+        GUIActionsHandlers:TSimpleLCLMethod_HandlersVector;
+
+        SetGDBObjInsp_HandlersVector:TSetGDBObjInsp_HandlersVector;
+
+        onKeyDown:TKeyEvent_HandlersVector;
+        getfocusedcontrol:TGetControlWithPriority_TZMessageID__TControlWithPriority_HandlersVector;
+
+        FTextQuestionFunc:TTextQuestionFunc;
       public
         constructor Create;
         destructor Destroy;override;
@@ -149,8 +169,11 @@ type
 
         procedure TextMessage(msg:String;opt:TTextMessageWriteOptionsSet);
 
-        function TextQuestion(Caption,Question:String;Flags: Longint):integer;
+        function TextQuestion(Caption,Question:String):TZCMsgCommonButton;
         function DoShowModal(MForm:TForm):Integer;
+
+        property TextQuestionFunc:TTextQuestionFunc read FTextQuestionFunc write FTextQuestionFunc;
+
       private
         procedure RegisterTProcedure_String_HandlersVector(var PSHV:TProcedure_String_HandlersVector;Handler:TProcedure_String_);
         procedure Do_TProcedure_String_HandlersVector(var PSHV:TProcedure_String_HandlersVector;s:String);
@@ -172,25 +195,6 @@ type
 
         procedure RegisterTGetControlWithPriority_TZMessageID__TControlWithPriority_HandlersVector(var GCWPHV:TGetControlWithPriority_TZMessageID__TControlWithPriority_HandlersVector;Handler:TGetControlWithPriority_TZMessageID__TControlWithPriority);
         function Do_TGetControlWithPriority_TZMessageID__TControlWithPriority_HandlersVector(var GCWPHV:TGetControlWithPriority_TZMessageID__TControlWithPriority_HandlersVector):TWinControl;
-
-      private
-        ZMessageIDSeed:TZMessageID;
-        HistoryOutHandlers:TProcedure_String_HandlersVector;
-        LogErrorHandlers:TProcedure_String_HandlersVector;
-        StatusLineTextOutHandlers:TProcedure_String_HandlersVector;
-
-        BeforeShowModalHandlers:TMethod_TForm_HandlersVector;
-        AfterShowModalHandlers:TMethod_TForm_HandlersVector;
-
-        GUIModeHandlers:TProcedure_TZMessageID_HandlersVector;
-        GUIActionsHandlers:TSimpleLCLMethod_HandlersVector;
-
-        SetGDBObjInsp_HandlersVector:TSetGDBObjInsp_HandlersVector;
-
-        onKeyDown:TKeyEvent_HandlersVector;
-        getfocusedcontrol:TGetControlWithPriority_TZMessageID__TControlWithPriority_HandlersVector;
-
-
     end;
 
     TStartLongProcessProc=Procedure(a:integer;s:string) of object;
@@ -267,6 +271,7 @@ end;
 constructor TZCMsgCallBackInterface.Create;
 begin
   ZMessageIDSeed:=0;
+  FTextQuestionFunc:=nil;
 end;
 destructor TZCMsgCallBackInterface.Destroy;
 begin
@@ -292,65 +297,79 @@ begin
   inc(ZMessageIDSeed);
   result:=ZMessageIDSeed;
 end;
-function TZCMsgCallBackInterface.TextQuestion(Caption,Question:String;Flags: Longint):integer;
+function TZCMsgCallBackInterface.TextQuestion(Caption,Question:TZCMsgStr):TZCMsgCommonButton;
 var
-   pc:PChar;
-   ps:PChar;
+   ptext,pcaption:PChar;
 begin
-  if Question<>'' then ps:=@Question[1]
-                  else ps:=nil;
-  if Caption<>'' then pc:=@Caption[1]
-                 else pc:=nil;
-  Do_BeforeShowModal(nil);
-  result:=application.MessageBox(ps,pc,Flags);
-  Do_AfterShowModal(nil);
+  if assigned(FTextQuestionFunc)then
+    result:=FTextQuestionFunc(Caption,Question,[zccbYes,zccbNo],zcdiQuestion)
+  else begin
+    if Question<>'' then
+      ptext:=@Question[1]
+    else
+      ptext:=nil;
+    if Caption<>'' then
+      pcaption:=@Caption[1]
+    else
+      pcaption:=nil;
+    Do_BeforeShowModal(nil);
+    result:=ID2TZCMsgCommonButton(application.MessageBox(ptext,pcaption,MB_YESNO));
+    Do_AfterShowModal(nil);
+  end;
 end;
-{ #todo : TextMessage need rewrite with zcMsgDlg instead MessageBox}
+
 procedure TZCMsgCallBackInterface.TextMessage(msg:String;opt:TTextMessageWriteOptionsSet);
 var
    Caption: string;
-   ps:PChar;
-   Flags: Longint;
+   MsgBoxPS:PChar;
+   MsgBoxFlags: Longint;
+   ZCIcon:TZCMsgDlgIcon;
 begin
-     if TMWOToModal in opt then begin
-       if TMWOWarning in opt then begin
-         Caption:=rsWarningCaption;
-         msg:=rsWarningPrefix+msg;
-         Flags:=MB_OK or MB_ICONWARNING;
-       end
-  else if TMWOError in opt then begin
+  if TMWOToModal in opt then begin
+    if TMWOWarning in opt then begin
+      Caption:=rsWarningCaption;
+      msg:=rsWarningPrefix+msg;
+      MsgBoxFlags:=MB_OK or MB_ICONWARNING;
+      ZCIcon:=zcdiWarning;
+    end else
+      if TMWOError in opt then begin
          Caption:=rsErrorCaption;
          msg:=rsErrorPrefix+msg;
-         Flags:=MB_ICONERROR;
-       end
-  else begin
+         MsgBoxFlags:=MB_ICONERROR;
+         ZCIcon:=zcdiError;
+      end else begin
           Caption:=rsMessageCaption;
-          Flags:=MB_OK;
-       end;
+          MsgBoxFlags:=MB_OK;
+          ZCIcon:=zcdiInformation;
+      end;
+    if msg<>'' then
+      MsgBoxPS:=@msg[1]
+    else
+      MsgBoxPS:=nil;
 
-       if msg<>'' then ps:=@msg[1]
-                  else ps:=nil;
-
-       Do_BeforeShowModal(nil);
-
-       application.MessageBox(ps,@Caption[1],Flags);
-
-       Do_AfterShowModal(nil);
-     end else begin
-       if TMWOWarning in opt then begin
-         msg:=rsWarningPrefix+msg;
-       end
-  else if TMWOError in opt then begin
+    if assigned(FTextQuestionFunc) then
+      FTextQuestionFunc(Caption,MsgBoxPS,[zccbOK],ZCIcon)
+    else begin
+      Do_BeforeShowModal(nil);
+      application.MessageBox(MsgBoxPS,@Caption[1],MsgBoxFlags);
+      Do_AfterShowModal(nil);
+    end;
+  end else begin
+    if TMWOWarning in opt then begin
+      msg:=rsWarningPrefix+msg;
+    end else
+      if TMWOError in opt then begin
          msg:=rsErrorPrefix+msg;
-       end
-     end;
+      end
+  end;
 
-     if TMWOToConsole in opt then
-       Do_HistoryOut(msg)
-else if TMWOToLog in opt then
-       Do_LogError(msg)
-else if TMWOToQuicklyReplaceable in opt then
-       Do_StatusLineTextOut(msg)
+  if TMWOToConsole in opt then
+    Do_HistoryOut(msg)
+  else if TMWOToLog in opt then
+    Do_LogError(msg)
+  else if TMWOToQuicklyReplaceable in opt then
+    Do_StatusLineTextOut(msg)
+
 end;
 
 procedure TZCMsgCallBackInterface.RegisterTProcedure_String_HandlersVector(var PSHV:TProcedure_String_HandlersVector;Handler:TProcedure_String_);

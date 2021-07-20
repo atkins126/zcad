@@ -40,6 +40,7 @@ GDBObjDevice= object(GDBObjBlockInsert)
                    constructor init(own:GDBPointer;layeraddres:PGDBLayerProp;LW:GDBSmallint);
                    destructor done;virtual;
                    function CalcInFrustum(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:GDBInteger; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:GDBDouble):GDBBoolean;virtual;
+                   function CalcTrueInFrustum(frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
                    procedure FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
                    procedure FormatFeatures(var drawing:TDrawingDef);virtual;
                    procedure DrawGeometry(lw:GDBInteger;var DC:TDrawContext{infrustumactualy:TActulity;subrender:GDBInteger});virtual;
@@ -51,6 +52,7 @@ GDBObjDevice= object(GDBObjBlockInsert)
                    procedure DeSelect(var SelectedObjCount:GDBInteger;ds2s:TDeSelect2Stage);virtual;
                    //function GetDeviceType:TDeviceType;virtual;
                    procedure getoutbound(var DC:TDrawContext);virtual;
+                   function getonlyvisibleoutbound(var DC:TDrawContext):TBoundingBox;virtual;
 
                    //function AssignToVariable(pv:pvardesk):GDBInteger;virtual;
                    function GetObjTypeName:GDBString;virtual;
@@ -264,6 +266,21 @@ begin
      a:=VarObjArray.calcvisible(frustum,infrustumactualy,visibleactualy,totalobj,infrustumobj, ProjectProc,zoom,currentdegradationfactor);
      result:=result or a;
 end;
+function GDBObjDevice.CalcTrueInFrustum;
+var
+  inhresult:TInBoundingVolume;
+begin
+  inhresult:=inherited;
+  result:=VarObjArray.CalcTrueInFrustum(frustum,visibleactualy);
+  if result<>inhresult then begin
+    if result=IRNotAplicable then
+      exit(inhresult);
+    if inhresult=IRNotAplicable then
+      exit(result);
+    result:=IRPartially;
+  end;
+end;
+
 procedure GDBObjDevice.getoutbound;
 var tbb:TBoundingBox;
 begin
@@ -274,6 +291,14 @@ begin
     and (tbb.LBN.z=tbb.RTF.z) then
                               else
                                   concatbb(vp.BoundingBox,{VarObjArray.calcbb}tbb);
+end;
+function GDBObjDevice.getonlyvisibleoutbound(var DC:TDrawContext):TBoundingBox;
+var tbb:TBoundingBox;
+begin
+  result:=inherited;
+  tbb:=VarObjArray.getonlyvisibleoutbound(dc);
+  if tbb.RTF.x>=tbb.LBN.x then
+    ConcatBB(result,tbb);
 end;
 function GDBObjDevice.Clone;
 var tvo: PGDBObjDevice;

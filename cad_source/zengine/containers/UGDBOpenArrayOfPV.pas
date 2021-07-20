@@ -43,6 +43,7 @@ GDBObjOpenArrayOfPV= object(TZctnrVectorPGDBaseObjects)
                       function calcvisbb(infrustumactualy:TActulity):TBoundingBox;
                       function getoutbound(var DC:TDrawContext):TBoundingBox;
                       function getonlyoutbound(var DC:TDrawContext):TBoundingBox;
+                      function getonlyvisibleoutbound(var DC:TDrawContext):TBoundingBox;
                       procedure Format;virtual;abstract;
                       procedure FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
                       procedure FormatAfterEdit(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
@@ -174,6 +175,42 @@ begin
                              concatbb(result,pobj^.vp.BoundingBox);
                              //pobj^.correctbb;
                              pobj:=iterate(ir);
+                       until pobj=nil;
+                  end;
+end;
+function GDBObjOpenArrayOfPV.getonlyvisibleoutbound(var DC:TDrawContext):TBoundingBox;
+var pobj:pGDBObjEntity;
+    ir:itrec;
+    bb:TBoundingBox;
+begin
+  pobj:=beginiterate(ir);
+
+  result.LBN:=NulVertex;
+  result.RTF:=MinusOneVertex;
+
+  if pobj=nil then
+                  begin
+                       {result.LBN:=NulVertex;
+                       result.RTF:=MinusOneVertex;}
+                  end
+              else
+                  begin
+                       //pobj^.getonlyoutbound(DC);
+                       //result:=pobj.vp.BoundingBox;
+                       //pobj^.correctbb;
+                       //pobj:=iterate(ir);
+                       if pobj<>nil then
+                       repeat
+                         if (pobj.vp.Layer<>nil)and(pobj.vp.Layer^._on) then begin
+                           bb:=pobj^.getonlyvisibleoutbound(dc);
+                           if bb.RTF.x>=bb.LBN.x then begin
+                             if result.RTF.x>=result.LBN.x then
+                               concatbb(result,bb)
+                             else
+                               result:=bb;
+                           end;
+                         end;
+                           pobj:=iterate(ir);
                        until pobj=nil;
                   end;
 end;
@@ -334,12 +371,14 @@ var
 begin
   emptycount:=0;
   objcount:=0;
-  result:=IREmpty;
+  result:={IREmpty}IRNotAplicable;
+  q:=IRNotAplicable;
   p:=beginiterate(ir);
   if p<>nil then
   begin
   repeat
-        if p^.Visible=visibleactualy then
+        //if p^.Visible=visibleactualy then
+    if p^.vp.Layer^._on then
         begin
              inc(objcount);
              q:=p^.CalcTrueInFrustum(frustum,visibleactualy);
@@ -361,10 +400,12 @@ begin
         end;
         p:=iterate(ir);
   until p=nil;
+  if (q<>IRNotAplicable) then begin
      if (emptycount=0)and(objcount>0) then
                        result:=IRFully
                      else
                        result:=IREmpty;
+  end;
   end;
 end;
 begin

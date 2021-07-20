@@ -24,7 +24,7 @@ uses uzctnrvectorgdbpointer,gzctnrvectorpobjects,uzcsysvars,uzegeometry,uzglview
      gzctnrvectortypes,uzbgeomtypes,uzbstrproc,gzctnrvectorp,
      uzbtypesbase,uzccommandsabstract, sysutils,uzbtypes,uzglviewareadata,
      uzbmemman,uzclog,varmandef,varman,uzedrawingdef,uzcinterface,
-     uzcsysparams,uzedrawingsimple,uzctnrvectorgdbstring,forms,LazLogger;
+     uzcsysparams,uzedrawingsimple,uzcdrawings,uzctnrvectorgdbstring,forms,LazLogger;
 const
      tm:tmethod=(Code:nil;Data:nil);
      nullmethod:{tmethod}TButtonMethod=nil;
@@ -87,6 +87,8 @@ type
                           function Get3DPointWithLineFromBase(prompt:GDBString;const base:GDBVertex;out p:GDBVertex):GDBBoolean;
                           function GetEntity(prompt:GDBString;out p:GDBPointer):GDBBoolean;
                           function Get3DPointInteractive(prompt:GDBString;out p:GDBVertex;const InteractiveProc:TInteractiveProcObjBuild;const PInteractiveData:GDBPointer):GDBBoolean;
+                          function GetInput(Prompt:GDBString;out Input:GDBString):GDBBoolean;
+
                           function EndGetPoint(newmode:TGetPointMode):GDBBoolean;
 
                           procedure sendmousecoord(Sender:TAbstractViewArea;key: GDBByte);
@@ -213,7 +215,7 @@ function GDBcommandmanager.EndGetPoint(newmode:TGetPointMode):GDBBoolean;
 begin
   if pcommandrunning<>nil then
   begin
-  if (pcommandrunning^.IData.GetPointMode=TGPWait)or(pcommandrunning^.IData.GetPointMode=TGPWaitEnt) then
+  if (pcommandrunning^.IData.GetPointMode=TGPWait)or(pcommandrunning^.IData.GetPointMode=TGPWaitEnt)or(pcommandrunning^.IData.GetPointMode=TGPWaitInput) then
                               begin
                                   pcommandrunning^.IData.GetPointMode:=newmode;
                                   result:=true;
@@ -254,6 +256,35 @@ begin
                                                                                  result:=false;
                                                                                  //HistoryOutStr('cancel');
                                                                                  end;
+  if (pcommandrunning^.IData.GetPointMode<>TGPCloseDWG)then
+  PTSimpleDrawing(pcommandrunning.pdwg)^.SetMouseEditorMode(savemode);//restore editor mode
+                                                                      //восстанавливаем сохраненный режим редактора
+end;
+function GDBcommandmanager.GetInput(Prompt:GDBString;out Input:GDBString):GDBBoolean;
+var
+   savemode:GDBByte;//variable to store the current mode of the editor
+                     //переменная для сохранения текущего режима редактора
+begin
+  savemode:=PTSimpleDrawing(pcommandrunning.pdwg)^.DefMouseEditorMode({MGet3DPoint or MGet3DPointWoOP}0,//set mode point of the mouse
+                                                                                                     //устанавливаем режим указания точек мышью
+                                                                      MGetControlpoint or MGetSelectionFrame or MGetSelectObject);//reset selection entities  mode
+                                                                                                              //сбрасываем режим выбора примитивов мышью
+  ZCMsgCallBackInterface.TextMessage(prompt,TMWOHistoryOut);
+  pcommandrunning^.IData.GetPointMode:=TGPWaitInput;
+  pcommandrunning^.IData.PInteractiveData:=nil;
+  pcommandrunning^.IData.PInteractiveProc:=nil;
+  while (pcommandrunning^.IData.GetPointMode=TGPWaitInput)and(not Application.Terminated) do
+  begin
+       Application.HandleMessage;
+       //Application.ProcessMessages;
+  end;
+  if (pcommandrunning^.IData.GetPointMode=TGPInput)and(not Application.Terminated) then begin
+    Input:=pcommandrunning^.IData.Input;
+    result:=true;
+  end else begin
+    Input:='';
+    result:=false;
+  end;
   if (pcommandrunning^.IData.GetPointMode<>TGPCloseDWG)then
   PTSimpleDrawing(pcommandrunning.pdwg)^.SetMouseEditorMode(savemode);//restore editor mode
                                                                       //восстанавливаем сохраненный режим редактора
@@ -413,7 +444,7 @@ begin
   if p<>nil then
   repeat
         if (uppercase(pGDBString(p)^)<>'ABOUT')then
-                                                    execute(p^,false,pdrawing,POGLWndParam)
+                                                    execute(p^,false,{pdrawing}drawings.GetCurrentDWG,POGLWndParam)
                                                 else
                                                     begin
                                                          if not sysparam.saved.nosplash then
@@ -513,12 +544,13 @@ var
    {i,}p1,p2: GDBInteger;
 begin
   p1:=pos('(',comm);
-  p2:=pos(')',comm);
-  if  p1<1 then
-               begin
-                    p1:=length(comm)+1;
-                    p2:=p1;
-               end;
+  if  p1<1 then begin
+    p1:=length(comm)+1;
+    p2:=p1;
+  end else begin
+    p2:=PosWithBracket(')','(',')',comm,p1+1,1);
+    //p2:=PosWithBracket(')',comm);
+  end;
   command:=copy(comm,1,p1-1);
   operands:=copy(comm,p1+1,p2-p1-1);
   command:=uppercase(Command);
@@ -623,7 +655,7 @@ begin
           end
      else
          begin
-              ZCMsgCallBackInterface.TextMessage(rsCommandNRInC,TMWOHistoryOut);
+              ZCMsgCallBackInterface.TextMessage(format(rsCommandNRInC,[comm]),TMWOHistoryOut);
          end;
     end;
   end
@@ -639,7 +671,7 @@ begin
      if not busy then
                      execute(comm,false,pdrawing,POGLWndParam)
                  else
-                     ZCMsgCallBackInterface.TextMessage(rsCommandNRInC,TMWOShowError);
+                     ZCMsgCallBackInterface.TextMessage(format(rsCommandNRInC,[comm]),TMWOShowError);
 end;
 procedure GDBcommandmanager.executecommandsilent{(const comm:pansichar): GDBInteger};
 begin
