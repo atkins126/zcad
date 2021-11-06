@@ -89,19 +89,19 @@ var
     pline:PGDBObjLine;
 begin
     result:=false;
-    if commandmanager.get3dpoint(prompt1,p1) then
+    if commandmanager.get3dpoint(prompt1,p1)=GRNormal then
     begin
          pline := GDBPointer(drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.CreateInitObj(GDBLineID,drawings.GetCurrentROOT));
          pline^.CoordInOCS.lBegin:=p1;
          InteractiveLineEndManipulator(pline,p1,false);
-      if commandmanager.Get3DPointInteractive(prompt2,p2,@InteractiveLineEndManipulator,pline) then
+      if commandmanager.Get3DPointInteractive(prompt2,p2,@InteractiveLineEndManipulator,pline) = GRNormal then
       begin
            result:=true;
       end;
     end;
     drawings.GetCurrentDWG^.FreeConstructionObjects;
 end;
-function GetInteractiveLineFrom1to2(prompt2:GDBString;const p1:GDBVertex; out p2:GDBVertex):GDBBoolean;
+function GetInteractiveLineFrom1to2(prompt2:GDBString;const p1:GDBVertex; out p2:GDBVertex):tgetresult;
 var
     pline:PGDBObjLine;
 begin
@@ -114,7 +114,7 @@ end;
 function createSuperLine(p1,p2:GDBVertex;nameSL:string;changeLayer:boolean;LayerNamePrefix:string):TCommandResult;
 var
     psuperline:PGDBObjSuperLine;
-    pvarext:PTVariablesExtender;
+    pvarext:TVariablesExtender;
     psu:ptunit;
     pvd:pvardesk;        //для нахождения имени суперлинии
     layername:gdbstring; //имя слоя куда будет помещена супелиния
@@ -122,12 +122,12 @@ var
 begin
     psuperline := AllocEnt(GDBSuperLineID);
     psuperline^.init(nil,nil,0,p1,p2);
-    pvarext:=psuperline^.GetExtension(typeof(TVariablesExtender));
+    pvarext:=psuperline^.GetExtension<TVariablesExtender>;
     if pvarext<>nil then
     begin
       psu:=units.findunit(SupportPath,InterfaceTranslate,'superline');
       if psu<>nil then
-        pvarext^.entityunit.copyfrom(psu);
+        pvarext.entityunit.copyfrom(psu);
     end;
     zcSetEntPropFromCurrentDrawingProp(psuperline);           //присваиваем умолчательные значения
 
@@ -163,7 +163,7 @@ function DrawSuperLine_com(operands:TCommandOperands):TCommandResult;
 var
     psuperline:PGDBObjSuperLine;
     p1,p2:gdbvertex;
-    pvarext:PTVariablesExtender;
+    pvarext:TVariablesExtender;
     psu:ptunit;
     UndoMarcerIsPlazed:boolean;
 
@@ -175,12 +175,12 @@ var
 begin
     psuperline := AllocEnt(GDBSuperLineID);
     psuperline^.init(nil,nil,0,p1,p2);
-    pvarext:=psuperline^.GetExtension(typeof(TVariablesExtender));
+    pvarext:=psuperline^.GetExtension<TVariablesExtender>;
     if pvarext<>nil then
     begin
       psu:=units.findunit(SupportPath,InterfaceTranslate,'superline');
       if psu<>nil then
-        pvarext^.entityunit.copyfrom(psu);
+        pvarext.entityunit.copyfrom(psu);
     end;
     zcSetEntPropFromCurrentDrawingProp(psuperline);           //присваиваем умолчательные значения
     //если манипуляции со слоем включены и ранее был найден "юнит" с параметрами
@@ -217,7 +217,7 @@ begin
     begin
       createline;
       p1:=p2;
-      while GetInteractiveLineFrom1to2(rscmSpecifySecondPoint,p1,p2)do
+      while GetInteractiveLineFrom1to2(rscmSpecifySecondPoint,p1,p2)= GRNormal do
       begin
        createline;
        p1:=p2;

@@ -68,7 +68,7 @@ var FOC:GDBInteger;
     ClearExtLoadData:TProcessExtLoadData=nil;
     FreeExtLoadData:TProcessExtLoadData=nil;
 procedure addfromdxf(name: GDBString;owner:PGDBObjGenericSubEntry;LoadMode:TLoadOpt;var drawing:TSimpleDrawing);
-function savedxf2000(name: GDBString; {PDrawing:PTSimpleDrawing}var drawing:TSimpleDrawing):boolean;
+function savedxf2000(SavedFileName,TemplateFileName:String;var drawing:TSimpleDrawing):boolean;
 procedure saveZCP(name: GDBString; {gdb: PGDBDescriptor}var drawing:TSimpleDrawing);
 procedure LoadZCP(name: GDBString; {gdb: PGDBDescriptor}var drawing:TSimpleDrawing);
 implementation
@@ -327,7 +327,7 @@ objid: GDBInteger;
   PExtLoadData:Pointer;
   EntInfoData:TEntInfoData;
   DC:TDrawContext;
-  //pentvarext,ppostentvarext:PTVariablesExtender;
+  //pentvarext,ppostentvarext:TVariablesExtender;
   bylayerlt:GDBPointer;
   lph:TLPSHandle;
 begin
@@ -376,8 +376,8 @@ begin
                                 begin
                                      if PGDBObjEntity(pobj)^.PExtAttrib^.Handle>200 then
                                                                                       begin
-                                                                                      context.h2p.{$IFDEF DELPHI}Add{$ENDIF}{$IFNDEF DELPHI}insert{$ENDIF}(PGDBObjEntity(pobj)^.PExtAttrib^.Handle,pobj);
-                                                                                      context.h2p.{$IFDEF DELPHI}Add{$ENDIF}{$IFNDEF DELPHI}insert{$ENDIF}(PGDBObjEntity(pobj)^.PExtAttrib^.dwgHandle,pobj);
+                                                                                      context.h2p.{$IFDEF DELPHI}Add{$ENDIF}{$IFNDEF DELPHI}Add{$ENDIF}(PGDBObjEntity(pobj)^.PExtAttrib^.Handle,pobj);
+                                                                                      context.h2p.{$IFDEF DELPHI}Add{$ENDIF}{$IFNDEF DELPHI}Add{$ENDIF}(PGDBObjEntity(pobj)^.PExtAttrib^.dwgHandle,pobj);
                                                                                       end;
                                                                                       //pushhandle(phandlearray,PGDBObjEntity(pobj)^.PExtAttrib^.Handle,GDBPlatformint(pobj));
                                      if PGDBObjEntity(pobj)^.PExtAttrib^.OwnerHandle>200 then
@@ -442,8 +442,8 @@ begin
                                 begin
                                      if PGDBObjEntity(pobj)^.PExtAttrib^.Handle>200 then
                                                                                       begin
-                                                                                      context.h2p.{$IFDEF DELPHI}Add{$ENDIF}{$IFNDEF DELPHI}insert{$ENDIF}(PGDBObjEntity(pobj)^.PExtAttrib^.Handle,postobj);
-                                                                                      context.h2p.{$IFDEF DELPHI}Add{$ENDIF}{$IFNDEF DELPHI}insert{$ENDIF}(PGDBObjEntity(pobj)^.PExtAttrib^.dwgHandle,postobj);
+                                                                                      context.h2p.{$IFDEF DELPHI}Add{$ENDIF}{$IFNDEF DELPHI}Add{$ENDIF}(PGDBObjEntity(pobj)^.PExtAttrib^.Handle,postobj);
+                                                                                      context.h2p.{$IFDEF DELPHI}Add{$ENDIF}{$IFNDEF DELPHI}Add{$ENDIF}(PGDBObjEntity(pobj)^.PExtAttrib^.dwgHandle,postobj);
                                                                                       end
                                                                                       //pushhandle(phandlearray,PGDBObjEntity(pobj)^.PExtAttrib^.Handle,GDBPlatformint(postobj));
                                 end;
@@ -460,10 +460,10 @@ begin
                                  newowner^.AddMi(@postobj);
                                  if assigned(pobj^.EntExtensions)then
                                                                      pobj^.EntExtensions.CopyAllExtToEnt(pobj,postobj);
-                                 {pentvarext:=pobj^.GetExtension(typeof(TVariablesExtender));
-                                 ppostentvarext:=postobj^.GetExtension(typeof(TVariablesExtender));
+                                 {pentvarext:=pobj^.GetExtension(TVariablesExtender);
+                                 ppostentvarext:=postobj^.GetExtension(TVariablesExtender);
                                  if (pentvarext<>nil)and(ppostentvarext<>nil) then
-                                 pentvarext^.entityunit.CopyTo(@ppostentvarext^.entityunit);}
+                                 pentvarext.entityunit.CopyTo(@ppostentvarext^.entityunit);}
 
                                  if foc=0 then
                                               begin
@@ -645,7 +645,7 @@ begin
            case drawing.LTypeStyleTable.AddItem(s,pointer(pltypeprop)) of
                         IsFounded:
                                   begin
-                                       context.h2p.{$IFDEF DELPHI}Add{$ENDIF}{$IFNDEF DELPHI}insert{$ENDIF}(DWGHandle,pltypeprop);
+                                       context.h2p.{$IFDEF DELPHI}Add{$ENDIF}{$IFNDEF DELPHI}Add{$ENDIF}(DWGHandle,pltypeprop);
                                        if LoadMode=TLOLoad then
                                        begin
                                        end
@@ -656,7 +656,7 @@ begin
                                   begin
                                        pltypeprop^.init(s);
                                        dashinfo:=TDIDash;
-                                       context.h2p.{$IFDEF DELPHI}Add{$ENDIF}{$IFNDEF DELPHI}insert{$ENDIF}(DWGHandle,pltypeprop);
+                                       context.h2p.{$IFDEF DELPHI}Add{$ENDIF}{$IFNDEF DELPHI}Add{$ENDIF}(DWGHandle,pltypeprop);
                                   end;
                         IsError:
                                   begin
@@ -940,7 +940,7 @@ begin
         end;
     if ti<>nil then
     begin
-         context.h2p.{$IFDEF DELPHI}Add{$ENDIF}{$IFNDEF DELPHI}insert{$ENDIF}(DWGHandle,ti);
+         context.h2p.{$IFDEF DELPHI}Add{$ENDIF}{$IFNDEF DELPHI}Add{$ENDIF}(DWGHandle,ti);
          ptstyle:={drawing.TextStyleTable.getelement}(ti);
          pltypeprop:=drawing.LTypeStyleTable.beginiterate(ir);
          if pltypeprop<>nil then
@@ -1638,7 +1638,7 @@ begin
                                            VarsDict.{$IFDEF DELPHI}Add{$ENDIF}{$IFNDEF DELPHI}insert{$ENDIF}('$TEXTSIZE',floattostr({sysvar.DWG.DWG_TextSize^}drawing.TextSize));
 end;
 
-function savedxf2000(name: GDBString; var drawing:TSimpleDrawing):boolean;
+function savedxf2000(SavedFileName,TemplateFileName:String;var drawing:TSimpleDrawing):boolean;
 var
   templatefile: GDBOpenArrayOfByte;
   outstream: {GDBInteger}GDBOpenArrayOfByte;
@@ -1690,10 +1690,10 @@ begin
     {if assigned(StartLongProcessProc)then
        StartLongProcessProc(drawing.pObjRoot^.ObjArray.Count,'Save DXF file');}
   OldHandele2NewHandle:=TMapHandleToHandle.Create;
-  OldHandele2NewHandle.{$IFDEF DELPHI}Add{$ENDIF}{$IFNDEF DELPHI}insert{$ENDIF}(0,0);
+  //OldHandele2NewHandle.{$IFDEF DELPHI}Add{$ENDIF}{$IFNDEF DELPHI}Add{$ENDIF}(0,0);
   //phandlea := dxfhandlearraycreate(10000);
   //pushhandle(phandlea,0,0);
-  templatefile.InitFromFile(ProgramPath + 'components/empty.dxf');
+  templatefile.InitFromFile(TemplateFileName);
   IODXFContext.handle := $2;
   inlayertable := false;
   inblocksec := false;
@@ -1762,7 +1762,7 @@ begin
         end
         else
         begin
-          OldHandele2NewHandle.{$IFDEF DELPHI}Add{$ENDIF}{$IFNDEF DELPHI}insert{$ENDIF}(valuei, IODXFContext.handle);
+          OldHandele2NewHandle.{$IFDEF DELPHI}Add{$ENDIF}{$IFNDEF DELPHI}Add{$ENDIF}(valuei, IODXFContext.handle);
           //pushhandle(phandlea, valuei, handle);
           if not ignoredsource then
           begin
@@ -2734,19 +2734,19 @@ ENDTAB}
   OldHandele2NewHandle.Destroy;
   templatefile.done;
 
-  if FileExists({$IFNDEF DELPHI}utf8tosys{$ENDIF}(name)) then
+  if FileExists({$IFNDEF DELPHI}utf8tosys{$ENDIF}(SavedFileName)) then
                            begin
-                                if (not(deletefile(name+'.bak')) or (not renamefile(name,name+'.bak'))) then
+                                if (not(deletefile(SavedFileName+'.bak')) or (not renamefile(SavedFileName,SavedFileName+'.bak'))) then
                                 begin
-                                   DebugLn('{WH}'+rsUnableRenameFileToBak,[name]);
-                                   //HistoryOutStr(format(rsUnableRenameFileToBak,[name]));
+                                   DebugLn('{WH}'+rsUnableRenameFileToBak,[SavedFileName]);
+                                   //HistoryOutStr(format(rsUnableRenameFileToBak,[SavedFileName]));
                                 end;
                            end;
 
-  if outstream.SaveToFile({expandpath}(name))<=0 then
+  if outstream.SaveToFile({expandpath}(SavedFileName))<=0 then
                                        begin
-                                       //ShowError(format(rsUnableToWriteFile,[name]));
-                                       DebugLn('{EM}'+rsUnableToWriteFile,[name]);
+                                       //ShowError(format(rsUnableToWriteFile,[SavedFileName]));
+                                       DebugLn('{EM}'+rsUnableToWriteFile,[SavedFileName]);
                                        result:=false;
                                        end
                                    else

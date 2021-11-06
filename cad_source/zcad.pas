@@ -19,20 +19,27 @@
 program zcad;
 //файл с объявлениями директив компилятора - должен быть подключен во все файлы проекта
 {$INCLUDE def.inc}
-{$IFDEF WINDOWS}
+
 {$IFDEF FPC}
-{$ifdef cpu32}
-        {$setpeflags $20} //winnt.h:#define IMAGE_FILE_LARGE_ADDRESS_AWARE       0x0020  // App can handle >2gb addresses
+  {$CODEPAGE UTF8}
 {$endif}
-{$ENDIF}
+
+{$IFDEF WINDOWS}
+  {$IFDEF FPC}
+    {$ifdef cpu32}
+      {$setpeflags $20} //winnt.h:#define IMAGE_FILE_LARGE_ADDRESS_AWARE       0x0020  // App can handle >2gb addresses
+    {$endif}
+  {$ENDIF}
 {$ENDIF}
 
 {$IFNDEF LINUX}
   {$APPTYPE GUI}
 {$ENDIF}
+
 {$ifdef WIN64} {$imagebase $400000} {$endif}
 
 {$INCLUDE buildmode.inc}
+
 uses
   {$IFDEF REPORTMMEMORYLEAKS}heaptrc,{$ENDIF}
   //first, setup crash report file path (uzcregexceptionsfile) and instll exceptions handler for console and gui
@@ -221,13 +228,17 @@ uses
   uzccommand_text,
   uzccommand_exporttexttocsv,
   uzccommand_dataexport,uzccommand_dataimport,
+  uzccommand_extdrentslist,uzccommand_extdralllist,uzccommand_extdradd,
+
+  uzcenitiesvariablesextender,uzcExtdrLayerControl,
 
   {$IFDEF ELECTROTECH}
   //**for velec func**//
-  //uzccomdrawsuperline,
-  //uzvslagcab, //автопрокладка кабелей по именным суперлиниям
-  //uzvagslcom, //создания именных суперлиний в комнате между извещателями
-  //uzvstripmtext, //очистка мтекста, сделано плохо, в будущем надо переделывать мтекст и механизм.
+  uzccommand_drawsuperline,
+  uzvslagcab, //автопрокладка кабелей по именным суперлиниям
+  uzvagslcom, //создания именных суперлиний в комнате между извещателями
+  uzvstripmtext, //очистка мтекста, сделано плохо, в будущем надо переделывать мтекст и механизм.
+  uzvcabmountmethod,
   //**//
   {$ENDIF}
 
@@ -259,10 +270,14 @@ uses
   uzctbexttoolbars, uzctbextmenus, uzctbextpalettes,
 
   uzcinterface,
-  uzccommand_dbgappexplorer;
+  uzccommand_dbgappexplorer,
+  uzelongprocesssupport;
 
 resourcestring
  rsStartAutorun='Execute *components\autorun.cmd';
+
+var
+  lpsh:TLPSHandle;
 
 
 {$R *.res}
@@ -271,6 +286,7 @@ begin
   programlog.logoutstr('<<<<<<<<<<<<<<<End units initialization',0,LM_Debug);
      if sysparam.notsaved.otherinstancerun then
                                       exit;
+  lpsh:=LPS.StartLongProcess('Start program',@lpsh,0);
 {$IFDEF REPORTMMEMORYLEAKS}printleakedblock:=true;{$ENDIF}
 {$IFDEF REPORTMMEMORYLEAKS}
        SetHeapTraceOutput(sysvar.PATH.Program_Run^+'log/memory-heaptrace.txt');
@@ -309,6 +325,7 @@ begin
   CLine.Show;}
 
   TZGuiExceptionsHandler.EnableLCLCaptureExceptions;
+  LPS.EndLongProcess(lpsh);
   Application.run;
 
   sysvar.SYS.SYS_RunTime:=nil;

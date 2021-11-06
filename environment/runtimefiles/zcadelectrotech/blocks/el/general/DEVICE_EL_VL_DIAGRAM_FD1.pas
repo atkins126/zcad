@@ -11,7 +11,7 @@ var
 T1:GDBString;(*'Обозначение'*)
 T2:GDBString;(*'P активная'*)
 T3:GDBString;(*'Q реактивная'*)
-T4:GDBString;(*'I hасчетный'*)
+T4:GDBString;(*'I расчетный'*)
 T5:GDBString;(*'Cos Ф'*)
 T6:GDBString;(*'Наименование'*)
 
@@ -23,8 +23,8 @@ BTY_TreeCoord:='PLAN_EM_Фидер';
 Device_Type:=TDT_SilaPotr;
 Device_Class:=TDC_Shell;
 
-NMO_Name:='F0';
-NMO_BaseName:='F';
+NMO_Name:='ФД0';
+NMO_BaseName:='ФД';
 NMO_Suffix:='??';
 
 T1:='??';

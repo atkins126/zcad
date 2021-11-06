@@ -23,14 +23,15 @@ uses
  uzcguimanager,uzbpaths,Themes,buttons,uzcsysvars,uzcstrconsts,uzbstrproc,
  uzcsysinfo,lclproc,LazUTF8,sysutils, StdCtrls,ExtCtrls,Controls,Classes,
  menus,Forms,fileutil,graphics, uzbtypes, uzbmemman,uzcdrawings,uzccommandsmanager,
- varman,languade,varmandef,
+ varman,varmandef,
  uzegeometry,uzctnrvectorgdbstring,uzcinterface,uzctreenode,uzclog,strmy,
- uzccommandlineutil,uztoolbarsmanager,uzmenusmanager,uzccommandsabstract,gzctnrvectortypes;
+ uzccommandlineutil,uztoolbarsmanager,uzmenusmanager,uzccommandsabstract,gzctnrvectortypes,
+ uzcctrlcommandlineprompt,uzeparsercmdprompt;
 
 const
      cheight=48;
 type
-  TCLine = class(TForm)
+  TCLine = class(TForm,ICommandLinePrompt)
     procedure AfterConstruction; override;
   public
     //utfpresent:boolean;
@@ -45,11 +46,14 @@ type
     function GetCLineFocusPriority:TControlWithPriority;
 
     destructor Destroy;override;
+  private
+    procedure SetPrompt(APrompt:String);virtual;overload;
+    procedure SetPrompt(APrompt:TParserCommandLinePrompt.TGeneralParsedText);virtual;overload;
   end;
 var
   CLine: TCLine;
   cmdedit:TComboBox;
-  prompt:TLabel;
+  prompt:TCommandLinePrompt;
   panel:tpanel;
   HistoryLine:TMemo;
 
@@ -66,6 +70,22 @@ begin
      canvas.Line(0,0,100,100);
 end;
 
+procedure TCLine.SetPrompt(APrompt:String{;ATPromptResults:TCommandLinePrompt.TPromptResults});
+begin
+  prompt.SetHighLightedText(APrompt,[],-1);
+end;
+
+procedure TCLine.SetPrompt(APrompt:TParserCommandLinePrompt.TGeneralParsedText);
+var
+  pt:TCommandLinePromptOption;
+  ts:TParserCommandLinePrompt.TParserString;
+begin
+  pt:=TCommandLinePromptOption.Create;
+  ts:=APrompt.GetResult(pt);
+  prompt.SetHighLightedText(ts,pt.Parts.arr,pt.Parts.Size-1);
+  pt.Free;
+end;
+
 procedure TCLine.SetMode(m:TCLineMode);
 begin
      {if m=mode then
@@ -73,13 +93,13 @@ begin
      case m of
      CLCOMMANDREDY:
      begin
-           prompt.Caption:=commandprefix+rsdefaultpromot+commandsuffix;
+           SetPrompt(commandprefix+rsdefaultpromot+commandsuffix);
            cmdedit.AutoComplete:=true;
            //cmdedit.AutoDropDown:=true;
      end;
      CLCOMMANDRUN:
      begin
-          prompt.Caption:=commandsuffix;
+          SetPrompt(commandsuffix);
           cmdedit.AutoComplete:=false;
           //cmdedit.AutoDropDown:=false;
      end;
@@ -216,9 +236,10 @@ begin
 
     panel.Color:=HistoryLine.Brush.Color;
 
-    prompt:=TLabel.create(panel);
+    prompt:=TCommandLinePrompt.create(panel);
+    prompt.OnClickNotify:=commandmanager.PromptTagNotufy;
     prompt.Align:=alLeft;
-    prompt.Layout:=tlCenter;
+    //prompt.Layout:=tlCenter;
     //prompt.Width:=1;
     //prompt.BorderStyle:=sbsSingle;
     prompt.AutoSize:=true;
@@ -293,12 +314,13 @@ begin
     //CWindow.Show;
     ZCMsgCallBackInterface.RegisterHandler_GUIMode(HandleCommandLineMode);
     HandleCmdLine(ZMsgID_GUICMDLineCheck);
-   // SetCommandLineMode:=self.SetMode;
+    commandmanager.AddClPrompt(self);
 end;
 destructor TCLine.Destroy;
 begin
-     aliases.Done;
-     inherited;
+  commandmanager.RemoveClPrompt(self);
+  aliases.Done;
+  inherited;
 end;
 
 procedure TCLine.AfterConstruction;

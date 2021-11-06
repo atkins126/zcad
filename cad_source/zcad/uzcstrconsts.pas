@@ -31,6 +31,7 @@ resourcestring
   rsNameAbsent='Absent Name';
   rsPrefixAbsent='Absent Prefix';
   rsBaseNameAbsent='Absent BaseName';
+  rseGeneralEroror='Error in '#13'"%s"'#13'with msg'#13'"%s"';
 
   rsNotSpecified='Not specified';
   rsInvalidInput='Invalid input';
@@ -132,7 +133,7 @@ resourcestring
 
   rscmOptions2OI='Options are available in the Object Inspector';
   rscmSelOrSpecEntity='Select or specify the parameters entity!';
-  rscmNEntitiesProcessed='%s entities processed';
+  rscmNEntitiesProcessed='%d entities processed';
   rscmNEntitiesDeselected='%d entities deselected';
 
   rscmNoBlocksOrDevices='No selected blocks or devices';

@@ -160,8 +160,8 @@ var
   //LayerBox:TZCADLayerComboBox;
   //LineWBox:TComboBox;
   //LayoutBox:TComboBox;
-  LPTime:Tdatetime;
-  pname:GDBString;
+  //LPTime:Tdatetime;
+  //pname:GDBString;
   oldlongprocess:integer;
   //OLDColor:integer;
   ProcessBar:TProgressBar;
@@ -554,7 +554,7 @@ end;
 procedure TZCADMainWindow.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
      CloseAction:=caNone;
-     if not commandmanager.EndGetPoint(TGPCloseApp) then
+     if not commandmanager.EndGetPoint(TGPMCloseApp) then
                                            Application.QueueAsyncCall(asynccloseapp, 0);
 end;
 
@@ -609,7 +609,7 @@ begin
       until result<>cmd_error;
       result:=ZCmrYes;
     end;
-    commandmanager.ChangeModeAndEnd(TGPCloseDWG);
+    commandmanager.ChangeModeAndEnd(TGPMCloseDWG);
     viewcontrol:=ClosedDWG.wa.getviewcontrol;
     if drawings.GetCurrentDWG=pointer(ClosedDwg) then
                                                drawings.freedwgvars;
@@ -1184,7 +1184,7 @@ begin
     comtext:='';
     needinput:=false;
     if commandmanager.pcommandrunning<>nil then
-      if commandmanager.pcommandrunning.IData.GetPointMode=TGPWaitInput then
+      if (commandmanager.pcommandrunning.IData.GetPointMode=TGPMWaitInput)and(key<>VK_ESCAPE) then
         needinput:=true;
     if assigned(cmdedit) then
       comtext:=cmdedit.text;
@@ -1320,40 +1320,29 @@ begin
 end;
 procedure TZCADMainWindow.StartLongProcess(LPHandle:TLPSHandle;Total:TLPSCounter;processname:TLPName);
 begin
-     LPTime:=now;
-     pname:=processname;
-     if (assigned(ProcessBar)and assigned(HintText)) then
-     begin
-  ProcessBar.max:=total;
-  ProcessBar.min:=0;
-  ProcessBar.position:=0;
-  HintText.Hide;
-  ProcessBar.Show;
-  oldlongprocess:=0;
-     end;
+  if (assigned(ProcessBar)and assigned(HintText)) then begin
+    ProcessBar.max:=total;
+    ProcessBar.min:=0;
+    ProcessBar.position:=0;
+    HintText.Hide;
+    ProcessBar.Show;
+    oldlongprocess:=0;
+  end;
 end;
+
 procedure TZCADMainWindow.ProcessLongProcess(LPHandle:TLPSHandle;Current:TLPSCounter);
 var
     pos:integer;
 begin
-     if (assigned(ProcessBar)and assigned(HintText)) then
-     begin
-          pos:=round(clientwidth*(single(current)/single(ProcessBar.max)));
-          if pos>oldlongprocess then
-          begin
-               ProcessBar.position:=current;
-               oldlongprocess:=pos+20;
-               ProcessBar.repaint;
-          end;
-     end;
+  if (assigned(ProcessBar)and assigned(HintText)) then begin
+    pos:=round(clientwidth*(single(current)/single(ProcessBar.max)));
+    if pos>oldlongprocess then begin
+      ProcessBar.position:=current;
+      oldlongprocess:=pos+20;
+      ProcessBar.repaint;
+    end;
+  end;
 end;
-
-{function TZCADMainWindow.MessageBox(Text, Caption: PChar; Flags: Longint): Integer;
-begin
-     ShowAllCursors(nil);
-     result:=application.MessageBox(Text, Caption,Flags);
-     RestoreCursors(nil);
-end;}
 
 procedure TZCADMainWindow.ShowAllCursors;
 begin
@@ -1364,43 +1353,30 @@ end;
 
 procedure TZCADMainWindow.RestoreCursors;
 begin
-     if drawings.GetCurrentDWG<>nil then
-     if drawings.GetCurrentDWG.wa<>nil then
-     drawings.GetCurrentDWG.wa.hidemousecursor;
+  if drawings.GetCurrentDWG<>nil then
+    if drawings.GetCurrentDWG.wa<>nil then
+      drawings.GetCurrentDWG.wa.hidemousecursor;
 end;
 
-{procedure TZCADMainWindow.Say(word:gdbstring);
-begin
-     //if sysvar.SYS.SYS_IsHistoryLineCreated^ then
-     begin
-          if assigned(HintText)then
-          begin
-          HintText.caption:=word;
-          HintText.repaint;
-          end;
-     end;
-end;}
 procedure TZCADMainWindow.EndLongProcess;
 var
-   Time:Tdatetime;
-   ts:GDBSTRING;
+   TimeStr,LPName:GDBSTRING;
 begin
-     if (assigned(ProcessBar)and assigned(HintText)) then
-     begin
-          ProcessBar.Hide;
-          HintText.Show;
-          ProcessBar.min:=0;
-          ProcessBar.max:=0;
-          ProcessBar.position:=0;
-     end;
-    //application.ProcessMessages;//halg zcad after Lazarus r63888
-    time:=(now-LPTime)*10e4;
-    str(time:3:2,ts);
-    if pname='' then
-                     ZCMsgCallBackInterface.TextMessage(format(rscompiledtimemsg,[ts]),TMWOHistoryOut)
-                 else
-                     ZCMsgCallBackInterface.TextMessage(format(rsprocesstimemsg,[pname,ts]),TMWOHistoryOut);
-    pname:='';
+  if (assigned(ProcessBar)and assigned(HintText)) then
+  begin
+    ProcessBar.Hide;
+    HintText.Show;
+    ProcessBar.min:=0;
+    ProcessBar.max:=0;
+    ProcessBar.position:=0;
+  end;
+  str(TotalLPTime*10e4:3:2,TimeStr);
+  LPName:=lps.getLPName(LPHandle);
+
+  if LPName='' then
+    ZCMsgCallBackInterface.TextMessage(format(rscompiledtimemsg,[TimeStr]),TMWOHistoryOut)
+  else
+    ZCMsgCallBackInterface.TextMessage(format(rsprocesstimemsg,[LPName,TimeStr]),TMWOHistoryOut);
 end;
 procedure TZCADMainWindow.MainMouseMove;
 begin
@@ -1608,10 +1584,10 @@ begin
              end;
              //wa.param.SelDesc.LastSelectedObject := wa.param.SelDesc.OnMouseObject;
              if commandmanager.pcommandrunning<>nil then
-             if commandmanager.pcommandrunning.IData.GetPointMode=TGPWaitEnt then
+             if commandmanager.pcommandrunning.IData.GetPointMode=TGPMWaitEnt then
              if sender.param.SelDesc.LastSelectedObject<>nil then
              begin
-               commandmanager.pcommandrunning^.IData.GetPointMode:=TGPEnt;
+               commandmanager.pcommandrunning^.IData.GetPointMode:=TGPMEnt;
              end;
          NeedRedraw:=true;
     end
@@ -1683,7 +1659,7 @@ var
    pvname,pvname2:pvardesk;
    ir:itrec;
    pobj:PGDBObjEntity;
-   pentvarext:PTVariablesExtender;
+   pentvarext:TVariablesExtender;
 begin
      result:=0;
      if pent=nil then
@@ -1693,8 +1669,8 @@ begin
      begin
           if (pent^.GetObjType=GDBDeviceID)or(pent^.GetObjType=GDBCableID)or(pent^.GetObjType=GDBNetID)then
           begin
-               pentvarext:=pent^.GetExtension(typeof(TVariablesExtender));
-               pvname:=pentvarext^.entityunit.FindVariable('NMO_Name');
+               pentvarext:=pent^.GetExtension<TVariablesExtender>;
+               pvname:=pentvarext.entityunit.FindVariable('NMO_Name');
                if pvname<>nil then
                begin
                    pobj:=pdwg.GetCurrentROOT.ObjArray.beginiterate(ir);
@@ -1702,8 +1678,8 @@ begin
                    repeat
                          if (pobj<>pent)and((pobj^.GetObjType=GDBDeviceID)or(pobj^.GetObjType=GDBCableID)or(pobj^.GetObjType=GDBNetID)) then
                          begin
-                              pentvarext:=pobj^.GetExtension(typeof(TVariablesExtender));
-                              pvname2:=pentvarext^.entityunit.FindVariable('NMO_Name');
+                              pentvarext:=pobj^.GetExtension<TVariablesExtender>;
+                              pvname2:=pentvarext.entityunit.FindVariable('NMO_Name');
                               if pvname2<>nil then
                               if pgdbstring(pvname2^.data.Instance)^=pgdbstring(pvname^.data.Instance)^ then
                               begin
@@ -1718,7 +1694,15 @@ begin
      end;
 end;
 procedure TZCADMainWindow.wakp(Sender:TAbstractViewArea;var Key: Word; Shift: TShiftState);
+var
+  waitinput:boolean;
 begin
+  waitinput:=commandmanager.pcommandrunning<>nil;
+  if waitinput then
+    waitinput:=commandmanager.pcommandrunning.IData.GetPointMode in SomethingWait;
+  if waitinput then
+    waitinput:=GPIempty in commandmanager.pcommandrunning.IData.InputMode;
+
      if Key=VK_ESCAPE then
      begin
        //if assigned(ReStoreGDBObjInspProc)then
@@ -1750,7 +1734,7 @@ begin
        //end;
        Key:=0;
      end
-     else if (Key = VK_RETURN)or(Key = VK_SPACE) then
+     else if ((Key = VK_RETURN)or(Key = VK_SPACE))and(not waitinput) then
            begin
                 commandmanager.executelastcommad(Sender.pdwg,@Sender.param);
                 Key:=00;
@@ -1768,7 +1752,7 @@ begin
   RelSelectedObjects:=SelectRelatedObjects(Sender.PDWG,@Sender.param,Sender.param.SelDesc.LastSelectedObject);
   if RelSelectedObjects>0 then
                               ZCMsgCallBackInterface.TextMessage(format(rsAdditionalSelected,[RelSelectedObjects]),TMWOHistoryOut);
-  if (commandmanager.pcommandrunning=nil)or(commandmanager.pcommandrunning^.IData.GetPointMode<>TGPWaitEnt) then
+  if (commandmanager.pcommandrunning=nil)or(commandmanager.pcommandrunning^.IData.GetPointMode<>TGPMWaitEnt) then
   begin
   if PGDBObjEntity(Sender.param.SelDesc.OnMouseObject)^.select(Sender.param.SelDesc.Selectedobjcount,drawings.CurrentDWG^.selector) then
     begin
@@ -1786,7 +1770,7 @@ var
   //inr:TINRect;
   line:GDBString;
   pvd:pvardesk;
-  pentvarext:PTVariablesExtender;
+  pentvarext:TVariablesExtender;
 begin
      result:='';
      i:=0;
@@ -1795,9 +1779,9 @@ begin
                     begin
                          repeat
                          pvd:=nil;
-                         pentvarext:=pp^.GetExtension(typeof(TVariablesExtender));
+                         pentvarext:=pp^.GetExtension<TVariablesExtender>;
                          if pentvarext<>nil then
-                         pvd:=pentvarext^.entityunit.FindVariable('NMO_Name');
+                         pvd:=pentvarext.entityunit.FindVariable('NMO_Name');
                          if pvd<>nil then
                                          begin
                                          if i=20 then

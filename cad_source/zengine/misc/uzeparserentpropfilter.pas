@@ -16,45 +16,58 @@ type
     IncludeEntity:TGDB3StateBool;
   end;
 
-  TParserEntityPropFilterString=AnsiString;
-  TParserEntityPropFilterChar=AnsiChar;
-  TParserEntityPropFilter=TGZParser<TParserEntityPropFilterString,TParserEntityPropFilterChar,TPropFilterData,TCharToOptChar<AnsiChar>>;
+  //TParserEntityPropFilterString=AnsiString;
+  //TParserEntityPropFilterChar=AnsiChar;
+  TParserEntityPropFilter=TGZParser<TRawByteStringManipulator,
+                                    TRawByteStringManipulator.TStringType,
+                                    TRawByteStringManipulator.TCharType,
+                                    TCodeUnitPosition,
+                                    TRawByteStringManipulator.TCharPosition,
+                                    TRawByteStringManipulator.TCharLength,
+                                    TRawByteStringManipulator.TCharInterval,
+                                    TRawByteStringManipulator.TCharRange,
+                                    TPropFilterData,
+                                    TCharToOptChar<TRawByteStringManipulator.TCharType>>;
 
   TIncludeIfMask=class(TParserEntityPropFilter.TParserTokenizer.TStaticProcessor)
-    class procedure StaticDoit(const Source:TParserEntityPropFilterString;
-                               const Token :TSubStr;
-                               const Operands :TSubStr;
-                               const ParsedOperands :TAbstractParsedText<TParserEntityPropFilterString,TPropFilterData>;
+    class procedure StaticDoit(const Source:TRawByteStringManipulator.TStringType;
+                               const Token :TRawByteStringManipulator.TCharRange;
+                               const Operands :TRawByteStringManipulator.TCharRange;
+                               const ParsedOperands :TAbstractParsedText<TRawByteStringManipulator.TStringType,TPropFilterData>;
+                               InsideBracketParser:TObject;
                                var Data:TPropFilterData);override;
   end;
 
   TIncludeIf=class(TParserEntityPropFilter.TParserTokenizer.TStaticProcessor)
-    class procedure StaticDoit(const Source:TParserEntityPropFilterString;
-                               const Token :TSubStr;
-                               const Operands :TSubStr;
-                               const ParsedOperands :TAbstractParsedText<TParserEntityPropFilterString,TPropFilterData>;
+    class procedure StaticDoit(const Source:TRawByteStringManipulator.TStringType;
+                               const Token :TRawByteStringManipulator.TCharRange;
+                               const Operands :TRawByteStringManipulator.TCharRange;
+                               const ParsedOperands :TAbstractParsedText<TRawByteStringManipulator.TStringType,TPropFilterData>;
+                               InsideBracketParser:TObject;
                                var Data:TPropFilterData);override;
   end;
 
 
   TSameMask=class(TParserEntityPropFilter.TParserTokenizer.TStaticProcessor)
-    class procedure StaticGetResult(const Source:TParserEntityPropFilterString;
-                                    const Token :TSubStr;
-                                    const Operands :TSubStr;
-                                    const ParsedOperands:TAbstractParsedText<TParserEntityPropFilterString,TPropFilterData>;
-                                    var Result:TParserEntityPropFilterString;
-                                    var ResultParam:TSubStr;
+    class procedure StaticGetResult(const Source:TRawByteStringManipulator.TStringType;
+                                    const Token :TRawByteStringManipulator.TCharRange;
+                                    const Operands :TRawByteStringManipulator.TCharRange;
+                                    const ParsedOperands:TAbstractParsedText<TRawByteStringManipulator.TStringType,TPropFilterData>;
+                                    InsideBracketParser:TObject;
+                                    var Result:TRawByteStringManipulator.TStringType;
+                                    var ResultParam:TRawByteStringManipulator.TCharRange;
                                     //var NextSymbolPos:integer;
                                     var data:TPropFilterData);override;
   end;
 
   TOr=class(TParserEntityPropFilter.TParserTokenizer.TStaticProcessor)
-    class procedure StaticGetResult(const Source:TParserEntityPropFilterString;
-                                    const Token :TSubStr;
-                                    const Operands :TSubStr;
-                                    const ParsedOperands:TAbstractParsedText<TParserEntityPropFilterString,TPropFilterData>;
-                                    var Result:TParserEntityPropFilterString;
-                                    var ResultParam:TSubStr;
+    class procedure StaticGetResult(const Source:TRawByteStringManipulator.TStringType;
+                                    const Token :TRawByteStringManipulator.TCharRange;
+                                    const Operands :TRawByteStringManipulator.TCharRange;
+                                    const ParsedOperands:TAbstractParsedText<TRawByteStringManipulator.TStringType,TPropFilterData>;
+                                    InsideBracketParser:TObject;
+                                    var Result:TRawByteStringManipulator.TStringType;
+                                    var ResultParam:TRawByteStringManipulator.TCharRange;
                                     //var NextSymbolPos:integer;
                                     var data:TPropFilterData);override;
   end;
@@ -63,19 +76,21 @@ type
 
   TGetEntParam=class(TParserEntityPropFilter.TParserTokenizer.TDynamicProcessor)
     mp:TMultiProperty;
-    tempresult:TParserEntityPropFilterString;
-    constructor vcreate(const Source:TParserEntityPropFilterString;
-                            const Token :TSubStr;
-                            const Operands :TSubStr;
-                            const ParsedOperands:TAbstractParsedText<TParserEntityPropFilterString,TPropFilterData>;
+    tempresult:TRawByteStringManipulator.TStringType;
+    constructor vcreate(const Source:TRawByteStringManipulator.TStringType;
+                            const Token :TRawByteStringManipulator.TCharRange;
+                            const Operands :TRawByteStringManipulator.TCharRange;
+                            const ParsedOperands:TAbstractParsedText<TRawByteStringManipulator.TStringType,TPropFilterData>;
+                            InsideBracketParser:TObject;
                             var Data:TPropFilterData);override;
     destructor Destroy;override;
-    procedure GetResult(const Source:TParserEntityPropFilterString;
-                        const Token :TSubStr;
-                        const Operands :TSubStr;
-                        const ParsedOperands:TAbstractParsedText<TParserEntityPropFilterString,TPropFilterData>;
-                        var Result:TParserEntityPropFilterString;
-                        var ResultParam:TSubStr;
+    procedure GetResult(const Source:TRawByteStringManipulator.TStringType;
+                        const Token :TRawByteStringManipulator.TCharRange;
+                        const Operands :TRawByteStringManipulator.TCharRange;
+                        const ParsedOperands:TAbstractParsedText<TRawByteStringManipulator.TStringType,TPropFilterData>;
+                        InsideBracketParser:TObject;
+                        var Result:TRawByteStringManipulator.TStringType;
+                        var ResultParam:TRawByteStringManipulator.TCharRange;
                         var data:TPropFilterData);override;
   end;
 var
@@ -87,14 +102,15 @@ var
   BracketTockenId:TParserEntityPropFilter.TParserTokenizer.TTokenId;
   VU:TObjectUnit;
 
-class procedure TIncludeIfMask.StaticDoit(const Source:TParserEntityPropFilterString;
-                           const Token :TSubStr;
-                           const Operands :TSubStr;
-                           const ParsedOperands :TAbstractParsedText<TParserEntityPropFilterString,TPropFilterData>;
+class procedure TIncludeIfMask.StaticDoit(const Source:TRawByteStringManipulator.TStringType;
+                           const Token :TRawByteStringManipulator.TCharRange;
+                           const Operands :TRawByteStringManipulator.TCharRange;
+                           const ParsedOperands :TAbstractParsedText<TRawByteStringManipulator.TStringType,TPropFilterData>;
+                           InsideBracketParser:TObject;
                            var Data:TPropFilterData);
 var
-  op1,op2:TParserEntityPropFilterString;
-  ResultParam:TSubStr;
+  op1,op2:TRawByteStringManipulator.TStringType;
+  ResultParam:TRawByteStringManipulator.TCharRange;
 begin
   if (ParsedOperands<>nil)
      and(ParsedOperands is TParserEntityPropFilter.TParsedText)
@@ -102,18 +118,18 @@ begin
      {and((ParsedOperands as TEntityFilterParser.TParsedTextWithOneToken).Part.TextInfo.TokenId=StringId)} then begin
        if Data.IncludeEntity<>T3SB_Fale then begin
          op1:=inttostr((ParsedOperands as TParserEntityPropFilter.TParsedText).Parts.size);
-         ResultParam.StartPos:=OnlyGetLength;
-         ResultParam.Length:=0;
+         ResultParam.P.CodeUnitPos:=OnlyGetLength;
+         ResultParam.L.CodeUnits:=0;
          TParserEntityPropFilter.TGeneralParsedText.GetResultWithPart(Source,(ParsedOperands as TParserEntityPropFilter.TParsedText).Parts.Mutable[0]^,data,op1,ResultParam);
-         SetLength(op1,ResultParam.Length);
-         ResultParam.StartPos:=InitialStartPos;
+         SetLength(op1,ResultParam.L.CodeUnits);
+         ResultParam.P.CodeUnitPos:=InitialStartPos;
          TParserEntityPropFilter.TGeneralParsedText.GetResultWithPart(Source,(ParsedOperands as TParserEntityPropFilter.TParsedText).Parts.Mutable[0]^,data,op1,ResultParam);
 
-         ResultParam.StartPos:=OnlyGetLength;
-         ResultParam.Length:=0;
+         ResultParam.P.CodeUnitPos:=OnlyGetLength;
+         ResultParam.L.CodeUnits:=0;
          TParserEntityPropFilter.TGeneralParsedText.GetResultWithPart(Source,(ParsedOperands as TParserEntityPropFilter.TParsedText).Parts.Mutable[2]^,data,op2,ResultParam);
-         SetLength(op2,ResultParam.Length);
-         ResultParam.StartPos:=InitialStartPos;
+         SetLength(op2,ResultParam.L.CodeUnits);
+         ResultParam.P.CodeUnitPos:=InitialStartPos;
          TParserEntityPropFilter.TGeneralParsedText.GetResultWithPart(Source,(ParsedOperands as TParserEntityPropFilter.TParsedText).Parts.Mutable[2]^,data,op2,ResultParam);
          if MatchesMask(op1,op2,false)
              or (AnsiCompareText(op1,op2)=0) then
@@ -122,16 +138,17 @@ begin
        //TEntsTypeFilter(Data).AddTypeNameMask(op1)
      end
   else
-    Raise Exception.CreateFmt(rsRunTimeError,[Operands.StartPos]);
+    Raise Exception.CreateFmt(rsRunTimeError,[Operands.P.CodeUnitPos]);
 end;
 
-class procedure TIncludeIf.StaticDoit(const Source:TParserEntityPropFilterString;
-                                      const Token :TSubStr;
-                                      const Operands :TSubStr;
-                                      const ParsedOperands :TAbstractParsedText<TParserEntityPropFilterString,TPropFilterData>;
+class procedure TIncludeIf.StaticDoit(const Source:TRawByteStringManipulator.TStringType;
+                                      const Token :TRawByteStringManipulator.TCharRange;
+                                      const Operands :TRawByteStringManipulator.TCharRange;
+                                      const ParsedOperands :TAbstractParsedText<TRawByteStringManipulator.TStringType,TPropFilterData>;
+                                      InsideBracketParser:TObject;
                                       var Data:TPropFilterData);
 var
-  op1:TParserEntityPropFilterString;
+  op1:TRawByteStringManipulator.TStringType;
 begin
   if (ParsedOperands<>nil)
      and((ParsedOperands is TParserEntityPropFilter.TParsedTextWithOneToken)or(ParsedOperands is TParserEntityPropFilter.TParsedTextWithoutTokens))then begin
@@ -144,20 +161,21 @@ begin
        //TEntsTypeFilter(Data).AddTypeNameMask(op1)
      end
   else
-    Raise Exception.CreateFmt(rsRunTimeError,[Operands.StartPos]);
+    Raise Exception.CreateFmt(rsRunTimeError,[Operands.P.CodeUnitPos]);
 end;
 
-class procedure TSameMask.StaticGetResult(const Source:TParserEntityPropFilterString;
-                                          const Token :TSubStr;
-                                          const Operands :TSubStr;
-                                          const ParsedOperands:TAbstractParsedText<TParserEntityPropFilterString,TPropFilterData>;
-                                          var Result:TParserEntityPropFilterString;
-                                          var ResultParam:TSubStr;
+class procedure TSameMask.StaticGetResult(const Source:TRawByteStringManipulator.TStringType;
+                                          const Token :TRawByteStringManipulator.TCharRange;
+                                          const Operands :TRawByteStringManipulator.TCharRange;
+                                          const ParsedOperands:TAbstractParsedText<TRawByteStringManipulator.TStringType,TPropFilterData>;
+                                          InsideBracketParser:TObject;
+                                          var Result:TRawByteStringManipulator.TStringType;
+                                          var ResultParam:TRawByteStringManipulator.TCharRange;
                                           //var NextSymbolPos:integer;
                                           var data:TPropFilterData);
 var
-  op1,op2:TParserEntityPropFilterString;
-  opResultParam:TSubStr;
+  op1,op2:TRawByteStringManipulator.TStringType;
+  opResultParam:TRawByteStringManipulator.TCharRange;
 begin
   if (ParsedOperands<>nil)
      and(ParsedOperands is TParserEntityPropFilter.TParsedText)
@@ -165,45 +183,46 @@ begin
      {and((ParsedOperands as TEntityFilterParser.TParsedTextWithOneToken).Part.TextInfo.TokenId=StringId)} then begin
        if Data.IncludeEntity<>T3SB_Fale then begin
          op1:=inttostr((ParsedOperands as TParserEntityPropFilter.TParsedText).Parts.size);
-         opResultParam.StartPos:=OnlyGetLength;
-         opResultParam.Length:=0;
+         opResultParam.P.CodeUnitPos:=OnlyGetLength;
+         opResultParam.L.CodeUnits:=0;
          TParserEntityPropFilter.TGeneralParsedText.GetResultWithPart(Source,(ParsedOperands as TParserEntityPropFilter.TParsedText).Parts.Mutable[0]^,data,op1,opResultParam);
-         SetLength(op1,opResultParam.Length);
-         opResultParam.StartPos:=InitialStartPos;
+         SetLength(op1,opResultParam.L.CodeUnits);
+         opResultParam.P.CodeUnitPos:=InitialStartPos;
          TParserEntityPropFilter.TGeneralParsedText.GetResultWithPart(Source,(ParsedOperands as TParserEntityPropFilter.TParsedText).Parts.Mutable[0]^,data,op1,opResultParam);
 
-         opResultParam.StartPos:=OnlyGetLength;
-         opResultParam.Length:=0;
+         opResultParam.P.CodeUnitPos:=OnlyGetLength;
+         opResultParam.L.CodeUnits:=0;
          TParserEntityPropFilter.TGeneralParsedText.GetResultWithPart(Source,(ParsedOperands as TParserEntityPropFilter.TParsedText).Parts.Mutable[2]^,data,op2,opResultParam);
-         SetLength(op2,opResultParam.Length);
-         opResultParam.StartPos:=InitialStartPos;
+         SetLength(op2,opResultParam.L.CodeUnits);
+         opResultParam.P.CodeUnitPos:=InitialStartPos;
          TParserEntityPropFilter.TGeneralParsedText.GetResultWithPart(Source,(ParsedOperands as TParserEntityPropFilter.TParsedText).Parts.Mutable[2]^,data,op2,opResultParam);
-         ResultParam.Length:=1;
-         if ResultParam.StartPos<>OnlyGetLength then begin
+         ResultParam.L.CodeUnits:=1;
+         if ResultParam.P.CodeUnitPos<>OnlyGetLength then begin
            if MatchesMask(op1,op2,false)
                or (AnsiCompareText(op1,op2)=0) then
-             Result[ResultParam.StartPos]:='+'
+             Result[ResultParam.P.CodeUnitPos]:='+'
            else
-             Result[ResultParam.StartPos]:='-'
+             Result[ResultParam.P.CodeUnitPos]:='-'
          end;
        end;
        //TEntsTypeFilter(Data).AddTypeNameMask(op1)
      end
   else
-    Raise Exception.CreateFmt(rsRunTimeError,[Operands.StartPos]);
+    Raise Exception.CreateFmt(rsRunTimeError,[Operands.P.CodeUnitPos]);
 end;
 
-class procedure TOr.StaticGetResult(const Source:TParserEntityPropFilterString;
-                                  const Token :TSubStr;
-                                  const Operands :TSubStr;
-                                  const ParsedOperands:TAbstractParsedText<TParserEntityPropFilterString,TPropFilterData>;
-                                  var Result:TParserEntityPropFilterString;
-                                  var ResultParam:TSubStr;
+class procedure TOr.StaticGetResult(const Source:TRawByteStringManipulator.TStringType;
+                                  const Token :TRawByteStringManipulator.TCharRange;
+                                  const Operands :TRawByteStringManipulator.TCharRange;
+                                  const ParsedOperands:TAbstractParsedText<TRawByteStringManipulator.TStringType,TPropFilterData>;
+                                  InsideBracketParser:TObject;
+                                  var Result:TRawByteStringManipulator.TStringType;
+                                  var ResultParam:TRawByteStringManipulator.TCharRange;
                                   //var NextSymbolPos:integer;
                                   var data:TPropFilterData);
 var
-  op1,op2:TParserEntityPropFilterString;
-  opResultParam:TSubStr;
+  op1,op2:TRawByteStringManipulator.TStringType;
+  opResultParam:TRawByteStringManipulator.TCharRange;
 begin
   if (ParsedOperands<>nil)
      and(ParsedOperands is TParserEntityPropFilter.TParsedText)
@@ -211,40 +230,41 @@ begin
      {and((ParsedOperands as TEntityFilterParser.TParsedTextWithOneToken).Part.TextInfo.TokenId=StringId)} then begin
        if Data.IncludeEntity<>T3SB_Fale then begin
          op1:=inttostr((ParsedOperands as TParserEntityPropFilter.TParsedText).Parts.size);
-         opResultParam.StartPos:=OnlyGetLength;
-         opResultParam.Length:=0;
+         opResultParam.P.CodeUnitPos:=OnlyGetLength;
+         opResultParam.L.CodeUnits:=0;
          TParserEntityPropFilter.TGeneralParsedText.GetResultWithPart(Source,(ParsedOperands as TParserEntityPropFilter.TParsedText).Parts.Mutable[0]^,data,op1,opResultParam);
-         SetLength(op1,opResultParam.Length);
-         opResultParam.StartPos:=InitialStartPos;
+         SetLength(op1,opResultParam.L.CodeUnits);
+         opResultParam.P.CodeUnitPos:=InitialStartPos;
          TParserEntityPropFilter.TGeneralParsedText.GetResultWithPart(Source,(ParsedOperands as TParserEntityPropFilter.TParsedText).Parts.Mutable[0]^,data,op1,opResultParam);
 
-         opResultParam.StartPos:=OnlyGetLength;
-         opResultParam.Length:=0;
+         opResultParam.P.CodeUnitPos:=OnlyGetLength;
+         opResultParam.L.CodeUnits:=0;
          TParserEntityPropFilter.TGeneralParsedText.GetResultWithPart(Source,(ParsedOperands as TParserEntityPropFilter.TParsedText).Parts.Mutable[2]^,data,op2,opResultParam);
-         SetLength(op2,opResultParam.Length);
-         opResultParam.StartPos:=InitialStartPos;
+         SetLength(op2,opResultParam.L.CodeUnits);
+         opResultParam.P.CodeUnitPos:=InitialStartPos;
          TParserEntityPropFilter.TGeneralParsedText.GetResultWithPart(Source,(ParsedOperands as TParserEntityPropFilter.TParsedText).Parts.Mutable[2]^,data,op2,opResultParam);
-         ResultParam.Length:=1;
-         if ResultParam.StartPos<>OnlyGetLength then begin
+         ResultParam.L.CodeUnits:=1;
+         if ResultParam.P.CodeUnitPos<>OnlyGetLength then begin
            if (op1='+')
            or (op2='+') then
-             Result[ResultParam.StartPos]:='+'
+             Result[ResultParam.P.CodeUnitPos]:='+'
            else
-             Result[ResultParam.StartPos]:='-'
+             Result[ResultParam.P.CodeUnitPos]:='-'
          end;
        end;
        //TEntsTypeFilter(Data).AddTypeNameMask(op1)
      end
   else
-    Raise Exception.CreateFmt(rsRunTimeError,[Operands.StartPos]);
+    Raise Exception.CreateFmt(rsRunTimeError,[Operands.P.CodeUnitPos]);
 end;
 
-procedure TGetEntParam.GetResult(const Source:TParserEntityPropFilterString;
-                    const Token :TSubStr;
-                    const Operands :TSubStr;
-                    const ParsedOperands:TAbstractParsedText<TParserEntityPropFilterString,TPropFilterData>;
-                    var Result:TParserEntityPropFilterString;
-                    var ResultParam:TSubStr;
+procedure TGetEntParam.GetResult(const Source:TRawByteStringManipulator.TStringType;
+                    const Token :TRawByteStringManipulator.TCharRange;
+                    const Operands :TRawByteStringManipulator.TCharRange;
+                    const ParsedOperands:TAbstractParsedText<TRawByteStringManipulator.TStringType,TPropFilterData>;
+                    InsideBracketParser:TObject;
+                    var Result:TRawByteStringManipulator.TStringType;
+                    var ResultParam:TRawByteStringManipulator.TCharRange;
                     var data:TPropFilterData);
 var
   i:integer;
@@ -252,7 +272,7 @@ var
   f:TzeUnitsFormat;
   ChangedData:TChangedData;
 begin
-  if ResultParam.StartPos=OnlyGetLength then begin
+  if ResultParam.P.CodeUnitPos=OnlyGetLength then begin
     if mp<>nil then begin
       if mp.MPObjectsData.MyGetValue(0,mpd) then begin
         ChangedData:=CreateChangedData(data.CurrentEntity,mpd.GetValueOffset,mpd.SetValueOffset);
@@ -271,16 +291,17 @@ begin
     end else
       tempresult:='';
   end;
-  ResultParam.Length:=Length(tempresult);
-  if ResultParam.StartPos<>OnlyGetLength then
-    for i:=0 to tempresult.Length-1 do
-      Result[ResultParam.StartPos+i]:=tempresult[i+1];
+  ResultParam.L.CodeUnits:=Length(tempresult);
+  if ResultParam.P.CodeUnitPos<>OnlyGetLength then
+    for i:=0 to Length(tempresult)-1 do
+      Result[ResultParam.P.CodeUnitPos+i]:=tempresult[i+1];
 end;
 
-constructor TGetEntParam.vcreate(const Source:TParserEntityPropFilterString;
-                        const Token :TSubStr;
-                        const Operands :TSubStr;
-                        const ParsedOperands:TAbstractParsedText<TParserEntityPropFilterString,TPropFilterData>;
+constructor TGetEntParam.vcreate(const Source:TRawByteStringManipulator.TStringType;
+                        const Token :TRawByteStringManipulator.TCharRange;
+                        const Operands :TRawByteStringManipulator.TCharRange;
+                        const ParsedOperands:TAbstractParsedText<TRawByteStringManipulator.TStringType,TPropFilterData>;
+                        InsideBracketParser:TObject;
                         var Data:TPropFilterData);
 var
   propertyname:string;

@@ -113,10 +113,11 @@ end;
 
 class procedure TLPSSupporthelper.EndLongProcessHandler(LPHandle:TLPSHandle;TotalLPTime:TDateTime);
 begin
-  if lps.isProcessed then
+  if lps.{isProcessed}isFirstProcess then begin
     if assigned(SuppressedMessages)then
       SuppressedMessages.clear;
-  TaskNameSave:='';
+    TaskNameSave:='';
+  end;
 end;
 class procedure TLPSSupporthelper.StartLongProcessHandler(LPHandle:TLPSHandle;Total:TLPSCounter;LPName:TLPName);
 begin
@@ -173,6 +174,9 @@ var
   TaskName:TLPName;
   PriorityFocusCtrl:TWinControl;
   ParentHWND:THandle;
+  TDF:TTaskDialogFlags;
+  FirstMainParent,MainParent:TWinControl;
+  i:integer;
 begin
   FillChar(Task,SizeOf(Task),0);
   if assigned(Context) then begin
@@ -211,16 +215,35 @@ begin
   Task.VerifyChecked := false;
 
   ParentHWND:=0;
-  if Screen.ActiveForm<>nil then
-    ParentHWND:=Screen.ActiveForm.Handle;
-  {PriorityFocusCtrl:= ZCMsgCallBackInterface.GetPriorityFocus;
-  if PriorityFocusCtrl<>nil then begin
-    while PriorityFocusCtrl.Parent<>nil do
-      PriorityFocusCtrl:=PriorityFocusCtrl.Parent;
-    ParentHWND:=PriorityFocusCtrl.Handle;
-  end;}
 
-  Result.ModalResult:=TLCLModalResult2TZCMsgModalResult.Convert(Task.Execute(TZCMsgCommonButtons2TCommonButtons.Convert(buttons),0,[tdfPositionRelativeToWindow],TZCMsgDlgIcon2TTaskDialogIcon(aDialogIcon),tfiWarning,0,0,ParentHWND));//controls.mrOk
+  //считаем сколько фактически форм зкада показано на экране
+  FirstMainParent:=nil;
+  MainParent:=nil;
+  for i:=0 to Screen.CustomFormCount-1 do begin
+    MainParent:=Screen.CustomForms[i];
+    if MainParent.IsVisible then begin
+      while MainParent.Parent<>nil do
+        MainParent:=MainParent.Parent;
+      if MainParent is TCustomForm then
+        //сплэшскрин за отдельнцю форму не считаем
+        if (MainParent as TCustomForm).FormStyle=fsSplash then
+          continue;
+      if FirstMainParent=nil then
+        FirstMainParent:=MainParent
+      else
+        if FirstMainParent<>MainParent then
+          Break;
+    end else
+      MainParent:=FirstMainParent;
+  end;
+
+  //если одна, Task в центре формы, если несколько или нет вообще - в центре экрана
+  if (FirstMainParent=MainParent)and(FirstMainParent<>nil) then
+    TDF:=[tdfPositionRelativeToWindow]
+  else
+    TDF:=[];
+
+  Result.ModalResult:=TLCLModalResult2TZCMsgModalResult.Convert(Task.Execute(TZCMsgCommonButtons2TCommonButtons.Convert(buttons),0,TDF,TZCMsgDlgIcon2TTaskDialogIcon(aDialogIcon),tfiWarning,0,0,ParentHWND));//controls.mrOk
   Result.RadioRes:=Task.RadioRes;
   Result.SelectionRes:=Task.SelectionRes;
   Result.VerifyChecked:=Task.VerifyChecked;

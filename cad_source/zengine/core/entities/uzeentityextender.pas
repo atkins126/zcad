@@ -24,16 +24,15 @@ uses uzbmemman,uzedrawingdef,uzbtypesbase,uzbtypes,usimplegenerics,
      UGDBOpenArrayOfByte,gzctnrstl,uzeffdxfsupport;
 
 type
-TBaseObjExtender= object(GDBaseObject)
-
+TBaseObjExtender=class
+  class function getExtenderName:string;virtual;abstract;
 end;
-PTBaseEntityExtender=^TBaseEntityExtender;
-TCreateThisExtender=function (pEntity:Pointer; out ObjSize:Integer):PTBaseEntityExtender;
-TBaseEntityExtender= object(TBaseObjExtender)
+//PTBaseEntityExtender=^TBaseEntityExtender;
+TBaseEntityExtender=class(TBaseObjExtender)
                   //class function CreateThisExtender(pEntity:Pointer; out ObjSize:Integer):PTBaseEntityExtender;
-                  constructor init(pEntity:Pointer);
+                  constructor Create(pEntity:Pointer);virtual;abstract;
                   procedure onEntityDestruct(pEntity:Pointer);virtual;abstract;
-                  procedure onEntityFormat(pEntity:Pointer;const drawing:TDrawingDef);virtual;abstract;
+                  procedure onBeforeEntityFormat(pEntity:Pointer;const drawing:TDrawingDef);virtual;abstract;
                   procedure onEntityClone(pSourceEntity,pDestEntity:Pointer);virtual;abstract;
                   procedure onEntityBuildVarGeometry(pEntity:pointer;const drawing:TDrawingDef);virtual;abstract;
                   procedure onEntitySupportOldVersions(pEntity:pointer;const drawing:TDrawingDef);virtual;abstract;
@@ -42,55 +41,86 @@ TBaseEntityExtender= object(TBaseObjExtender)
                   procedure ReorganizeEnts(OldEnts2NewEntsMap:TMapPointerToPointer);virtual;abstract;
                   procedure PostLoad(var context:TIODXFLoadContext);virtual;abstract;
 end;
-TEntityExtenderVector= TMyVector<PTBaseEntityExtender>;
-TEntityExtenderMap= GKey2DataMap<Pointer,SizeUInt{$IFNDEF DELPHI},LessPointer{$ENDIF}>;
+TMetaEntityExtender=class of TBaseEntityExtender;
+TEntityExtenderVector= TMyVector<TBaseEntityExtender>;
+TEntityExtenderMap= GKey2DataMap<TMetaEntityExtender,SizeUInt(*{$IFNDEF DELPHI},LessPointer{$ENDIF}*)>;
 TEntityExtensions=class
                        fEntityExtensions:TEntityExtenderVector;
                        fEntityExtenderToIndex:TEntityExtenderMap;
 
                        constructor create;
                        destructor destroy;override;
-                       function AddExtension(ExtObj:PTBaseEntityExtender;ObjSize:GDBInteger):{PTBaseEntityExtender}pointer;
-                       function GetExtension(_ExtType:pointer):{PTBaseEntityExtender}pointer;
+                       function AddExtension(ExtObj:TBaseEntityExtender):TBaseEntityExtender;
+                       function GetExtension<GEntityExtenderType>(_ExtType:TMetaEntityExtender):GEntityExtenderType;overload;
+                       function GetExtension(n:Integer):TBaseEntityExtender;overload;
+                       //function GetExtension(ExtType:TMetaEntityExtender):TBaseEntityExtender;overload;
+                       function GetExtensionsCount:Integer;
                        procedure CopyAllExtToEnt(pSourceEntity,pDestEntity:pointer);
 
+
                        procedure RunOnCloneProcedures(source,dest:pointer);
+                       procedure RunOnBeforeEntityFormat(pEntity:Pointer;const drawing:TDrawingDef);
                        procedure RunOnBuildVarGeometryProcedures(pEntity:pointer;const drawing:TDrawingDef);
                        procedure RunSupportOldVersions(pEntity:pointer;const drawing:TDrawingDef);
                        procedure RunReorganizeEnts(OldEnts2NewEntsMap:TMapPointerToPointer);
                        procedure RunPostload(var context:TIODXFLoadContext);
                   end;
+  TEntityExtendersMap=GKey2DataMap<string,TMetaEntityExtender>;
+var
+  EntityExtenders:TEntityExtendersMap;
 implementation
-constructor TBaseEntityExtender.init(pEntity:Pointer);
-begin
-end;
-function TEntityExtensions.AddExtension(ExtObj:PTBaseEntityExtender;ObjSize:GDBInteger):{PTBaseEntityExtender}pointer;
+function TEntityExtensions.AddExtension(ExtObj:TBaseEntityExtender):TBaseEntityExtender;
 var
   nevindex:SizeUInt;
 begin
-     if not fEntityExtenderToIndex.MyGetValue(typeof(ExtObj^),nevindex) then
+     if not fEntityExtenderToIndex.MyGetValue(typeof(ExtObj),nevindex) then
      begin
           nevindex:=fEntityExtensions.Size;
-          fEntityExtenderToIndex.RegisterKey(typeof(ExtObj^),nevindex);
+          fEntityExtenderToIndex.RegisterKey(typeof(ExtObj),nevindex);
           fEntityExtensions.PushBack(ExtObj);
           result:=ExtObj;
      end
      else
         result:=fEntityExtensions[nevindex];
 end;
-function TEntityExtensions.GetExtension(_ExtType:pointer):{PTBaseEntityExtender}pointer;
+function TEntityExtensions.GetExtension<GEntityExtenderType>(_ExtType:TMetaEntityExtender):GEntityExtenderType;
 var
   index:SizeUInt;
 begin
      if assigned(fEntityExtensions)then
      begin
      if fEntityExtenderToIndex.MyGetValue(_ExtType,index) then
+       result:=GEntityExtenderType(fEntityExtensions[index])
+     else
+       result:=nil;
+     end
+     else
+       result:=nil;
+end;
+{function TEntityExtensions.GetExtension(ExtType:TMetaEntityExtender):TBaseEntityExtender;
+var
+  index:SizeUInt;
+begin
+     if assigned(fEntityExtensions)then
+     begin
+     if fEntityExtenderToIndex.MyGetValue(ExtType,index) then
        result:=fEntityExtensions[index]
      else
        result:=nil;
      end
      else
        result:=nil;
+end;}
+function TEntityExtensions.GetExtensionsCount:Integer;
+begin
+  if Assigned(fEntityExtensions) then
+    result:=fEntityExtensions.Size
+  else
+    result:=0;
+end;
+function TEntityExtensions.GetExtension(n:Integer):TBaseEntityExtender;
+begin
+  result:=fEntityExtensions[n];
 end;
 constructor TEntityExtensions.create;
 begin
@@ -100,13 +130,12 @@ end;
 destructor TEntityExtensions.destroy;
 var
   i:integer;
-  p:PTBaseEntityExtender;
+  p:TBaseEntityExtender;
 begin
      for i:=0 to fEntityExtensions.Size-1 do
      begin
        p:=fEntityExtensions[i];
-       p^.Done;
-       GDBFreeMem(pointer(p));
+       p.Free;
      end;
      fEntityExtensions.Destroy;
      fEntityExtenderToIndex.Destroy;
@@ -117,7 +146,7 @@ var
 begin
      if assigned(fEntityExtensions)then
      for i:=0 to fEntityExtensions.Size-1 do
-       fEntityExtensions[i]^.onEntityClone(source,dest);
+       fEntityExtensions[i].onEntityClone(source,dest);
 end;
 procedure TEntityExtensions.RunOnBuildVarGeometryProcedures(pEntity:pointer;const drawing:TDrawingDef);
 var
@@ -125,7 +154,15 @@ var
 begin
      if assigned(fEntityExtensions)then
      for i:=0 to fEntityExtensions.Size-1 do
-       fEntityExtensions[i]^.onEntityBuildVarGeometry(pEntity,drawing);
+       fEntityExtensions[i].onEntityBuildVarGeometry(pEntity,drawing);
+end;
+procedure TEntityExtensions.RunOnBeforeEntityFormat(pEntity:Pointer;const drawing:TDrawingDef);
+var
+  i:integer;
+begin
+     if assigned(fEntityExtensions)then
+     for i:=0 to fEntityExtensions.Size-1 do
+       fEntityExtensions[i].OnBeforeEntityFormat(pEntity,drawing);
 end;
 procedure TEntityExtensions.RunSupportOldVersions(pEntity:pointer;const drawing:TDrawingDef);
 var
@@ -133,7 +170,7 @@ var
 begin
      if assigned(fEntityExtensions)then
      for i:=0 to fEntityExtensions.Size-1 do
-       fEntityExtensions[i]^.onEntitySupportOldVersions(pEntity,drawing);
+       fEntityExtensions[i].onEntitySupportOldVersions(pEntity,drawing);
 end;
 procedure TEntityExtensions.CopyAllExtToEnt(pSourceEntity,pDestEntity:pointer);
 var
@@ -141,7 +178,7 @@ var
 begin
      if assigned(fEntityExtensions)then
      for i:=0 to fEntityExtensions.Size-1 do
-       fEntityExtensions[i]^.CopyExt2Ent(pSourceEntity,pDestEntity);
+       fEntityExtensions[i].CopyExt2Ent(pSourceEntity,pDestEntity);
 end;
 procedure TEntityExtensions.RunReorganizeEnts(OldEnts2NewEntsMap:TMapPointerToPointer);
 var
@@ -149,15 +186,22 @@ var
 begin
      if assigned(fEntityExtensions)then
      for i:=0 to fEntityExtensions.Size-1 do
-       fEntityExtensions[i]^.ReorganizeEnts(OldEnts2NewEntsMap);
+       fEntityExtensions[i].ReorganizeEnts(OldEnts2NewEntsMap);
 end;
 procedure TEntityExtensions.RunPostLoad(var context:TIODXFLoadContext);
 var
   i:integer;
+  ExtObj:TBaseEntityExtender;
 begin
      if assigned(fEntityExtensions)then
-     for i:=0 to fEntityExtensions.Size-1 do
-       fEntityExtensions[i]^.PostLoad(context);
+     for i:=0 to fEntityExtensions.Size-1 do begin
+       ExtObj:=fEntityExtensions[i];
+       fEntityExtensions[i].PostLoad(context);
+     end;
 end;
+initialization
+  EntityExtenders:=TEntityExtendersMap.Create;
+finalization
+  EntityExtenders.Free;
 end.
 

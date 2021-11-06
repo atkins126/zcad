@@ -1,4 +1,4 @@
-unit DEVICE_EL_VL_LIGHT3_1_EM;
+unit DEVICE_EL_VL_MOTOR4;
 
 interface
 
@@ -10,24 +10,24 @@ usescopy addtocable;
 
 var
 
-Power:GDBDouble;(*'Мощность, кВт'*)
-Code:GDBString;(*'Код'*)
+T1:GDBString;(*'Мощность, кВт'*)
 
 implementation
 
 begin
 
-BTY_TreeCoord:='PLAN_EM_светильник';
+BTY_TreeCoord:='PLAN_EM_Двигатель';
 Device_Type:=TDT_SilaPotr;
 Device_Class:=TDC_Shell;
 
-NMO_Name:='С0';
-NMO_BaseName:='С';
+NMO_Name:='М0';
+NMO_BaseName:='М';
 NMO_Suffix:='??';
-Power:=0.0;
+
+T1:='0';
 
 SerialConnection:=1;
-GC_HeadDevice:='ШР??';
+GC_HeadDevice:='ЩР??';
 GC_HDShortName:='??';
 GC_HDGroup:=0;
 

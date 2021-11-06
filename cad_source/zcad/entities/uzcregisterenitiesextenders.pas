@@ -28,21 +28,21 @@ uses sysutils,
 implementation
 begin
   {from GDBObjBlockDef}
-  GDBObjBlockdef.GetDXFIOFeatures.RegisterEntityExtenderObject(@TVariablesExtender.CreateEntVariablesExtender);
+  GDBObjBlockdef.GetDXFIOFeatures.RegisterEntityExtenderObject(TVariablesExtender);
 
   {from GDBObjDevice}
-  GDBObjDevice.GetDXFIOFeatures.RegisterEntityExtenderObject(@TVariablesExtender.CreateEntVariablesExtender);
+  GDBObjDevice.GetDXFIOFeatures.RegisterEntityExtenderObject(TVariablesExtender);
 
   {from GDBObjNet}
-  GDBObjNet.GetDXFIOFeatures.RegisterEntityExtenderObject(@TVariablesExtender.CreateEntVariablesExtender);
+  GDBObjNet.GetDXFIOFeatures.RegisterEntityExtenderObject(TVariablesExtender);
 
   {from GDBObjCable}
-  GDBObjCable.GetDXFIOFeatures.RegisterEntityExtenderObject(@TVariablesExtender.CreateEntVariablesExtender);
+  GDBObjCable.GetDXFIOFeatures.RegisterEntityExtenderObject(TVariablesExtender);
 
   {from GDBObjSuperLine}
-  GDBObjSuperLine.GetDXFIOFeatures.RegisterEntityExtenderObject(@TVariablesExtender.CreateEntVariablesExtender);
+  GDBObjSuperLine.GetDXFIOFeatures.RegisterEntityExtenderObject(TVariablesExtender);
 
   {from GDBObjElLeader}
-  GDBObjElLeader.GetDXFIOFeatures.RegisterEntityExtenderObject(@TVariablesExtender.CreateEntVariablesExtender);
+  GDBObjElLeader.GetDXFIOFeatures.RegisterEntityExtenderObject(TVariablesExtender);
 end.
 
