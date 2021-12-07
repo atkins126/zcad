@@ -315,6 +315,7 @@ begin
   GDBGetMem({$IFDEF DEBUGBUILD}'GDBObjAlignedDimension.Clone',{$ENDIF}GDBPointer(tvo), sizeof(GDBObjAlignedDimension));
   tvo^.init(bp.ListPos.owner,vp.Layer, vp.LineWeight);
   CopyVPto(tvo^);
+  CopyExtensionsTo(tvo^);
   tvo^.DimData := DimData;
   tvo^.bp.ListPos.Owner:=own;
   tvo^.PDimStyle:=PDimStyle;
@@ -384,7 +385,7 @@ var
   l:double;
 begin
      if assigned(EntExtensions)then
-       EntExtensions.RunOnBeforeEntityFormat(@self,drawing);
+       EntExtensions.RunOnBeforeEntityFormat(@self,drawing,DC);
 
           ConstObjArray.free;
           CalcDNVectors;
@@ -409,6 +410,8 @@ begin
 
           DrawDimensionLine(tv,DimData.P10InWCS,false,false,true,drawing,dc);
    inherited;
+   if assigned(EntExtensions)then
+     EntExtensions.RunOnAfterEntityFormat(@self,drawing,DC);
 end;
 {procedure GDBObjAlignedDimension.DrawGeometry;
 begin

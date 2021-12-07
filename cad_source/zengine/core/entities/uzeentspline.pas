@@ -161,7 +161,7 @@ var //i,j: GDBInteger;
     fm,fp:DMatrix4F;
 begin
      if assigned(EntExtensions)then
-       EntExtensions.RunOnBeforeEntityFormat(@self,drawing);
+       EntExtensions.RunOnBeforeEntityFormat(@self,drawing,DC);
      FormatWithoutSnapArray;
      CP.init({$IFDEF DEBUGBUILD}'{4FCFE57E-4000-4535-A086-549DEC959CD4}',{$ENDIF}VertexArrayInOCS.count{,sizeof(GDBvertex4S)});
      ptv:=VertexArrayInOCS.beginiterate(ir);
@@ -247,6 +247,8 @@ begin
   Representation.Clear;
   Representation.DrawPolyLineWithLT(dc,AproxPointInWCS,vp,false,false);
   calcbb(dc);
+  if assigned(EntExtensions)then
+    EntExtensions.RunOnAfterEntityFormat(@self,drawing,DC);
 end;
 
 function GDBObjSpline.FromDXFPostProcessBeforeAdd;
@@ -306,6 +308,7 @@ begin
   GDBGetMem({$IFDEF DEBUGBUILD}'{8F88CAFB-14F3-4F33-96B5-F493DB8B28B7}',{$ENDIF}GDBPointer(tpo), sizeof(GDBObjSpline));
   tpo^.init(bp.ListPos.owner,vp.Layer, vp.LineWeight,closed);
   CopyVPto(tpo^);
+  CopyExtensionsTo(tpo^);
   //tpo^.vertexarray.init({$IFDEF DEBUGBUILD}'{90423E18-2ABF-48A8-8E0E-5D08A9E54255}',{$ENDIF}1000);
   vertexarrayinocs.copyto(tpo^.vertexarrayinocs);
   Knots.copyto(tpo^.Knots);

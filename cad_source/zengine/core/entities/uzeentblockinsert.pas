@@ -303,13 +303,15 @@ end;
 procedure GDBObjBlockInsert.FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext);
 begin
   if assigned(EntExtensions)then
-    EntExtensions.RunOnBeforeEntityFormat(@self,drawing);
+    EntExtensions.RunOnBeforeEntityFormat(@self,drawing,DC);
 
   //inferited; //fix https://github.com/zamtmn/zcad/issues/17
   calcobjmatrix;
   ConstObjArray.FormatEntity(drawing,dc);
   calcbb(dc);
   //self.BuildGeometry(drawing); //fix https://github.com/zamtmn/zcad/issues/17
+  if assigned(EntExtensions)then
+    EntExtensions.RunOnAfterEntityFormat(@self,drawing,DC);
 end;
 procedure GDBObjBlockInsert.AddOnTrackAxis(var posr:os_record;const processaxis:taddotrac);
 //var tv:gdbvertex;
@@ -420,6 +422,7 @@ begin
   //tvo^.vp.id := GDBBlockInsertID;
   //tvo^.vp.layer :=vp.layer;
   CopyVPto(tvo^);
+  CopyExtensionsTo(tvo^);
   GDBPointer(tvo^.name) := nil;
   tvo^.name := name;
   tvo^.pattrib := nil;

@@ -26,8 +26,10 @@ uses
   uzbmemman,uzedimensionaltypes,uzcstrconsts,sysutils,uzeentityfactory,
   uzcenitiesvariablesextender,uzgldrawcontext,usimplegenerics,gzctnrstl,
   gzctnrvectortypes,uzbtypes,uzcdrawings,varmandef,uzeentity,uzbtypesbase,
-  Varman,uzctnrvectorgdbstring,UGDBSelectedObjArray,uzcoimultipropertiesutil;
+  Varman,uzctnrvectorgdbstring,UGDBSelectedObjArray,uzcoimultipropertiesutil,
+  uzeentityextender,uzelongprocesssupport,uzcutils;
 type
+  TObjIDWithExtender2Counter=TMyMapCounter<TObjIDWithExtender>;
 {Export+}
   {TMSType=(
            TMST_All(*'All entities'*),
@@ -49,12 +51,14 @@ type
                 TxtEntType:TMSPrimitiveDetector;(*'Process primitives'*)
                 VariableProcessSelector:TVariableProcessSelector;(*'Process variables'*)
                 VariablesUnit:TObjectUnit;(*'Variables'*)
+                ExtendersUnit:TObjectUnit;(*'Extenders'*)
                 GeneralUnit:TObjectUnit;(*'General'*)
                 GeometryUnit:TObjectUnit;(*'Geometry'*)
                 MiscUnit:TObjectUnit;(*'Misc'*)
                 SummaryUnit:TObjectUnit;(*'Summary'*)
                 ObjIDVector:{-}TObjIDVector{/GDBPointer/};(*hidden_in_objinsp*)
                 ObjID2Counter:{-}TObjID2Counter{/GDBPointer/};(*hidden_in_objinsp*)
+                ObjIDWithExtenderCounter:{-}TObjIDWithExtender2Counter{/GDBPointer/};(*hidden_in_objinsp*)
                 SavezeUnitsFormat:TzeUnitsFormat;(*hidden_in_objinsp*)
                 procedure FormatAfterFielfmod(PField,PTypeDescriptor:GDBPointer);virtual;
                 procedure CreateUnit(const f:TzeUnitsFormat;_GetEntsTypes:boolean=true);virtual;
@@ -69,9 +73,10 @@ type
 
                 procedure SetVariables(PSourceVD:pvardesk;NeededObjType:TObjID);
                 procedure SetMultiProperty(pu:PTObjectUnit;PSourceVD:pvardesk;NeededObjType:TObjID);
-                procedure processProperty(const ID:TObjID; const pentity: pGDBObjEntity; const PMultiPropertyDataForObjects:PTMultiPropertyDataForObjects; const pu:PTObjectUnit; const PSourceVD:PVarDesk;const mp:TMultiProperty; var DC:TDrawContext);
+                procedure processProperty(const ID:TObjID; const pdata: pointer; const pentity: pGDBObjEntity; const PMultiPropertyDataForObjects:PTMultiPropertyDataForObjects; const pu:PTObjectUnit; const PSourceVD:PVarDesk;const mp:TMultiProperty; var DC:TDrawContext);
                 procedure ClearErrorRange;
             end;
+  PMSEditor=^TMSEditor;
 {Export-}
 procedure DeselectEnts(PInstance:GDBPointer);
 procedure SelectOnlyThisEnts(PInstance:GDBPointer);
@@ -90,6 +95,7 @@ implementation
 constructor  TMSEditor.init;
 begin
      VariablesUnit.init('VariablesUnit');
+     ExtendersUnit.init('ExtenderesUnit');
      GeneralUnit.init('GeneralUnit');
      GeometryUnit.init('GeometryUnit');
      MiscUnit.init('MiscUnit');
@@ -99,11 +105,13 @@ begin
      VariableProcessSelector:=VPS_OnlyThisEnts;
 
      ObjID2Counter:=TObjID2Counter.Create;
-     ObjIDVector:=TObjIDVector.create;
+     ObjIDVector:=TObjIDVector.Create;
+     ObjIDWithExtenderCounter:=TObjIDWithExtender2Counter.Create;
 end;
 destructor  TMSEditor.done;
 begin
      VariablesUnit.done;
+     ExtendersUnit.done;
      GeneralUnit.done;
      GeometryUnit.done;
      MiscUnit.done;
@@ -112,6 +120,7 @@ begin
 
      ObjID2Counter.Free;
      ObjIDVector.Free;
+     ObjIDWithExtenderCounter.Free;
 end;
 function SetVariable(pentity: pGDBObjEntity;pentvarext: TVariablesExtender;PSourceVD:pvardesk):boolean;
 var
@@ -196,7 +205,7 @@ begin
                                         iterator.destroy;
          end;
 end;
-procedure TMSEditor.processProperty(const ID:TObjID; const pentity: pGDBObjEntity; const PMultiPropertyDataForObjects:PTMultiPropertyDataForObjects; const pu:PTObjectUnit; const PSourceVD:PVarDesk;const mp:TMultiProperty; var DC:TDrawContext);
+procedure TMSEditor.processProperty(const ID:TObjID; const pdata: pointer; const pentity: pGDBObjEntity; const PMultiPropertyDataForObjects:PTMultiPropertyDataForObjects; const pu:PTObjectUnit; const PSourceVD:PVarDesk;const mp:TMultiProperty; var DC:TDrawContext);
 var
    ChangedData:TChangedData;
    CanChangeValue:Boolean;
@@ -204,7 +213,7 @@ var
    entinfo:TEntInfoData;
 begin
      begin
-       ChangedData:=CreateChangedData(pentity,PMultiPropertyDataForObjects.GetValueOffset,PMultiPropertyDataForObjects.SetValueOffset);
+       ChangedData:=CreateChangedData(pdata,PMultiPropertyDataForObjects.GSData);
        CanChangeValue:=true;
        if @PMultiPropertyDataForObjects.CheckValue<>nil then
                                                           begin
@@ -215,7 +224,7 @@ begin
                              begin
                                PMultiPropertyDataForObjects.EntChangeProc(pu,PSourceVD,ChangedData,mp);
                                pentity^.YouChanged(drawings.GetCurrentDWG^);
-                               pentity.FormatEntity(drawings.GetCurrentDWG^,dc);
+                               //pentity.FormatEntity(drawings.GetCurrentDWG^,dc);
                              end
                          else
                              begin
@@ -244,12 +253,17 @@ var
   pentity: pGDBObjEntity;
   DC:TDrawContext;
   psd:PSelectedObjDesc;
-  i:integer;
+  i,j:integer;
   PMultiPropertyDataForObjects:PTMultiPropertyDataForObjects;
+  ObjIDWithExtender:TObjIDWithExtender;
+  Extender:TBaseEntityExtender;
+  lpsh:TLPSHandle;
 begin
   ClearErrorRange;
   PSourceVD.attrib:=PSourceVD.attrib and (not vda_different);
   dc:=drawings.GetCurrentDWG^.CreateDrawingRC;
+  if drawings.GetCurrentDWG.SelObjArray.Count>1 then
+    lpsh:=LPS.StartLongProcess('SetMultiProperty',@TMSEditor.SetMultiProperty,0);
   psd:=drawings.GetCurrentDWG.SelObjArray.beginiterate(EntIterator);
   if psd<>nil then
   repeat
@@ -257,27 +271,40 @@ begin
     if (pentity^.Selected)and((pentity^.GetObjType=NeededObjType)or(NeededObjType=0)) then
     begin
       for i:=0 to MultiPropertiesManager.MultiPropertyVector.Size-1 do
-        if MultiPropertiesManager.MultiPropertyVector[i].usecounter<>0 then
-        begin
-             if ComparePropAndVarNames(MultiPropertiesManager.MultiPropertyVector[i].MPName,PSourceVD^.name) then
-             begin
-                  if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetMutableValue(pentity^.GetObjType,PMultiPropertyDataForObjects)then
-                  begin
+        if MultiPropertiesManager.MultiPropertyVector[i].usecounter<>0 then begin
+          if ComparePropAndVarNames(MultiPropertiesManager.MultiPropertyVector[i].MPName,PSourceVD^.name) then begin
+            if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetMutableValue(TObjIDWithExtender.Create(pentity^.GetObjType,nil),PMultiPropertyDataForObjects)then begin
+              if not PMultiPropertyDataForObjects^.SetValueErrorRange then
+                processProperty(pentity^.GetObjType,pentity,pentity,PMultiPropertyDataForObjects,pu,PSourceVD,MultiPropertiesManager.MultiPropertyVector[i],DC)
+            end else if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetMutableValue(TObjIDWithExtender.Create(0,nil),PMultiPropertyDataForObjects)then begin
+                if not PMultiPropertyDataForObjects^.SetValueErrorRange then
+                  processProperty(0,pentity,pentity,PMultiPropertyDataForObjects,pu,PSourceVD,MultiPropertiesManager.MultiPropertyVector[i],DC);
+            end else begin
+              for j:=0 to pentity^.GetExtensionsCount-1 do begin
+                Extender:=pentity^.GetExtension(j);
+                ObjIDWithExtender.ObjID:=pentity^.GetObjType;
+                ObjIDWithExtender.ExtenderClass:=typeof(Extender);
+                if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetMutableValue(ObjIDWithExtender,PMultiPropertyDataForObjects)then begin
+                  if not PMultiPropertyDataForObjects^.SetValueErrorRange then
+                    processProperty(pentity^.GetObjType,Extender,pentity,PMultiPropertyDataForObjects,pu,PSourceVD,MultiPropertiesManager.MultiPropertyVector[i],DC)
+                end else begin
+                  ObjIDWithExtender.ObjID:=0;
+                  if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetMutableValue(ObjIDWithExtender,PMultiPropertyDataForObjects)then begin
                     if not PMultiPropertyDataForObjects^.SetValueErrorRange then
-                      processProperty(pentity^.GetObjType,pentity,PMultiPropertyDataForObjects,pu,PSourceVD,MultiPropertiesManager.MultiPropertyVector[i],DC)
-                  end
-                  else
-                      if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetMutableValue(0,PMultiPropertyDataForObjects)then
-                      begin
-                        if not PMultiPropertyDataForObjects^.SetValueErrorRange then
-                          processProperty(0,pentity,PMultiPropertyDataForObjects,pu,PSourceVD,MultiPropertiesManager.MultiPropertyVector[i],DC);
-                      end;
-             end
+                      processProperty(pentity^.GetObjType,Extender,pentity,PMultiPropertyDataForObjects,pu,PSourceVD,MultiPropertiesManager.MultiPropertyVector[i],DC)
+                  end;
+                end;
+              end;
+            end;
+          end
         end;
     end;
     psd:=drawings.GetCurrentDWG.SelObjArray.iterate(EntIterator);
   until psd=nil;
+  if drawings.GetCurrentDWG.SelObjArray.Count>1 then
+    LPS.EndLongProcess(lpsh);
 end;
+
 procedure  TMSEditor.FormatAfterFielfmod;
 var //i: GDBInteger;
     //pu:pointer;
@@ -304,7 +331,7 @@ begin
       if pvd<>nil then
       begin
          SetMultiProperty(@GeneralUnit,pvd,GetObjType);
-         CreateMultiPropertys(SavezeUnitsFormat);
+         //CreateMultiPropertys(SavezeUnitsFormat);
          exit;
       end;
 
@@ -312,7 +339,7 @@ begin
       if pvd<>nil then
       begin
          SetMultiProperty(@GeometryUnit,pvd,GetObjType);
-         CreateMultiPropertys(SavezeUnitsFormat);
+         //CreateMultiPropertys(SavezeUnitsFormat);
          exit;
       end;
 
@@ -320,7 +347,15 @@ begin
       if pvd<>nil then
       begin
          SetMultiProperty(@MiscUnit,pvd,GetObjType);
-         CreateMultiPropertys(SavezeUnitsFormat);
+         //CreateMultiPropertys(SavezeUnitsFormat);
+         exit;
+      end;
+
+      pvd:=ExtendersUnit.FindVariableByInstance(PFIELD);
+      if pvd<>nil then
+      begin
+         SetMultiProperty(@ExtendersUnit,pvd,GetObjType);
+         //CreateMultiPropertys(SavezeUnitsFormat);
          exit;
       end;
 
@@ -337,62 +372,75 @@ end;
 procedure TMSEditor.GetEntsTypes;
 var
     ir:itrec;
+    i:integer;
     pv:pGDBObjEntity;
     psd:PSelectedObjDesc;
     pair:TObjID2Counter.TDictionaryPair;
-    //iterator:TObjID2Counter.TIterator;
     s:GDBString;
     entinfo:TEntInfoData;
+    ObjIDWithExtender:TObjIDWithExtender;
     counter:integer;
 begin
+  //очистка-пересоздание структур данных
   ObjID2Counter.Free;
   ObjID2Counter:=TObjID2Counter.Create;
-  ObjIDVector.free;
+
+  ObjIDVector.Free;
   ObjIDVector:=TObjIDVector.create;
+
+  ObjIDWithExtenderCounter.Free;
+  ObjIDWithExtenderCounter:=TObjIDWithExtender2Counter.Create;
   counter:=0;
 
+  //пробегаем выбранные примитивы, считаем сколько примитивов разного типа выбрано
+  //и какие расширения к ним привязаны
   psd:=drawings.GetCurrentDWG.SelObjArray.beginiterate(ir);
   if psd<>nil then
   repeat
     pv:=psd^.objaddr;
     if pv<>nil then
-    if pv^.Selected then
-    begin
-         ObjID2Counter.CountKey(pv^.GetObjType,1);
-         inc(counter);
+    if pv^.Selected then begin
+      //считаем типы примитивов
+      ObjID2Counter.CountKey(pv^.GetObjType,1);
+
+      //считаем расширения
+      ObjIDWithExtender.ObjID:=pv^.GetObjType;
+      for i:=0 to pv^.GetExtensionsCount()-1 do begin
+        ObjIDWithExtender.ExtenderClass:=typeof(pv^.GetExtension(i));
+        ObjIDWithExtenderCounter.CountKey(ObjIDWithExtender,1);
+      end;
+
+      inc(counter);
     end;
   psd:=drawings.GetCurrentDWG.SelObjArray.iterate(ir);
   until psd=nil;
 
   TxtEntType.Enums.free;
-  if ObjID2Counter.{size}count>1 then
-                   TxtEntType.Selected:=0
-               else
-                   TxtEntType.Selected:=1;
+  if ObjID2Counter.count>1 then
+    TxtEntType.Selected:=0
+  else
+    TxtEntType.Selected:=1;
+
+  //добавляем в комбобокс "все(кол-во)"
   s:=sysutils.format(rsNameWithCounter,[rsNameAll,counter]);
   TxtEntType.Enums.PushBackData(s);
   ObjIDVector.PushBack(0);
 
+  //добавляем в комбобокс "тип(кол-во)"
   for pair in ObjID2Counter do begin
-  //iterator:=ObjID2Counter.Min;
-  //if assigned(iterator) then
-  //repeat
-        if ObjID2EntInfoData.MyGetValue(pair.Key,entinfo) then
-          s:=entinfo.UserName
-        else
-          s:=rsNotRegistred;
-        s:=sysutils.format(rsNameWithCounter,[s,pair.value]);
-        TxtEntType.Enums.PushBackData(s);
-        ObjIDVector.PushBack(pair.key);
-  //until not iterator.Next;
-  //if assigned(iterator) then
-  //  iterator.destroy;
+    if ObjID2EntInfoData.MyGetValue(pair.Key,entinfo) then
+      s:=entinfo.UserName
+    else
+      s:=rsNotRegistred;
+    s:=sysutils.format(rsNameWithCounter,[s,pair.value]);
+    TxtEntType.Enums.PushBackData(s);
+    ObjIDVector.PushBack(pair.key);
   end;
 
 end;
 procedure TMSEditor.CreateMultiPropertys;
 var
-    i:integer;
+    i,j:integer;
     NeedObjID:TObjID;
     pu:PTObjectUnit;
     MultiPropertyDataForObjects:TMultiPropertyDataForObjects;
@@ -401,86 +449,119 @@ var
     ir:itrec;
     fistrun:boolean;
     ChangedData:TChangedData;
+    ObjIDWithExtender:TObjIDWithExtender;
+    Extender:TBaseEntityExtender;
 begin
   SavezeUnitsFormat:=f;
   NeedObjID:=GetObjType;
   for i:=0 to MultiPropertiesManager.MultiPropertyVector.Size-1 do
-    if MultiPropertiesManager.MultiPropertyVector[i].usecounter<>0 then
-    begin
+    if MultiPropertiesManager.MultiPropertyVector[i].usecounter<>0 then begin
       case MultiPropertiesManager.MultiPropertyVector[i].MPCategory of
-      MPCGeneral:pu:=@self.GeneralUnit;
-      MPCGeometry:pu:=@self.GeometryUnit;
-      MPCMisc:pu:=@self.MiscUnit;
-      MPCSummary:pu:=@self.SummaryUnit;
+        MPCExtenders:pu:=@self.ExtendersUnit;
+        MPCGeneral  :pu:=@self.GeneralUnit;
+        MPCGeometry :pu:=@self.GeometryUnit;
+        MPCMisc     :pu:=@self.MiscUnit;
+        MPCSummary  :pu:=@self.SummaryUnit;
       end;
-      MultiPropertiesManager.MultiPropertyVector[i].PIiterateData:=MultiPropertiesManager.MultiPropertyVector[i].BeforeIterateProc(MultiPropertiesManager.MultiPropertyVector[i],pu);
+      MultiPropertiesManager.MultiPropertyVector[i].PIiterateData:=MultiPropertiesManager.MultiPropertyVector[i].MIPD.BeforeIterateProc(MultiPropertiesManager.MultiPropertyVector[i],pu);
 
       psd:=drawings.GetCurrentDWG.SelObjArray.beginiterate(ir);
       if psd<>nil then
       repeat
         pv:=psd^.objaddr;
         if pv<>nil then
-        if (pv^.GetObjType=NeedObjID)or(NeedObjID=0) then
-        if pv^.Selected then
-        begin
-             if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetValue(pv^.GetObjType,MultiPropertyDataForObjects)then
-             begin
-               if @MultiPropertyDataForObjects.EntBeforeIterateProc<>nil then
-               begin
-                 ChangedData:=CreateChangedData(pv,MultiPropertyDataForObjects.GetValueOffset,MultiPropertyDataForObjects.SetValueOffset);
-                 MultiPropertyDataForObjects.EntBeforeIterateProc(MultiPropertiesManager.MultiPropertyVector[i].PIiterateData,ChangedData);
-               end;
-             end
-             else
-                 if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetValue(0,MultiPropertyDataForObjects)then
-                 begin
-                   if @MultiPropertyDataForObjects.EntBeforeIterateProc<>nil then
-                   begin
-                     ChangedData:=CreateChangedData(pv,MultiPropertyDataForObjects.GetValueOffset,MultiPropertyDataForObjects.SetValueOffset);
-                     MultiPropertyDataForObjects.EntBeforeIterateProc(MultiPropertiesManager.MultiPropertyVector[i].PIiterateData,ChangedData)
-                   end;
-                 end;
-        end;
-      psd:=drawings.GetCurrentDWG.SelObjArray.iterate(ir);
+          if (pv^.GetObjType=NeedObjID)or(NeedObjID=0) then
+            if pv^.Selected then begin
+              if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetValue(TObjIDWithExtender.Create(pv^.GetObjType,nil),MultiPropertyDataForObjects)then begin
+                if @MultiPropertyDataForObjects.EntBeforeIterateProc<>nil then
+                begin
+                  ChangedData:=CreateChangedData(pv,MultiPropertyDataForObjects.GSData);
+                  MultiPropertyDataForObjects.EntBeforeIterateProc(MultiPropertiesManager.MultiPropertyVector[i].PIiterateData,ChangedData);
+                end;
+              end else if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetValue(TObjIDWithExtender.Create(0,nil),MultiPropertyDataForObjects)then begin
+                if @MultiPropertyDataForObjects.EntBeforeIterateProc<>nil then begin
+                  ChangedData:=CreateChangedData(pv,MultiPropertyDataForObjects.GSData);
+                  MultiPropertyDataForObjects.EntBeforeIterateProc(MultiPropertiesManager.MultiPropertyVector[i].PIiterateData,ChangedData)
+                end;
+              end else begin
+                for j:=0 to pv^.GetExtensionsCount-1 do begin
+                  Extender:=pv^.GetExtension(j);
+                  ObjIDWithExtender.ObjID:=pv^.GetObjType;
+                  ObjIDWithExtender.ExtenderClass:=typeof(Extender);
+                  if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetValue(ObjIDWithExtender,MultiPropertyDataForObjects)then begin
+                    if @MultiPropertyDataForObjects.EntBeforeIterateProc<>nil then begin
+                      ChangedData:=CreateChangedData(Extender,MultiPropertyDataForObjects.GSData);
+                      MultiPropertyDataForObjects.EntBeforeIterateProc(MultiPropertiesManager.MultiPropertyVector[i].PIiterateData,ChangedData)
+                    end;
+                  end else begin
+                    ObjIDWithExtender.ObjID:=0;
+                    if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetValue(ObjIDWithExtender,MultiPropertyDataForObjects)then begin
+                      if @MultiPropertyDataForObjects.EntBeforeIterateProc<>nil then begin
+                        ChangedData:=CreateChangedData(Extender,MultiPropertyDataForObjects.GSData);
+                        MultiPropertyDataForObjects.EntBeforeIterateProc(MultiPropertiesManager.MultiPropertyVector[i].PIiterateData,ChangedData)
+                      end;
+                    end;
+                  end;
+                end;
+              end;
+            end;
+        psd:=drawings.GetCurrentDWG.SelObjArray.iterate(ir);
       until psd=nil;
-
     end;
 
   for i:=0 to MultiPropertiesManager.MultiPropertyVector.Size-1 do
-   if MultiPropertiesManager.MultiPropertyVector[i].usecounter<>0 then
-   begin
-     fistrun:=true;
-     psd:=drawings.GetCurrentDWG.SelObjArray.beginiterate(ir);
-     if psd<>nil then
-     repeat
-       pv:=psd^.objaddr;
-       if pv<>nil then
-       if (pv^.GetObjType=NeedObjID)or(NeedObjID=0) then
-       if pv^.Selected then
-       begin
-            if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetValue({NeedObjID}pv^.GetObjType,MultiPropertyDataForObjects)then
-            begin
-              ChangedData:=CreateChangedData(pv,MultiPropertyDataForObjects.GetValueOffset,MultiPropertyDataForObjects.SetValueOffset);
-              MultiPropertyDataForObjects.EntIterateProc(MultiPropertiesManager.MultiPropertyVector[i].PIiterateData,ChangedData,MultiPropertiesManager.MultiPropertyVector[i],fistrun,MultiPropertyDataForObjects.EntChangeProc,f);
-              fistrun:=false;
-            end
-            else
-                if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetValue(0,MultiPropertyDataForObjects)then
-                begin
-                  ChangedData:=CreateChangedData(pv,MultiPropertyDataForObjects.GetValueOffset,MultiPropertyDataForObjects.SetValueOffset);
-                  MultiPropertyDataForObjects.EntIterateProc(MultiPropertiesManager.MultiPropertyVector[i].PIiterateData,ChangedData,MultiPropertiesManager.MultiPropertyVector[i],fistrun,MultiPropertyDataForObjects.EntChangeProc,f);
-                  fistrun:=false;
+    if MultiPropertiesManager.MultiPropertyVector[i].usecounter<>0 then
+    begin
+      fistrun:=true;
+      psd:=drawings.GetCurrentDWG.SelObjArray.beginiterate(ir);
+      if psd<>nil then
+      repeat
+        pv:=psd^.objaddr;
+        if pv<>nil then
+          if (pv^.GetObjType=NeedObjID)or(NeedObjID=0) then
+            if pv^.Selected then begin
+              if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetValue(TObjIDWithExtender.Create(pv^.GetObjType,nil),MultiPropertyDataForObjects)then begin
+                ChangedData:=CreateChangedData(pv,MultiPropertyDataForObjects.GSData);
+                MultiPropertyDataForObjects.EntIterateProc(MultiPropertiesManager.MultiPropertyVector[i].PIiterateData,ChangedData,MultiPropertiesManager.MultiPropertyVector[i],fistrun,MultiPropertyDataForObjects.EntChangeProc,f);
+                fistrun:=false;
+              end else if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetValue(TObjIDWithExtender.Create(0,nil),MultiPropertyDataForObjects)then begin
+                ChangedData:=CreateChangedData(pv,MultiPropertyDataForObjects.GSData);
+                MultiPropertyDataForObjects.EntIterateProc(MultiPropertiesManager.MultiPropertyVector[i].PIiterateData,ChangedData,MultiPropertiesManager.MultiPropertyVector[i],fistrun,MultiPropertyDataForObjects.EntChangeProc,f);
+                fistrun:=false;
+              end else begin
+                for j:=0 to pv^.GetExtensionsCount-1 do begin
+                  Extender:=pv^.GetExtension(j);
+                  ObjIDWithExtender.ObjID:=pv^.GetObjType;
+                  ObjIDWithExtender.ExtenderClass:=typeof(Extender);
+                  if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetValue(ObjIDWithExtender,MultiPropertyDataForObjects)then begin
+                    if @MultiPropertyDataForObjects.EntIterateProc<>nil then begin
+                      ChangedData:=CreateChangedData(Extender,MultiPropertyDataForObjects.GSData);
+                      MultiPropertyDataForObjects.EntIterateProc(MultiPropertiesManager.MultiPropertyVector[i].PIiterateData,ChangedData,MultiPropertiesManager.MultiPropertyVector[i],fistrun,MultiPropertyDataForObjects.EntChangeProc,f);
+                      fistrun:=false;
+                    end;
+                  end else begin
+                    ObjIDWithExtender.ObjID:=0;
+                    if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetValue(ObjIDWithExtender,MultiPropertyDataForObjects)then begin
+                      if @MultiPropertyDataForObjects.EntIterateProc<>nil then begin
+                        ChangedData:=CreateChangedData(Extender,MultiPropertyDataForObjects.GSData);
+                        MultiPropertyDataForObjects.EntIterateProc(MultiPropertiesManager.MultiPropertyVector[i].PIiterateData,ChangedData,MultiPropertiesManager.MultiPropertyVector[i],fistrun,MultiPropertyDataForObjects.EntChangeProc,f);
+                        fistrun:=false;
+                      end;
+                    end;
+                  end;
                 end;
-       end;
-     psd:=drawings.GetCurrentDWG.SelObjArray.iterate(ir);
-     until psd=nil;
-   end;
+              end;
+
+            end;
+        psd:=drawings.GetCurrentDWG.SelObjArray.iterate(ir);
+      until psd=nil;
+    end;
 
 
   for i:=0 to MultiPropertiesManager.MultiPropertyVector.Size-1 do
     if MultiPropertiesManager.MultiPropertyVector[i].usecounter<>0 then
     begin
-      MultiPropertiesManager.MultiPropertyVector[i].AfterIterateProc(MultiPropertiesManager.MultiPropertyVector[i].PIiterateData,MultiPropertiesManager.MultiPropertyVector[i]);
+      MultiPropertiesManager.MultiPropertyVector[i].MIPD.AfterIterateProc(MultiPropertiesManager.MultiPropertyVector[i].PIiterateData,MultiPropertiesManager.MultiPropertyVector[i]);
       MultiPropertiesManager.MultiPropertyVector[i].PIiterateData:=nil;
     end;
 
@@ -490,38 +571,63 @@ procedure TMSEditor.CheckMultiPropertyUse;
 var
     i,j,usablecounter:integer;
     NeedObjID:TObjID;
+    pair:TObjIDWithExtender2Counter.TDictionaryPair;
+    //tp:TObjID2MultiPropertyProcs.TDictionaryPair;
 begin
-     //сброс счетчика использования
-     for i:=0 to MultiPropertiesManager.MultiPropertyVector.Size-1 do
-       MultiPropertiesManager.MultiPropertyVector[i].usecounter:=0;
+  //сброс счетчика использования
+  for i:=0 to MultiPropertiesManager.MultiPropertyVector.Size-1 do
+   MultiPropertiesManager.MultiPropertyVector[i].usecounter:=0;
 
-     NeedObjID:=GetObjType;
+  NeedObjID:=GetObjType;
 
-     if NeedObjID=0 then
-     begin
-          //Проперти для всех типов примитивов
-          usablecounter:=0;
-          for j:=1 to ObjIDVector.Size-1 do
-          begin
-            for i:=0 to MultiPropertiesManager.MultiPropertyVector.Size-1 do
-              if (MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyContans(ObjIDVector[j]))or(MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyContans(0)) then
-                inc(MultiPropertiesManager.MultiPropertyVector[i].usecounter);
-            inc(usablecounter);
+  if NeedObjID=0 then begin
+    //Проперти для всех типов примитивов
+    usablecounter:=0;
+    for j:=1 to ObjIDVector.Size-1 do begin
+      for i:=0 to MultiPropertiesManager.MultiPropertyVector.Size-1 do
+        //проверяем является ли это пропертей самого примитива
+        if (MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyContans(TObjIDWithExtender.Create(ObjIDVector[j],nil)))or(MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyContans(TObjIDWithExtender.Create(0,nil))) then
+          inc(MultiPropertiesManager.MultiPropertyVector[i].usecounter)
+        else begin
+          //если нет, проверяем явсляется ли это пропертей расширения примитива
+          for pair in ObjIDWithExtenderCounter do begin
+            if pair.key.ObjId=ObjIDVector[j] then
+              if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyContans(pair.key) then
+                inc(MultiPropertiesManager.MultiPropertyVector[i].usecounter)
+              else begin
+                if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyContans(TObjIDWithExtender.Create(0,pair.key.ExtenderClass)) then
+                  inc(MultiPropertiesManager.MultiPropertyVector[i].usecounter)
+              end;
           end;
-     end
-     else
-     begin
-          //Проперти для конкретного типа примитивов
-          for i:=0 to MultiPropertiesManager.MultiPropertyVector.Size-1 do
-            if (MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyContans(NeedObjID))or(MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyContans(0)) then
-              inc(MultiPropertiesManager.MultiPropertyVector[i].usecounter);
-          usablecounter:=1;
-     end;
+        end;
+      inc(usablecounter);
+    end;
+  end else begin
+    //Проперти для конкретного типа примитивов
+    for i:=0 to MultiPropertiesManager.MultiPropertyVector.Size-1 do begin
+      //проверяем является ли это пропертей самого примитива
+      if (MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyContans(TObjIDWithExtender.Create(NeedObjId,nil)))or(MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyContans(TObjIDWithExtender.Create(0,nil))) then
+        inc(MultiPropertiesManager.MultiPropertyVector[i].usecounter)
+      else begin
+        //если нет, проверяем явсляется ли это пропертей расширения примитива
+        for pair in ObjIDWithExtenderCounter do begin
+          if pair.key.ObjId=NeedObjId then
+            if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyContans(pair.key) then
+              inc(MultiPropertiesManager.MultiPropertyVector[i].usecounter)
+            else begin
+              if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyContans(TObjIDWithExtender.Create(0,pair.key.ExtenderClass)) then
+                inc(MultiPropertiesManager.MultiPropertyVector[i].usecounter)
+            end;
+        end;
+      end;
+    end;
+    usablecounter:=1;
+  end;
 
-     for i:=0 to MultiPropertiesManager.MultiPropertyVector.Size-1 do
-       if (MultiPropertiesManager.MultiPropertyVector[i].usecounter<>usablecounter)then
-        if (MultiPropertiesManager.MultiPropertyVector[i].UseMode=MPUM_AllEntsMatched)then
-          MultiPropertiesManager.MultiPropertyVector[i].usecounter:=0;
+  for i:=0 to MultiPropertiesManager.MultiPropertyVector.Size-1 do
+    if (MultiPropertiesManager.MultiPropertyVector[i].usecounter<>usablecounter)then
+      if (MultiPropertiesManager.MultiPropertyVector[i].UseMode=MPUM_AllEntsMatched)then
+        MultiPropertiesManager.MultiPropertyVector[i].usecounter:=0;
 end;
 procedure TMSEditor.processunit(var entunit:TObjectUnit;linkedunit:boolean=false);
 var
@@ -589,6 +695,14 @@ begin
      VariablesUnit.free;
      if VerboseLog^ then
                        debugln('{T-}end');
+
+     if VerboseLog^ then
+                       debugln('{T+}ExtendersUnit.free start');
+     ExtendersUnit.free;
+     ExtendersUnit.InterfaceUses.PushBackIfNotPresent(sysunit);
+     if VerboseLog^ then
+                       debugln('{T-}end');
+
 
      if VerboseLog^ then
                        debugln('{T+}GeneralUnit.free start');

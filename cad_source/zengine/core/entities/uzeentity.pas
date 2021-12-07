@@ -691,6 +691,8 @@ end;
 procedure GDBObjEntity.SaveToDXFObjXData(var outhandle:GDBOpenArrayOfByte;var IODXFContext:TIODXFContext);
 begin
      GetDXFIOFeatures.RunSaveFeatures(outhandle,@self,IODXFContext);
+     if assigned(EntExtensions) then
+       EntExtensions.RunSaveToDxf(outhandle,@self,IODXFContext);
      inherited;
 end;
 
@@ -771,7 +773,7 @@ begin
       LT:=getLTfromVP(vp);
       if LT<>nil then
       begin
-           result:=GlobalLTScale*vp.LineTypeScale*LT.len
+           result:=GlobalLTScale*vp.LineTypeScale*LT.LengthFact
       end
          else
          result:=0;

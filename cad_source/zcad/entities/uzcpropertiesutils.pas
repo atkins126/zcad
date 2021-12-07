@@ -27,6 +27,7 @@ function GetProperty(PEnt:PGDBObjGenericWithSubordinated;propertyname:gdbstring;
 implementation
 var
   pu:TObjectUnit;
+  ChangedData:TChangedData;
 function GetProperty(PEnt:PGDBObjGenericWithSubordinated;propertyname:gdbstring; out propertyvalue:gdbstring):boolean;
 var
   mp:TMultiProperty;
@@ -41,7 +42,8 @@ var
     f:=drawings.GetUnitsFormat;
     //mp.PIiterateData:=mp.BeforeIterateProc(mp,@pu);
     //ChangedData:=CreateChangedData(PEnt,mpd.GetValueOffset,mpd.SetValueOffset);
-    propertyvalue:=mp.MPType.GetDecoratedValueAsString({ChangedData.PGetDataInEtity}Pointer(PtrUInt(PEnt)+mpd.GetValueOffset),f);
+    ChangedData:=CreateChangedData(PEnt,mpd.GSData);
+    propertyvalue:=mp.MPType.GetDecoratedValueAsString(ChangedData.PGetDataInEtity,f);
     //if @mpd.EntBeforeIterateProc<>nil then
     //  mpd.EntBeforeIterateProc(mp.PIiterateData,ChangedData);
     //mpd.EntIterateProc(mp.PIiterateData,ChangedData,mp,true,mpd.EntChangeProc,f);
@@ -62,9 +64,9 @@ begin
   propertyvalue:='??';
   exit;}
   if MultiPropertiesManager.MultiPropertyDictionary.MyGetValue(propertyname,mp) then begin
-    if mp.MPObjectsData.MyGetValue(0,mpd) then begin
+    if mp.MPObjectsData.MyGetValue(TObjIDWithExtender.Create(0,nil),mpd) then begin
       GetPropertyValue;
-    end else if mp.MPObjectsData.MyGetValue(PEnt^.GetObjType,mpd) then begin
+    end else if mp.MPObjectsData.MyGetValue(TObjIDWithExtender.Create(PEnt^.GetObjType,nil),mpd) then begin
       GetPropertyValue;
     end else
       result:=false;

@@ -251,7 +251,7 @@ var
   v:GDBvertex4D;
 begin
   if assigned(EntExtensions)then
-    EntExtensions.RunOnBeforeEntityFormat(@self,drawing);
+    EntExtensions.RunOnBeforeEntityFormat(@self,drawing,DC);
 
   if self.Ratio<=1 then
                       rr:=uzegeometry.oneVertexlength(majoraxis)
@@ -283,6 +283,8 @@ begin
 
   calcbb(dc);
   createpoint;
+  if assigned(EntExtensions)then
+    EntExtensions.RunOnAfterEntityFormat(@self,drawing,DC);
 end;
 procedure GDBObjEllipse.getoutbound;
 var //tv,tv2:GDBVertex;
@@ -675,6 +677,7 @@ begin
   GDBGetMem({$IFDEF DEBUGBUILD}'{368BA81A-219B-4DE9-A8E0-64EE16001126}',{$ENDIF}GDBPointer(tvo), sizeof(GDBObjEllipse));
   tvo^.init(CalcOwner(own),vp.Layer, vp.LineWeight, Local.p_insert, {r,}startangle,endangle,majoraxis);
   CopyVPto(tvo^);
+  CopyExtensionsTo(tvo^);
   //tvo^.vp.ID:=GDBEllipseID;
   tvo^.Local:=local;
   tvo^.RR:=RR;

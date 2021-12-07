@@ -310,6 +310,7 @@ begin
   //tvo^.vp.id :=GDBDeviceID;
   //tvo^.vp.layer :=vp.layer;
   CopyVPto(tvo^);
+  CopyExtensionsTo(tvo^);
   GDBPointer(tvo^.name) := nil;
   tvo^.name := name;
   tvo^.pattrib := nil;
@@ -638,7 +639,7 @@ procedure GDBObjDevice.FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext)
     u:gdbdouble;*)
 begin
   if assigned(EntExtensions)then
-    EntExtensions.RunOnBeforeEntityFormat(@self,drawing);
+    EntExtensions.RunOnBeforeEntityFormat(@self,drawing,DC);
 
          //if PTObjectUnit(ou.Instance)^.InterfaceVariables.vardescarray.Count=0 then
                                                         begin
@@ -715,6 +716,8 @@ begin
           VarObjArray.FormatEntity(drawing,dc);
      self.lstonmouse:=nil;
      calcbb(dc);
+  if assigned(EntExtensions)then
+    EntExtensions.RunOnAfterEntityFormat(@self,drawing,DC);
 end;
 function AllocDevice:PGDBObjDevice;
 begin

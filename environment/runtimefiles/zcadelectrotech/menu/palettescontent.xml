@@ -59,21 +59,19 @@
       	</ZTreeNode>
       	<ZTreeNode Caption='Освещение 1:100'>
 	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_LIGHT1_1)" Img='DEVICE_EL_VL_LIGHT1_1_300' Caption='Светильник 2х36'/>
-	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_LIGHT1_1A)" Img='DEVICE_EL_VL_LIGHT1_1A_300' Caption='Светильник 2х36A'/>
 	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_LIGHT2_1)" Img='DEVICE_EL_VL_LIGHT2_1_300' Caption='Светильник 4х18'/>
-	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_LIGHT2_1A)" Img='DEVICE_EL_VL_LIGHT2_1A_300' Caption='Светильник 4х18A'/>
 	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_LIGHT3_1)" Img='DEVICE_EL_VL_LIGHT3_1_300' Caption='Светильник 1х18'/>
-	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_LIGHT3_1A)" Img='DEVICE_EL_VL_LIGHT3_1A_300' Caption='Светильник 1х18A'/>
-	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_LIGHT4_1A)" Img='DEVICE_EL_VL_LIGHT4_1A_300' Caption='Световой указатель'/>
+	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_LIGHT4_1)" Img='DEVICE_EL_VL_LIGHT4_1_300' Caption='Световой указатель'/>
+	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_LIGHT5_1)" Img='DEVICE_EL_VL_LIGHT5_1_300' Caption='Колодка клемная'/>
+	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_LIGHT6_1)" Img='DEVICE_EL_VL_LIGHT6_1_300' Caption='Свободный аппарат'/>
       	</ZTreeNode>
       	<ZTreeNode Caption='Освещение 1:200'>
 	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_LIGHT1_2)" Img='DEVICE_EL_VL_LIGHT1_2_300' Caption='Светильник 2х36'/>
-	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_LIGHT1_2A)" Img='DEVICE_EL_VL_LIGHT1_2A_300' Caption='Светильник 2х36A'/>
 	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_LIGHT2_2)" Img='DEVICE_EL_VL_LIGHT2_2_300' Caption='Светильник 4х18'/>
-	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_LIGHT2_2A)" Img='DEVICE_EL_VL_LIGHT2_2A_300' Caption='Светильник 4х18A'/>
 	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_LIGHT3_2)" Img='DEVICE_EL_VL_LIGHT3_2_300' Caption='Светильник 1х18'/>
-	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_LIGHT3_2A)" Img='DEVICE_EL_VL_LIGHT3_2A_300' Caption='Светильник 1х18A'/>
-	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_LIGHT4_2A)" Img='DEVICE_EL_VL_LIGHT4_2A_300' Caption='Световой указатель'/>
+	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_LIGHT4_2)" Img='DEVICE_EL_VL_LIGHT4_2_300' Caption='Световой указатель'/>
+	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_LIGHT5_2)" Img='DEVICE_EL_VL_LIGHT5_2_300' Caption='Колодка клемная'/>
+	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_LIGHT6_2)" Img='DEVICE_EL_VL_LIGHT6_2_300' Caption='Свободный аппарат'/>
       	</ZTreeNode>
       	<ZTreeNode Caption='Выключатели 1:200'>
 	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_SWITH1_1P_2)" Img='DEVICE_EL_VL_SWITH1_1P_2_300' Caption='Выключатель СП31 1P'/>
@@ -150,6 +148,10 @@
 	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_REPORT5_2)" Img='DEVICE_EL_VL_REPORT5_2_300' Caption='Ведомость арматуры 2'/>
 	   <ZTreeCommand Command="Insert(EL_VL_REFERENCE1_1)" Img='EL_VL_REFERENCE1_1_300' Caption='Усл.обозначения 1'/>
 	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_REFERENCE1_2)" Img='DEVICE_EL_VL_REFERENCE1_2_300' Caption='Усл.обозначения 2'/>
+	   <ZTreeCommand Command="Insert(EL_VL_REPORT8_1)" Img='EL_VL_REPORT8_1_300' Caption='Ведомость светильников 1'/>
+	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_REPORT8_2)" Img='DEVICE_EL_VL_REPORT8_2_300' Caption='Ведомость светильников 2'/>
+	   <ZTreeCommand Command="Insert(EL_VL_REPORT9_1)" Img='EL_VL_REPORT9_1_300' Caption='Экспликация 1'/>
+	   <ZTreeCommand Command="Insert(DEVICE_EL_VL_REPORT9_2)" Img='DEVICE_EL_VL_REPORT9_2_300' Caption='Экспликация 2'/>
       	</ZTreeNode>
       	<ZTreeNode Caption='Схемы'>
 	   <ZTreeCommand Command="Insert(DIAGRAM_SP0)" Img='DIAGRAM_SP0_300' Caption='Боковик источник'/>

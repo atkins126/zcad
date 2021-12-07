@@ -32,6 +32,9 @@ GDBObjExtendable=object(GDBaseObject)
                                  procedure AddExtension(ExtObj:TBaseEntityExtender);
                                  function GetExtension<GEntityExtenderType>:GEntityExtenderType;overload;
                                  function GetExtension(ExtType:TMetaEntityExtender):TBaseEntityExtender;overload;
+                                 function GetExtension(n:Integer):TBaseEntityExtender;overload;
+                                 function GetExtensionsCount:Integer;
+                                 procedure CopyExtensionsTo(var Dest:GDBObjExtendable);
                                  destructor done;virtual;
 end;
 
@@ -107,22 +110,53 @@ end;
 function GDBObjExtendable.GetExtension<GEntityExtenderType>:GEntityExtenderType;
 begin
      if assigned(EntExtensions) then
-                                    result:=EntExtensions.GetExtension<GEntityExtenderType>(GEntityExtenderType)
+                                    result:=EntExtensions.GetExtension<GEntityExtenderType>
                                 else
                                     result:=nil;
 end;
 function GDBObjExtendable.GetExtension(ExtType:TMetaEntityExtender):TBaseEntityExtender;
 begin
      if assigned(EntExtensions) then
-                                    result:=EntExtensions.GetExtension<TBaseEntityExtender>(ExtType)
+                                    result:=EntExtensions.GetExtension(ExtType)
                                 else
                                     result:=nil;
+end;
+function GDBObjExtendable.GetExtensionsCount:Integer;
+begin
+  if assigned(EntExtensions) then
+    result:=EntExtensions.GetExtensionsCount
+  else
+    result:=0;
+end;
+function GDBObjExtendable.GetExtension(n:Integer):TBaseEntityExtender;
+begin
+  if assigned(EntExtensions) then
+    result:=EntExtensions.GetExtension(n)
+  else
+    result:=nil;
 end;
 destructor GDBObjExtendable.done;
 begin
      if assigned(EntExtensions)then
        EntExtensions.destroy;
 end;
+procedure GDBObjExtendable.CopyExtensionsTo(var Dest:GDBObjExtendable);
+var
+  i:integer;
+  SourceExt,DestExt:TBaseEntityExtender;
+begin
+  for i:=0 to GetExtensionsCount-1 do begin
+    SourceExt:=GetExtension(i);
+    DestExt:=Dest.GetExtension(TypeOf(SourceExt));
+    if not Assigned(DestExt) then begin
+      DestExt:=TMetaEntityExtender(SourceExt.ClassType).Create(@Dest);
+      DestExt.Assign(SourceExt);
+      Dest.AddExtension(DestExt);
+    end else
+      DestExt.Assign(SourceExt);
+  end;
+end;
+
 destructor GDBObjSubordinated.done;
 begin
      inherited;

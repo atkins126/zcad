@@ -130,7 +130,7 @@ var
       TCP:TCodePage;
 begin
   if assigned(EntExtensions)then
-    EntExtensions.RunOnBeforeEntityFormat(@self,drawing);
+    EntExtensions.RunOnBeforeEntityFormat(@self,drawing,DC);
 
   Representation.Clear;
 
@@ -214,6 +214,8 @@ begin
     calcbb(dc);
 
     //P_InsertInWCS:=VectorTransform3D(local.P_insert,vp.owner^.GetMatrix^);
+    if assigned(EntExtensions)then
+      EntExtensions.RunOnAfterEntityFormat(@self,drawing,DC);
 end;
 procedure GDBObjText.CalcGabarit;
 var
@@ -248,6 +250,7 @@ begin
   tvo^.bp.ListPos.Owner:=own;
   //tvo^.vp:=vp;
   CopyVPto(tvo^);
+  CopyExtensionsTo(tvo^);
   tvo^.Local:=local;
   tvo^.Textprop:=textprop;
   tvo^.content:=content;

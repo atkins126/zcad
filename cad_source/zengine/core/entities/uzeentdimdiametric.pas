@@ -187,6 +187,7 @@ begin
   GDBGetMem({$IFDEF DEBUGBUILD}'GDBObjDiametricDimension.Clone',{$ENDIF}GDBPointer(tvo), sizeof(GDBObjDiametricDimension));
   tvo^.init(bp.ListPos.owner,vp.Layer, vp.LineWeight);
   CopyVPto(tvo^);
+  CopyExtensionsTo(tvo^);
   tvo^.DimData := DimData;
   tvo^.bp.ListPos.Owner:=own;
   tvo^.PDimStyle:=PDimStyle;
@@ -210,7 +211,7 @@ var
   pl:pgdbobjline;
 begin
      if assigned(EntExtensions)then
-       EntExtensions.RunOnBeforeEntityFormat(@self,drawing);
+       EntExtensions.RunOnBeforeEntityFormat(@self,drawing,DC);
 
           ConstObjArray.free;
           CalcDNVectors;
@@ -233,6 +234,8 @@ begin
                                       DrawDimensionLine{LinePart}(uzegeometry.VertexDmorph(DimData.P11InOCS,vectord, Self.dimtextw),DimData.P15InWCS,true,false,false,drawing,dc)
                                  end;
    inherited;
+          if assigned(EntExtensions)then
+            EntExtensions.RunOnAfterEntityFormat(@self,drawing,DC);
 end;
 function GDBObjDiametricDimension.TextNeedOffset(dimdir:gdbvertex):GDBBoolean;
 begin

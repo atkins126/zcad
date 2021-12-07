@@ -86,7 +86,7 @@ procedure GDBObjSolid.FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext);
 //var i:GDBInteger;
 begin
   if assigned(EntExtensions)then
-    EntExtensions.RunOnBeforeEntityFormat(@self,drawing);
+    EntExtensions.RunOnBeforeEntityFormat(@self,drawing,DC);
   calcObjMatrix;
   createpoint;
   normal:=normalizevertex(
@@ -101,6 +101,8 @@ begin
                                                 else
                                                     triangle:=false;
   calcbb(dc);
+   if assigned(EntExtensions)then
+     EntExtensions.RunOnAfterEntityFormat(@self,drawing,DC);
 end;
 procedure GDBObjSolid.createpoint;
 begin
@@ -391,6 +393,7 @@ begin
   tvo^.init(bp.ListPos.owner,vp.Layer, vp.LineWeight, nulvertex);
   tvo^.Local:=local;
   CopyVPto(tvo^);
+  CopyExtensionsTo(tvo^);
   tvo^.bp.ListPos.Owner:=own;
   tvo^.PInOCS:=PInOCS;
   tvo^.PInWCS:=PInWCS;
