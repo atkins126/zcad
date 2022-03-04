@@ -16,19 +16,18 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
 unit uzcpropertiesutils;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
-uses sysutils,uzbtypesbase,uzbtypes,
+uses sysutils,uzbtypes,
      uzeentity,varmandef,uzeentsubordinated,
      uzcoimultiproperties,uzcoimultipropertiesutil,uzcdrawings,
-     Varman,gzctnrvectortypes,uzedimensionaltypes;
-function GetProperty(PEnt:PGDBObjGenericWithSubordinated;propertyname:gdbstring; out propertyvalue:gdbstring):boolean;
+     Varman,uzedimensionaltypes;
+function GetProperty(PEnt:PGDBObjGenericWithSubordinated;propertyname:String; out propertyvalue:String):boolean;
 implementation
 var
   pu:TObjectUnit;
-  ChangedData:TChangedData;
-function GetProperty(PEnt:PGDBObjGenericWithSubordinated;propertyname:gdbstring; out propertyvalue:gdbstring):boolean;
+function GetProperty(PEnt:PGDBObjGenericWithSubordinated;propertyname:String; out propertyvalue:String):boolean;
 var
   mp:TMultiProperty;
   mpd:TMultiPropertyDataForObjects;
@@ -52,7 +51,7 @@ var
     //pdesc:=pu.InterfaceVariables.vardescarray.beginiterate(ir);
     //if pdesc<>nil then begin
       result:=true;
-    //  propertyvalue:=pdesc.data.PTD.GetDecoratedValueAsString(pdesc.data.Instance,f);
+    //  propertyvalue:=pdesc.data.PTD.GetDecoratedValueAsString(pdesc.Instance,f);
     //end else
     //  result:=false;
     //pu.InterfaceVariables.vardescarray.Freewithproc(vardeskclear);

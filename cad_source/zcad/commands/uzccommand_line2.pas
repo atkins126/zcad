@@ -18,14 +18,14 @@
 {$mode delphi}
 unit uzccommand_line2;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
   LazLogger,
   uzccommandsabstract,uzccommandsimpl,
   uzcdrawings,uzeconsts,uzcinterface,
-  uzcstrconsts,uzbgeomtypes,uzbtypesbase,
+  uzcstrconsts,uzegeometrytypes,
   uzglviewareadata,uzccommandsmanager,
   varmandef,uzbtypes,uzegeometry,
   uzeentity,uzeentline,uzgldrawcontext,
@@ -34,8 +34,8 @@ uses
 
 function Line_com_CommandStart(operands:TCommandOperands):TCommandResult;
 procedure Line_com_CommandEnd(_self:pointer);
-function Line_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
-function Line_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
+function Line_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
+function Line_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
 
 var
   PCreatedGDBLine:pgdbobjline;
@@ -57,7 +57,7 @@ procedure Line_com_CommandEnd(_self:pointer);
 begin
 end;
 
-function Line_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
+function Line_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
 var
     dc:TDrawContext;
 begin
@@ -71,7 +71,7 @@ begin
   end
 end;
 
-function Line_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
+function Line_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
 var po:PGDBObjSubordinated;
     domethod,undomethod:tmethod;
     dc:TDrawContext;
@@ -90,8 +90,8 @@ begin
        then
        begin
             PGDBObjEntity(osp^.PGDBObject)^.formatentity(drawings.GetCurrentDWG^,dc);
-            //PGDBObjEntity(osp^.PGDBObject)^.ObjToGDBString('Found: ','');
-            ZCMsgCallBackInterface.TextMessage(PGDBObjline(osp^.PGDBObject)^.ObjToGDBString('Found: ',''),TMWOHistoryOut);
+            //PGDBObjEntity(osp^.PGDBObject)^.ObjToString('Found: ','');
+            ZCMsgCallBackInterface.TextMessage(PGDBObjline(osp^.PGDBObject)^.ObjToString('Found: ',''),TMWOHistoryOut);
             po:=PGDBObjEntity(osp^.PGDBObject)^.getowner;
             pold:=osp^.PGDBObject;
        end

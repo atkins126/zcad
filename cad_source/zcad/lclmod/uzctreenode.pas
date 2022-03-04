@@ -17,15 +17,15 @@
 }
 
 unit uzctreenode;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 
 uses
-  {$IFDEF WINDOWS}win32proc,{$endif}
+  {$IFDEF LCLWIN32}win32proc,{$endif}
   uzcutils,uzbpaths,Themes,uzcinterface,uzccommandsabstract,ExtCtrls,lclproc,Graphics,ActnList,ComCtrls,
   Controls,Classes,menus,Forms,{$IFDEF FPC}lcltype,{$ENDIF}LazUTF8,Buttons,
   {$IFNDEF DELPHI}uzctranslations,{$ENDIF}sysutils,uzbstrproc,varmandef,
-  uzccommandsmanager,uzclog,uzcdrawings,Varman,UBaseTypeDescriptor,uzbtypesbase,uzcsysinfo,UGDBOpenArrayOfByte;
+  uzccommandsmanager,uzclog,uzcdrawings,Varman,UBaseTypeDescriptor,uzcsysinfo,uzctnrVectorBytes;
 type
     TZAction=class(TAction)
                    public
@@ -53,7 +53,7 @@ type
               end;
     TMyActionListHelper = class helper for TActionList
       procedure AddMyAction(Action:TZAction);
-      function LoadImage(imgfile:GDBString):Integer;
+      function LoadImage(imgfile:String):Integer;
       procedure SetImage(img,identifer:string;var action:TZAction);
     end;
     TmyCommandToolButton=class({Tmy}TToolButton)
@@ -74,7 +74,7 @@ type
                        public
                        FCommand:String;{**<Command to manager commands}
                        FSilent:Boolean;
-                       constructor create(TheOwner: TComponent;_Caption,_Command:TTranslateString);
+                       constructor create(TheOwner: TComponent;_Caption,_Command:TTranslateString);overload;
                        procedure SetCommand(_Caption,_Command:TTranslateString);
                        procedure Click; override;
                   end;
@@ -161,6 +161,8 @@ begin
                                              {$IFDEF LCLQT}tsDownNormal{$ENDIF}
                                              {$IFDEF LCLQT5}tsDownNormal{$ENDIF}
                                              {$IFDEF LCLgtk2}ttbSplitButtonDropDownNormal{$ENDIF}
+                                             {$IFDEF LCLgtk3}ttbSplitButtonDropDownNormal{$ENDIF}
+                                             {$IFDEF LCLcocoa}ttbSplitButtonDropDownNormal{$ENDIF}
                                              );
     PaintRect:=ClientRect;
     {$IFDEF LCLWIN32}if WindowsVersion<wvVista then begin
@@ -171,6 +173,7 @@ begin
     {$IFDEF LCLQT}PaintRect.Top:=PaintRect.Bottom div 2;PaintRect.Left:=2*PaintRect.Right div 3;{$ENDIF}
     {$IFDEF LCLQT5}PaintRect.Top:=PaintRect.Bottom div 2;PaintRect.Left:=2*PaintRect.Right div 3;{$ENDIF}
     {$IFDEF LCLGTK2}PaintRect.Top:=2*PaintRect.Bottom div 3;PaintRect.Left:=PaintRect.Right div 2;{$ENDIF}
+    {$IFDEF LCLGTK3}PaintRect.Top:=2*PaintRect.Bottom div 3;PaintRect.Left:=PaintRect.Right div 2;{$ENDIF}
     ThemeServices.DrawElement(Canvas.Handle,Details,PaintRect)
   end;
 end;
@@ -288,15 +291,15 @@ begin
      begin
           if pvd^.data.PTD.getfacttypedef=@FundamentalBooleanDescriptorOdj then
                                                         begin
-                                                             PGDBBoolean(pvd^.data.Instance)^:=not PGDBBoolean(pvd^.data.Instance)^;
-                                                             Checked:=PGDBBoolean(pvd^.data.Instance)^;
+                                                             PBoolean(pvd^.data.Addr.Instance)^:=not PBoolean(pvd^.data.Addr.Instance)^;
+                                                             Checked:=PBoolean(pvd^.data.Addr.Instance)^;
                                                         end
           else if fmask<>0 then
                                begin
-                                    pv:=pvd^.data.Instance;
+                                    pv:=pvd^.data.Addr.Instance;
                                     pm:=@Fmask;
                                     accum:=0;
-                                    for i:=1 to pvd^.data.PTD^.SizeInGDBBytes do
+                                    for i:=1 to pvd^.data.PTD^.SizeInBytes do
                                      begin
                                           pv^:=pv^ xor pm^;
                                           accum:=accum or(pv^ and pm^);
@@ -308,13 +311,13 @@ begin
                                                 else
                                                     Checked:=false;
                                end
-     else if sizeof(FBufer)>=pvd^.data.PTD^.SizeInGDBBytes then
+     else if sizeof(FBufer)>=pvd^.data.PTD^.SizeInBytes then
                                                                begin
                                                                     if not Checked then
                                                                     begin
                                                                     fbufer:=0;
-                                                                    Move(pvd^.data.Instance^, FBufer,pvd^.data.PTD^.SizeInGDBBytes);
-                                                                    fillchar(pvd^.data.Instance^,pvd^.data.PTD^.SizeInGDBBytes,0);
+                                                                    Move(pvd^.data.Addr.Instance^, FBufer,pvd^.data.PTD^.SizeInBytes);
+                                                                    fillchar(pvd^.data.Addr.Instance^,pvd^.data.PTD^.SizeInBytes,0);
                                                                     if fbufer<>0 then
                                                                                     Checked:=false;
                                                                     end
@@ -323,9 +326,9 @@ begin
                                                                       if fbufer=0 then
                                                                                       fbufer:=1;
                                                                       begin
-                                                                      Move( FBufer,pvd^.data.Instance^,pvd^.data.PTD^.SizeInGDBBytes);
+                                                                      Move( FBufer,pvd^.data.Addr.Instance^,pvd^.data.PTD^.SizeInBytes);
                                                                       fbufer:=0;
-                                                                      Move(pvd^.data.Instance^, FBufer,pvd^.data.PTD^.SizeInGDBBytes);
+                                                                      Move(pvd^.data.Addr.Instance^, FBufer,pvd^.data.PTD^.SizeInBytes);
 
                                                                       if fbufer<>0 then
                                                                                       Checked:=true;
@@ -360,14 +363,14 @@ begin
           enabled:=true;
           if pvd^.data.PTD=@FundamentalBooleanDescriptorOdj then
                                                         begin
-                                                             Checked:=PGDBBoolean(pvd^.data.Instance)^;
+                                                             Checked:=PBoolean(pvd^.data.Addr.Instance)^;
                                                         end
           else if fmask<>0 then
                                begin
-                                    pv:=pvd^.data.Instance;
+                                    pv:=pvd^.data.Addr.Instance;
                                     pm:=@Fmask;
                                     accum:=0;
-                                    for i:=1 to pvd^.data.PTD^.SizeInGDBBytes do
+                                    for i:=1 to pvd^.data.PTD^.SizeInBytes do
                                      begin
                                           accum:=accum or(pv^ and pm^);
                                           inc(pv);
@@ -378,10 +381,10 @@ begin
                                                 else
                                                     self.Checked:=false;
                                end
-          else if sizeof(FBufer)>=pvd^.data.PTD^.SizeInGDBBytes then
+          else if sizeof(FBufer)>=pvd^.data.PTD^.SizeInBytes then
                                                                     begin
                                                                          TBufer:=0;
-                                                                         Move(pvd^.data.Instance^, TBufer,pvd^.data.PTD^.SizeInGDBBytes);
+                                                                         Move(pvd^.data.Addr.Instance^, TBufer,pvd^.data.PTD^.SizeInBytes);
                                                                          if TBufer<>0 then
                                                                                          self.Checked:=true
                                                                                       else
@@ -409,7 +412,7 @@ begin
      AddAction(action);
 end;
 
-function TMyActionListHelper.LoadImage(imgfile:GDBString):Integer;
+function TMyActionListHelper.LoadImage(imgfile:String):Integer;
 var
     bmp:TBitmap;
 begin
@@ -586,14 +589,14 @@ begin
           enabled:=true;
           if pvd^.data.PTD=@FundamentalBooleanDescriptorOdj then
                                                         begin
-                                                             self.Down:=PGDBBoolean(pvd^.data.Instance)^;
+                                                             self.Down:=PBoolean(pvd^.data.Addr.Instance)^;
                                                         end
           else if fmask<>0 then
                                begin
-                                    pv:=pvd^.data.Instance;
+                                    pv:=pvd^.data.Addr.Instance;
                                     pm:=@Fmask;
                                     accum:=0;
-                                    for i:=1 to pvd^.data.PTD^.SizeInGDBBytes do
+                                    for i:=1 to pvd^.data.PTD^.SizeInBytes do
                                      begin
                                           accum:=accum or(pv^ and pm^);
                                           inc(pv);
@@ -604,10 +607,10 @@ begin
                                                 else
                                                     self.Down:=false;
                                end
-          else if sizeof(FBufer)>=pvd^.data.PTD^.SizeInGDBBytes then
+          else if sizeof(FBufer)>=pvd^.data.PTD^.SizeInBytes then
                                                                     begin
                                                                          TBufer:=0;
-                                                                         Move(pvd^.data.Instance^, TBufer,pvd^.data.PTD^.SizeInGDBBytes);
+                                                                         Move(pvd^.data.Addr.Instance^, TBufer,pvd^.data.PTD^.SizeInBytes);
                                                                          if TBufer<>0 then
                                                                                          self.Down:=true
                                                                                       else
@@ -633,15 +636,15 @@ begin
      begin
           if pvd^.data.PTD=@FundamentalBooleanDescriptorOdj then
                                                         begin
-                                                             PGDBBoolean(pvd^.data.Instance)^:=not PGDBBoolean(pvd^.data.Instance)^;
-                                                             self.Down:=PGDBBoolean(pvd^.data.Instance)^;
+                                                             PBoolean(pvd^.data.Addr.Instance)^:=not PBoolean(pvd^.data.Addr.Instance)^;
+                                                             self.Down:=PBoolean(pvd^.data.Addr.Instance)^;
                                                         end
           else if fmask<>0 then
                                begin
-                                    pv:=pvd^.data.Instance;
+                                    pv:=pvd^.data.Addr.Instance;
                                     pm:=@Fmask;
                                     accum:=0;
-                                    for i:=1 to pvd^.data.PTD^.SizeInGDBBytes do
+                                    for i:=1 to pvd^.data.PTD^.SizeInBytes do
                                      begin
                                           pv^:=pv^ xor pm^;
                                           accum:=accum or(pv^ and pm^);
@@ -653,13 +656,13 @@ begin
                                                 else
                                                     self.Down:=false;
                                end
-     else if sizeof(FBufer)>=pvd^.data.PTD^.SizeInGDBBytes then
+     else if sizeof(FBufer)>=pvd^.data.PTD^.SizeInBytes then
                                                                begin
                                                                     if not self.Down then
                                                                     begin
                                                                     fbufer:=0;
-                                                                    Move(pvd^.data.Instance^, FBufer,pvd^.data.PTD^.SizeInGDBBytes);
-                                                                    fillchar(pvd^.data.Instance^,pvd^.data.PTD^.SizeInGDBBytes,0);
+                                                                    Move(pvd^.data.Addr.Instance^, FBufer,pvd^.data.PTD^.SizeInBytes);
+                                                                    fillchar(pvd^.data.Addr.Instance^,pvd^.data.PTD^.SizeInBytes,0);
                                                                     if fbufer<>0 then
                                                                                     self.Down:=false;
                                                                     end
@@ -668,9 +671,9 @@ begin
                                                                       if fbufer=0 then
                                                                                       fbufer:=1;
                                                                       begin
-                                                                      Move( FBufer,pvd^.data.Instance^,pvd^.data.PTD^.SizeInGDBBytes);
+                                                                      Move( FBufer,pvd^.data.Addr.Instance^,pvd^.data.PTD^.SizeInBytes);
                                                                       fbufer:=0;
-                                                                      Move(pvd^.data.Instance^, FBufer,pvd^.data.PTD^.SizeInGDBBytes);
+                                                                      Move(pvd^.data.Addr.Instance^, FBufer,pvd^.data.PTD^.SizeInBytes);
 
                                                                       if fbufer<>0 then
                                                                                       self.Down:=true;

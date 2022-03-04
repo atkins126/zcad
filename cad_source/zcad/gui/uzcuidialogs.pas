@@ -17,17 +17,12 @@
 }
 
 unit uzcuidialogs;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
     Controls,LCLTaskDialog,SysUtils,Forms,{$IFNDEF DELPHI}LCLtype,{$ELSE}windows,{$ENDIF}
     uzcinterface,uzclog,uzelongprocesssupport,
     uzcuitypes,uzcuiutils,uzcuilcl2zc;
-
-resourcestring
-  rsMsgWndTitle='ZCAD';
-  rsDontShowThisNextTime='Don''t show this next time (for task "%s")';
-  rsMsgKeepChoice='Keep choice (for task "%s")';
 
 type
 
@@ -35,17 +30,6 @@ type
     class procedure StartLongProcessHandler(LPHandle:TLPSHandle;Total:TLPSCounter;LPName:TLPName);
     class procedure EndLongProcessHandler(LPHandle:TLPSHandle;TotalLPTime:TDateTime);
   end;
-
-  TZCMsgCommonButton2TCommonButton_Converter=class
-    class function Convert(valueIn:TZCMsgCommonButton;out valueOut:TCommonButton):boolean;
-  end;
-
-  TLCLModalResult2TZCMsgModalResult_Converter=class
-    class function Convert(valueIn:Integer;out valueOut:TZCMsgModalResult):boolean;
-  end;
-
-  TZCMsgCommonButtons2TCommonButtons=TGSetConverter<TZCMsgCommonButton,TZCMsgCommonButtons,TCommonButton,TCommonButtons,TZCMsgCommonButton2TCommonButton_Converter>;
-  TLCLModalResult2TZCMsgModalResult=TGConverter<Integer,TZCMsgModalResult,TLCLModalResult2TZCMsgModalResult_Converter>;
 
 procedure FatalError(errstr:String);
 function zcMsgDlg(MsgStr:TZCMsgStr;aDialogIcon:TZCMsgDlgIcon;buttons:TZCMsgCommonButtons;NeedAskDonShow:boolean=false;Context:TMessagesContext=nil;MsgTitle:TZCMsgStr=''):TZCMsgDialogResult;
@@ -69,46 +53,6 @@ procedure FreeMessagesContext(var Context:TMessagesContext);
 begin
   if assigned(Context) then
     FreeAndNil(Context);
-end;
-
-class function TZCMsgCommonButton2TCommonButton_Converter.Convert(valueIn:TZCMsgCommonButton;out valueOut:TCommonButton):boolean;
-begin
-  result:=true;
-  case valueIn of
-    zccbOK:valueOut:=cbOK;
-    zccbYes:valueOut:=cbYes;
-    zccbNo:valueOut:=cbNo;
-    zccbCancel:valueOut:=cbCancel;
-    zccbRetry:valueOut:=cbRetry;
-    zccbClose:valueOut:=cbClose;
-    else result:=false;
-  end;
-end;
-
-class function TLCLModalResult2TZCMsgModalResult_Converter.Convert(valueIn:Integer;out valueOut:TZCMsgModalResult):boolean;
-begin
-  result:=true;
-  if valueIn in [mrNone..mrLast] then
-    case valueIn of
-      mrNone:    valueOut:=ZCmrNone;
-      mrOK:      valueOut:=ZCmrOK;
-      mrCancel:  valueOut:=ZCmrCancel;
-      mrAbort:   valueOut:=ZCmrAbort;
-      mrRetry:   valueOut:=ZCmrRetry;
-      mrIgnore:  valueOut:=ZCmrIgnore;
-      mrYes:     valueOut:=ZCmrYes;
-      mrNo:      valueOut:=ZCmrNo;
-      mrAll:     valueOut:=ZCmrAll;
-      mrNoToAll: valueOut:=ZCmrNoToAll;
-      mrYesToAll:valueOut:=ZCmrYesToAll;
-      mrClose:   valueOut:=ZCmrClose;
-      else begin
-        result:=false;
-        valueOut:=ZCmrNone;
-      end;
-    end
-  else
-    valueOut:=valueIn;
 end;
 
 class procedure TLPSSupporthelper.EndLongProcessHandler(LPHandle:TLPSHandle;TotalLPTime:TDateTime);
@@ -172,13 +116,15 @@ var
   MsgID:String;
   PContext:PTMessagesContext;
   TaskName:TLPName;
-  PriorityFocusCtrl:TWinControl;
+  //PriorityFocusCtrl:TWinControl;
   ParentHWND:THandle;
   TDF:TTaskDialogFlags;
   FirstMainParent,MainParent:TWinControl;
   i:integer;
 begin
-  FillChar(Task,SizeOf(Task),0);
+  Task:=Default(TTaskDialog);
+  Result:=Default(TZCMsgDialogResult);
+  //FillChar(Task,SizeOf(Task),0);
   if assigned(Context) then begin
     PContext:=@Context;
     TaskName:=Context.TaskName;

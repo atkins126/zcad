@@ -18,7 +18,7 @@
 {$mode delphi}
 unit uzccommand_arc;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -27,7 +27,7 @@ uses
   uzccommandsabstract,uzccommandsimpl,
   uzccominteractivemanipulators,
   uzeconsts,uzcstrconsts,
-  uzbgeomtypes,
+  uzegeometrytypes,
   uzccommandsmanager,
   uzeentarc,uzeentline,uzeentityfactory,
   uzcdrawings,uzgldrawcontext,

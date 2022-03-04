@@ -17,11 +17,12 @@
 }
 
 unit uzefontttf;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses LCLProc,uzgprimitivescreator,uzgprimitives,uzglvectorobject,uzefontbase,uzebeziersolver,math,uzgloglstatemanager,uzegluinterface,TTTypes,TTObjs,
-  usimplegenerics,EasyLazFreeType,uzbmemman,uzbstrproc,uzbtypesbase,sysutils,
-  gzctnrvectortypes,uzbgeomtypes,uzbtypes,uzegeometry,gzctnrstl;
+uses LCLProc,uzgprimitivescreator,uzgprimitives,uzglvectorobject,uzefontbase,
+     uzebeziersolver,math,uzgloglstatemanager,uzegluinterface,TTTypes,TTObjs,
+  usimplegenerics,EasyLazFreeType,uzbstrproc,sysutils,
+  uzegeometrytypes,uzbtypes,uzegeometry,gzctnrSTL,gzctnrvectortypes,uzbLogIntf;
 type
 PTTTFSymInfo=^TTTFSymInfo;
 TTTFSymInfo=record
@@ -39,12 +40,12 @@ TTFFont= object({SHXFont}BASEFont)
               MapChar:TMapChar;
               //MapCharIterator:TMapChar.TIterator;
               //-ttf-//TriangleData:ZGLFontTriangle2DArray;
-              function GetOrReplaceSymbolInfo(symbol:GDBInteger{//-ttf-//; var TrianglesDataInfo:TTrianglesDataInfo}):PGDBsymdolinfo;virtual;
+              function GetOrReplaceSymbolInfo(symbol:Integer{//-ttf-//; var TrianglesDataInfo:TTrianglesDataInfo}):PGDBsymdolinfo;virtual;
               //-ttf-//function GetTriangleDataAddr(offset:integer):PGDBFontVertex2D;virtual;
               procedure ProcessTriangleData(si:PGDBsymdolinfo);
               constructor init;
               destructor done;virtual;
-              function IsCanSystemDraw:GDBBoolean;virtual;
+              function IsCanSystemDraw:Boolean;virtual;
               procedure SetupSymbolLineParams(const matr:DMatrix4D; var SymsParam:TSymbolSParam);virtual;
         end;
 
@@ -59,7 +60,8 @@ var
    Ptrsize:PInteger;
    trmode:TTriangulationMode;
    CurrentLLentity:TArrayIndex;
-{procedure adddcross(shx:PGDBOpenArrayOfByte;var size:GDBWord;x,y:fontfloat);
+   triangle:array[0..2] of integer;
+{procedure adddcross(shx:PTZctnrVectorBytes;var size:Word;x,y:fontfloat);
 const
      s=0.01;
 begin
@@ -85,7 +87,7 @@ begin
     shx.AddFontFloat(@y);
     inc(size);
 end;
-procedure addgcross(shx:PGDBOpenArrayOfByte;var size:GDBWord;x,y:fontfloat);
+procedure addgcross(shx:PTZctnrVectorBytes;var size:Word;x,y:fontfloat);
 const
      s=0.01;
 begin
@@ -229,7 +231,7 @@ var
    x1,y1:fontfloat;
    cends,lastoncurve:integer;
    startcountur:boolean;
-   k:gdbdouble;
+   k:Double;
    tesselator:TessObj;
    lastv:GDBFontVertex2D;
    tparrayindex:integer;
@@ -260,10 +262,10 @@ begin//----//
            pendsymbol:=pttf.SHXdata.getDataMutable(pttf.SHXdata.Count);
            while psymbol<pendsymbol do
                begin
-                 case GDBByte(psymbol^) of
+                 case Byte(psymbol^) of
                    SHXLine:
                      begin
-                       inc(pGDBByte(psymbol), sizeof(SHXLine));
+                       inc(PByte(psymbol), sizeof(SHXLine));
                        v.x:=pfontfloat(psymbol)^;
                        inc(pfontfloat(psymbol));
                        v.y:=pfontfloat(psymbol)^;
@@ -280,9 +282,9 @@ begin//----//
                      end;
                    SHXPoly:
                      begin
-                       inc(pGDBByte(psymbol), sizeof(SHXPoly));
-                       len := GDBWord(psymbol^);
-                       inc(pGDBByte(psymbol), sizeof(GDBWord));
+                       inc(PByte(psymbol), sizeof(SHXPoly));
+                       len := Word(psymbol^);
+                       inc(PByte(psymbol), sizeof(Word));
                        v.x:=pfontfloat(psymbol)^;
                        inc(pfontfloat(psymbol));
                        v.y:=pfontfloat(psymbol)^;
@@ -418,13 +420,11 @@ begin
   GLUIntrf.TessBeginPolygon(tesselator,nil);
   for i:=0 to bs.Conturs.VArray.Size-1 do
   begin
-       if VerboseLog^ then
-          DebugLn('{T+}[TTF_CONTENTS]Contur=%d',[i]);
+       zTraceLn('{T+}[TTF_CONTENTS]Contur=%d',[i]);
        GLUIntrf.TessBeginContour(tesselator);
        for j:=0 to bs.Conturs.VArray[i].Size-1 do
        begin
-            if VerboseLog^ then
-               DebugLn('[TTF_CONTENTS]x=%f;y=%f',[(bs.Conturs.VArray[i][j].v.x),(bs.Conturs.VArray[i][j].v.y)]);
+            zTraceLn('[TTF_CONTENTS]x=%f;y=%f',[(bs.Conturs.VArray[i][j].v.x),(bs.Conturs.VArray[i][j].v.y)]);
             tv.x:=bs.Conturs.VArray[i][j].v.x;
             tv.y:=bs.Conturs.VArray[i][j].v.y;
             tv.z:=0;
@@ -432,8 +432,7 @@ begin
             //VectorData.GeomData.Add2DPoint(Conturs.VArray[i][j].x,Conturs.VArray[i][j].y);
        end;
        GLUIntrf.TessEndContour(tesselator);
-       if VerboseLog^ then
-          DebugLn('{T-}[TTF_CONTENTS]End contur');
+       zTraceLn('{T-}[TTF_CONTENTS]End contur');
   end;
   GLUIntrf.TessEndPolygon(tesselator);
 
@@ -459,14 +458,14 @@ begin
                                            //SymsParam.pfont:=@self;
                                       end
 end;
-function TTFFont.IsCanSystemDraw:GDBBoolean;
+function TTFFont.IsCanSystemDraw:Boolean;
 begin
      result:=true;
 end;
 constructor TTFFont.init;
 begin
      inherited;
-     //-ttf-//TriangleData.init({$IFDEF DEBUGBUILD}'{4A97D8DA-8B55-41AA-9287-7F0C842AC2D0}',{$ENDIF}200);
+     //-ttf-//TriangleData.init(200);
      ftFont:=TFreeTypeFont.create;
      MapChar:=TMapChar.Create;
      //MapCharIterator:=TMapChar.TIterator.Create;
@@ -496,7 +495,7 @@ begin
        si.SymMinY:=symoutbound.LBN.y;
   end;
 end;
-function TTFFont.GetOrReplaceSymbolInfo(symbol:GDBInteger{//-ttf-//; var TrianglesDataInfo:TTrianglesDataInfo}):PGDBsymdolinfo;
+function TTFFont.GetOrReplaceSymbolInfo(symbol:Integer{//-ttf-//; var TrianglesDataInfo:TTrianglesDataInfo}):PGDBsymdolinfo;
 var
    CharIterator:TMapChar.TIterator;
    si:TTTFSymInfo;

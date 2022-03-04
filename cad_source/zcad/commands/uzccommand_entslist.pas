@@ -18,13 +18,13 @@
 {$mode delphi}
 unit uzccommand_entslist;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
   LazLogger,SysUtils,
   uzccommandsabstract,uzccommandsimpl,
-  gzctnrvectortypes,uzctnrvectorgdbstring,
+  uzctnrvectorstrings,
   //uzccommandsmanager,
   uzeentityfactory,
   uzcinterface;
@@ -33,9 +33,9 @@ implementation
 
 function EntsList_com(operands:TCommandOperands):TCommandResult;
 var
-   p:PCommandObjectDef;
-   ir:itrec;
-   clist:TZctnrVectorGDBString;
+   //p:PCommandObjectDef;
+   //ir:itrec;
+   clist:TZctnrVectorStrings;
    pair:ObjID2EntInfoData.TDictionaryPair;
    //iterator:ObjID2EntInfoData.TIterator;
 begin

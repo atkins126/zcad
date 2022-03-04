@@ -17,34 +17,47 @@
 }
 
 unit USinonimDescriptor;
-{$INCLUDE def.inc}
+
 {$MODE DELPHI}
 interface
-uses TypeDescriptors,UGDBOpenArrayOfByte,uzbtypesbase,
-     uzedimensionaltypes,varmandef,uzbtypes{,UGDBOpenArrayOfData,UGDBStringArray},uzbmemman;
+uses TypeDescriptors,uzctnrVectorBytes,
+     uzedimensionaltypes,varmandef,uzbtypes,TypInfo;
 type
 PGDBSinonimDescriptor=^GDBSinonimDescriptor;
 GDBSinonimDescriptor=object(TUserTypeDescriptor)
                      PSinonimOf:PUserTypeDescriptor;
-                     SinonimName:GDBString;
-                     constructor init(SinonimTypeName,Tname:GDBString;pu:pointer);
+                     SinonimName:String;
+                     constructor init(SinonimTypeName,Tname:String;pu:pointer);
                      constructor init2(SinonimOf:PUserTypeDescriptor;Tname:TInternalScriptString;pu:pointer);
                      function CreateProperties(const f:TzeUnitsFormat;mode:PDMode;PPDA:PTPropertyDeskriptorArray;Name:TInternalScriptString;PCollapsed:Pointer;ownerattrib:Word;var bmode:Integer;const addr:Pointer;ValKey,ValType:TInternalScriptString):PTPropertyDeskriptorArray;virtual;
-                     procedure ApplyOperator(oper,path:TInternalScriptString;var offset:GDBInteger;out tc:PUserTypeDescriptor);virtual;
-                     //function Serialize(PInstance:Pointer;SaveFlag:GDBWord;var membuf:PGDBOpenArrayOfByte;var  linkbuf:PGDBOpenArrayOfTObjLinkRecord;var sub:integer):integer;virtual;
-                     //function DeSerialize(PInstance:Pointer;SaveFlag:GDBWord;var membuf:GDBOpenArrayOfByte;linkbuf:PGDBOpenArrayOfTObjLinkRecord):integer;virtual;
+                     procedure ApplyOperator(oper,path:TInternalScriptString;var offset:Integer;out tc:PUserTypeDescriptor);virtual;
+                     //function Serialize(PInstance:Pointer;SaveFlag:Word;var membuf:PTZctnrVectorBytes;var  linkbuf:PGDBOpenArrayOfTObjLinkRecord;var sub:integer):integer;virtual;
+                     //function DeSerialize(PInstance:Pointer;SaveFlag:Word;var membuf:TZctnrVectorBytes;linkbuf:PGDBOpenArrayOfTObjLinkRecord):integer;virtual;
                      destructor Done;virtual;
                      function GetFactTypedef:PUserTypeDescriptor;virtual;
                      function Compare(pleft,pright:pointer):TCompareResult;virtual;
                      function GetValueAsString(pinstance:Pointer):TInternalScriptString;virtual;
                      procedure SetValueFromString(PInstance:Pointer;Value:TInternalScriptString);virtual;
-                     procedure SavePasToMem(var membuf:GDBOpenArrayOfByte;PInstance:Pointer;prefix:TInternalScriptString);virtual;
+                     procedure SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;prefix:TInternalScriptString);virtual;
                      function GetFormattedValueAsString(PInstance:Pointer; const f:TzeUnitsFormat):TInternalScriptString;virtual;
                      procedure MagicFreeInstance(PInstance:Pointer);virtual;
                      procedure MagicAfterCopyInstance(PInstance:Pointer);virtual;
+                     procedure InitInstance(PInstance:Pointer);virtual;
+                     procedure RegisterTypeinfo(ti:PTypeInfo);virtual;
                end;
 implementation
-uses {ZBasicVisible,}UUnitManager{,log};
+uses UUnitManager;
+procedure GDBSinonimDescriptor.RegisterTypeinfo(ti:PTypeInfo);
+begin
+  GetFactTypedef^.RegisterTypeinfo(ti);
+  SizeInBytes:=GetFactTypedef^.SizeInBytes;
+end;
+
+procedure GDBSinonimDescriptor.InitInstance(PInstance:Pointer);
+begin
+   GetFactTypedef^.InitInstance(PInstance);
+end;
+
 function GDBSinonimDescriptor.GetFormattedValueAsString(PInstance:Pointer; const f:TzeUnitsFormat):TInternalScriptString;
 begin
      result:=GetFactTypedef^.GetFormattedValueAsString(pinstance,f);
@@ -53,7 +66,7 @@ function GDBSinonimDescriptor.GetValueAsString;
 begin
      result:=GetFactTypedef^.GetValueAsString(pinstance);
 end;
-procedure GDBSinonimDescriptor.SavePasToMem(var membuf:GDBOpenArrayOfByte;PInstance:Pointer;prefix:TInternalScriptString);
+procedure GDBSinonimDescriptor.SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;prefix:TInternalScriptString);
 begin
      GetFactTypedef^.SavePasToMem(membuf,PInstance,prefix);
 end;
@@ -88,14 +101,14 @@ begin
     Pointer(SinonimName):=nil;
     SinonimName:=SinonimTypeName;
     PSinonimOf:=units.currentunit{ SysUnit}.TypeName2PTD(SinonimName);
-    inherited init(PSinonimOf^.SizeInGDBBytes,Tname,pu);
+    inherited init(PSinonimOf^.SizeInBytes,Tname,pu);
 end;
 constructor GDBSinonimDescriptor.init2(SinonimOf:PUserTypeDescriptor;Tname:TInternalScriptString;pu:pointer);
 begin
     Pointer(SinonimName):=nil;
     SinonimName:=SinonimOf^.TypeName;
     PSinonimOf:=SinonimOf;
-    inherited init(PSinonimOf^.SizeInGDBBytes,Tname,pu);
+    inherited init(PSinonimOf^.SizeInBytes,Tname,pu);
 end;
 function GDBSinonimDescriptor.CreateProperties;
 var

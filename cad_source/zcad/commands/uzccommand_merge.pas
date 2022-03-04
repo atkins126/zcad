@@ -17,7 +17,7 @@
 }
 
 unit uzccommand_merge;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -27,8 +27,7 @@ uses
   uzeffmanager,
   uzccommand_newdwg,
   uzccmdload,
-  uzccommandsimpl,uzccommandsabstract,
-  uzcdrawings;
+  uzccommandsimpl,uzccommandsabstract;
 
 function Merge_com(operands:TCommandOperands):TCommandResult;
 

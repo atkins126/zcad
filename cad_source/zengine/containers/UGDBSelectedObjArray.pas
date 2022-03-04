@@ -17,11 +17,10 @@
 }
 
 unit UGDBSelectedObjArray;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses uzbgeomtypes,uzepalette,uzgldrawcontext,uzecamera,uzeentwithmatrix,uzeentity,
-     UGDBControlPointArray,gzctnrvectordata,sysutils,uzbtypes,uzegeometry,
-     uzbtypesbase,uzbmemman;
+uses uzegeometrytypes,uzepalette,uzgldrawcontext,uzecamera,uzeentwithmatrix,uzeentity,
+     UGDBControlPointArray,gzctnrVector,sysutils,uzbtypes,uzegeometry;
 type
 {Export+}
 PSelectedObjDesc=^SelectedObjDesc;
@@ -33,17 +32,17 @@ SelectedObjDesc=record
                 end;
 PGDBSelectedObjArray=^GDBSelectedObjArray;
 {REGISTEROBJECTTYPE GDBSelectedObjArray}
-GDBSelectedObjArray= object(GZVectorData{-}<selectedobjdesc>{//})
-                          SelectedCount:GDBInteger;
+GDBSelectedObjArray= object(GZVector{-}<selectedobjdesc>{//})
+                          SelectedCount:Integer;
 
                           function addobject(PEntity:PGDBObjEntity):pselectedobjdesc;virtual;
                           procedure free;virtual;
-                          procedure remappoints(pcount:TActulity;ScrollMode:GDBBoolean;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;
-                          procedure drawpoint(var DC:TDrawContext;const GripSize:GDBInteger; const SelColor,UnSelColor:TRGB);virtual;
-                          procedure drawobject(var DC:TDrawContext{infrustumactualy:TActulity;subrender:GDBInteger});virtual;
+                          procedure remappoints(pcount:TActulity;ScrollMode:Boolean;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;
+                          procedure drawpoint(var DC:TDrawContext;const GripSize:Integer; const SelColor,UnSelColor:TRGB);virtual;
+                          procedure drawobject(var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
                           function getnearesttomouse(mx,my:integer):tcontrolpointdist;virtual;
                           function getonlyoutbound(var DC:TDrawContext):TBoundingBox;
-                          procedure selectcurrentcontrolpoint(key:GDBByte;mx,my,h:integer);virtual;
+                          procedure selectcurrentcontrolpoint(key:Byte;mx,my,h:integer);virtual;
                           procedure selectcontrolpointinframe(f1,f2: GDBvertex2DI);virtual;
                           procedure RenderFeedBack(pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;
                           //destructor done;virtual;
@@ -53,9 +52,9 @@ GDBSelectedObjArray= object(GZVectorData{-}<selectedobjdesc>{//})
                           procedure SetRotateObj(minusd,plusd,rm:DMatrix4D;x,y,z:GDBVertex);
                           procedure TransformObj(dispmatr:DMatrix4D);
 
-                          procedure drawobj(var DC:TDrawContext{infrustumactualy:TActulity;subrender:GDBInteger});virtual;
+                          procedure drawobj(var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
                           procedure freeelement(PItem:PT);virtual;
-                          procedure calcvisible(frustum:cliparray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:GDBInteger; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:GDBDouble);virtual;
+                          procedure calcvisible(frustum:cliparray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double);virtual;
                           procedure resprojparam(pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);
                     end;
 {EXPORT-}
@@ -63,7 +62,7 @@ implementation
 //uses uzedrawingabstract,uzeentgenericsubentry;
 procedure GDBSelectedObjArray.resprojparam;
 var tdesc:pselectedobjdesc;
-    i:GDBInteger;
+    i:Integer;
 begin
   if count<>0 then
   begin
@@ -81,12 +80,12 @@ begin
   if PSelectedObjDesc(PItem).pcontrolpoint<>nil then
                                                 begin
                                                      PSelectedObjDesc(PItem).pcontrolpoint^.Done;
-                                                     gdbfreemem(GDBPointer(PSelectedObjDesc(PItem).pcontrolpoint));
+                                                     Freemem(Pointer(PSelectedObjDesc(PItem).pcontrolpoint));
                                                 end;
   if PSelectedObjDesc(PItem).ptempobj<>nil then
                                            begin
                                                 PSelectedObjDesc(PItem).ptempobj^.done;
-                                                gdbfreemem(GDBPointer(PSelectedObjDesc(PItem).ptempobj));
+                                                Freemem(Pointer(PSelectedObjDesc(PItem).ptempobj));
                                            end;
   //PGDBObjBlockdef(p).Entities.ClearAndDone;
 end;
@@ -100,7 +99,7 @@ end;
 
 function GDBSelectedObjArray.addobject;
 var dummyseldesc:selectedobjdesc;
-    i:GDBInteger;
+    i:Integer;
 begin
   dummyseldesc.objaddr:=PEntity;
   dummyseldesc.pcontrolpoint:=nil;
@@ -116,7 +115,7 @@ begin
 end;
 procedure GDBSelectedObjArray.free;
 var tdesc:pselectedobjdesc;
-    i:GDBInteger;
+    i:Integer;
 begin
   tdesc:=GetParrayAsPointer;
   if count<>0 then
@@ -126,12 +125,12 @@ begin
             if tdesc^.pcontrolpoint<>nil then
             begin
                 tdesc^.pcontrolpoint^.done;
-                GDBFreeMem(GDBPointer(tdesc^.pcontrolpoint));
+                Freemem(Pointer(tdesc^.pcontrolpoint));
             end;
             if tdesc^.ptempobj<>nil then
             begin
                  tdesc^.ptempobj^.done;
-                 GDBFreeMem(GDBPointer(tdesc^.ptempobj));
+                 Freemem(Pointer(tdesc^.ptempobj));
             end;
             inc(tdesc);
        end;
@@ -140,7 +139,7 @@ begin
 end;
 procedure GDBSelectedObjArray.drawpoint;
 var tdesc:pselectedobjdesc;
-    i:GDBInteger;
+    i:Integer;
 begin
   if count<>0 then
   begin
@@ -159,7 +158,7 @@ begin
 end;
 procedure GDBSelectedObjArray.RenderFeedBack;
 var tdesc:pselectedobjdesc;
-    i:GDBInteger;
+    i:Integer;
 begin
   if count<>0 then
   begin
@@ -179,7 +178,7 @@ begin
   end;
 end;procedure GDBSelectedObjArray.drawobject;
 var tdesc:pselectedobjdesc;
-    i:GDBInteger;
+    i:Integer;
 begin
   if count<>0 then
   begin
@@ -196,7 +195,7 @@ begin
 end;
 procedure GDBSelectedObjArray.remappoints;
 var tdesc:pselectedobjdesc;
-    i:GDBInteger;
+    i:Integer;
 begin
   if count<>0 then
   begin
@@ -212,8 +211,8 @@ begin
   end;
 end;
 function GDBSelectedObjArray.getnearesttomouse;
-var i: GDBInteger;
-//  d: GDBDouble;
+var i: Integer;
+//  d: Double;
   td:tcontrolpointdist;
   tdesc:pselectedobjdesc;
 begin
@@ -232,7 +231,7 @@ begin
 end;
 
 (*procedure processobject(pobj:PGDBObjEntity;minusd,plusd,rm:DMatrix4D;x,y,z:GDBVertex);
-var i: GDBInteger;
+var i: Integer;
   m,m2,oplus,ominus:DMatrix4D;
   tv,P_insert_in_OCS,P_insert_in_WCS:gdbvertex;
 begin
@@ -280,7 +279,7 @@ end;
 
 *)
 procedure processobject(pobj:PGDBObjEntity;minusd,plusd,rm:DMatrix4D;x,y,z:GDBVertex);
-var //i: GDBInteger;
+var //i: Integer;
   m{,oplus,ominus}:DMatrix4D;
   {tv,}P_insert_in_OCS,P_insert_in_WCS:gdbvertex;
 begin
@@ -302,8 +301,8 @@ begin
 end;
 
 (*procedure processobject(pobj:PGDBObjEntity;minusd,plusd,rm:DMatrix4D;x,y,z:GDBVertex);
-var i: GDBInteger;
-//  d: GDBDouble;
+var i: Integer;
+//  d: Double;
 //  td:tcontrolpointdist;
   m,m2,oplus,ominus:DMatrix4D;
   tv:gdbvertex;
@@ -353,8 +352,8 @@ begin
 end;
 *)
 procedure GDBSelectedObjArray.SetRotate(minusd,plusd,rm:DMatrix4D;x,y,z:GDBVertex);
-var i: GDBInteger;
-//  d: GDBDouble;
+var i: Integer;
+//  d: Double;
 //  td:tcontrolpointdist;
   tdesc:pselectedobjdesc;
   //m,oplus:DMatrix4D;
@@ -377,8 +376,8 @@ begin
               gdb.GetCurrentROOT.FormatAfterEdit;}
 end;
 procedure GDBSelectedObjArray.SetRotateObj(minusd,plusd,rm:DMatrix4D;x,y,z:GDBVertex);
-var i: GDBInteger;
-//  d: GDBDouble;
+var i: Integer;
+//  d: Double;
 //  td:tcontrolpointdist;
   tdesc:pselectedobjdesc;
   //m,tempm,oplus,ominus:DMatrix4D;
@@ -411,8 +410,8 @@ begin
 end;
 
 procedure GDBSelectedObjArray.Transform(dispmatr:DMatrix4D);
-var i: GDBInteger;
-//  d: GDBDouble;
+var i: Integer;
+//  d: Double;
 //  td:tcontrolpointdist;
   tdesc:pselectedobjdesc;
 begin
@@ -438,7 +437,7 @@ begin
               gdb.GetCurrentROOT.FormatAfterEdit;}
 end;
 procedure GDBSelectedObjArray.TransformObj(dispmatr:DMatrix4D);
-var i: GDBInteger;
+var i: Integer;
   tdesc:pselectedobjdesc;
 begin
   if count > 0 then
@@ -463,8 +462,8 @@ begin
               gdb.GetCurrentROOT.FormatAfterEdit;}
 end;
 procedure GDBSelectedObjArray.freeclones;
-var i: GDBInteger;
-//  d: GDBDouble;
+var i: Integer;
+//  d: Double;
 //  td:tcontrolpointdist;
   tdesc:pselectedobjdesc;
 begin
@@ -476,7 +475,7 @@ begin
       if tdesc^.ptempobj<>nil then
         begin
           tdesc^.ptempobj^.done;
-          GDBFreeMem(GDBPointer(tdesc^.ptempobj));
+          Freemem(Pointer(tdesc^.ptempobj));
           tdesc^.ptempobj:=nil;
         end;
       inc(tdesc);
@@ -487,9 +486,9 @@ end;
 procedure GDBSelectedObjArray.calcvisible;
 {var
   p:pGDBObjEntity;
-  q:GDBBoolean;}
-var i: GDBInteger;
-//  d: GDBDouble;
+  q:Boolean;}
+var i: Integer;
+//  d: Double;
 //  td:tcontrolpointdist;
   tdesc:pselectedobjdesc;
 begin
@@ -518,7 +517,7 @@ begin
 end;
 function GDBSelectedObjArray.getonlyoutbound(var DC:TDrawContext):TBoundingBox;
 var
-   i: GDBInteger;
+   i: Integer;
    tdesc:pselectedobjdesc;
 begin
   if count > 0 then
@@ -545,8 +544,8 @@ begin
 
 end;
 procedure GDBSelectedObjArray.drawobj;
-var i: GDBInteger;
-//  d: GDBDouble;
+var i: Integer;
+//  d: Double;
 //  td:tcontrolpointdist;
   tdesc:pselectedobjdesc;
 begin
@@ -563,7 +562,7 @@ begin
 
 end;
 procedure GDBSelectedObjArray.selectcontrolpointinframe(f1,f2: GDBvertex2DI);
-var i: GDBInteger;
+var i: Integer;
   tdesc:pselectedobjdesc;
 begin
   if count > 0 then
@@ -579,8 +578,8 @@ begin
 
 end;
 procedure GDBSelectedObjArray.selectcurrentcontrolpoint;
-var i: GDBInteger;
-//  d: GDBDouble;
+var i: Integer;
+//  d: Double;
   //td:tcontrolpointdist;
   tdesc:pselectedobjdesc;
 begin
@@ -592,8 +591,10 @@ begin
     tdesc:=GetParrayAsPointer;
     for i := 0 to count - 1 do
     begin
-      if tdesc^.pcontrolpoint<>nil then tdesc^.pcontrolpoint^.selectcurrentcontrolpoint(key,mx,my,h);
-      SelectedCount:=SelectedCount+tdesc^.pcontrolpoint^.SelectedCount;
+      if tdesc^.pcontrolpoint<>nil then begin
+        tdesc^.pcontrolpoint^.selectcurrentcontrolpoint(key,mx,my,h);
+        SelectedCount:=SelectedCount+tdesc^.pcontrolpoint^.SelectedCount;
+      end;
       inc(tdesc);
     end;
   end;
@@ -602,7 +603,7 @@ end;
 begin
   if pa then
 
-  GDBFreeMem(PArray);
+  Freemem(PArray);
 end;}
 begin
 end.

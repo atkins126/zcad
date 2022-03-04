@@ -8,11 +8,13 @@ usescopy objname;
 
 var
 
-T1:GDBString;(*'Обозначение'*)
-T2:GDBString;(*'Марка'*)
-T3:GDBString;(*'Параметры'*)
-T4:GDBString;(*'Терм.уставка'*)
-T5:GDBString;(*'Эл.маг.уставка'*)
+T1:String;(*'Обозначение'*)
+T2:String;(*'Марка'*)
+T3:String;(*'Параметры'*)
+T4:String;(*'Терм.уставка'*)
+T5:String;(*'Эл.маг.уставка'*)
+
+T11:Integer;(*'123'*)
 
 implementation
 
@@ -32,5 +34,7 @@ T2:='??';
 T3:='??';
 T4:='';
 T5:='';
+
+T11:=3;
 
 end.

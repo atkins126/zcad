@@ -21,9 +21,9 @@ unit uzcExtdrLayerControl;
 interface
 
 uses SysUtils,uzedrawingdef,uzeentityextender,
-     uzeentdevice,TypeDescriptors,uzetextpreprocessor,UGDBOpenArrayOfByte,
-     uzbtypesbase,uzbtypes,uzeentsubordinated,uzeentity,uzeenttext,uzeblockdef,
-     varmandef,Varman,UUnitManager,URecordDescriptor,UBaseTypeDescriptor,uzbmemman,
+     uzeentdevice,TypeDescriptors,uzetextpreprocessor,uzctnrVectorBytes,
+     uzbtypes,uzeentsubordinated,uzeentity,uzeenttext,uzeblockdef,
+     varmandef,Varman,UUnitManager,URecordDescriptor,UBaseTypeDescriptor,
      uzeffdxfsupport,uzcvariablesutils,usimplegenerics,
      uzeBaseExtender,uzgldrawcontext,fpexprpars,LCLProc;
 const
@@ -35,11 +35,11 @@ type
   TLayerControlExtender=class(TBaseEntityExtender)
     //private
     public
-      FExpression:GDBString;
+      FExpression:String;
       FParser:TFPExpressionParser;
       pEnt:Pointer;
     public
-      GoodLayer,BadLayer:GDBString;
+      GoodLayer,BadLayer:String;
       procedure SetExpression(const AExpression:String);
       function GetExpression:String;
       class function getExtenderName:string;override;
@@ -52,12 +52,12 @@ type
       procedure GetVariableValue(Var Result : TFPExpressionResult; ConstRef AName : ShortString);
       procedure onBeforeEntityFormat(pEntity:Pointer;const drawing:TDrawingDef;var DC:TDrawContext);override;
       procedure onAfterEntityFormat(pEntity:Pointer;const drawing:TDrawingDef;var DC:TDrawContext);override;
-      procedure SaveToDxf(var outhandle:GDBOpenArrayOfByte;PEnt:Pointer;var IODXFContext:TIODXFContext);override;
+      procedure SaveToDxf(var outhandle:TZctnrVectorBytes;PEnt:Pointer;var IODXFContext:TIODXFContext);override;
       procedure ReorganizeEnts(OldEnts2NewEntsMap:TMapPointerToPointer);override;
       procedure PostLoad(var context:TIODXFLoadContext);override;
-      class function EntIOLoadGoodLayer(_Name,_Value:GDBString;ptu:PExtensionData;const drawing:TDrawingDef;PEnt:pointer):boolean;
-      class function EntIOLoadBadLayer(_Name,_Value:GDBString;ptu:PExtensionData;const drawing:TDrawingDef;PEnt:pointer):boolean;
-      class function EntIOLoadExpression(_Name,_Value:GDBString;ptu:PExtensionData;const drawing:TDrawingDef;PEnt:pointer):boolean;
+      class function EntIOLoadGoodLayer(_Name,_Value:String;ptu:PExtensionData;const drawing:TDrawingDef;PEnt:pointer):boolean;
+      class function EntIOLoadBadLayer(_Name,_Value:String;ptu:PExtensionData;const drawing:TDrawingDef;PEnt:pointer):boolean;
+      class function EntIOLoadExpression(_Name,_Value:String;ptu:PExtensionData;const drawing:TDrawingDef;PEnt:pointer):boolean;
 
       procedure onEntitySupportOldVersions(pEntity:pointer;const drawing:TDrawingDef);override;
       published
@@ -126,26 +126,21 @@ begin
   Raise EExprScanner.Create(Msg);
 end;
 
-function tryCalcFPExpressionParserResultType(ptd:PUserTypeDescriptor; var RT:TResultType):boolean;
-var
-  tRT:TResultType;
+function tryCalcFPExpressionParserResultType(ptd:PUserTypeDescriptor; out RT:TResultType):boolean;
 begin
-  tRT:=rtAuto;
+  RT:=rtAuto;
   if (ptd=@FundamentalDoubleDescriptorObj)or(ptd=@FundamentalSingleDescriptorObj) then
-    tRT:=rtFloat
+    RT:=rtFloat
   else if (ptd=@FundamentalUnicodeStringDescriptorObj)or(ptd=@FundamentalStringDescriptorObj)or(ptd=@FundamentalAnsiStringDescriptorObj) then
-    tRT:=rtString
+    RT:=rtString
   else if (ptd=@FundamentalWordDescriptorObj)or(ptd=@FundamentalLongIntDescriptorObj)or(ptd=@FundamentalByteDescriptorObj)
         or(ptd=@FundamentalSmallIntDescriptorObj)or(ptd=@FundamentalLongWordDescriptorObj)
         or(ptd=@FundamentalQWordDescriptorObj)or(ptd=@FundamentalInt64Descriptor)or(ptd=@FundamentalShortIntDescriptorObj) then
-    tRT:=rtInteger
+    RT:=rtInteger
   else if (ptd=@FundamentalBooleanDescriptorOdj)then
-    tRT:=rtBoolean;
-  if tRT<>rtAuto then begin
-    result:=true;
-    RT:=tRT;
-  end else
-    Result:=False;
+    RT:=rtBoolean;
+
+  result:=RT<>rtAuto;
 end;
 
 procedure TLayerControlExtender.GetVariableValue(Var Result : TFPExpressionResult; ConstRef AName : ShortString);
@@ -169,29 +164,29 @@ begin
     Err('TLayerControlExtender.GetVariableValue wrong TResultType for "'+AName+'" variable');
 
   if ptd=@FundamentalDoubleDescriptorObj then
-    result.ResFloat := PDouble(pvd^.data.Instance)^
+    result.ResFloat := PDouble(pvd^.data.Addr.Instance)^
   else if ptd=@FundamentalSingleDescriptorObj then
-    result.ResFloat := PSingle(pvd^.data.Instance)^
+    result.ResFloat := PSingle(pvd^.data.Addr.Instance)^
   else if (ptd=@FundamentalUnicodeStringDescriptorObj)or(ptd=@FundamentalStringDescriptorObj)or(ptd=@FundamentalAnsiStringDescriptorObj) then
-    result.ResString:=ptd.GetValueAsString(pvd^.data.Instance)
+    result.ResString:=ptd.GetValueAsString(pvd^.data.Addr.Instance)
   else if ptd=@FundamentalWordDescriptorObj then
-    result.ResInteger := PWord(pvd^.data.Instance)^
+    result.ResInteger := PWord(pvd^.data.Addr.Instance)^
   else if ptd=@FundamentalLongIntDescriptorObj then
-    result.ResInteger := PLongint(pvd^.data.Instance)^
+    result.ResInteger := PLongint(pvd^.data.Addr.Instance)^
   else if ptd=@FundamentalByteDescriptorObj then
-    result.ResInteger := PByte(pvd^.data.Instance)^
+    result.ResInteger := PByte(pvd^.data.Addr.Instance)^
   else if ptd=@FundamentalSmallIntDescriptorObj then
-    result.ResInteger := PSmallInt(pvd^.data.Instance)^
+    result.ResInteger := PSmallInt(pvd^.data.Addr.Instance)^
   else if ptd=@FundamentalLongWordDescriptorObj then
-    result.ResInteger := PLongWord(pvd^.data.Instance)^
+    result.ResInteger := PLongWord(pvd^.data.Addr.Instance)^
   else if ptd=@FundamentalQWordDescriptorObj then
-    result.ResInteger := PQWord(pvd^.data.Instance)^
+    result.ResInteger := PQWord(pvd^.data.Addr.Instance)^
   else if ptd=@FundamentalInt64Descriptor then
-    result.ResInteger := PInt64(pvd^.data.Instance)^
+    result.ResInteger := PInt64(pvd^.data.Addr.Instance)^
   else if ptd=@FundamentalShortIntDescriptorObj then
-    result.ResInteger := PShortInt(pvd^.data.Instance)^
+    result.ResInteger := PShortInt(pvd^.data.Addr.Instance)^
   else if ptd=@FundamentalBooleanDescriptorOdj then
-    result.ResBoolean := PBoolean(pvd^.data.Instance)^
+    result.ResBoolean := PBoolean(pvd^.data.Addr.Instance)^
   else
     Err('TLayerControlExtender.GetVariableValue wrong PTD for "'+AName+'" variable');
 
@@ -286,18 +281,18 @@ begin
   result:=LayerControlExtenderName;
 end;
 
-procedure TLayerControlExtender.SaveToDxf(var outhandle:GDBOpenArrayOfByte;PEnt:Pointer;var IODXFContext:TIODXFContext);
+procedure TLayerControlExtender.SaveToDxf(var outhandle:TZctnrVectorBytes;PEnt:Pointer;var IODXFContext:TIODXFContext);
 begin
-  dxfGDBStringout(outhandle,1000,'LCGoodLayer='+GoodLayer);
-  dxfGDBStringout(outhandle,1000,'LCBadLayer='+BadLayer);
-  dxfGDBStringout(outhandle,1000,'LCExpression='+FExpression);
+  dxfStringout(outhandle,1000,'LCGoodLayer='+GoodLayer);
+  dxfStringout(outhandle,1000,'LCBadLayer='+BadLayer);
+  dxfStringout(outhandle,1000,'LCExpression='+FExpression);
 end;
 
 procedure TLayerControlExtender.PostLoad(var context:TIODXFLoadContext);
 begin
 end;
 
-class function TLayerControlExtender.EntIOLoadGoodLayer(_Name,_Value:GDBString;ptu:PExtensionData;const drawing:TDrawingDef;PEnt:pointer):boolean;
+class function TLayerControlExtender.EntIOLoadGoodLayer(_Name,_Value:String;ptu:PExtensionData;const drawing:TDrawingDef;PEnt:pointer):boolean;
 var
   LCExtdr:TLayerControlExtender;
 begin
@@ -308,7 +303,7 @@ begin
   result:=true;
 end;
 
-class function TLayerControlExtender.EntIOLoadBadLayer(_Name,_Value:GDBString;ptu:PExtensionData;const drawing:TDrawingDef;PEnt:pointer):boolean;
+class function TLayerControlExtender.EntIOLoadBadLayer(_Name,_Value:String;ptu:PExtensionData;const drawing:TDrawingDef;PEnt:pointer):boolean;
 var
   LCExtdr:TLayerControlExtender;
 begin
@@ -319,7 +314,7 @@ begin
   result:=true;
 end;
 
-class function TLayerControlExtender.EntIOLoadExpression(_Name,_Value:GDBString;ptu:PExtensionData;const drawing:TDrawingDef;PEnt:pointer):boolean;
+class function TLayerControlExtender.EntIOLoadExpression(_Name,_Value:String;ptu:PExtensionData;const drawing:TDrawingDef;PEnt:pointer):boolean;
 var
   LCExtdr:TLayerControlExtender;
 begin

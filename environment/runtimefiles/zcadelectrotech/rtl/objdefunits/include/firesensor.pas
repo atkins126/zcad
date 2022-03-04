@@ -5,13 +5,12 @@ usescopy objname;
 usescopy objmaterial;
 usescopy objgroup;
 usescopy blocktype;
-usescopy slcabagenmodul;
 var
    Device_Type:TDeviceType;(*'Тип устройства'*) 
 
-   AmountI:GDBInteger;(*'Количество'*)
+   AmountI:Integer;(*'Количество'*)
    
-   EL_Cab_AddLength:GDBDouble;(*'Добавлять к длине кабеля'*)
+   EL_Cab_AddLength:Double;(*'Добавлять к длине кабеля'*)
 implementation
 begin
    BTY_TreeCoord:='PLAN_OPS_PSSENSORS_UNCAT';

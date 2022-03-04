@@ -17,15 +17,15 @@
 }
 
 unit uzetrash;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
-    uzbgeomtypes,uzbtypesbase,uzbtypes,uzeentity,uzeconsts,uzegeometry;
+    uzegeometrytypes,uzeentity,uzeconsts,uzegeometry;
 type
 {EXPORT+}
 {REGISTEROBJECTTYPE GDBObjTrash}
 GDBObjTrash= object(GDBObjEntity)
-                 function GetHandle:GDBPlatformint;virtual;
+                 function GetHandle:PtrInt;virtual;
                  function GetMatrix:PDMatrix4D;virtual;
                  constructor initnul;
                  destructor done;virtual;

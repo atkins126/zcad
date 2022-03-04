@@ -16,17 +16,18 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
 
-unit uzclog;
-{$INCLUDE def.inc}
+unit uzcLog;
+{$INCLUDE zcadconfig.inc}
 {$mode objfpc}{$H+}
 interface
-uses UGDBOpenArrayOfByte,LazLoggerBase,
+uses uzctnrVectorBytes,LazLoggerBase,
      LazLogger,sysutils{$IFNDEF DELPHI},LazUTF8{$ENDIF},
      uzblog;
 const {$IFDEF DELPHI}filelog='log/zcad_delphi.log';{$ENDIF}
       {$IFDEF FPC}
                   {$IFDEF LINUX}filelog='../../log/zcad_linux.log';{$ENDIF}
                   {$IFDEF WINDOWS}filelog='../../log/zcad_windows.log';{$ENDIF}
+                  {$IFDEF DARWIN}filelog='../../log/zcad_darwin.log';{$ENDIF}
       {$ENDIF}
       lp_IncPos=uzblog.lp_IncPos;
       lp_DecPos=uzblog.lp_DecPos;

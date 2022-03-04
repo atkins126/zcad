@@ -15,7 +15,7 @@
 {
 @author(Vladimir Bobrov)
 }
-{$mode objfpc}
+{$mode objfpc}{$H+}
 
 {**Модуль реализации чертежных команд (линия, круг, размеры и т.д.)}
 unit uzvcom;
@@ -26,7 +26,7 @@ unit uzvcom;
 { файл def.inc необходимо включать в начале каждого модуля zcad
   он содержит в себе централизованные настройки параметров компиляции  }
   
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -38,11 +38,11 @@ uses
 
   sysutils, math,
 
-  uzbgeomtypes,URecordDescriptor,TypeDescriptors,
+  uzegeometrytypes,URecordDescriptor,TypeDescriptors,
 
   Forms, //gzctnrvectortypes,
   //uzcfblockinsert,  //старое временно
-  uzcfarrayinsert,
+  //uzcfarrayinsert,
 
   uzeentblockinsert,      //unit describes blockinsert entity
                        //модуль описывающий примитив вставка блока
@@ -69,7 +69,7 @@ uses
   uzeentity,
 
 
-  gvector,garrayutils, // Подключение Generics и модуля для работы с ним
+  gvector,//garrayutils, // Подключение Generics и модуля для работы с ним
 
   uzcentcable,
   uzeentdevice,
@@ -78,16 +78,16 @@ uses
   uzccablemanager,
   /////////////////
   uzegeometry,
-  uzeentitiesmanager,
+  //uzeentitiesmanager,
 
   //uzcmessagedialogs,
   uzeentityfactory,    //unit describing a "factory" to create primitives
                       //модуль описывающий "фабрику" для создания примитивов
   uzcsysvars,        //system global variables
                       //системные переменные
-  uzgldrawcontext,
+  //uzgldrawcontext,
   uzcinterface,
-  uzbtypesbase,uzbtypes, //base types
+  uzbtypes, //base types
                       //описания базовых типов
   uzeconsts, //base constants
                       //описания базовых констант
@@ -95,7 +95,7 @@ uses
   uzccommandsabstract,
   uzccommandsimpl, //Commands manager and related objects
                       //менеджер команд и объекты связанные с ним
-  uzcdrawing,
+  //uzcdrawing,
   uzedrawingsimple,
   uzcdrawings,     //Drawings manager, all open drawings are processed him
                       //"Менеджер" чертежей
@@ -103,7 +103,7 @@ uses
                       //разные функции упрощающие создание примитивов, пока их там очень мало
   varmandef,
   Varman,
-  {UGDBOpenArrayOfUCommands,}zcchangeundocommand,
+  {UGDBOpenArrayOfUCommands,}//zcchangeundocommand,
 
   uzclog,                //log system
                       //<**система логирования
@@ -112,10 +112,10 @@ uses
   uzventsuperline,   //для работы  с суперлинией
   //uzvtestdraw,       //быстрая рисовалка разных примитивов
   //для работы графа
-  ExtType,
-  Pointerv,
-  Graphs,
-
+  //ExtType,
+  //Pointerv,
+  //Graphs,
+  uzcenitiesvariablesextender,
   uzvsgeom,
     gzctnrvectortypes,                  //itrec
   uzvtestdraw; // тестовые рисунки
@@ -159,12 +159,12 @@ type
       //** Создания списка ребер графа
       PTInfoEdgeGraph=^TInfoEdgeGraph;
       TInfoEdgeGraph=record
-                         VIndex1:GDBInteger; //номер 1-й вершниы по списку
-                         VIndex2:GDBInteger; //номер 2-й вершниы по списку
+                         VIndex1:Integer; //номер 1-й вершниы по списку
+                         VIndex2:Integer; //номер 2-й вершниы по списку
                          VPoint1:GDBVertex;  //координаты 1й вершниы
                          VPoint2:GDBVertex;  //координаты 2й вершниы
                          cableEnt:PGDBObjSuperLine;
-                         edgeLength:GDBDouble; // длина ребра
+                         edgeLength:Double; // длина ребра
       end;
       TListEdgeGraph=specialize TVector<TInfoEdgeGraph>;
 
@@ -185,7 +185,7 @@ type
       //** Создания списка номеров вершин для построение ребер (временный список  )
       PTInfoTempNumVertex=^TInfoTempNumVertex;
       TInfoTempNumVertex=record
-                         num:GDBInteger; //номер 1-й вершниы по списку
+                         num:Integer; //номер 1-й вершниы по списку
       end;
       TListTempNumVertex=specialize TVector<TInfoTempNumVertex>;
 
@@ -197,7 +197,7 @@ type
                          nameSuperLine:string;
                          public
                          constructor Create;
-                         destructor Destroy;virtual;
+                         destructor Destroy;override;
       end;
 
       //TListGraphBuilder=specialize TVector<TGraphBuilder>;
@@ -233,8 +233,8 @@ type
 
       //Список номеров
       TInfoListNumVertex=record
-                   num:GDBInteger; //номер 1-й вершниы по списку
-                   level:GDBDouble;
+                   num:Integer; //номер 1-й вершниы по списку
+                   level:Double;
       end;
       TListNumVertex=specialize TVector<TInfoListNumVertex>;
 
@@ -245,7 +245,7 @@ type
                          listNumbers:TListNumVertex;
                          public
                          constructor Create;
-                         destructor Destroy;virtual;
+                         destructor Destroy;override;
       end;
       TListBreakInfo=specialize TVector<TBreakInfo>;
 
@@ -259,12 +259,12 @@ type
 
       function graphBulderFunc(Epsilon:double;nameCable:string):TGraphBuilder;
       function visualGraphEdge(p1:GDBVertex;p2:GDBVertex;color:integer;nameLayer:string):TCommandResult;
-      function visualGraphVertex(p1:GDBVertex;rr:GDBDouble;color:integer;nameLayer:string):TCommandResult;
-      function visualGraphError(point:GDBVertex;rr:GDBDouble;color:integer;nameLayer:string):TCommandResult;
+      function visualGraphVertex(p1:GDBVertex;rr:Double;color:integer;nameLayer:string):TCommandResult;
+      function visualGraphError(point:GDBVertex;rr:Double;color:integer;nameLayer:string):TCommandResult;
       function getPointConnector(pobj:pGDBObjEntity; out pConnect:GDBVertex):Boolean;
 
       function testTempDrawPolyLine(listVertex:GListVertexPoint;color:Integer):TCommandResult;
-      function testTempDrawText(p1:GDBVertex;mText:GDBString):TCommandResult;
+      function testTempDrawText(p1:GDBVertex;mText:String):TCommandResult;
       function convertLineInRectangleWithAccuracy(point1:GDBVertex;point2:GDBVertex;accuracy:double):TRectangleLine;
       procedure listSortVertexAtStPtLine(var listNumVertex:TListTempNumVertex;listDevice:TListDeviceLine;stVertLine:GDBVertex);
       function getAreaLine(point1:GDBVertex;point2:GDBVertex;accuracy:double):TBoundingBox;
@@ -373,14 +373,14 @@ begin
   NearObjects.Done;//убиваем список
 end;
 //Сравнение 2-х вершин одинаковые они или нет, с учетом погрешности
-function compareVertex(p1:GDBVertex;p2:GDBVertex;inaccuracy:GDBDouble):Boolean;
+function compareVertex(p1:GDBVertex;p2:GDBVertex;inaccuracy:Double):Boolean;
 begin
     result:=false;
     if ((p1.x >= p2.x-inaccuracy) and (p1.x <= p2.x+inaccuracy) and (p2.y >= p2.y-inaccuracy) and (p2.y <= p2.y+inaccuracy)) then
        result:=true;
 end;
 //Проверка списка на дубликаты, при добавлении новой вершины, с учетом погрешности
-function dublicateVertex(listVertex:TListDeviceLine;addVertex:GDBVertex;inaccuracy:GDBDouble):Boolean;
+function dublicateVertex(listVertex:TListDeviceLine;addVertex:GDBVertex;inaccuracy:Double):Boolean;
 var
     i:integer;
 begin
@@ -452,7 +452,7 @@ begin
 end;
 
 //Визуализация круга его p1-координата, rr-радиус, color-цвет
-function visualGraphVertex(p1:GDBVertex;rr:GDBDouble;color:integer;nameLayer:string):TCommandResult;
+function visualGraphVertex(p1:GDBVertex;rr:Double;color:integer;nameLayer:string):TCommandResult;
 var
     pcircle:PGDBObjCircle;
 begin
@@ -470,7 +470,7 @@ begin
 end;
 
 //Визуализация ошибки его p1-координата, rr-радиус, color-цвет
-function visualGraphError(point:GDBVertex;rr:GDBDouble;color:integer;nameLayer:string):TCommandResult;
+function visualGraphError(point:GDBVertex;rr:Double;color:integer;nameLayer:string):TCommandResult;
 var
     polyObj:PGDBObjPolyLine;
     tempPoint:GDBVertex;
@@ -531,7 +531,7 @@ begin
      result:=cmd_ok;
 end;
 //быстрое написание текста
-function testTempDrawText(p1:GDBVertex;mText:GDBString):TCommandResult;
+function testTempDrawText(p1:GDBVertex;mText:String):TCommandResult;
 var
     ptext:PGDBObjText;
 begin
@@ -539,14 +539,14 @@ begin
       zcSetEntPropFromCurrentDrawingProp(ptext); //добавляем дефаултные свойства
       ptext^.TXTStyleIndex:=drawings.GetCurrentDWG^.GetCurrentTextStyle; //добавляет тип стиля текста, дефаултные свойства его не добавляют
       ptext^.Local.P_insert:=p1;  // координата
-      ptext^.Template:=mText;     // сам текст
+      ptext^.Template:=TDXFEntsInternalStringType(mText);     // сам текст
       zcAddEntToCurrentDrawingWithUndo(ptext);   //добавляем в чертеж
       result:=cmd_ok;
 end;
 
 
 
-//function testTempDrawCircle(p1:GDBVertex;rr:GDBDouble):TCommandResult;
+//function testTempDrawCircle(p1:GDBVertex;rr:Double):TCommandResult;
 //var
 //    pcircle:PGDBObjCircle;
 //   // pe:T3PointCircleModePentity;
@@ -1362,6 +1362,8 @@ var
    nameBreak,nameDevice:string;
    pvd:pvardesk; //для работы со свойствами устройств
    haveName,IsExchange:boolean;
+   pnodestartvarext:TVariablesExtender;
+   pvstart:pvardesk;
 begin
     listBreak:=TListBreakInfo.Create;                                    //создаем список номеров вершин стойков/разрывов с одинаковыми именами
     for i:=0 to graph.listVertex.Size-1 do
@@ -1369,14 +1371,19 @@ begin
      nameDevice:=graph.listVertex[i].deviceEnt^.Name;
      //ZCMsgCallBackInterface.TextMessage('breakname= ' + nameDevice);
 
-     if (nameDevice='EL_CABLE_UP') or (nameDevice='EL_CABLE_DOWN') or (nameDevice='EL_CABLE_FROMDOWN') or (nameDevice='EL_CABLE_FROMUP') or (nameDevice='EL_CABLE_BREAK') then
+        pnodestartvarext:=graph.listVertex[i].deviceEnt^.specialize GetExtension<TVariablesExtender>;
+        pvstart:=nil;
+        pvstart:=pnodestartvarext.entityunit.FindVariable('RiserName');
+        //pvstartelevation:=pnodestartvarext^.entityunit.FindVariable('Elevation');
+        if (pvstart <> nil) then
+     //if (nameDevice='EL_CABLE_UP') or (nameDevice='EL_CABLE_DOWN') or (nameDevice='EL_CABLE_FROMDOWN') or (nameDevice='EL_CABLE_FROMUP') or (nameDevice='EL_CABLE_BREAK') then
      begin
        haveName:=true;
        pvd:=FindVariableInEnt(graph.listVertex[i].deviceEnt,'RiserName');
-       nameBreak:=pgdbstring(pvd^.data.Instance)^;
+       nameBreak:=pString(pvd^.data.Addr.Instance)^;
        pvd:=FindVariableInEnt(graph.listVertex[i].deviceEnt,'Elevation');
        infoVertex.num:=i;
-       infoVertex.level:=PGDBDouble(pvd^.data.Instance)^;
+       infoVertex.level:=PDouble(pvd^.data.Addr.Instance)^;
 
        graph.listVertex.Mutable[i]^.break:=true;
        graph.listVertex.Mutable[i]^.breakName:=nameBreak;
@@ -1538,11 +1545,11 @@ begin
            begin
              pSuperLine:=PGDBObjSuperLine(pobj);
              pvd:=FindVariableInEnt(pSuperLine,'NMO_Name');
-             tempName:=pgdbstring(pvd^.data.Instance)^;
+             tempName:=pString(pvd^.data.Addr.Instance)^;
              if nameCable=tempName then
                begin
                  infoCable.cableEnt:=pSuperLine;
-                 //infoCable.typeMount:=pgdbstring(FindVariableInEnt(pSuperLine,'Cable_Mounting_Method')^.data.Instance)^;
+                 //infoCable.typeMount:=pString(FindVariableInEnt(pSuperLine,'Cable_Mounting_Method')^.Instance)^;
                  infoCable.stPoint:=pSuperLine^.CoordInOCS.lBegin;
                  infoCable.stPoint.z:=0;
                  infoCable.edPoint:=pSuperLine^.CoordInOCS.lEnd;
@@ -1715,13 +1722,13 @@ begin
                         begin
                           interceptVertex:=uzegeometry.intercept3d(extMainLine.stPoint,extMainLine.edPoint,extNextLine.stPoint,extNextLine.edPoint).interceptcoord;
                           //проверка есть ли уже такая вершина, если нет то добавляем вершину и сразу создаем ребро
-                           if dublicateVertex({listDevice}result.listVertex,interceptVertex,Epsilon) = false then begin
+                           if dublicateVertex(result.listVertex,interceptVertex,Epsilon) = false then begin
                             infoDevice.deviceEnt:=nil;
                             infoDevice.centerPoint:=interceptVertex;
-                            result.listVertex{listDevice}.PushBack(infoDevice);
+                            result.listVertex.PushBack(infoDevice);
 
-                            infoEdge.VIndex1:=result.listVertex{listDevice}.Size-1;
-                            infoEdge.VIndex2:=getNumDeviceInListDevice(result.listVertex{listDevice},pObjDevice);
+                            infoEdge.VIndex1:=result.listVertex.Size-1;
+                            infoEdge.VIndex2:=getNumDeviceInListDevice(result.listVertex,pObjDevice);
                             infoEdge.VPoint1:=interceptVertex;
                             infoEdge.VPoint2:=pObjDevice^.GetCenterPoint;
                             infoEdge.edgeLength:=uzegeometry.Vertexlength(interceptVertex,pObjDevice^.GetCenterPoint);
@@ -1752,9 +1759,9 @@ begin
   //**** поиск ребер между узлами за основу взяты вершины
   //**   возможно данный метод быстрее оставить на будущее****//
   {*
-  for i:=0 to result.listVertex{listDevice}.Size-1 do    //перебираем все узлы
+  for i:=0 to result.listVertex.Size-1 do    //перебираем все узлы
   begin
-      tempListEdge:=getListEdgeAreaVertexLine(i,Epsilon,result.listVertex{listDevice},listCable);
+      tempListEdge:=getListEdgeAreaVertexLine(i,Epsilon,result.listVertex,listCable);
       if tempListEdge.size <> 0 then
         for j:=0 to tempListEdge.Size-1 do
           if listHaveThisEdge(result.listEdge,tempListEdge[j]) = false then
@@ -1833,10 +1840,10 @@ begin
          pvd:=FindVariableInEnt(pSuperLine,'NMO_Name');
          isname:=true;
          for name in listSLname do
-           if name = pgdbstring(pvd^.data.Instance)^ then
+           if name = pString(pvd^.data.Addr.Instance)^ then
              isname:=false;
          if isname then
-            listSLname.PushBack(pgdbstring(pvd^.data.Instance)^);
+            listSLname.PushBack(pString(pvd^.data.Addr.Instance)^);
         end;
       pobj:=drawings.GetCurrentROOT^.ObjArray.iterate(ir); //переход к следующем примитиву в списке выбраных примитивов
     until pobj=nil;
@@ -1872,7 +1879,7 @@ end;
          if ourGraph.listVertex[i].deviceEnt<>nil then
          begin
              pvd:=FindVariableInEnt(ourGraph.listVertex[i].deviceEnt,'DB_link');
-             ZCMsgCallBackInterface.TextMessage(pgdbstring(pvd^.data.Instance)^);
+             ZCMsgCallBackInterface.TextMessage(pString(pvd^.Instance)^);
          end;
          testTempDrawCircle(ourGraph.listVertex[i].centerPoint,Epsilon);
       end;
@@ -1891,7 +1898,7 @@ end;
 
       ZCMsgCallBackInterface.TextMessage('В полученном графе вершин = ' + IntToStr(ourGraph.listVertex.Size));
       ZCMsgCallBackInterface.TextMessage('В полученном графе ребер = ' + IntToStr(ourGraph.listEdge.Size));
-    {
+
     ZCMsgCallBackInterface.TextMessage('*** Min Weight Path ***');
   //  writeln('*** Min Weight Path ***');
     G:=TGraph.Create;
@@ -1934,6 +1941,7 @@ end;
       VertexPath.Free;
     end;
     result:=cmd_ok; }
+    {
   end;
 
   function TestgraphUses_com(operands:TCommandOperands):TCommandResult;
@@ -1999,6 +2007,7 @@ function Testcablemanager_com(operands:TCommandOperands):TCommandResult;
   pnp:PTNodeProp;
   ir,ir2,ir3:itrec;
   begin
+
     cman.init;
     cman.build;
     pcabledesk:=cman.beginiterate(ir);
@@ -2025,7 +2034,7 @@ function Testcablemanager_com(operands:TCommandOperands):TCommandResult;
        until pcabledesk=nil;
       END;
 
-
+   result:=cmd_ok;
 
         //ZCMsgCallBackInterface.TextMessage(' гуд ' + pcabledesk.);
     // CableManager.build;

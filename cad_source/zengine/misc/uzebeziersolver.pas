@@ -17,11 +17,11 @@
 }
 
 unit uzebeziersolver;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses uzgprimitivescreator,uzgprimitives,uzglvectorobject,uzegluinterface,gvector,
-     uzbmemman,gzctnrvectortypes,uzbgeomtypes,UGDBOpenArrayOfByte,uzbtypesbase,
-     sysutils,uzbtypes,uzegeometry,gzctnrstl,LazLogger;
+     uzegeometrytypes,uzctnrVectorBytes,
+     sysutils,uzegeometry,gzctnrSTL,LazLogger,gzctnrvectortypes;
 type
 TPointAttr=(TPA_OnCurve,TPA_NotOnCurve);
 TSolverMode=(TSM_WaitStartCountur,TSM_WaitStartPoint,TSM_WaitPoint);
@@ -37,7 +37,7 @@ TBezierSolver2D=class
                      FMode:TSolverMode;
                      BOrder:integer;
                      VectorData:PZGLVectorObject;
-                     shxsize:PGDBWord;
+                     shxsize:PWord;
                      scontur,truescontur:GDBvertex2D;
                      sconturpa:TPointAttr;
                      Conturs:TMyVectorArrayGDBFontVertex2D;
@@ -52,18 +52,17 @@ TBezierSolver2D=class
                      procedure DrawCountur;
                      procedure ClearConturs;
                      procedure solve;
-                     function getpoint(t:gdbdouble):GDBvertex2D;
+                     function getpoint(t:Double):GDBvertex2D;
                      procedure AddPointToContur(x,y:fontfloat;attr:TPointAttr);
                 end;
 var
    BS:TBezierSolver2D;
-   triangle:array[0..2] of integer;
 implementation
 //uses {math,}log;
 procedure TBezierSolver2D.AddPointToContur(x,y:fontfloat;attr:TPointAttr);
 var
    {tff1,tff0,}tff:{GDBFontVertex2D}TDummyData;
-   //a: GDBDouble;
+   //a: Double;
 begin
     //if attr=TPA_NotOnCurve then exit;
     tff.v.x:=x;
@@ -200,7 +199,7 @@ begin
      end;
 end;
 
-function TBezierSolver2D.getpoint(t:gdbdouble):GDBvertex2D;
+function TBezierSolver2D.getpoint(t:Double):GDBvertex2D;
 var
    i,j,k,rindex:integer;
 begin

@@ -5,13 +5,13 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }   
 unit uzcentcable;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses uzeobjectextender,varman,uzgldrawcontext,uzeentgenericsubentry,uzedrawingdef,
-     uzcsysvars,UGDBOpenArrayOfByte,uzestyleslayers,UUnitManager,uzeentcurve,uzegeometry,
-     math,gzctnrvectordata,uzbtypesbase,uzeentity,varmandef,uzbtypes,
-     uzbgeomtypes,uzeconsts,uzeffdxfsupport,sysutils,uzbmemman,uzeentsubordinated,uzeentdevice,
+     uzcsysvars,uzctnrVectorBytes,uzestyleslayers,UUnitManager,uzeentcurve,uzegeometry,
+     math,gzctnrVector,uzeentity,varmandef,uzbtypes,
+     uzegeometrytypes,uzeconsts,uzeffdxfsupport,sysutils,uzeentsubordinated,uzeentdevice,
      gzctnrvectortypes,uzcenitiesvariablesextender,uzeentityfactory,uzclog,LazLogger;
 type
 {Повторное описание типа в Cableы}
@@ -33,7 +33,7 @@ TNodeProp=record
                 DevLink:PGDBObjDevice;
           end;
 {REGISTEROBJECTTYPE TNodePropArray}
-TNodePropArray= object(GZVectorData{-}<TNodeProp>{//})
+TNodePropArray= object(GZVector{-}<TNodeProp>{//})
 end;
 
 PGDBObjCable=^GDBObjCable;
@@ -49,22 +49,22 @@ GDBObjCable= object(GDBObjCurve)
                  str21:GDBVertex;(*hidden_in_objinsp*)
                  str22:GDBVertex;(*hidden_in_objinsp*)
                  str23:GDBVertex;(*hidden_in_objinsp*)
-                 constructor init(own:GDBPointer;layeraddres:PGDBLayerProp;LW:GDBSmallint);
+                 constructor init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt);
                  constructor initnul(owner:PGDBObjGenericWithSubordinated);
-                 procedure DrawGeometry(lw:GDBInteger;var DC:TDrawContext{infrustumactualy:TActulity;subrender:GDBInteger});virtual;
-                 function GetObjTypeName:GDBString;virtual;
+                 procedure DrawGeometry(lw:Integer;var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
+                 function GetObjTypeName:String;virtual;
                  procedure FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
                  procedure FormatFast(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
-                 procedure SaveToDXFObjXData(var outhandle:{GDBInteger}GDBOpenArrayOfByte;var IODXFContext:TIODXFContext);virtual;
-                 procedure SaveToDXF(var outhandle:{GDBInteger}GDBOpenArrayOfByte;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
-                 procedure SaveToDXFfollow(var outhandle:{GDBInteger}GDBOpenArrayOfByte;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
+                 procedure SaveToDXFObjXData(var outhandle:{Integer}TZctnrVectorBytes;var IODXFContext:TIODXFContext);virtual;
+                 procedure SaveToDXF(var outhandle:{Integer}TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
+                 procedure SaveToDXFfollow(var outhandle:{Integer}TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
 
-                 function Clone(own:GDBPointer):PGDBObjEntity;virtual;
+                 function Clone(own:Pointer):PGDBObjEntity;virtual;
 
                  destructor done;virtual;
                  class function GetDXFIOFeatures:TDXFEntIODataManager;static;
 
-                 //function Clone(own:GDBPointer):PGDBObjEntity;virtual;
+                 //function Clone(own:Pointer):PGDBObjEntity;virtual;
                  function GetObjType:TObjID;virtual;
            end;
 {Export-}
@@ -74,12 +74,12 @@ var
 implementation
 function GDBObjCable.Clone;
 var tvo: PGDBObjCable;
-    i:GDBInteger;
+    i:Integer;
     p:pgdbvertex;
 begin
   //result:=inherited Clone(own);
   //exit;
-  GDBGetMem({$IFDEF DEBUGBUILD}'{F9D41F4A-1E80-4D3A-9DD1-D0037EFCA988}',{$ENDIF}GDBPointer(tvo), sizeof(GDBObjCable));
+  Getmem(Pointer(tvo), sizeof(GDBObjCable));
   tvo^.init(bp.ListPos.owner,vp.Layer, vp.LineWeight);
   //tvo^.vp:=vp;
   //tvo^.GetObjType :=GDBCableID;
@@ -115,11 +115,11 @@ begin
         dxfvertexout(outhandle,10,ptn2^.Nextp);
         dxfvertexout(outhandle,11,ptn1^.PrevP);
 
-         dxfGDBStringout(outhandle,1001,ZCADAppNameInDXF);
-         dxfGDBStringout(outhandle,1002,'{');
-         dxfGDBStringout(outhandle,1000,'_OWNERHANDLE=6E');
+         dxfStringout(outhandle,1001,ZCADAppNameInDXF);
+         dxfStringout(outhandle,1002,'{');
+         dxfStringout(outhandle,1000,'_OWNERHANDLE=6E');
          //self.SaveToDXFObjXData(handle);
-         dxfGDBStringout(outhandle,1002,'}');
+         dxfStringout(outhandle,1002,'}');
 
 
         ptn2:=ptn1;
@@ -127,13 +127,13 @@ begin
   until ptn1=nil;
   end;
 end;
-procedure GDBObjCable.SaveToDXFObjXData(var outhandle:{GDBInteger}GDBOpenArrayOfByte;var IODXFContext:TIODXFContext);
+procedure GDBObjCable.SaveToDXFObjXData(var outhandle:{Integer}TZctnrVectorBytes;var IODXFContext:TIODXFContext);
 //var
-   //s:gdbstring;
+   //s:String;
 begin
      inherited;
-     dxfGDBStringout(outhandle,1000,'_UPGRADE=1');
-     dxfGDBStringout(outhandle,1000,'_LAYER='+vp.Layer.name);
+     dxfStringout(outhandle,1000,'_UPGRADE=1');
+     dxfStringout(outhandle,1000,'_LAYER='+vp.Layer.name);
 end;
 procedure GDBObjCable.SaveToDXF;
 var
@@ -145,29 +145,46 @@ begin
   vp.Layer:=drawing.GetLayerTable^.{gdb.GetCurrentDWG.LayerTable.}getAddres('SYS_METRIC');
 
   SaveToDXFObjPrefix(outhandle,'POLYLINE','AcDb3dPolyline',IODXFContext);
-  dxfGDBIntegerout(outhandle,66,1);
+  dxfIntegerout(outhandle,66,1);
   dxfvertexout(outhandle,10,uzegeometry.NulVertex);
-  dxfGDBIntegerout(outhandle,70,8);
+  dxfIntegerout(outhandle,70,8);
 
   vp.Layer:=pl;
 end;
 procedure GDBObjCable.FormatFast;
 var
-   ptvnext:pgdbvertex;
+   ptvnext,ptvprev:pgdbvertex;
    ir_inVertexArray:itrec;
    np:TNodeProp;
 begin
      np.DevLink:=nil;
      inherited FormatEntity(drawing,dc);
+     Representation.Clear;
      NodePropArray.clear;
-     ptvnext:=vertexarrayInWCS.beginiterate(ir_inVertexArray);
-     if ptvnext<>nil then
+     ptvprev:=vertexarrayInWCS.beginiterate(ir_inVertexArray);
+     ptvnext:=vertexarrayInWCS.iterate(ir_inVertexArray);
+     if (ptvnext<>nil)and(ptvprev<>nil) then
      repeat
            np.NextP:=ptvnext^;
-           np.PrevP:=ptvnext^;
+           np.PrevP:=ptvprev^;
+           Representation.DrawLineWithLT(DC,np.NextP,np.PrevP,vp);
+           ptvprev:=ptvnext;
            ptvnext:=vertexarrayInWCS.iterate(ir_inVertexArray);
            NodePropArray.PushBackData(np);
      until ptvnext=nil;
+
+     {ptn2:=NodePropArray.beginiterate(ir_inNodeArray);
+     ptn1:=NodePropArray.iterate(ir_inNodeArray);
+     if ptn1<>nil then
+     begin
+     repeat
+       Representation.DrawLineWithLT(DC,ptn2^.Nextp,ptn1^.PrevP,vp);
+       //DC.Drawer.DrawLine3DInModelSpace(ptn2^.Nextp,ptn1^.PrevP,DC.DrawingContext.matrixs);
+       ptn2:=ptn1;
+       ptn1:=NodePropArray.iterate(ir_inNodeArray);
+     until ptn1=nil;
+     end;}
+
 end;
 
 procedure GDBObjCable.FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext);
@@ -181,9 +198,11 @@ var ir_inGDB,ir_inVertexArray,ir_inNodeArray,ir_inDevice,ir_inDevice2:itrec;
     I3DPPrev,I3DPNext,I3DP:Intercept3DProp;
     m,rotmatr:DMatrix4D;
     pvd,{pvd2,}pvds,pvdal,pvdrt:pvardesk;
-    {group,pribor,}count:gdbinteger;
-    l:gdbdouble;
+    {group,pribor,}count:Integer;
+    l:Double;
     pentvarext,pentvarextcirrobj:TVariablesExtender;
+
+    ptn1,ptn2:PTNodeProp;
 begin
   inherited;
   if assigned(EntExtensions)then
@@ -194,15 +213,15 @@ begin
   //CreateDeviceNameProcess(@self);
 
   {pvd:=ou.FindVariable('GC_HeadDevice');
-  group:=pgdbinteger(pvd^.data.Instance)^;
+  group:=PInteger(pvd^.Instance)^;
   pvd:=ou.FindVariable('GC_HDGroup');
-  pribor:=pgdbinteger(pvd^.data.Instance)^;}
+  pribor:=PInteger(pvd^.Instance)^;}
 
 
   //pvd:=ou.FindVariable('Cable_Length');
   //pvds:=ou.FindVariable('LENGTH_Scale');
   //pvdal:=ou.FindVariable('LENGTH_Add');
-  //pgdbdouble(pvd^.data.Instance)^:=length*pgdbdouble(pvds^.data.Instance)^+pgdbdouble(pvdal^.data.Instance)^;
+  //pDouble(pvd^.Instance)^:=length*pDouble(pvds^.Instance)^+pDouble(pvdal^.Instance)^;
   ptv:=vertexarrayInWCS.beginiterate(ir_inVertexArray);
   NodePropArray.clear;
   if ptv<>nil then
@@ -333,20 +352,20 @@ begin
                     pentvarextcirrobj:=CurrentObj^.GetExtension<TVariablesExtender>;
                     {pvd:=CurrentObj.ou.FindVariable('OPS_Pribor');
                     if pvd<>nil then
-                    pgdbinteger(pvd^.data.Instance)^:=group;
+                    PInteger(pvd^.Instance)^:=group;
                     pvd:=CurrentObj.ou.FindVariable('OPS_GroupInPribor');
                     if pvd<>nil then
-                    pgdbinteger(pvd^.data.Instance)^:=pribor;
+                    PInteger(pvd^.Instance)^:=pribor;
                     pvd:=CurrentObj.ou.FindVariable('OPS_NumberInSleif');
                     if pvd<>nil then
                     begin
                     inc(count);
-                    pgdbinteger(pvd^.data.Instance)^:=count;
+                    PInteger(pvd^.Instance)^:=count;
                     end;}
                     pvd:=pentvarextcirrobj.entityunit.FindVariable('EL_Cab_AddLength');
                     if pvd<>nil then
                                     begin
-                                         l:=l+pgdbdouble(pvd^.data.Instance)^;
+                                         l:=l+pDouble(pvd^.data.Addr.Instance)^;
                                     end;
                     inc(count);
                     CurrentObj^.FormatEntity(drawing,dc);
@@ -359,27 +378,27 @@ begin
   pentvarext:=self.GetExtension<TVariablesExtender>;
   pvd:=pentvarext.entityunit.FindVariable('CABLE_TotalCD');
   if pvd<>nil then
-                                  pgdbinteger(pvd^.data.Instance)^:=count;
+                                  PInteger(pvd^.data.Addr.Instance)^:=count;
   pvd:=pentvarext.entityunit.FindVariable('AmountD');
   pvds:=pentvarext.entityunit.FindVariable('LENGTH_Scale');
   pvdal:=pentvarext.entityunit.FindVariable('LENGTH_Add');
   pvdrt:=pentvarext.entityunit.FindVariable('LENGTH_RoundTo');
   if pvds<>nil then
-  if pgdbdouble(pvds^.data.Instance)^>0 then
+  if pDouble(pvds^.data.Addr.Instance)^>0 then
                                              begin
                                              if (pvd<>nil)and(pvds<>nil)and(pvdal<>nil){and(pvdrt<>nil)} then
-                                             pgdbdouble(pvd^.data.Instance)^:={roundto(}length*pgdbdouble(pvds^.data.Instance)^+pgdbdouble(pvdal^.data.Instance)^+l{,pgdbinteger(pvdrt^.data.Instance)^)};
+                                             pDouble(pvd^.data.Addr.Instance)^:={roundto(}length*pDouble(pvds^.data.Addr.Instance)^+pDouble(pvdal^.data.Addr.Instance)^+l{,PInteger(pvdrt^.Instance)^)};
                                              pvds:=pentvarext.entityunit.FindVariable('LENGTH_KReserve');
                                              if pvds<>nil then
-                                                              pgdbdouble(pvd^.data.Instance)^:=pgdbdouble(pvd^.data.Instance)^*pgdbdouble(pvds^.data.Instance)^;
+                                                              pDouble(pvd^.data.Addr.Instance)^:=pDouble(pvd^.data.Addr.Instance)^*pDouble(pvds^.data.Addr.Instance)^;
                                              if (pvdrt<>nil) then
-                                                              pgdbdouble(pvd^.data.Instance)^:=roundto(pgdbdouble(pvd^.data.Instance)^,pgdbinteger(pvdrt^.data.Instance)^);
+                                                              pDouble(pvd^.data.Addr.Instance)^:=roundto(pDouble(pvd^.data.Addr.Instance)^,PInteger(pvdrt^.data.Addr.Instance)^);
 
                                              end
                                          else
                                              begin
                                              if (pvd<>nil)and(pvds<>nil) then
-                                             pgdbdouble(pvd^.data.Instance)^:=-pgdbdouble(pvds^.data.Instance)^;
+                                             pDouble(pvd^.data.Addr.Instance)^:=-pDouble(pvds^.data.Addr.Instance)^;
                                              end;
 
 
@@ -423,6 +442,20 @@ begin
        end;
   end;
   NodePropArray.Shrink;
+
+  Representation.Clear;
+  ptn2:=NodePropArray.beginiterate(ir_inNodeArray);
+  ptn1:=NodePropArray.iterate(ir_inNodeArray);
+  if ptn1<>nil then
+  begin
+  repeat
+    Representation.DrawLineWithLT(DC,ptn2^.Nextp,ptn1^.PrevP,vp);
+    //DC.Drawer.DrawLine3DInModelSpace(ptn2^.Nextp,ptn1^.PrevP,DC.DrawingContext.matrixs);
+    ptn2:=ptn1;
+    ptn1:=NodePropArray.iterate(ir_inNodeArray);
+  until ptn1=nil;
+  end;
+
   if assigned(EntExtensions)then
     EntExtensions.RunOnAfterEntityFormat(@self,drawing,DC);
 end;
@@ -435,7 +468,7 @@ constructor GDBObjCable.init;
    //pvd:pvardesk;
 begin
   inherited init(own,layeraddres, lw);
-  NodePropArray.init({$IFDEF DEBUGBUILD}'{28ED5BF5-7598-4903-A715-C525BC68C116}',{$ENDIF}1000{,sizeof(TNodeProp)});
+  NodePropArray.init(1000);
   //vp.ID := GDBCableID;
   //PTObjectUnit(self.ou.Instance)^.init('cable');
   GetDXFIOFeatures.AddExtendersToEntity(@self);
@@ -443,7 +476,7 @@ end;
 constructor GDBObjCable.initnul;
 begin
   inherited initnul(owner);
-  NodePropArray.init({$IFDEF DEBUGBUILD}'{28ED5BF5-7598-4903-A715-C525BC68C116}',{$ENDIF}1000{,sizeof(TNodeProp)});
+  NodePropArray.init(1000);
   //vp.id := GDBCableID;
   GetDXFIOFeatures.AddExtendersToEntity(@self);
   //OU.done;
@@ -461,70 +494,29 @@ begin
 end;
 
 procedure GDBObjCable.DrawGeometry;
-var
-   ptn1,ptn2:PTNodeProp;
-   ir_inNodeArray:itrec;
+//var
+   //ptn1,ptn2:PTNodeProp;
+   //ir_inNodeArray:itrec;
 begin
-  ptn2:=NodePropArray.beginiterate(ir_inNodeArray);
-  ptn1:=NodePropArray.iterate(ir_inNodeArray);
-  if ptn1<>nil then
-  begin
-  repeat
-        DC.Drawer.DrawLine3DInModelSpace(ptn2^.Nextp,ptn1^.PrevP,DC.DrawingContext.matrixs);
-        ptn2:=ptn1;
-        ptn1:=NodePropArray.iterate(ir_inNodeArray);
-  until ptn1=nil;
-  end;
+
+  if (selected)or(dc.selected) then
+    Representation.DrawNiceGeometry(DC)
+  else
+    Representation.DrawGeometry(DC);
+
   if SysVar.DWG.DWG_HelpGeometryDraw^ then
-  if CanSimplyDrawInWCS(DC,SysVar.DSGN.DSGN_HelpScale^,1) then
-  begin
-  {notfirst:=false;
-  ptn2:=NodePropArray.beginiterate(ir_inNodeArray);
-  ptn1:=NodePropArray.iterate(ir_inNodeArray);
-  if ptn1<>nil then
-  begin
-  repeat
-        if ptn2^.DevLink<>nil then
-        begin
-        if ptn1<>nil then
-        begin
-        //oglsm.mytotalglend;
-        oglsm.myglpushmatrix;
-        oglsm.mygltranslated(ptn2^.Nextp.x+dc.pcamera^.CamCSOffset.x,ptn2^.Nextp.y+dc.pcamera^.CamCSOffset.y,ptn2^.Nextp.z+dc.pcamera^.CamCSOffset.z);
-        oglsm.myglScalef(SysVar.DSGN.DSGN_HelpScale^,SysVar.DSGN.DSGN_HelpScale^,SysVar.DSGN.DSGN_HelpScale^);
-        circlepointoflod[8].drawgeometry;
-        //oglsm.mytotalglend;
-        oglsm.myglpopmatrix;
-        end;
-        if notfirst then
-        begin
-        //oglsm.mytotalglend;
-        oglsm.myglpushmatrix;
-        oglsm.mygltranslated(ptn2^.Prevp.x+dc.pcamera^.CamCSOffset.x,ptn2^.Prevp.y+dc.pcamera^.CamCSOffset.y,ptn2^.Prevp.z+dc.pcamera^.CamCSOffset.z);
-        oglsm.myglScalef(SysVar.DSGN.DSGN_HelpScale^,SysVar.DSGN.DSGN_HelpScale^,SysVar.DSGN.DSGN_HelpScale^);
-        circlepointoflod[8].drawgeometry;
-        //oglsm.mytotalglend;
-        oglsm.myglpopmatrix;
-        end
-           else notfirst:=true;
-        end
-           else notfirst:=true;
-        ptn2:=ptn1;
-        ptn1:=NodePropArray.iterate(ir_inNodeArray);
-  until ptn2=nil;
-  end;}
-  if vertexarrayInWCS.Count>1 then
-  begin
-       dc.drawer.DrawLine3DInModelSpace(str21,str22,dc.DrawingContext.matrixs);
-       dc.drawer.DrawLine3DInModelSpace(str22,str23,dc.DrawingContext.matrixs);
-  end;
-  end;
+    if CanSimplyDrawInWCS(DC,SysVar.DSGN.DSGN_HelpScale^,1) then begin
+      if vertexarrayInWCS.Count>1 then begin
+        dc.drawer.DrawLine3DInModelSpace(str21,str22,dc.DrawingContext.matrixs);
+        dc.drawer.DrawLine3DInModelSpace(str22,str23,dc.DrawingContext.matrixs);
+      end;
+    end;
   //inherited;
   drawbb(dc);
 end;
 function AllocCable:PGDBObjCable;
 begin
-  GDBGetMem({$IFDEF DEBUGBUILD}'{AllocCable}',{$ENDIF}result,sizeof(GDBObjCable));
+  Getmem(result,sizeof(GDBObjCable));
 end;
 function AllocAndInitCable(owner:PGDBObjGenericWithSubordinated):PGDBObjCable;
 begin

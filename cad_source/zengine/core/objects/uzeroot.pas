@@ -17,13 +17,13 @@
 }
 
 unit uzeroot;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 Uses
-   uzgldrawcontext,uzedrawingdef,uzecamera,uzeentitiestree,uzbtypesbase,uzbtypes,
+   uzgldrawcontext,uzedrawingdef,uzecamera,uzeentitiestree,uzbtypes,
    uzeconsts,uzeentity,uzeentgenericsubentry,uzeentconnected,uzeentsubordinated,
-   gzctnrvectortypes,uzbgeomtypes,uzegeometry;
+   gzctnrvectortypes,uzegeometrytypes,uzegeometry;
 type
 {Export+}
 PGDBObjRoot=^GDBObjRoot;
@@ -31,20 +31,20 @@ PGDBObjRoot=^GDBObjRoot;
 GDBObjRoot= object(GDBObjGenericSubEntry)
                  constructor initnul;
                  destructor done;virtual;
-                 //function ImEdited(pobj:PGDBObjSubordinated;pobjinarray:GDBInteger):GDBInteger;virtual;
+                 //function ImEdited(pobj:PGDBObjSubordinated;pobjinarray:Integer):Integer;virtual;
                  procedure FormatAfterEdit(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
-                 procedure AfterDeSerialize(SaveFlag:GDBWord; membuf:GDBPointer);virtual;
+                 procedure AfterDeSerialize(SaveFlag:Word; membuf:Pointer);virtual;
                  function getowner:PGDBObjSubordinated;virtual;
                  function GetMainOwner:PGDBObjSubordinated;virtual;
                  procedure getoutbound(var DC:TDrawContext);virtual;
-                 //function FindVariable(varname:GDBString):pvardesk;virtual;
-                 function GetHandle:GDBPlatformint;virtual;
-                 procedure EraseMi(pobj:pGDBObjEntity;pobjinarray:GDBInteger;var drawing:TDrawingDef);virtual;
+                 //function FindVariable(varname:String):pvardesk;virtual;
+                 function GetHandle:PtrInt;virtual;
+                 procedure EraseMi(pobj:pGDBObjEntity;pobjinarray:Integer;var drawing:TDrawingDef);virtual;
 
                  function GetMatrix:PDMatrix4D;virtual;
-                 procedure DrawWithAttrib(var DC:TDrawContext{visibleactualy:TActulity;subrender:GDBInteger});virtual;
-                 function CalcInFrustum(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:GDBInteger; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:GDBDouble):GDBBoolean;virtual;
-                 procedure CalcInFrustumByTree(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var enttree:TEntTreeNode;var totalobj,infrustumobj:GDBInteger; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:GDBDouble);virtual;
+                 procedure DrawWithAttrib(var DC:TDrawContext{visibleactualy:TActulity;subrender:Integer});virtual;
+                 function CalcInFrustum(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
+                 procedure CalcInFrustumByTree(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var enttree:TEntTreeNode;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double);virtual;
                  procedure calcbb(var DC:TDrawContext);virtual;
                  //function FindShellByClass(_type:TDeviceClass):PGDBObjSubordinated;virtual;
                  function GetObjType:TObjID;virtual;
@@ -68,7 +68,7 @@ begin
      vp.BoundingBox.LBN:=VectorTransform3D(vp.BoundingBox.LBN,ObjMatrix);
      vp.BoundingBox.RTF:=VectorTransform3D(vp.BoundingBox.RTF,ObjMatrix);
 end;
-procedure GDBObjRoot.CalcInFrustumByTree(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var enttree:TEntTreeNode;var totalobj,infrustumobj:GDBInteger; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:GDBDouble);
+procedure GDBObjRoot.CalcInFrustumByTree(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var enttree:TEntTreeNode;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double);
 var
    myfrustum:ClipArray;
 begin
@@ -97,7 +97,7 @@ function GDBObjRoot.GetMatrix;
 begin
      result:=@self.ObjMatrix{ @OneMatrix};
 end;
-procedure GDBObjRoot.EraseMi(pobj:pGDBObjEntity;pobjinarray:GDBInteger;var drawing:TDrawingDef);
+procedure GDBObjRoot.EraseMi(pobj:pGDBObjEntity;pobjinarray:Integer;var drawing:TDrawingDef);
 var p:PGDBObjConnected;
     ir:itrec;
 begin
@@ -111,7 +111,7 @@ begin
            p:=self.ObjToConnectedArray.iterate(ir);
      until p=nil;
 end;
-function GDBObjRoot.GetHandle:GDBPlatformint;
+function GDBObjRoot.GetHandle:PtrInt;
 begin
      result:=H_Root;
 end;
@@ -152,7 +152,7 @@ begin
      //vp.ID:=GDBRootId;
      //bp.PSelfInOwnerArray:=nil;
      bp.ListPos.SelfIndex:=-1;
-     ObjToConnectedArray.init({$IFDEF DEBUGBUILD}'{0AD3CD18-E887-4038-BADA-7616D9F52963}',{$ENDIF}100);
+     ObjToConnectedArray.init(100);
      {prootonit:=units.findunit('objroot');
      if prootonit<>nil then
                            PTObjectUnit(ou.Instance)^.copyfrom(units.findunit('objroot'));}

@@ -5,15 +5,16 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }  
 unit uzcentnet;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses uzcinterface,uzeobjectextender,uzeentityfactory,Varman,uzgldrawcontext,uzestyleslayers,
-     uzeentgenericsubentry,uzedrawingdef,uzeentitiesprop,uzcsysvars,UGDBOpenArrayOfByte,
-     uzbtypesbase,uzeentity,UGDBOpenArrayOfPV,uzeentconnected,uzeconsts,
-     varmandef,uzegeometry,uzbtypes,UGDBGraf,uzbmemman,uzeentsubordinated,uunitmanager,
-     gzctnrvectortypes,uzbgeomtypes,sysutils,gzctnrvectorpobjects,
-     uzcenitiesvariablesextender,uzeentline,uzeffdxfsupport,math,uzclog,LazLogger;
+     uzeentgenericsubentry,uzedrawingdef,uzeentitiesprop,uzcsysvars,uzctnrVectorBytes,
+     uzeentity,UGDBOpenArrayOfPV,uzeentconnected,uzeconsts,
+     varmandef,uzegeometry,uzbtypes,UGDBGraf,uzeentsubordinated,uunitmanager,
+     gzctnrvectortypes,uzegeometrytypes,sysutils,
+     uzcenitiesvariablesextender,uzeentline,uzeffdxfsupport,math,uzclog,LazLogger,
+     uzctnrvectorpgdbaseobjects;
 resourcestring
   rscannotbeconnected='Can not be connected';
 const
@@ -26,32 +27,32 @@ GDBObjNet= object(GDBObjConnected)
                  graf:GDBGraf;
                  riserarray:TZctnrVectorPGDBaseObjects;
                  constructor initnul(owner:PGDBObjGenericWithSubordinated);
-                 function CanAddGDBObj(pobj:PGDBObjEntity):GDBBoolean;virtual;
-                 function EubEntryType:GDBInteger;virtual;
-                 procedure ImEdited(pobj:PGDBObjSubordinated;pobjinarray:GDBInteger;var drawing:TDrawingDef);virtual;
+                 function CanAddGDBObj(pobj:PGDBObjEntity):Boolean;virtual;
+                 function EubEntryType:Integer;virtual;
+                 procedure ImEdited(pobj:PGDBObjSubordinated;pobjinarray:Integer;var drawing:TDrawingDef);virtual;
                  procedure restructure(var drawing:TDrawingDef);virtual;
-                 procedure DeSelect(var SelectedObjCount:GDBInteger;ds2s:TDeSelect2Stage);virtual;
+                 procedure DeSelect(var SelectedObjCount:Integer;ds2s:TDeSelect2Stage);virtual;
                  procedure BuildGraf(var drawing:TDrawingDef);virtual;
-                 procedure DrawGeometry(lw:GDBInteger;var DC:TDrawContext{infrustumactualy:TActulity;subrender:GDBInteger});virtual;
-                 procedure EraseMi(pobj:pgdbobjEntity;pobjinarray:GDBInteger;var drawing:TDrawingDef);virtual;
-                 function CalcNewName(Net1,Net2:PGDBObjNet):GDBInteger;
+                 procedure DrawGeometry(lw:Integer;var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
+                 procedure EraseMi(pobj:pgdbobjEntity;pobjinarray:Integer;var drawing:TDrawingDef);virtual;
+                 function CalcNewName(Net1,Net2:PGDBObjNet):Integer;
                  procedure connectedtogdb(ConnectedArea:PGDBObjGenericSubEntry;var drawing:TDrawingDef);virtual;
-                 function GetObjTypeName:GDBString;virtual;
+                 function GetObjTypeName:String;virtual;
                  procedure FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
                  procedure DelSelectedSubitem(var drawing:TDrawingDef);virtual;
-                 function Clone(own:GDBPointer):PGDBObjEntity;virtual;
+                 function Clone(own:Pointer):PGDBObjEntity;virtual;
                  procedure TransformAt(p:PGDBObjEntity;t_matrix:PDMatrix4D);virtual;
                  procedure transform(const t_matrix:DMatrix4D);virtual;
 
                  function GetNearestLine(const point:GDBVertex):PGDBObjEntity;
 
-                 procedure SaveToDXF(var outhandle:{GDBInteger}GDBOpenArrayOfByte;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
-                 procedure SaveToDXFObjXData(var outhandle:{GDBInteger}GDBOpenArrayOfByte;var IODXFContext:TIODXFContext);virtual;
-                 procedure SaveToDXFfollow(var outhandle:{GDBInteger}GDBOpenArrayOfByte;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
+                 procedure SaveToDXF(var outhandle:{Integer}TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
+                 procedure SaveToDXFObjXData(var outhandle:{Integer}TZctnrVectorBytes;var IODXFContext:TIODXFContext);virtual;
+                 procedure SaveToDXFfollow(var outhandle:{Integer}TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
 
                  destructor done;virtual;
                  procedure FormatAfterDXFLoad(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
-                 function IsHaveGRIPS:GDBBoolean;virtual;
+                 function IsHaveGRIPS:Boolean;virtual;
                  class function GetDXFIOFeatures:TDXFEntIODataManager;static;
                  function GetObjType:TObjID;virtual;
            end;
@@ -59,7 +60,7 @@ GDBObjNet= object(GDBObjConnected)
 var
     GDBObjNetDXFFeatures:TDXFEntIODataManager;
 implementation
-function GDBObjNet.IsHaveGRIPS:GDBBoolean;
+function GDBObjNet.IsHaveGRIPS:Boolean;
 begin
      result:=false;
 end;
@@ -101,12 +102,12 @@ end;
 function GDBObjNet.Clone;
 var tvo: PGDBObjNet;
 begin
-  GDBGetMem({$IFDEF DEBUGBUILD}'{F9D41F4A-1E80-4D3A-9DD1-D0037EFCA988}',{$ENDIF}GDBPointer(tvo), sizeof(GDBObjNet));
+  Getmem(Pointer(tvo), sizeof(GDBObjNet));
   tvo^.initnul(bp.ListPos.owner);
   CopyVPto(tvo^);
   CopyExtensionsTo(tvo^);
   //tvo^.vp.id :=GDBNetID;
-  tvo.ObjArray.init({$IFDEF DEBUGBUILD}'{E9005274-601F-4A3F-BDB8-E311E59D558C}',{$ENDIF}ObjArray.Count);
+  tvo.ObjArray.init(ObjArray.Count);
   ObjArray.CloneEntityTo(@tvo.ObjArray,tvo);
   tvo^.bp.ListPos.Owner:=own;
   result := tvo;
@@ -134,8 +135,8 @@ begin
 end;
 function GDBObjNet.GetNearestLine;
 var pl:pgdbobjline;
-    d,d0:gdbdouble;
-//    i:GDBInteger;
+    d,d0:Double;
+//    i:Integer;
 //    tgf: pgrafelement;
     ir:itrec;
 begin
@@ -190,17 +191,17 @@ begin
           pobj^.vp:=tvp;
      end;
 end;
-procedure GDBObjNet.SaveToDXFObjXData(var outhandle:{GDBInteger}GDBOpenArrayOfByte;var IODXFContext:TIODXFContext);
+procedure GDBObjNet.SaveToDXFObjXData(var outhandle:{Integer}TZctnrVectorBytes;var IODXFContext:TIODXFContext);
 //var
-   //s:gdbstring;
+   //s:String;
 begin
      inherited;
      //s:=inttohex(GetHandle,10);
      //TMWOHistoryOut(@s[1]);
-     dxfGDBStringout(outhandle,1000,'_HANDLE='+inttohex(GetHandle,10));
-     dxfGDBStringout(outhandle,1000,'_UPGRADE='+inttostr(UD_LineToNet));
+     dxfStringout(outhandle,1000,'_HANDLE='+inttohex(GetHandle,10));
+     dxfStringout(outhandle,1000,'_UPGRADE='+inttostr(UD_LineToNet));
 end;
-procedure GDBObjNet.SaveToDXFfollow(var outhandle:{GDBInteger}GDBOpenArrayOfByte;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);
+procedure GDBObjNet.SaveToDXFfollow(var outhandle:{Integer}TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);
 var pobj:PGDBObjEntity;
     ir:itrec;
 begin
@@ -238,7 +239,7 @@ begin
      //bp.ListPos.Owner^.ImEdited(@self,bp.ListPos.SelfIndex,drawing);
 end;
 procedure GDBObjNet.DrawGeometry;
-var i{,j}:GDBInteger;
+var i{,j}:Integer;
     tgf: pgrafelement;
     //wcoord:gdbvertex;
 begin
@@ -293,7 +294,7 @@ begin
 end;
 procedure GDBObjNet.BuildGraf(var drawing:TDrawingDef);
 var pl:pgdbobjline;
-    //i:GDBInteger;
+    //i:Integer;
     tgf: pgrafelement;
     ir:itrec;
 begin
@@ -336,10 +337,10 @@ end;
                 //pl^.CoordInOCS.lbegin:=tgf^.point;
                 //pl^.CoordInOCS.lend:=tgf^.point;
                 //pl^.Format
-function GDBObjNet.CalcNewName(Net1,Net2:PGDBObjNet):GDBInteger;
+function GDBObjNet.CalcNewName(Net1,Net2:PGDBObjNet):Integer;
 var
    pvd1,pvd2:pvardesk;
-   n1,n2:gdbstring;
+   n1,n2:String;
    pentvarext1,pentvarext2:TVariablesExtender;
 begin
      result:=0;
@@ -347,8 +348,8 @@ begin
      pentvarext2:=net2.GetExtension<TVariablesExtender>;
      pvd1:=pentvarext1.entityunit.FindVariable('NMO_Name');
      pvd2:=pentvarext2.entityunit.FindVariable('NMO_Name');
-     n1:=pstring(pvd1^.data.Instance)^;
-     n2:=pstring(pvd2^.data.Instance)^;
+     n1:=pstring(pvd1^.data.Addr.Instance)^;
+     n2:=pstring(pvd2^.data.Addr.Instance)^;
      if (n1='')and(n2='') then
                               result:={gdb.numerator.getnamenumber(el_unname_prefix)}0
 else if n1=n2 then
@@ -364,7 +365,7 @@ else if (n2[1]='@') then
 end;
 procedure GDBObjNet.connectedtogdb;
 var CurrentNet:PGDBObjNet;
-    nn:GDBInteger;
+    nn:Integer;
     pmyline,ptestline:pgdbobjline;
     inter:intercept3dprop;
     ir,ir2,ir3:itrec;
@@ -427,10 +428,10 @@ end;
 procedure GDBObjNet.restructure;
 var pl,pl2:pgdbobjline;
     tpl:pgdbobjline;
-    i,j:GDBInteger;
+    i,j:Integer;
     ip:intercept3dprop;
     tv:gdbvertex;
-//    q:GDBBoolean;
+//    q:Boolean;
     TempNet:PGDBObjNet;
     tgf: pgrafelement;
     ti:GDBObjOpenArrayOfPV;
@@ -469,15 +470,15 @@ begin
                                      tv:=pl^.CoordInOCS.lbegin;
                                      pl^.CoordInOCS.lbegin:=ip.interceptcoord;
                                      pl^.Formatentity(drawing,dc);
-                                     //tpl:=GDBPointer(CreateObjFree(GDBLineID));
+                                     //tpl:=Pointer(CreateObjFree(GDBLineID));
                                      {выдрано из CreateObjFree для отвязки от GDBManager}
-                                     GDBGetMem({$IFDEF DEBUGBUILD}'{Net.CreateObjFree.line}',{$ENDIF}GDBPointer(tpl), sizeof(GDBObjLine));
+                                     Getmem(Pointer(tpl), sizeof(GDBObjLine));
                                      //GDBObjLineInit(@self,tpl,drawing.GetLayerTable^.GetCurrentLayer, sysvar.dwg.DWG_CLinew^, tv,ip.interceptcoord);
                                      {выдрано из GDBObjLineInit для отвязки от GDBManager}
                                      tpl^.init(@self,{drawing.GetLayerTable^.GetCurrentLayer}self.vp.Layer,sysvar.dwg.DWG_CLinew^,tv,ip.interceptcoord);
                                      CopyVPto(tpl^);
                                      objarray.AddPEntity(tpl^);
-                                     {tpl := GDBPointer(self.ObjArray.CreateObj(GDBLineID,@self));
+                                     {tpl := Pointer(self.ObjArray.CreateObj(GDBLineID,@self));
                                      GDBObjLineInit(@self,tpl, sysvar.DWG_CLayer^, sysvar.DWG_CLinew^, tv,ip.interceptcoord);}
                                      tpl.FormatEntity(drawing,dc);
                                 end;
@@ -487,15 +488,15 @@ begin
                                      tv:=pl2^.CoordInOCS.lbegin;
                                      pl2^.CoordInOCS.lbegin:=ip.interceptcoord;
                                      pl2^.FormatEntity(drawing,dc);
-                                     //tpl:=GDBPointer(CreateObjFree(GDBLineID));
+                                     //tpl:=Pointer(CreateObjFree(GDBLineID));
                                      {выдрано из CreateObjFree для отвязки от GDBManager}
-                                     GDBGetMem({$IFDEF DEBUGBUILD}'{Net.CreateObjFree.line}',{$ENDIF}GDBPointer(tpl), sizeof(GDBObjLine));
+                                     Getmem(Pointer(tpl), sizeof(GDBObjLine));
                                      //GDBObjLineInit(@self,tpl,drawing.GetLayerTable^.GetCurrentLayer, sysvar.dwg.DWG_CLinew^, tv,ip.interceptcoord);
                                      {выдрано из GDBObjLineInit для отвязки от GDBManager}
                                      tpl^.init(@self,{drawing.GetLayerTable^.GetCurrentLayer}self.vp.Layer,sysvar.dwg.DWG_CLinew^,tv,ip.interceptcoord);
                                      CopyVPto(tpl^);
                                      objarray.AddPEntity(tpl^);
-                                     {tpl := GDBPointer(self.ObjArray.CreateObj(GDBLineID,@self));
+                                     {tpl := Pointer(self.ObjArray.CreateObj(GDBLineID,@self));
                                      GDBObjLineInit(@self,tpl, sysvar.DWG_CLayer^, sysvar.DWG_CLinew^, tv,ip.interceptcoord);}
                                      tpl.FormatEntity(drawing,dc);
                                 end
@@ -513,8 +514,8 @@ begin
      //exit;
      if graf.divide then
      begin
-          GDBGetMem({$IFDEF DEBUGBUILD}'{4BB9158C-D16F-4310-9770-3BC2F2AF82C9}',{$ENDIF}GDBPointer(TempNet),sizeof(GDBObjNet));
-          if GDBPlatformUInt(tempnet)=$229FEF0 then
+          Getmem(Pointer(TempNet),sizeof(GDBObjNet));
+          if PtrUInt(tempnet)=$229FEF0 then
                                   tempnet:=tempnet;
           TempNet^.initnul(nil);
           pentvarexttempnet:=tempnet.GetExtension<TVariablesExtender>;
@@ -524,22 +525,22 @@ begin
           PGDBObjGenericSubEntry(GetMainOwner)^
           {gdb.GetCurrentROOT}.AddObjectToObjArray{ObjArray.add}(@TempNet);
           //gdb.GetCurrentDWG.ObjRoot.ObjCasheArray.addnodouble(@TempNet);
-          ti.init({$IFDEF DEBUGBUILD}'{B106F951-AEAB-43B9-B0B9-B18827EACFE5}',{$ENDIF}100){%H-};
+          ti.init(100){%H-};
           for i:=0 to self.graf.Count-1 do
           begin
                tgf:=pgrafelement(graf.getDataMutable(i));
                if tgf^.connected=0 then
                begin
-                    pl:=GDBPointer(tgf^.link.beginiterate(ir));
+                    pl:=Pointer(tgf^.link.beginiterate(ir));
                     if pl<>nil then
                     repeat
                           ti.PushBackIfNotPresent(pl);
-                          pl:=GDBPointer(tgf^.link.iterate(ir));
+                          pl:=Pointer(tgf^.link.iterate(ir));
                     until pl=nil;
                end;
           end;
 
-          pl:=GDBPointer(ti.beginiterate(ir));
+          pl:=Pointer(ti.beginiterate(ir));
           if pl<>nil then
           repeat
                 self.ObjArray.DeleteElement(pl^.bp.ListPos.SelfIndex);
@@ -547,10 +548,10 @@ begin
                 //pl^.bp.Owner:=TempNet;
 
                 //pl^.bp.Owner^.RemoveInArray(pl^.bp.PSelfInOwnerArray);
-                //GDBPointer(pl^.bp.PSelfInOwnerArray^):=nil;
+                //Pointer(pl^.bp.PSelfInOwnerArray^):=nil;
                 tempnet.ObjArray.AddPEntity(pl^);
                 pl.bp.ListPos.Owner:=tempnet;
-                pl:=GDBPointer(ti.iterate(ir));
+                pl:=Pointer(ti.iterate(ir));
           until pl=nil;
           self.ObjArray.pack;
           //self.correctobjects(pointer(bp.Owner),bp.PSelfInOwnerArray);
@@ -572,11 +573,11 @@ end;
 constructor GDBObjNet.initnul;
 begin
      inherited initnul(owner);
-     //GDBPointer(name):=nil;
+     //Pointer(name):=nil;
      self.vp.layer:=@DefaultErrorLayer;// gdb.GetCurrentDWG.LayerTable.GetCurrentLayer {getaddres('EL_WIRES')};
      //vp.ID := GDBNetID;
      graf.init(10000);
-     riserarray.init({$IFDEF DEBUGBUILD}'{6D2E18F8-2C19-45B8-A12A-025849ABCDC2}',{$ENDIF}100);
+     riserarray.init(100);
      GetDXFIOFeatures.AddExtendersToEntity(@self);
      //uunitmanager.units.loadunit(expandpath('*CAD\rtl\objdefunits\elwire.pas'),@ou);
 end;
@@ -594,7 +595,7 @@ begin
 end;
 function UpgradeLine2Net(ptu:PExtensionData;pent:PGDBObjLine;const drawing:TDrawingDef):PGDBObjNet;
 begin
-   GDBGetMem({$IFDEF DEBUGBUILD}'{2D9DEF3C-7BC8-43F0-AA83-37B5F9517A0D}',{$ENDIF}pointer(result),sizeof(GDBObjNet));
+   Getmem(pointer(result),sizeof(GDBObjNet));
    result^.initnul(pent^.bp.ListPos.Owner);
    pent.CopyVPto(result^);
    //result.vp.Layer:=pent^.vp.Layer;
@@ -602,7 +603,7 @@ begin
 end;
 function AllocNet:PGDBObjNet;
 begin
-  GDBGetMem({$IFDEF DEBUGBUILD}'{AllocElLeader}',{$ENDIF}result,sizeof(GDBObjNet));
+  Getmem(result,sizeof(GDBObjNet));
 end;
 function AllocAndInitNet(owner:PGDBObjGenericWithSubordinated):PGDBObjNet;
 begin

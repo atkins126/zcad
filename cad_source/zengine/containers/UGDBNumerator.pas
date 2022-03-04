@@ -17,24 +17,24 @@
 }
 
 unit UGDBNumerator;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses uzbtypesbase,uzbtypes,gzctnrvectortypes,sysutils,UGDBNamedObjectsArray;
+uses uzbtypes,gzctnrvectortypes,sysutils,UGDBNamedObjectsArray;
 type
 {EXPORT+}
 PGDBNumItem=^GDBNumItem;
 {REGISTEROBJECTTYPE GDBNumItem}
 GDBNumItem= object(GDBNamedObject)
-                 Nymber:GDBInteger;
-                 constructor Init(N:GDBString);
+                 Nymber:Integer;
+                 constructor Init(N:String);
                 end;
 PGDBNumerator=^GDBNumerator;
 {---REGISTEROBJECTTYPE GDBNumerator}
 GDBNumerator= object(GDBNamedObjectsArray<PGDBNumItem,GDBNumItem>)(*OpenArrayOfData=GDBNumItem*)
-                       constructor init(m:GDBInteger);
-                       function getnamenumber(_Name:GDBString;AutoInc:GDBBoolean):GDBstring;
-                       function getnumber(_Name:GDBString;AutoInc:GDBBoolean):GDBInteger;
-                       function AddNumerator(Name:GDBString):PGDBNumItem;virtual;
+                       constructor init(m:Integer);
+                       function getnamenumber(_Name:String;AutoInc:Boolean):String;
+                       function getnumber(_Name:String;AutoInc:Boolean):Integer;
+                       function AddNumerator(Name:String):PGDBNumItem;virtual;
                        procedure sort;
                        end;
 {EXPORT-}
@@ -95,7 +95,7 @@ begin
                     inc(p^.Nymber);
      result:=p^.Nymber;
 end;
-function GDBNumerator.AddNumerator(Name:GDBString):PGDBNumItem;
+function GDBNumerator.AddNumerator(Name:String):PGDBNumItem;
 var
   p:PGDBNumItem;
   //ir:itrec;
@@ -114,9 +114,9 @@ begin
      end;
      result:=p;
 end;
-constructor GDBNumerator.init(m:GDBInteger);
+constructor GDBNumerator.init(m:Integer);
 begin
-     inherited init({$IFDEF DEBUGBUILD}'{4249FDF0-86E5-4D42-8538-1402D5B7C55B}',{$ENDIF}m);
+     inherited init(m);
 end;
 begin
 end.

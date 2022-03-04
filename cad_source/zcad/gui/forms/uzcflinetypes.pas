@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, StdCtrls,
   ButtonPanel, Buttons, ExtCtrls, ComCtrls, Spin,
 
-  uzcinterface,uzcgui2linetypes,uzcflinetypesload,uzcsysvars, uzedrawingsimple,uzbtypesbase,uzbtypes,
+  uzcinterface,uzcgui2linetypes,uzcflinetypesload,uzcsysvars, uzedrawingsimple,uzbtypes,
   uzestyleslinetypes,uzcdrawings,uzcimagesmanager,uzcsysinfo,uzbstrproc,usupportgui,uzeutils,
   gzctnrvectortypes,uzbpaths,uzcstrconsts,UGDBNamedObjectsArray,uzcuitypes;
 
@@ -47,7 +47,7 @@ type
       SubItem: Integer; State: TCustomDrawState; var DefaultDraw: Boolean);
     procedure _onCreate(Sender: TObject);
     procedure UpdateItem(Item: TListItem);
-    procedure countlt(plt:PGDBLtypeProp;out e,b:GDBInteger);
+    procedure countlt(plt:PGDBLtypeProp;out e,b:Integer);
     procedure _UpdateLT(Sender: TObject);
     procedure _UpDateLV(LV:TListView;SLT:PGDBLtypeProp);
   private
@@ -152,7 +152,7 @@ procedure TLineTypesForm._LTChange(Sender: TObject; Item: TListItem;
 begin
 
 end;
-procedure TLineTypesForm.countlt(plt:PGDBLtypeProp;out e,b:GDBInteger);
+procedure TLineTypesForm.countlt(plt:PGDBLtypeProp;out e,b:Integer);
 var
    pdwg:PTSimpleDrawing;
 begin
@@ -170,7 +170,7 @@ var
    li:TListItem;
    ltd:tstrings;
    CurrentLine:integer;
-   LTName,LTDesk,LTImpl:GDBString;
+   LTName,LTDesk,LTImpl:String;
 begin
      li:=ListView1.Selected;
      ltd:=tstringlist.Create;
@@ -215,7 +215,7 @@ begin
           countlt(pltp,inent,inblock);
           LTDescLabel.Caption:=Format(rsLineTypeUsedIn,[Tria_AnsiToUtf8(pltp^.Name),inent,inblock]);
           if pltp^.Mode=TLTLineType then
-                                        Memo1.Text:=Format(rsLineTypeDesk,[pltp^.LengthDXF,Tria_AnsiToUtf8(pltp^.getastext)])
+                                        Memo1.Text:=Format(rsLineTypeDesk,[pltp^.LengthDXF,pltp^.LengthFact,Tria_AnsiToUtf8(pltp^.getastext)])
                                     else
                                         Memo1.Text:=rsSysLineTypeWarning;
      end;
@@ -227,7 +227,7 @@ var
    pdwg:PTSimpleDrawing;
    ltd:tstrings;
    CurrentLine:integer;
-   LTName,LTDesk,LTImpl:GDBString;
+   LTName,LTDesk,LTImpl:String;
 begin
      pdwg:=drawings.GetCurrentDWG;
      CurrentLine:=1;

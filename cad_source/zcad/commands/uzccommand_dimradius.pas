@@ -18,14 +18,14 @@
 {$mode delphi}
 unit uzccommand_dimradius;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
   LazLogger,
   uzccommandsabstract,uzccommandsimpl,
   uzeconsts,uzcstrconsts,
-  uzbgeomtypes,
+  uzegeometrytypes,
   uzccommandsmanager,
   uzeentcircle,uzeentarc,uzeentityfactory,uzegeometry,
   uzcutils,uzeentdimradial,uzgldrawcontext,uzcdrawings,uzcinterface,

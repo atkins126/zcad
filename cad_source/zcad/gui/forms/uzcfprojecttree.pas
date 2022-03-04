@@ -17,15 +17,15 @@ Project tree form
 @author(Andrey Zubarev <zamtmn@yandex.ru>)
 }
 unit uzcfprojecttree;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
  uzcsysparams,uzcsysvars,uzctranslations,uzcenitiesvariablesextender,uzcdrawing,uzbpaths,
- uzctnrvectorgdbstring,uzeconsts,uzcstrconsts,uzcctrlcontextmenu,uzbstrproc,
+ uzctnrvectorstrings,uzeconsts,uzcstrconsts,uzcctrlcontextmenu,uzbstrproc,
  uzctreenode,menus, {$IFDEF FPC}lcltype,{$ENDIF}
  Classes,FileUtil,Forms,stdctrls,Controls,ComCtrls,
- uzcdevicebaseabstract,uzclog,SysUtils,uzbtypes,uzcdrawings,varman,languade,
- varmandef,uzcsysinfo,uzbmemman,uzbtypesbase,uzccommandsimpl,uzccommandsabstract,
+ uzcdevicebaseabstract,uzclog,SysUtils,uzcdrawings,varman,
+ varmandef,uzcsysinfo,uzccommandsimpl,uzccommandsabstract,
  uztoolbarsmanager,
  gzctnrvectortypes,uzeblockdef,UBaseTypeDescriptor,uzcinterface,UUnitManager,LazLogger,uzmenusmanager;
 const
@@ -43,7 +43,7 @@ type
       {**Modified TTreeNode}
       TEqTreeNode=class(TBlockTreeNode)
                public
-                    ptd:TTypedData;
+                    ptd:THardTypedData;
                     //FBlockName:String;{**<Block(Device) name}
                     procedure Select;override;
                     function GetParams:Pointer;override;
@@ -69,7 +69,7 @@ type
   end;
 var
   ProjectTreeForm:TProjectTreeForm;{<Дерево проекта}
-  BlockCategory,EqCategory:TZctnrVectorGDBString;
+  BlockCategory,EqCategory:TZctnrVectorStrings;
 
   //ProgramDBContextMenuN,ProjectDBContextMenuN,ProgramDEVContextMenuN:TmyPopupMenu;
 
@@ -107,10 +107,10 @@ end;
 begin
      result:=Name;
 end;}
-function Cat2UserNameCat(category:GDBString; const catalog:TZctnrVectorGDBString):GDBString;
+function Cat2UserNameCat(category:String; const catalog:TZctnrVectorStrings):String;
 var
-   ps{,pspred}:pgdbstring;
-//   s:gdbstring;
+   ps{,pspred}:pString;
+//   s:String;
    ir:itrec;
 begin
      ps:=catalog.beginiterate(ir);
@@ -139,19 +139,19 @@ begin
                             BuildTreeByEQ(ProjectEquipmentN,PTZCADDrawing(drawings.GetCurrentDWG).DWGUnits.findunit(SupportPath,InterfaceTranslate,DrawingDeviceBaseUnitName),MenusManager.GetPopupMenu('PROJECTDBCXMENU',nil));
                             (*
                             ProjectEquipmentNodeN.free;
-                            gdbgetmem({$IFDEF DEBUGBUILD}'{B941B71E-2BA6-4B5E-B436-633B6C8FC500}',{$ENDIF}pointer(ProjectEquipmentNode.SubNode),sizeof(TGDBTree));
-                            ProjectEquipmentNode.SubNode.init({$IFDEF DEBUGBUILD}'{CE1105DB-7CAD-4353-922A-5A31956421C4}',{$ENDIF}10);
+                            Getmem(pointer(ProjectEquipmentNode.SubNode),sizeof(TGDBTree));
+                            ProjectEquipmentNode.SubNode.init(10);
                             BuildTreeByEQ(ProjectEquipmentNode,drawings.GetCurrentDWG.DWGUnits.findunit(DrawingDeviceBaseUnitName),ProjectDBContextMenu);
                             ProjectDB.Sync;
                             *)
                        end;
 
 end;
-procedure BuildBranchN(var CurrNode:TmyTreeNode;var TreePos:GDBString; const catalog:TZctnrVectorGDBString);
+procedure BuildBranchN(var CurrNode:TmyTreeNode;var TreePos:String; const catalog:TZctnrVectorStrings);
 var
     i:integer;
     CurrFindNode{,tn}:TmyTreeNode;
-    category:GDBString;
+    category:String;
 begin
      TmyTreeView(CurrNode.TreeView).NodeType:=TmyTreeNode;
      i:=pos('_',treepos);
@@ -176,13 +176,13 @@ procedure TProjectTreeForm.BuildTreeByEQ(var BuildNode:TmyTreeNode;PDBUNIT:PTUni
 var
    pvdeq:pvardesk;
    ir:itrec;
-   offset:GDBInteger;
+   offset:Integer;
    tc:PUserTypeDescriptor;
-   treepos,treesuperpos{,category,s}:GDBString;
+   treepos,treesuperpos{,category,s}:String;
    i:integer;
    CurrNode{,CurrFindNode,tn}:TmyTreeNode;
    eqnode:TEqTreeNode;
-   s:AnsiString;
+   //s:AnsiString;
 begin
   pvdeq:=PDBUNIT^.InterfaceVariables.vardescarray.beginiterate(ir);
   if pvdeq<>nil then
@@ -194,7 +194,7 @@ begin
          pvdeq^.data.PTD^.ApplyOperator('.','TreeCoord',offset,tc);
          if (offset<>0)and(tc^.GetFactTypedef=@FundamentalStringDescriptorObj) then
          begin
-              treesuperpos:=pgdbstring(ptruint(pvdeq^.data.Instance) + offset)^;
+              treesuperpos:=pString(ptruint(pvdeq^.data.Addr.Instance) + offset)^;
          end
          else
              treesuperpos:='';
@@ -214,11 +214,11 @@ begin
 
          buildbranchn(CurrNode,treepos,EqCategory);
 
-         //gdbgetmem({$IFDEF DEBUGBUILD}'{3987F838-D729-4E08-813E-6818030B801C}',{$ENDIF}pointer(eqnode),sizeof(GDBEqNode));
-         if PDBUNIT<>DBUnit then
-                                s:=PDbBaseObject(pvdeq^.data.Instance)^.NameShort+' из '
-                            else
-                                s:='';
+         //Getmem(pointer(eqnode),sizeof(GDBEqNode));
+         //if PDBUNIT<>DBUnit then
+         //                       s:=PDbBaseObject(pvdeq^.data.Addr.Instance)^.NameShort+' из '
+         //                   else
+         //                       s:='';
          TmyTreeView(CurrNode.TreeView).NodeType:=TEqTreeNode;
          if treepos=uncat then
                                 begin
@@ -226,19 +226,19 @@ begin
                                      eqnode.fBlockName:=pvdeq^.name;
                                      eqnode.FPopupMenu:=pcm;
                                      eqnode.ptd.PTD:=pvdeq^.data.PTD;
-                                     eqnode.ptd.Instance:=pvdeq^.data.Instance;
+                                     eqnode.ptd.Instance:=pvdeq^.data.Addr.Instance;
 
-                                     //eqnode.init(s+pvdeq^.name,pvdeq^.name,pvdeq^.data.PTD,pvdeq^.data.Instance,pcm)
+                                     //eqnode.init(s+pvdeq^.name,pvdeq^.name,pvdeq^.data.PTD,pvdeq^.Instance,pcm)
                                 end
                              else
                                  begin
-                                      eqnode:=TEqTreeNode({tree}TmyTreeView(BuildNode.TreeView).Items.addchild(CurrNode,(PDbBaseObject(pvdeq^.data.Instance)^.NameShort)+' ('+pvdeq^.name+') '+' из '+treepos));
+                                      eqnode:=TEqTreeNode({tree}TmyTreeView(BuildNode.TreeView).Items.addchild(CurrNode,(PDbBaseObject(pvdeq^.data.Addr.Instance)^.NameShort)+' ('+pvdeq^.name+') '+' из '+treepos));
                                       eqnode.fBlockName:=pvdeq^.name;
                                       eqnode.FPopupMenu:=pcm;
                                       eqnode.ptd.PTD:=pvdeq^.data.PTD;
-                                      eqnode.ptd.Instance:=pvdeq^.data.Instance;
+                                      eqnode.ptd.Instance:=pvdeq^.data.Addr.Instance;
 
-                                 //eqnode.init(s+treepos,pvdeq^.name,pvdeq^.data.PTD,pvdeq^.data.Instance,pcm);
+                                 //eqnode.init(s+treepos,pvdeq^.name,pvdeq^.data.PTD,pvdeq^.Instance,pcm);
                                  end;
          //CurrNode.SubNode.AddNode(eqnode);
          until treesuperpos='';
@@ -262,7 +262,7 @@ var
     i:integer;
     CurrNode:TTreeNode;
     pvd{,pvd2}:pvardesk;
-    treepos{,treesuperpos,category}:GDBString;
+    treepos{,treesuperpos,category}:String;
     //pmenuitem:pzmenuitem;
 
     BlockNode:TBlockTreeNode;
@@ -328,8 +328,8 @@ begin
         pentvarext:=pb.GetExtension<TVariablesExtender>;
         pvd:=pentvarext.entityunit.FindVariable('BTY_TreeCoord');
         if pvd<>nil then
-        if pvd^.data.Instance<>nil then
-                                        treepos:=pstring(pvd^.data.Instance)^;
+        if pvd^.data.Addr.Instance<>nil then
+                                        treepos:=pstring(pvd^.data.Addr.Instance)^;
         //log.programlog.LogOutStr(treepos,0);
 
 
@@ -349,7 +349,7 @@ begin
   BuildTreeByEQ(ProjectEquipmentN,PTZCADDrawing(drawings.GetCurrentDWG).DWGUnits.findunit(SupportPath,InterfaceTranslate,DrawingDeviceBaseUnitName),MenusManager.GetPopupMenu('PROJECTDBCXMENU',nil));
 
 end;
-function ProjectTree_com(Operands:pansichar):GDBInteger;
+function ProjectTree_com(Operands:pansichar):Integer;
 begin
   if not assigned(ProjectTreeForm) then
                                   ProjectTreeForm:=TProjectTreeForm.mycreate(Application,@ProjectTreeForm);

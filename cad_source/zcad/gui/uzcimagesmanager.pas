@@ -17,14 +17,14 @@
 }
 
 unit uzcimagesmanager;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 
 uses
   uzbpaths,Classes, SysUtils, FileUtil, LResources, Forms, Controls, Graphics,
   Buttons, ExtCtrls, LazUTF8,
-  uzbtypes,uzcsysvars,uzcsysinfo,uzbtypesbase,gzctnrstl,usimplegenerics,UGDBOpenArrayOfByte,
+  uzcsysvars,uzcsysinfo,gzctnrSTL,uzctnrVectorBytes,
   uzbstrproc,LazLogger;
 type
   TImageData=record
@@ -32,14 +32,14 @@ type
     UppercaseName:string;
     Path:string;
   end;
-  TImageName2TImageDataMap=GKey2DataMap<GDBString,TImageData(*{$IFNDEF DELPHI},LessGDBString{$ENDIF}*)>;
+  TImageName2TImageDataMap=GKey2DataMap<String,TImageData(*{$IFNDEF DELPHI},LessString{$ENDIF}*)>;
   TImagesManager=class(TComponent)
     private
       FDefaultImageIndex:integer;
       FIconList: TImageList;
       ImageDataMap:TImageName2TImageDataMap;
       procedure InternalCreate;
-      //procedure FoundImage(filename:{AnsiString}GDBString);
+      //procedure FoundImage(filename:{AnsiString}String);
     public
       constructor Create;overload;
       constructor Create(TheOwner: TComponent); override;overload;
@@ -138,15 +138,15 @@ begin
 end;
 procedure TImagesManager.LoadAliasesDir(path:string);
 var
-  line,sub,internalname:GDBString;
-  f:GDBOpenArrayOfByte;
+  line,sub,internalname:String;
+  f:TZctnrVectorBytes;
   PID:TImageName2TImageDataMap.PValue;
   ID:TImageData;
 begin
   f.InitFromFile(path);
   while f.notEOF do
     begin
-      line:=f.readGDBString;
+      line:=f.readString;
       if line<>'' then
       if line[1]<>';' then
         begin

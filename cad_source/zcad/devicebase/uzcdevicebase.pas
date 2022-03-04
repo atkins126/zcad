@@ -1,43 +1,43 @@
 unit uzcdevicebase;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses uzcinterface,uzbpaths,uzctranslations,gvector,varmandef,CsvDocument,uzcdevicebaseabstract,uzcsysvars,
-     LazUTF8,uzcsysinfo,strmy,uzbtypesbase,uzbtypes,UUnitManager,varman,sysutils,
+     LazUTF8,uzcsysinfo,strmy,uzbtypes,UUnitManager,varman,sysutils,
      typedescriptors,URecordDescriptor,UObjectDescriptor,uzclog;
 type
 {EXPORT+}
 PDeviceDbBaseObject=^DeviceDbBaseObject;
 {REGISTEROBJECTTYPE DeviceDbBaseObject}
 DeviceDbBaseObject= object(DbBaseObject)
-                       UID:GDBString;(*'**Уникальный идентификатор'*)(*oi_readonly*)
+                       UID:String;(*'**Уникальный идентификатор'*)(*oi_readonly*)
 
-                       NameShortTemplate:GDBString;(*'**Формат короткого названия'*)(*oi_readonly*)
-                       NameTemplate:GDBString;(*'**Формат названия'*)(*oi_readonly*)
-                       NameFullTemplate:GDBString;(*'**Формат полного названия'*)(*oi_readonly*)
-                       UIDTemplate:GDBString;(*'**Формат уникального идентификатора'*)(*oi_readonly*)
-                       Variants:{-}TCSVDocument{/GDBPointer/};(*'Варианты'*)(*oi_readonly*)
+                       NameShortTemplate:String;(*'**Формат короткого названия'*)(*oi_readonly*)
+                       NameTemplate:String;(*'**Формат названия'*)(*oi_readonly*)
+                       NameFullTemplate:String;(*'**Формат полного названия'*)(*oi_readonly*)
+                       UIDTemplate:String;(*'**Формат уникального идентификатора'*)(*oi_readonly*)
+                       Variants:{-}TCSVDocument{/Pointer/};(*'Варианты'*)(*oi_readonly*)
                        constructor initnul;
-                       procedure FormatAfterFielfmod(PField,PTypeDescriptor:GDBPointer);virtual;
+                       procedure FormatAfterFielfmod(PField,PTypeDescriptor:Pointer);virtual;
                        procedure Format;virtual;
-                       procedure SetOtherFields(PField,PTypeDescriptor:GDBPointer);virtual;
+                       procedure SetOtherFields(PField,PTypeDescriptor:Pointer);virtual;
                  end;
 {REGISTEROBJECTTYPE ElDeviceBaseObject}
 ElDeviceBaseObject= object(DeviceDbBaseObject)
-                                   Pins:GDBString;(*'**Клеммы'*)
+                                   Pins:String;(*'**Клеммы'*)
                                    constructor initnul;
                                    procedure Format;virtual;
                              end;
 {REGISTEROBJECTTYPE CableDeviceBaseObject}
 CableDeviceBaseObject= object(DeviceDbBaseObject)
-                                   CoreCrossSection:GDBDouble;(*'**Сечение жилы'*)
-                                   NumberOfCores:GDBDouble;(*'**Количество жил'*)
-                                   OuterDiameter:GDBDouble;(*'**Наружный диаметр'*)
+                                   CoreCrossSection:Double;(*'**Сечение жилы'*)
+                                   NumberOfCores:Double;(*'**Количество жил'*)
+                                   OuterDiameter:Double;(*'**Наружный диаметр'*)
                                    constructor initnul;
                              end;
 {EXPORT-}
 DeviceManager=object(GDBaseObject)
                     constructor init;
-                    procedure loadfromdir(path: GDBString);
+                    procedure loadfromdir(path: String);
               end;
 thead=record
             offset:integer;
@@ -60,29 +60,29 @@ end;
 constructor ElDeviceBaseObject.initnul;
 begin
      Inherited initnul;
-     GDBPointer(Pins):=nil;
+     Pointer(Pins):=nil;
      Pins:='ElDeviceBaseObject.initnul';
 end;
 constructor DeviceDbBaseObject.initnul;
 begin
      Inherited initnul;
      variants:=nil;
-     GDBPointer(NameTemplate):=nil;
+     Pointer(NameTemplate):=nil;
      //NameTemplate:='DeviceDbBaseObject.initnul';
-     GDBPointer(UIDTemplate):=nil;
+     Pointer(UIDTemplate):=nil;
      //UIDTemplate:='DeviceDbBaseObject.initnul';
-     GDBPointer(NameFullTemplate):=nil;
+     Pointer(NameFullTemplate):=nil;
      //NameFullTemplate:='DeviceDbBaseObject.initnul';
 end;
-procedure DeviceDbBaseObject.SetOtherFields(PField,PTypeDescriptor:GDBPointer);
+procedure DeviceDbBaseObject.SetOtherFields(PField,PTypeDescriptor:Pointer);
 var
     i:integer;
     FieldName:string;
     //cheked:boolean;
 
-    //offset:GDBInteger;
+    //offset:Integer;
     //tc:PUserTypeDescriptor;
-    //pf:GDBPointer;
+    //pf:Pointer;
 
     headarray:theadarray;
     head:thead;
@@ -96,7 +96,7 @@ begin
      begin
           if headarray[j].cheked then
           begin
-               value:=headarray[j].TD.GetValueAsString(@self+headarray[j].offset);
+               value:=headarray[j].TD.GetValueAsString(PByte(@self)+headarray[j].offset);
                if variants.Cells[j,row]<>'*' then
                if variants.Cells[j,row]<>value then
                                                  begin
@@ -116,7 +116,7 @@ begin
      begin
           if not headarray[j].cheked then
           begin
-               headarray[j].TD.SetValueFromString(@self+headarray[j].offset,variants.Cells[j,i]);
+               headarray[j].TD.SetValueFromString(PByte(@self)+headarray[j].offset,variants.Cells[j,i]);
           end;
      end;
 end;
@@ -146,7 +146,7 @@ begin
      headarray.Destroy;
 end;
 
-procedure DeviceDbBaseObject.FormatAfterFielfmod(PField,PTypeDescriptor:GDBPointer);
+procedure DeviceDbBaseObject.FormatAfterFielfmod(PField,PTypeDescriptor:Pointer);
 begin
      SetOtherFields(PField,PTypeDescriptor);
      format;
@@ -175,7 +175,7 @@ begin
 end;
 constructor DeviceManager.init;
 var
-   s,ts:gdbstring;
+   s,ts:String;
 begin
      DisableTranslate;
      s:=sysvar.PATH.device_library^;
@@ -207,7 +207,7 @@ begin
                           pfd:=PRecordDescriptor(pvd^.data.PTD)^.FindField('Variants');
                           if pfd<>nil then
                           begin
-                               pf:=pvd.data.Instance+pfd.Offset;
+                               pf:=pvd.data.Addr.Instance+pfd.Offset;
                                pf^:=TCSVDocument.Create;
                                TCSVDocument(pf^).Delimiter:=';';
                                TCSVDocument(pf^).LoadFromFile(utf8tosys(fn));
@@ -217,9 +217,9 @@ begin
                  else
                      ZCMsgCallBackInterface.TextMessage('',TMWOShowError);
 end;
-procedure DeviceManager.loadfromdir(path: GDBString);
+procedure DeviceManager.loadfromdir(path: String);
 //var sr: TSearchRec;
-    //s:gdbstring;
+    //s:String;
 begin
 
   FromDirIterator(utf8tosys(path),'*.pas',firstfilename,loaddev,nil);
@@ -247,7 +247,7 @@ begin
      pt^.RegisterVMT(TypeOf(CableDeviceBaseObject));
      pt^.AddMetod('','initnul','',@CableDeviceBaseObject.initnul,m_constructor);
 
-     //pt^.AddMetod('AfterDeSerialize','(SaveFlag:GDBWord; membuf:GDBPointer):GDBInteger;',nil,m_virtual);
+     //pt^.AddMetod('AfterDeSerialize','(SaveFlag:Word; membuf:Pointer):Integer;',nil,m_virtual);
      //pt^.AddMetod('format','',@ElDeviceBaseObject.format,m_procedure);
      //t.initnul;
      //pt^.RunMetod('initnul',@t);

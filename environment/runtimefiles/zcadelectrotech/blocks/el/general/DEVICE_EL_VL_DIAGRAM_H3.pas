@@ -8,9 +8,8 @@ usescopy objname;
 
 var
 
-T1:GDBString;(*'Маркировка'*)
-T2:GDBString;(*'Тип'*)
-T3:GDBString;(*'Адрес'*)
+T1:String;(*'Маркировка'*)
+T2:String;(*'Тип'*)
 
 implementation
 
@@ -27,6 +26,5 @@ NMO_Affix:='.1';
 
 T1:='??';
 T2:='??';
-T3:='??';
 
 end.

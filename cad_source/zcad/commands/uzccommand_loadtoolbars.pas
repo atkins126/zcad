@@ -17,12 +17,12 @@
 }
 
 unit uzccommand_loadtoolbars;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
  LCLProc,
- uzbpaths,uzccommandsabstract,uzccommandsimpl,uzbtypes,uztoolbarsmanager;
+ uzbpaths,uzccommandsabstract,uzccommandsimpl,uztoolbarsmanager;
 
 implementation
 function LoadToolbars_com(operands:TCommandOperands):TCommandResult;

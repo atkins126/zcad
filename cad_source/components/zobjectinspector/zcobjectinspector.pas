@@ -17,7 +17,7 @@
 }
 
 unit zcobjectinspector;
-{$INCLUDE def.inc}
+
 {$MODE DELPHI}
 
 interface
@@ -25,7 +25,7 @@ interface
 uses
   Classes,SysUtils,strutils,
   {$IFDEF LCLGTK2}gtk2,{$ENDIF}
-  {$IFDEF WINDOWS}win32proc,{$endif}
+  {$IFDEF LCLWIN32}win32proc,{$endif}
   Types,Graphics,Themes,LCLIntf,LCLType,
   ExtCtrls,Controls,Menus,Forms,
   StdCtrls,
@@ -35,7 +35,7 @@ uses
   uzedimensionaltypes,
   varmandef,
   TypeDescriptors,
-  gzctnrvectortypes,uzctnrvectorgdbstring;
+  gzctnrvectortypes,uzctnrvectorstrings;
 const
   fastEditorOffset={$IFDEF LCLQT}2{$ELSE}2{$ENDIF} ;
   spliterhalfwidth=4;
@@ -60,7 +60,7 @@ type
                        UndoCommand:PTTypedChangeCommand;
                  end;
 
-  TOnGetOtherValues=procedure(var vsa:TZctnrVectorGDBString;const valkey:string;const pcurcontext:pointer;const pcurrobj:pointer;const GDBobj:boolean);
+  TOnGetOtherValues=procedure(var vsa:TZctnrVectorStrings;const valkey:string;const pcurcontext:pointer;const pcurrobj:pointer;const GDBobj:boolean);
   TOnUpdateObjectInInsp=procedure(const EDContext:TEditorContext;const currobjgdbtype:PUserTypeDescriptor;const pcurcontext:pointer;const pcurrobj:pointer;const GDBobj:boolean);
   TOnNotify=procedure(const pcurcontext:pointer);
   TMyNotifyEvent=procedure(sender:tobject);
@@ -192,7 +192,7 @@ var
   LocalRowHeightOverride:boolean=false;
   PRowHeight:PInteger;
   PRowHeightOverride:PBoolean;
-  //INTFObjInspRowHeight:TGDBIntegerOverrider;
+  //INTFObjInspRowHeight:TIntegerOverrider;
   INTFObjInspSpaceHeight:integer=0;
   INTFObjInspShowEmptySections:boolean=false;
 
@@ -231,7 +231,7 @@ end;
 
 function PlusMinusDetail(Collapsed,hot:boolean):TThemedTreeview;
 begin
-     {$IFDEF WINDOWS}
+     {$IFDEF LCLWIN32}
      if WindowsVersion < wvVista then
                                     hot:=false;
      {$endif}
@@ -468,7 +468,7 @@ end;
 
 procedure TGDBobjinsp.createpda;
 begin
-  pda.init({$IFDEF DEBUGBUILD}'{ED044410-8C08-4113-B2FB-3259017CBF04}',{$ENDIF}100);
+  pda.init(100);
 end;
 
 destructor TGDBobjinsp.Destroy;
@@ -688,14 +688,14 @@ begin
                      if onmouse then
                      begin
                      result := ThemeServices.GetElementDetails(ttItemHot);
-                     {$IFDEF WINDOWS}
+                     {$IFDEF LCLWIN32}
                      if ((WindowsVersion >= wvVista)and ThemeServices.ThemesEnabled) then
                                                                                          ThemeServices.DrawElement(cnvs.Handle, result, r, nil)
                                                                                      else
                                                                                          if isOldStyleDraw then
                                                                                          ThemeServices.DrawElement(cnvs.Handle, ThemeServices.GetElementDetails(ttItemNormal), r, nil)
                      {$ENDIF}
-                     {$IFNDEF WINDOWS}
+                     {$IFNDEF LCLWIN32}
                      ThemeServices.DrawElement(cnvs.Handle, result, r, nil);
                      {$ENDIF}
                      end
@@ -709,7 +709,7 @@ begin
                      ThemeServices.DrawElement(cnvs.Handle, result, r, nil);
                      end;
                      end;
-                     {$IFDEF WINDOWS}
+                     {$IFDEF LCLWIN32}
                      if (WindowsVersion < wvVista)or(not ThemeServices.ThemesEnabled) then
                      {$ENDIF}
                      if isOldStyleDraw then
@@ -1025,7 +1025,7 @@ ARect := GetClientRect;
 InflateRect(ARect, -BorderWidth, -BorderWidth);
 ARect.Top:=ARect.Top+VertScrollBar.ScrollPos;
 ARect.Bottom:=ARect.Bottom+VertScrollBar.ScrollPos;
-{$IFDEF WINDOWS}
+{$IFDEF LCLWIN32}
 if WindowsVersion < wvVista then
                                 DefaultDetails := ThemeServices.GetElementDetails(tbPushButtonNormal)
                             else
@@ -1054,7 +1054,7 @@ ts.Alignment:=taCenter;
 ts.Layout:=tlCenter;}
 
 hrect:=ARect;
-{$IFDEF WINDOWS}
+{$IFDEF LCLWIN32}
 if WindowsVersion>=wvVista then
 {$endif}
 InflateRect(hrect, -1, -1);
@@ -1092,8 +1092,8 @@ begin
                                       hrect.Bottom:=ARect.Bottom{height};
      if ThemeServices.ThemesEnabled then
      begin
-          {$IFNDEF WINDOWS}DefaultDetails := ThemeServices.GetElementDetails(ttbSeparatorNormal);{$ENDIF}
-          {$IFDEF WINDOWS}
+          {$IFNDEF LCLWIN32}DefaultDetails := ThemeServices.GetElementDetails(ttbSeparatorNormal);{$ENDIF}
+          {$IFDEF LCLWIN32}
           if WindowsVersion < wvVista then
                                           DefaultDetails := ThemeServices.GetElementDetails(ttbSeparatorNormal)
                                       else
@@ -1379,7 +1379,7 @@ begin
 end;
 
 procedure TGDBobjinsp.MouseMove(Shift: TShiftState; X, Y: Integer);
-//procedure TGDBobjinsp.Pre_MouseMove(fwkeys:longint; x,y:GDBSmallInt; var r:HandledMsg);
+//procedure TGDBobjinsp.Pre_MouseMove(fwkeys:longint; x,y:SmallInt; var r:HandledMsg);
 var
   my:integer;
   pp:PPropertyDeskriptor;
@@ -1529,7 +1529,7 @@ begin
       tp:=CurrPObj;
       GDBobjinsp.buildproplist(EDContext.UndoStack,CurrUnitsFormat,CurrObjGDBType,property_correct,tp);
       //peditor^.done;
-      //gdbfreemem(pointer(peditor));
+      //Freemem(pointer(peditor));
       EDContext.ppropcurrentedit:=pp;
     end;
     PEditor:=pp^.PTypeManager^.CreateEditor(@self,pp.rect,pp^.valueAddres,nil,false,'этого не должно тут быть',rowh).Editor;
@@ -1678,7 +1678,7 @@ end;
 procedure TGDBobjinsp.createeditor(pp:PPropertyDeskriptor);
 var
   tp:pointer;
-  vsa:TZctnrVectorGDBString;
+  vsa:TZctnrVectorStrings;
   TED:TEditorDesc;
   editorcontrol:TWinControl;
   tr:TRect;
@@ -1727,7 +1727,7 @@ begin
                                        //editorcontrol.SetBounds(tr.Left+2,tr.Top,tr.Right-tr.Left-2,tr.Bottom-tr.Top);
                                        if (editorcontrol is TCombobox) then
                                                                            begin
-                                                                                {$IFDEF LINUX}
+                                                                                {$IFNDEF LCLWIN32}
                                                                                 editorcontrol.Visible:=false;
                                                                                 {$ENDIF}
                                                                                 editorcontrol.Parent:=self;

@@ -15,19 +15,19 @@
 {
 @author(Vladimir Bobrov)
 }
-{$mode objfpc}
+{$mode objfpc}{$H+}
 
 unit uzvtestdraw;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
-   sysutils, math,
+   sysutils, //math,
 
   URecordDescriptor,TypeDescriptors,
 
   Forms, //uzcfblockinsert,
-  uzcfarrayinsert,
+  //uzcfarrayinsert,
 
   uzeentblockinsert,      //unit describes blockinsert entity
                        //модуль описывающий примитив вставка блока
@@ -53,26 +53,26 @@ uses
   uzeentarc,
   uzeentcircle,
   uzeentity,
-  uzbgeomtypes,
+  uzegeometrytypes,
 
 
-  gvector,garrayutils, // Подключение Generics и модуля для работы с ним
+  //gvector,garrayutils, // Подключение Generics и модуля для работы с ним
 
   uzcentcable,
   uzeentdevice,
-  UGDBOpenArrayOfPV,
+  //UGDBOpenArrayOfPV,
 
   uzegeometry,
-  uzeentitiesmanager,
+  //uzeentitiesmanager,
 
   //uzcmessagedialogs,
   uzeentityfactory,    //unit describing a "factory" to create primitives
                       //модуль описывающий "фабрику" для создания примитивов
   uzcsysvars,        //system global variables
                       //системные переменные
-  uzgldrawcontext,
+  //uzgldrawcontext,
   uzcinterface,
-  uzbtypesbase,uzbtypes, //base types
+  uzbtypes, //base types
                       //описания базовых типов
   uzeconsts, //base constants
                       //описания базовых констант
@@ -80,7 +80,7 @@ uses
   uzccommandsabstract,
   uzccommandsimpl, //Commands manager and related objects
                       //менеджер команд и объекты связанные с ним
-  uzcdrawing,
+  //uzcdrawing,
   uzedrawingsimple,
   uzcdrawings,     //Drawings manager, all open drawings are processed him
                       //"Менеджер" чертежей
@@ -88,16 +88,16 @@ uses
                       //разные функции упрощающие создание примитивов, пока их там очень мало
   varmandef,
   Varman,
-  {UGDBOpenArrayOfUCommands,}zcchangeundocommand,
+  {UGDBOpenArrayOfUCommands,}//zcchangeundocommand,
 
   uzclog,                //log system
                       //<**система логирования
-  uzcvariablesutils, // для работы с ртти
+  //uzcvariablesutils, // для работы с ртти
 
   //для работы графа
-  ExtType,
-  Pointerv,
-  Graphs,
+  //ExtType,
+  //Pointerv,
+  //Graphs,
 
    uzestyleslayers,
    //uzcdrawings,
@@ -109,14 +109,14 @@ uses
 
 
 
-  function testTempDrawText(p1:GDBVertex;mText:GDBString):TCommandResult;
+  function testTempDrawText(p1:GDBVertex;mText:String):TCommandResult;
   function testTempDrawLine(p1:GDBVertex;p2:GDBVertex):TCommandResult;
 
   function testTempDrawLineColor(p1:GDBVertex;p2:GDBVertex;color:integer):TCommandResult;
   function testTempDraw2dLineColor(pt1:GDBVertex2D;pt2:GDBVertex2D;color:integer):TCommandResult;
 
   function testTempDrawPLCross(point:GDBVertex;rr:double;color:Integer):TCommandResult;
-  function testDrawCircle(p1:GDBVertex;rr:GDBDouble;color:integer):TCommandResult;
+  function testDrawCircle(p1:GDBVertex;rr:Double;color:integer):TCommandResult;
 
   function getTestLayer(createdlayername:string):PGDBLayerProp;
 implementation
@@ -145,7 +145,7 @@ implementation
   end;
 
   //Визуализация круга его p1-координата, rr-радиус, color-цвет
-  function testDrawCircle(p1:GDBVertex;rr:GDBDouble;color:integer):TCommandResult;
+  function testDrawCircle(p1:GDBVertex;rr:Double;color:integer):TCommandResult;
   var
       pcircle:PGDBObjCircle;
   begin
@@ -162,7 +162,7 @@ implementation
       result:=cmd_ok;
   end;
   //быстрое написание текста
-  function testTempDrawText(p1:GDBVertex;mText:GDBString):TCommandResult;
+  function testTempDrawText(p1:GDBVertex;mText:String):TCommandResult;
   var
       ptext:PGDBObjText;
   begin
@@ -170,7 +170,7 @@ implementation
         zcSetEntPropFromCurrentDrawingProp(ptext); //добавляем дефаултные свойства
         ptext^.TXTStyleIndex:=drawings.GetCurrentDWG^.GetCurrentTextStyle; //добавляет тип стиля текста, дефаултные свойства его не добавляют
         ptext^.Local.P_insert:=p1;  // координата
-        ptext^.Template:=mText;     // сам текст
+        ptext^.Template:=TDXFEntsInternalStringType(mText);     // сам текст
         ptext^.vp.Layer:=getTestLayer('systemTempuzvtestdraw');
         zcAddEntToCurrentDrawingWithUndo(ptext);   //добавляем в чертеж
         result:=cmd_ok;
@@ -348,6 +348,7 @@ function TestModul_com(operands:TCommandOperands):TCommandResult;
     i   : Integer;
     tempPoint:GDBVertex;
  begin
+
        tempPoint.x:=0;
        tempPoint.y:=0;
        tempPoint.z:=0;
@@ -355,7 +356,7 @@ function TestModul_com(operands:TCommandOperands):TCommandResult;
       DrawInOutPoly(tempPoint, 20, 8, 3, 1, 0);
       //DrawInOutPoly(tempPoint, 8, 8, 3, 0,5);
       //DrawInOutPoly(tempPoint, 10, 4, 2, 1,0);
-
+    result:=cmd_ok;
  end;
 
 initialization

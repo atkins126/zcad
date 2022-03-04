@@ -16,17 +16,17 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
 unit uzcvariablesutils;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
-uses uzcenitiesvariablesextender,sysutils,UGDBOpenArrayOfPV,uzbtypesbase,uzbtypes,
+uses uzcenitiesvariablesextender,sysutils,UGDBOpenArrayOfPV,
      gzctnrvectortypes,uzeentity,varmandef,uzeentsubordinated;
-//**поиск значения свойства по имени varname:gdbstring которое было в ведено в инспекторе для данного устройства PEnt:PGDBObjEntity
+//**поиск значения свойства по имени varname:String которое было в ведено в инспекторе для данного устройства PEnt:PGDBObjEntity
 //**возвращает
-function FindVariableInEnt(PEnt:PGDBObjEntity;varname:gdbstring):pvardesk;
-function FindEntityByVar(arr:GDBObjOpenArrayOfPV;objID:GDBWord;vname,vvalue:GDBString):PGDBObjSubordinated;
+function FindVariableInEnt(PEnt:PGDBObjEntity;varname:String):pvardesk;
+function FindEntityByVar(arr:GDBObjOpenArrayOfPV;objID:Word;vname,vvalue:String):PGDBObjSubordinated;
 implementation
-function FindVariableInEnt(PEnt:PGDBObjEntity;varname:gdbstring):pvardesk;
+function FindVariableInEnt(PEnt:PGDBObjEntity;varname:String):pvardesk;
 var
    pentvarext:TVariablesExtender;
 begin
@@ -38,7 +38,7 @@ begin
      if PEnt^.bp.ListPos.Owner<>nil then
        result:=FindVariableInEnt(pointer(PEnt^.bp.ListPos.Owner),varname);
 end;
-function FindEntityByVar(arr:GDBObjOpenArrayOfPV;objID:GDBWord;vname,vvalue:GDBString):PGDBObjSubordinated;
+function FindEntityByVar(arr:GDBObjOpenArrayOfPV;objID:Word;vname,vvalue:String):PGDBObjSubordinated;
 var
    pvisible:PGDBObjEntity;
    ir:itrec;
@@ -56,7 +56,7 @@ begin
                     pvd:=pentvarext.entityunit.FindVariable(vname);
                     if pvd<>nil then
                     begin
-                         if pvd.data.PTD.GetValueAsString(pvd.data.Instance)=vvalue then
+                         if pvd.data.PTD.GetValueAsString(pvd.data.Addr.Instance)=vvalue then
                          begin
                               result:=pvisible;
                               exit;

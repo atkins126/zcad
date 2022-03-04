@@ -17,7 +17,7 @@
 }
 
 unit uzcmainwindow;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -31,26 +31,26 @@ uses
        uzcsysparams,gzctnrvectortypes,uzemathutils,uzelongprocesssupport,
        uzgldrawergdi,uzcdrawing,UGDBOpenArrayOfPV,uzedrawingabstract,
        uzepalette,uzbpaths,uzglviewareadata,uzeentitiesprop,uzcinterface,
-       UGDBOpenArrayOfByte,uzbmemman,uzbtypesbase,uzbtypes,
-       uzegeometry,uzcsysvars,uzcstrconsts,uzbstrproc,UGDBNamedObjectsArray,uzclog,uzblog,
+       uzctnrVectorBytes,uzbtypes,
+       uzegeometry,uzcsysvars,uzcstrconsts,uzbstrproc,uzclog,uzblog,
        uzedimensionaltypes,varmandef, varman,UUnitManager,uzcsysinfo,strmy,uzestylestexts,uzestylesdim,
   uzbexceptionscl,uzbexceptionsgui,
   {ZCAD SIMPLE PASCAL SCRIPT}
        //languade,
   {ZCAD ENTITIES}
-       uzbgeomtypes,uzeentity,UGDBSelectedObjArray,uzestyleslayers,uzedrawingsimple,
+       uzegeometrytypes,uzeentity,UGDBSelectedObjArray,uzestyleslayers,uzedrawingsimple,
        uzeblockdef,uzcdrawings,uzestyleslinetypes,uzeconsts,uzeenttext,uzeentdimension,
   {ZCAD COMMANDS}
        uzccommandsabstract,uzccommandsimpl,uzccommandsmanager,
        uzccommand_loadlayout,
   {GUI}
        uzcuitypes,
-       uzcmenucontextcheckfuncs,uzctbextmenus,uzmenusdefaults,uzmenusmanager,uztoolbarsmanager,uzctextenteditor,uzcfcommandline,uzctreenode,uzcflineweights,uzcctrllayercombobox,uzcctrlcontextmenu,
+       uzcmenucontextcheckfuncs,uzctbextmenus,uzmenusdefaults,uzmenusmanager,uztoolbarsmanager,uzctextenteditor,uzcfcommandline,uzctreenode,uzcctrlcontextmenu,
        uzcimagesmanager,usupportgui,uzcuidialogs,
   {}
        uzgldrawcontext,uzglviewareaabstract,uzcguimanager,uzcinterfacedata,
        uzcenitiesvariablesextender,uzglviewareageneral,UniqueInstanceRaw,
-       uzmacros,uzcviewareacxmenu;
+       uzmacros,uzcviewareacxmenu,uzccommand_quit;
   {}
 resourcestring
   rsClosed='Closed';
@@ -95,15 +95,14 @@ type
     procedure ShowAllCursors(ShowedForm:TForm);
     procedure RestoreCursors(ShowedForm:TForm);
     procedure CloseDWGPageInterf(Sender: TObject);
-    function CloseDWGPage(Sender: TObject;NeedAskDonShow:boolean;MCtx:TMessagesContext):integer;
 
     procedure PageControlMouseDown(Sender: TObject;Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure correctscrollbars;
-    function wamd(Sender:TAbstractViewArea;Button:TMouseButton;Shift:TShiftState;X,Y:Integer;onmouseobject:GDBPointer;var NeedRedraw:Boolean):boolean;
+    function wamd(Sender:TAbstractViewArea;Button:TMouseButton;Shift:TShiftState;X,Y:Integer;onmouseobject:Pointer;var NeedRedraw:Boolean):boolean;
     procedure wamm(Sender:TAbstractViewArea;Shift:TShiftState;X,Y:Integer);
-    procedure wams(Sender:TAbstractViewArea;SelectedEntity:GDBPointer);
+    procedure wams(Sender:TAbstractViewArea;SelectedEntity:Pointer);
     procedure wakp(Sender:TAbstractViewArea;var Key: Word; Shift: TShiftState);
-    function GetEntsDesc(ents:PGDBObjOpenArrayOfPV):GDBString;
+    function GetEntsDesc(ents:PGDBObjOpenArrayOfPV):String;
     procedure waSetObjInsp(Sender:{TAbstractViewArea}tobject;GUIAction:TZMessageID);
     procedure WaShowCursor(Sender:TAbstractViewArea;var DC:TDrawContext);
 
@@ -114,7 +113,7 @@ type
 
     public
     SuppressedShortcuts:TXMLConfig;
-    rt:GDBInteger;
+    rt:Integer;
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     destructor Destroy;override;
     procedure CreateAnchorDockingInterface;
@@ -144,7 +143,7 @@ type
     procedure ShowCXMenu;
     procedure ShowFMenu;
     procedure MainMouseMove;
-    function MainMouseDown(Sender:TAbstractViewArea):GDBBoolean;
+    function MainMouseDown(Sender:TAbstractViewArea):Boolean;
     procedure MainMouseUp;
     procedure IPCMessage(Sender: TObject);
     {$ifdef windows}procedure SetTop;{$endif}
@@ -153,7 +152,6 @@ type
     function GetFocusPriority:TControlWithPriority;
                end;
 //procedure UpdateVisible(GUIMode:TZMessageID);
-function _CloseDWGPage(ClosedDWG:PTZCADDrawing;lincedcontrol:TObject;NeedAskDonShow:boolean;MCtx:TMessagesContext):Integer;
 
 var
   ZCADMainWindow: TZCADMainWindow;
@@ -161,13 +159,12 @@ var
   //LineWBox:TComboBox;
   //LayoutBox:TComboBox;
   //LPTime:Tdatetime;
-  //pname:GDBString;
+  //pname:String;
   oldlongprocess:integer;
   //OLDColor:integer;
   ProcessBar:TProgressBar;
   //StoreBackTraceStrFunc:TBackTraceStrFunc;//this unneed after fpc rev 31026 see http://bugs.freepascal.org/view.php?id=13518
-  function CloseApp:GDBInteger;
-  function IsRealyQuit:GDBBoolean;
+  function IsRealyQuit:Boolean;
 
 implementation
 {$R *.lfm}
@@ -231,8 +228,8 @@ const IntEmpty=-1000;
       IntDifferent=-10001;
       PEmpty=pointer(0);
       PDifferent=pointer(1);
-var lw:GDBInteger;
-    color:GDBInteger;
+var lw:Integer;
+    color:Integer;
     layer:pgdblayerprop;
     ltype:PGDBLtypeProp;
     tstyle:PGDBTextStyle;
@@ -395,7 +392,7 @@ begin
 end;
 procedure TZCADMainWindow.processfilehistory(filename:string);
 var i,j,k:integer;
-    pstr,pstrnext:PGDBString;
+    pstr,pstrnext:PString;
 begin
      k:=FindIndex(@FileHistory,low(filehistory),high(filehistory),filename);
      if k<0 then exit;
@@ -405,12 +402,12 @@ begin
      for i:=k downto 0 do
      begin
           j:=i+1;
-          pstr:=SavedUnit.FindValue('PATH_File'+inttostr(i));
-          pstrnext:=SavedUnit.FindValue('PATH_File'+inttostr(j));
+          pstr:=SavedUnit.FindValue('PATH_File'+inttostr(i)).data.Addr.Instance;
+          pstrnext:=SavedUnit.FindValue('PATH_File'+inttostr(j)).data.Addr.Instance;
           if (assigned(pstr))and(assigned(pstrnext))then
                                                         pstrnext^:=pstr^;
      end;
-     pstr:=SavedUnit.FindValue('PATH_File0');
+     pstr:=SavedUnit.FindValue('PATH_File0').data.Addr.Instance;
      if (assigned(pstr))then
                              pstr^:=filename;
 
@@ -428,10 +425,10 @@ begin
      SetArrayTop(@CommandsHistory,Command,Command,'');
      CheckArray(@CommandsHistory,low(Commandshistory),high(Commandshistory));
 end;
-function IsRealyQuit:GDBBoolean;
+function IsRealyQuit:Boolean;
 var
-   pint:PGDBInteger;
-   //mem:GDBOpenArrayOfByte;
+   pint:PInteger;
+   //mem:TZctnrVectorBytes;
    i:integer;
    dr:TZCMsgDialogResult;
    GVA:TGeneralViewArea;
@@ -471,18 +468,18 @@ begin
           {if sysvar.SYS.SYS_IsHistoryLineCreated<>nil then
           if sysvar.SYS.SYS_IsHistoryLineCreated^ then}
           begin
-               pint:=SavedUnit.FindValue('DMenuX');
+               pint:=SavedUnit.FindValue('DMenuX').data.Addr.Instance;
                if assigned(pint)then
                                     pint^:=commandmanager.DMenu.Left;
-               pint:=SavedUnit.FindValue('DMenuY');
+               pint:=SavedUnit.FindValue('DMenuY').data.Addr.Instance;
                if assigned(pint)then
                                     pint^:=commandmanager.DMenu.Top;
 
-          pint:=SavedUnit.FindValue('VIEW_ObjInspSubV');
+          pint:=SavedUnit.FindValue('VIEW_ObjInspSubV').data.Addr.Instance;
           if assigned(pint)then
                                if assigned(GetNameColWidthProc)then
                                pint^:=GetNameColWidthProc;
-          pint:=SavedUnit.FindValue('VIEW_ObjInspV');
+          pint:=SavedUnit.FindValue('VIEW_ObjInspV').data.Addr.Instance;
           if assigned(pint)then
                                if assigned(GetOIWidthProc)then
                                pint^:=GetOIWidthProc;
@@ -490,7 +487,7 @@ begin
      if assigned(InfoForm) then
                          StoreBoundsToSavedUnit('TEdWND_',InfoForm.BoundsRect);
 
-          (*mem.init({$IFDEF DEBUGBUILD}'{71D987B4-8C57-4C62-8C12-CFC24A0A9C9A}',{$ENDIF}1024);
+          (*mem.init(1024);
           SavedUnit^.SavePasToMem(mem);
           mem.SaveToFile(expandpath(ProgramPath+'rtl'+PathDelim+'savedvar.pas'));
           mem.done;*)
@@ -499,52 +496,6 @@ begin
      else
          result:=false;
      end;
-end;
-
-function CloseApp:GDBInteger;
-var
-  MCtx:TMessagesContext=nil;
-  wa:TGeneralViewArea;
-  ClosedDWG:PTZCADDrawing;
-
-  function GetChangedDrawingsCount:integer;
-  var
-    i:integer;
-  begin
-    result:=0;
-    for i:=0 to ZCADMainWindow.PageControl.PageCount-1 do begin
-      wa:=TGeneralViewArea(FindComponentByType(ZCADMainWindow.PageControl.Pages[i],TGeneralViewArea));
-      if wa<>nil then begin
-        Closeddwg:=PTZCADDrawing(wa.PDWG);
-        if ClosedDWG<>nil then
-          if ClosedDWG.Changed then
-            inc(result);
-       end;
-    end;
-  end;
-
-begin
-  result:=0;
-  if IsRealyQuit then
-  begin
-    if ZCADMainWindow.PageControl<>nil then
-    begin
-      if GetChangedDrawingsCount>1 then
-        MCtx:=CreateMessagesContext(rsCloseDrawings);
-      while ZCADMainWindow.PageControl.ActivePage<>nil do
-      begin
-        if ZCADMainWindow.CloseDWGPage(ZCADMainWindow.PageControl.ActivePage,GetChangedDrawingsCount>1,MCtx)=IDCANCEL then begin
-          FreeMessagesContext(MCtx);
-          exit;
-        end;
-      end;
-      FreeMessagesContext(MCtx);
-    end;
-    ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIFreEditorProc);
-    ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIReturnToDefaultObject);
-    ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIBeforeCloseApp);
-    application.terminate;
-  end;
 end;
 
 procedure TZCADMainWindow.asynccloseapp(Data: PtrInt);
@@ -586,74 +537,11 @@ begin
     Dlg.Free;
   end;
 end;
-function _CloseDWGPage(ClosedDWG:PTZCADDrawing;lincedcontrol:TObject;NeedAskDonShow:boolean;MCtx:TMessagesContext):Integer;
-var
-   viewcontrol:TCADControl;
-   s:string;
-   TAWA:TAbstractViewArea;
-   dr:TZCMsgDialogResult;
-begin
-  if ClosedDWG<>nil then
-  begin
-    result:=ZCmrYes;
-    if ClosedDWG.Changed then begin
-      repeat
-        s:=format(rsCloseDWGQuery,[StringReplace(ClosedDWG.FileName,'\','\\',[rfReplaceAll])]);
-        dr:=zcMsgDlg(s,zcdiQuestion,[zccbYes,zccbNo,zccbCancel],NeedAskDonShow,MCTx);
-        result:=dr.ModalResult;
-        //result:=ZCADMainWindow.MessageBox(@s[1],@rsWarningCaption[1],MB_YESNOCANCEL);
-        if result=ZCmrCancel then exit;
-        if result=ZCmrNo then system.break;
-        if result=ZCmrYes then
-          result:=dwgQSave_com(ClosedDWG);
-      until result<>cmd_error;
-      result:=ZCmrYes;
-    end;
-    commandmanager.ChangeModeAndEnd(TGPMCloseDWG);
-    viewcontrol:=ClosedDWG.wa.getviewcontrol;
-    if drawings.GetCurrentDWG=pointer(ClosedDwg) then
-                                               drawings.freedwgvars;
-    drawings.RemoveData(ClosedDWG);
-    drawings.pack;
-
-    viewcontrol.free;
-
-    lincedcontrol.Free;
-    tobject(viewcontrol):=ZCADMainWindow.PageControl.ActivePage;
-
-    if viewcontrol<>nil then
-    begin
-      TAWA:=TAbstractViewArea(FindComponentByType(viewcontrol,TAbstractViewArea));
-      drawings.CurrentDWG:=pointer(TAWA.PDWG);
-      TAWA.GDBActivate;
-    end
-    else
-      drawings.freedwgvars;
-    ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIFreEditorProc);
-    ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIReturnToDefaultObject);
-    ZCMsgCallBackInterface.TextMessage(rsClosed,TMWOQuickly);
-    ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIActionRebuild);
-    ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIActionRedraw);
-    //if assigned(UpdateVisibleProc) then UpdateVisibleProc(ZMsgID_GUIActionRedraw);
-  end;
-end;
 procedure TZCADMainWindow.CloseDWGPageInterf(Sender: TObject);
 begin
      CloseDWGPage(Sender,false,nil);
 end;
 
-function TZCADMainWindow.CloseDWGPage(Sender: TObject;NeedAskDonShow:boolean;MCtx:TMessagesContext):integer;
-var
-   wa:TGeneralViewArea;
-   ClosedDWG:PTZCADDrawing;
-   //i:integer;
-begin
-  Closeddwg:=nil;
-  wa:=TGeneralViewArea(FindComponentByType(TTabSheet(sender),TGeneralViewArea));
-  if wa<>nil then
-    Closeddwg:=PTZCADDrawing(wa.PDWG);
-  result:=_CloseDWGPage(ClosedDWG,Sender,NeedAskDonShow,mctx);
-end;
 procedure TZCADMainWindow.PageControlMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
@@ -1010,7 +898,6 @@ begin
   MenusManager.setup(self,StandartActions);
   RegisterGeneralContextCheckFunc('True',@GMCCFTrue);
   RegisterGeneralContextCheckFunc('False',@GMCCFFalse);
-  RegisterGeneralContextCheckFunc('DebugMode',@GMCCFDebugMode);
   RegisterGeneralContextCheckFunc('CtrlPressed',@GMCCFCtrlPressed);
   RegisterGeneralContextCheckFunc('ShiftPressed',@GMCCFShiftPressed);
   RegisterGeneralContextCheckFunc('AltPressed',@GMCCFAltPressed);
@@ -1360,7 +1247,7 @@ end;
 
 procedure TZCADMainWindow.EndLongProcess;
 var
-   TimeStr,LPName:GDBSTRING;
+   TimeStr,LPName:String;
 begin
   if (assigned(ProcessBar)and assigned(HintText)) then
   begin
@@ -1382,7 +1269,7 @@ procedure TZCADMainWindow.MainMouseMove;
 begin
      cxmenumgr.reset;
 end;
-function TZCADMainWindow.MainMouseDown(Sender:TAbstractViewArea):GDBBoolean;
+function TZCADMainWindow.MainMouseDown(Sender:TAbstractViewArea):Boolean;
 begin
      ZCMsgCallBackInterface.Do_SetNormalFocus;
      //if @SetCurrentDWGProc<>nil then
@@ -1490,9 +1377,9 @@ begin
        ZCMsgCallBackInterface.TextMessage(htext,TMWOQuickly);
 end;
 
-function TZCADMainWindow.wamd(Sender:TAbstractViewArea;Button:TMouseButton;Shift:TShiftState;X,Y:Integer;onmouseobject:GDBPointer;var NeedRedraw:Boolean):boolean;
+function TZCADMainWindow.wamd(Sender:TAbstractViewArea;Button:TMouseButton;Shift:TShiftState;X,Y:Integer;onmouseobject:Pointer;var NeedRedraw:Boolean):boolean;
 var
-  key:GDBByte;
+  key:Byte;
   //needredraw:boolean;
   FreeClick:boolean;
 function ProcessControlpoint:boolean;
@@ -1654,7 +1541,7 @@ begin
 
   result:=false;
 end;
-function SelectRelatedObjects(PDWG:PTAbstractDrawing;param:POGLWndtype;pent:PGDBObjEntity):GDBInteger;
+function SelectRelatedObjects(PDWG:PTAbstractDrawing;param:POGLWndtype;pent:PGDBObjEntity):Integer;
 var
    pvname,pvname2:pvardesk;
    ir:itrec;
@@ -1681,7 +1568,7 @@ begin
                               pentvarext:=pobj^.GetExtension<TVariablesExtender>;
                               pvname2:=pentvarext.entityunit.FindVariable('NMO_Name');
                               if pvname2<>nil then
-                              if pgdbstring(pvname2^.data.Instance)^=pgdbstring(pvname^.data.Instance)^ then
+                              if pString(pvname2^.data.Addr.Instance)^=pString(pvname^.data.Addr.Instance)^ then
                               begin
                                    if pobj^.select(param.SelDesc.Selectedobjcount,drawings.CurrentDWG^.selector)then
                                                                                                           inc(result);
@@ -1745,7 +1632,7 @@ begin
                               key:=00;
                          end
 end;
-procedure TZCADMainWindow.wams(Sender:TAbstractViewArea;SelectedEntity:GDBPointer);
+procedure TZCADMainWindow.wams(Sender:TAbstractViewArea;SelectedEntity:Pointer);
 var
     RelSelectedObjects:Integer;
 begin
@@ -1762,13 +1649,13 @@ begin
     end;
   end;
 end;
-function TZCADMainWindow.GetEntsDesc(ents:PGDBObjOpenArrayOfPV):GDBString;
+function TZCADMainWindow.GetEntsDesc(ents:PGDBObjOpenArrayOfPV):String;
 var
-  i: GDBInteger;
+  i: Integer;
   pp:PGDBObjEntity;
   ir:itrec;
   //inr:TINRect;
-  line:GDBString;
+  line:String;
   pvd:pvardesk;
   pentvarext:TVariablesExtender;
 begin
@@ -1790,7 +1677,7 @@ begin
                                               exit;
                                          end;
                                          line:=pp^.GetObjName+' Layer='+pp^.vp.Layer.GetFullName;
-                                         line:=line+' Name='+pvd.data.PTD.GetValueAsString(pvd.data.Instance);
+                                         line:=line+' Name='+pvd.data.PTD.GetValueAsString(pvd.data.Addr.Instance);
                                          if result='' then
                                                           result:=line
                                                       else
@@ -1812,7 +1699,7 @@ begin
 end;
 procedure TZCADMainWindow.waSetObjInsp;
 var
-    tn:GDBString;
+    tn:String;
     ptype:PUserTypeDescriptor;
     objcount:integer;
     sender_wa:TAbstractViewArea;
@@ -1869,13 +1756,13 @@ begin
   size:=round(pdwg.wa.getviewcontrol.ClientWidth*pdwg.GetPcamera^.prop.zoom);
   position:=round(-pdwg.GetPcamera^.prop.point.x);
   min:=round(bb.LBN.x+size/2);
-  max:=round(bb.RTF.x+{$IFDEF LINUX}-{$ENDIF}size/2);
+  max:=round(bb.RTF.x+{$IFNDEF LCLWIN32}-{$ENDIF}size/2);
   if max<min then max:=min;
   ZCADMainWindow.HScrollBar.SetParams(position,min,max,size);
 
   size:=round(pdwg.wa.getviewcontrol.ClientHeight*pdwg.GetPcamera^.prop.zoom);
   min:=round(bb.LBN.y+size/2);
-  max:=round(bb.RTF.y+{$IFDEF LINUX}-{$ENDIF}size/2);
+  max:=round(bb.RTF.y+{$IFNDEF LCLWIN32}-{$ENDIF}size/2);
   if max<min then max:=min;
   position:=round((bb.LBN.y+bb.RTF.y+pdwg.GetPcamera^.prop.point.y));
   ZCADMainWindow.VScrollBar.SetParams(position,min,max,size);
@@ -1956,11 +1843,11 @@ end;
 procedure TZCADMainWindow.updatevisible(sender:TObject;GUIMode:TZMessageID);
 var
    GVA:TGeneralViewArea;
-   name:gdbstring;
+   name:String;
    i,k:Integer;
    pdwg:PTSimpleDrawing;
    FIPCServerRunning:boolean;
-   otherinstancerunning:boolean;
+   //otherinstancerunning:boolean;
    oldmenu,newmenu:TMainMenu;
 begin
   if GUIMode<>ZMsgID_GUIActionRedraw then
@@ -2152,12 +2039,12 @@ begin
       end;
   end;
   end;
-function DockingOptions_com(Operands:pansichar):GDBInteger;
+function DockingOptions_com(Operands:pansichar):Integer;
 begin
      ShowAnchorDockOptions(DockMaster);
      result:=cmd_ok;
 end;
-function RaiseException_com(Operands:pansichar):GDBInteger;
+function RaiseException_com(Operands:pansichar):Integer;
 begin
      raise EExternal.Create('Exception test');
      result:=cmd_ok;

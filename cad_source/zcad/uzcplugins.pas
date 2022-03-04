@@ -17,32 +17,32 @@
 }
 
 unit uzcplugins;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses uzbtypesbase,sysutils, dynlibs, uzclog,uzbmemman,gzctnrvectordata,uzeentity,
+uses sysutils, dynlibs, uzclog,gzctnrVector,uzeentity,
      LazLogger;
 type
     {Export+}
   {REGISTERRECORDTYPE PluginVersionInfo}
   PluginVersionInfo=record
     PluginName: pansichar;
-    PluginVersion: GDBInteger;
+    PluginVersion: Integer;
   end;
   GetVersFunc=function: PluginVersionInfo;
-  Initfunc=function: GDBInteger;
+  Initfunc=function: Integer;
   pmoduledesc=^moduledesc;
   {REGISTERRECORDTYPE moduledesc}
   moduledesc=record
     modulename:pansichar;
     modulehandle:thandle;
-    ininfunction:function(path:pansichar):GDBInteger;
-    donefunction:function:GDBInteger;
+    ininfunction:function(path:pansichar):Integer;
+    donefunction:function:Integer;
   end;
   arraymoduledesc=packed array[0..0] of moduledesc;
   popenarraymoduledesc=^openarraymoduledesc;
   {REGISTERRECORDTYPE openarraymoduledesc}
   openarraymoduledesc=record
-    count:GDBInteger;
+    count:Integer;
     modarr:arraymoduledesc;
   end;
   {REGISTERRECORDTYPE copyobjectdesc}
@@ -52,30 +52,30 @@ type
   copyobjectarray=packed array [0..0] of copyobjectdesc;
   pcopyobjectarraywm=^copyobjectarraywm;
   copyobjectarraywm=record
-                          max:GDBInteger;
+                          max:Integer;
                           copyobjectarray:copyobjectarray;
                     end;
   PGDBPluginsArray=^GDBPluginsArray;
   {REGISTEROBJECTTYPE GDBPluginsArray}
-  GDBPluginsArray= object(GZVectorData<moduledesc>)
-                        constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger);
-                        procedure loadplugins(path: GDBString);
+  GDBPluginsArray= object(GZVector<moduledesc>)
+                        constructor init(m:Integer);
+                        procedure loadplugins(path: String);
                   end;
      {Export-}
 
 var //pmodule: popenarraymoduledesc;
     gdbplugins:GDBPluginsArray;
-function getpmodule: GDBPointer;
-//procedure loadplugins(path: GDBString);
+function getpmodule: Pointer;
+//procedure loadplugins(path: String);
 {procedure startup;
 procedure finalize;}
 {$IFDEF DELPHI}exports getpmodule;{$ENDIF}
 implementation
 constructor GDBPluginsArray.init;
 begin
-  inherited init({$IFDEF DEBUGBUILD}ErrGuid,{$ENDIF}m{,sizeof(moduledesc)});
+  inherited init(m);
 end;
-procedure GDBPluginsArray.loadplugins(path: GDBString);
+procedure GDBPluginsArray.loadplugins(path: String);
 var
   sr: TSearchRec;
   dllhandle: thandle;
@@ -135,7 +135,7 @@ begin
   programlog.logoutstr('end;',lp_DecPos,LM_Necessarily);
 end;
 
-function getpmodule: GDBPointer;
+function getpmodule: Pointer;
 begin
   result:=@gdbplugins;
 end;
@@ -147,14 +147,14 @@ begin
 end;
 (*procedure startup;
 begin
-     gdbplugins.init({$IFDEF DEBUGBUILD}'{7893C445-EAE9-4361-B7AF-244513EE799F}',{$ENDIF}100);
+     gdbplugins.init(100);
 end;
 procedure finalize;
 begin
      gdbplugins.FreewithprocAndDone(@freeplugin);
 end;*)
 initialization
-gdbplugins.init({$IFDEF DEBUGBUILD}'{7893C445-EAE9-4361-B7AF-244513EE799F}',{$ENDIF}100);
+gdbplugins.init(100);
 finalization
   debugln('{I}[UnitsFinalization] Unit "',{$INCLUDE %FILE%},'" finalization');
   gdbplugins.Freewithproc(freeplugin);

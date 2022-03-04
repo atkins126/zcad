@@ -17,7 +17,7 @@
 }
 {$MODE DELPHI}
 unit uzccommand_dataimport;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -26,11 +26,11 @@ uses
   uzeentity,
   uzccommandsabstract,uzccommandsimpl,
   uzcdialogsfiles,
-  uzbtypesbase,uzbpaths,uzcutils,uzcinterface,
+  uzbpaths,uzcinterface,
   uzeentitiestypefilter,
   uzcdrawings,uzedrawingsimple,uzgldrawcontext,
-  gzctnrvectorpobjects,varmandef,uzcenitiesvariablesextender,
-  CsvDocument;
+  varmandef,uzcenitiesvariablesextender,
+  CsvDocument,uzctnrvectorpgdbaseobjects;
 
 implementation
 
@@ -47,7 +47,7 @@ begin
     pentvarext:=pvisible^.GetExtension<TVariablesExtender>;
     pvd:=pentvarext.entityunit.FindVariable(prop);
     if pvd<>nil then begin
-      if pvd.data.PTD.GetValueAsString(pvd.data.Instance)=value then
+      if pvd.data.PTD.GetValueAsString(pvd.data.Addr.Instance)=value then
         dest.PushBackData(pvisible);
     end;
   pvisible:=source.iterate(ir);
@@ -67,7 +67,7 @@ begin
     pentvarext:=pvisible^.GetExtension<TVariablesExtender>;
     pvd:=pentvarext.entityunit.FindVariable(prop);
     if pvd<>nil then begin
-      pvd.data.PTD.SetValueFromString(pvd.data.Instance,value);
+      pvd.data.PTD.SetValueFromString(pvd.data.Addr.Instance,value);
       pvisible.FormatEntity(drawing,DC);
     end;
   pvisible:=source.iterate(ir);
@@ -85,6 +85,7 @@ function RowValue(FDoc:TCSVDocument;ARow:Integer):string;
 var
   i:integer;
 begin
+  result:='';
   for i:=0 to FDoc.ColCount[ARow] do
     if i=0 then
       result:=result+FDoc.Cells[i,ARow]
@@ -154,8 +155,8 @@ end;
 
 function DataImport_com(operands:TCommandOperands):TCommandResult;
 var
-  pv:pGDBObjEntity;
-  ir:itrec;
+  //pv:pGDBObjEntity;
+  //ir:itrec;
   lph:TLPSHandle;
   isload:boolean;
   FDoc:TCSVDocument;

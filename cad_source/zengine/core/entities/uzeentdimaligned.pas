@@ -16,14 +16,14 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>)
 }
 unit uzeentdimaligned;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses uzgldrawcontext,uzeentityfactory,uzeentdimension,uzeentpoint,uzestylesdim,
      uzestyleslayers,uzedrawingdef,uzbstrproc,
-     UGDBOpenArrayOfByte,UGDBControlPointArray,uzegeometry,uzeentline,uzbtypesbase,
+     uzctnrVectorBytes,UGDBControlPointArray,uzegeometry,uzeentline,
      uzeentcomplex,sysutils,UGDBSelectedObjArray,uzeentity,uzbtypes,uzeconsts,
-     uzbgeomtypes,uzeffdxfsupport,uzbmemman,uzeentsubordinated,
+     uzegeometrytypes,uzeffdxfsupport,uzeentsubordinated,
      UGDBOpenArrayOfPV;
 (*
 Alligned dimension structure in DXF
@@ -41,21 +41,21 @@ type
 PGDBObjAlignedDimension=^GDBObjAlignedDimension;
 {REGISTEROBJECTTYPE GDBObjAlignedDimension}
 GDBObjAlignedDimension= object(GDBObjDimension)
-                      constructor init(own:GDBPointer;layeraddres:PGDBLayerProp;LW:GDBSmallint);
+                      constructor init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt);
                       constructor initnul(owner:PGDBObjGenericWithSubordinated);
-                      procedure DrawExtensionLine(p1,p2:GDBVertex;LineNumber:GDBInteger;var drawing:TDrawingDef;var DC:TDrawContext; part:integer);
+                      procedure DrawExtensionLine(p1,p2:GDBVertex;LineNumber:Integer;var drawing:TDrawingDef;var DC:TDrawContext; part:integer);
 
 
 
                       procedure FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
-                      function Clone(own:GDBPointer):PGDBObjEntity;virtual;
+                      function Clone(own:Pointer):PGDBObjEntity;virtual;
                       //procedure DrawGeometry;
 
-                      procedure addcontrolpoints(tdesc:GDBPointer);virtual;
+                      procedure addcontrolpoints(tdesc:Pointer);virtual;
 
 
 
-                      function GetObjTypeName:GDBString;virtual;
+                      function GetObjTypeName:String;virtual;
 
 
 
@@ -68,22 +68,22 @@ GDBObjAlignedDimension= object(GDBObjDimension)
                       function P14ChangeTo(tv:GDBVertex):GDBVertex;virtual;
                       //function P15ChangeTo(tv:GDBVertex):GDBVertex;virtual;
                       //function P16ChangeTo(tv:GDBVertex):GDBVertex;virtual;
-                       procedure SaveToDXF(var outhandle:{GDBInteger}GDBOpenArrayOfByte;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
-                       function GetDimStr(var drawing:TDrawingDef):GDBString;virtual;
+                       procedure SaveToDXF(var outhandle:{Integer}TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
+                       function GetDimStr(var drawing:TDrawingDef):TDXFEntsInternalStringType;virtual;
                        function GetObjType:TObjID;virtual;
                    end;
 {EXPORT-}
-function CorrectPointLine(q:GDBvertex;p1,p2:GDBvertex;out d:GDBDouble):GDBVertex;
+function CorrectPointLine(q:GDBvertex;p1,p2:GDBvertex;out d:Double):GDBVertex;
 function GetTFromDirNormalizedPoint(q:GDBvertex;var p1,dirNormalized:GDBvertex):double;
 implementation
-function GDBObjAlignedDimension.GetDimStr(var drawing:TDrawingDef):GDBString;
+function GDBObjAlignedDimension.GetDimStr(var drawing:TDrawingDef):TDXFEntsInternalStringType;
 begin
      result:=GetLinearDimStr(abs(scalardot(vertexsub(DimData.P14InWCS,DimData.P13InWCS),vectorD)),drawing);
 end;
 
-function CorrectPointLine(q:GDBvertex;p1,p2:GDBvertex;out d:GDBDouble):GDBVertex;
+function CorrectPointLine(q:GDBvertex;p1,p2:GDBvertex;out d:Double):GDBVertex;
 var w,l:GDBVertex;
-    dist,llength:GDBDouble;
+    dist,llength:Double;
 begin
      //расстояние от точки до линии
      w:=VertexSub(q,p1);
@@ -106,9 +106,9 @@ begin
               else
                   result:=p2;
 end;
-function SetPointLine(d:GDBDouble;q:GDBvertex;p1,p2:GDBvertex):GDBVertex;
+function SetPointLine(d:Double;q:GDBvertex;p1,p2:GDBvertex):GDBVertex;
 var w,l:GDBVertex;
-    dist:GDBDouble;
+    dist:Double;
 begin
      w:=VertexSub(q,p1);
      l:=VertexSub(p2,p1);
@@ -136,11 +136,11 @@ begin
   dxfvertexout(outhandle,10,DimData.P10InWCS);
   dxfvertexout(outhandle,11,DimData.P11InOCS);
   if DimData.TextMoved then
-                           dxfGDBIntegerout(outhandle,70,1+128)
+                           dxfIntegerout(outhandle,70,1+128)
                        else
-                           dxfGDBIntegerout(outhandle,70,1);
-  dxfGDBStringout(outhandle,3,PDimStyle^.Name);
-  dxfGDBStringout(outhandle,100,'AcDbAlignedDimension');
+                           dxfIntegerout(outhandle,70,1);
+  dxfStringout(outhandle,3,PDimStyle^.Name);
+  dxfStringout(outhandle,100,'AcDbAlignedDimension');
   dxfvertexout(outhandle,13,DimData.P13InWCS);
   dxfvertexout(outhandle,14,DimData.P14InWCS);
 end;
@@ -154,7 +154,7 @@ begin
 end;
 function GDBObjAlignedDimension.P10ChangeTo(tv:GDBVertex):GDBVertex;
 var
-    t,tl:GDBDouble;
+    t,tl:Double;
     temp:GDBVertex;
 begin
      if uzegeometry.sqrVertexlength(tv,DimData.P14InWCS)>sqreps then
@@ -175,7 +175,7 @@ begin
 end;
 function GDBObjAlignedDimension.P11ChangeTo(tv:GDBVertex):GDBVertex;
 var
-    t,tl:GDBDouble;
+    t,tl:Double;
     tvertex,temp:GDBVERTEX;
 begin
      result:=tv;
@@ -204,7 +204,7 @@ X (13,23,33)     X (14,24,34)
 *)
 function GDBObjAlignedDimension.P13ChangeTo(tv:GDBVertex):GDBVertex;
 var
-    t,dir:GDBDouble;
+    t,dir:Double;
     tvertex:GDBVERTEX;
 begin
      result:=tv;
@@ -241,7 +241,7 @@ begin
 end;
 function GDBObjAlignedDimension.P14ChangeTo(tv:GDBVertex):GDBVertex;
 var
-    t,dir:GDBDouble;
+    t,dir:Double;
     tvertex:GDBVERTEX;
 begin
      result:=tv;
@@ -280,10 +280,10 @@ function GDBObjAlignedDimension.GetObjTypeName;
 begin
      result:=ObjN_ObjAlignedDimension;
 end;
-procedure GDBObjAlignedDimension.addcontrolpoints(tdesc:GDBPointer);
+procedure GDBObjAlignedDimension.addcontrolpoints(tdesc:Pointer);
 var pdesc:controlpointdesc;
 begin
-          PSelectedObjDesc(tdesc)^.pcontrolpoint^.init({$IFDEF DEBUGBUILD}'{4CBC9A73-A88D-443B-B925-2F0611D82AB0}',{$ENDIF}4);
+          PSelectedObjDesc(tdesc)^.pcontrolpoint^.init(4);
 
           pdesc.selected:=false;
           pdesc.pobject:=nil;
@@ -312,7 +312,7 @@ end;
 function GDBObjAlignedDimension.Clone;
 var tvo: PGDBObjAlignedDimension;
 begin
-  GDBGetMem({$IFDEF DEBUGBUILD}'GDBObjAlignedDimension.Clone',{$ENDIF}GDBPointer(tvo), sizeof(GDBObjAlignedDimension));
+  Getmem(Pointer(tvo), sizeof(GDBObjAlignedDimension));
   tvo^.init(bp.ListPos.owner,vp.Layer, vp.LineWeight);
   CopyVPto(tvo^);
   CopyExtensionsTo(tvo^);
@@ -343,7 +343,7 @@ function GDBObjAlignedDimension.GetObjType;
 begin
      result:=GDBAlignedDimensionID;
 end;
-procedure GDBObjAlignedDimension.DrawExtensionLine(p1,p2:GDBVertex;LineNumber:GDBInteger;var drawing:TDrawingDef;var DC:TDrawContext; part:integer);
+procedure GDBObjAlignedDimension.DrawExtensionLine(p1,p2:GDBVertex;LineNumber:Integer;var drawing:TDrawingDef;var DC:TDrawContext; part:integer);
 var
    pl:pgdbobjline;
    pp:pgdbobjpoint;
@@ -419,7 +419,7 @@ begin
 end;}
 function AllocAlignedDimension:PGDBObjAlignedDimension;
 begin
-  GDBGetMem({$IFDEF DEBUGBUILD}'{AllocAlignedDimension}',{$ENDIF}result,sizeof(GDBObjAlignedDimension));
+  Getmem(result,sizeof(GDBObjAlignedDimension));
 end;
 function AllocAndInitAlignedDimension(owner:PGDBObjGenericWithSubordinated):PGDBObjAlignedDimension;
 begin

@@ -17,10 +17,10 @@
 }
 
 unit UGDBObjBlockdefArray;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses LCLProc,uzgldrawcontext,uzedrawingdef,uzbstrproc,uzeblockdef,gzctnrvectorobjects,
-     gzctnrvectortypes,sysutils,uzbtypes,uzbmemman,uzegeometry,uzbtypesbase;
+uses LCLProc,uzgldrawcontext,uzedrawingdef,uzbstrproc,uzeblockdef,gzctnrVectorObjects,
+     gzctnrvectortypes,sysutils,uzbtypes,uzegeometry,uzbLogIntf;
 type
 {Export+}
 {REGISTEROBJECTTYPE GDBObjBlockdefArray}
@@ -28,22 +28,22 @@ PGDBObjBlockdefArray=^GDBObjBlockdefArray;
 PBlockdefArray=^BlockdefArray;
 BlockdefArray=packed array [0..0] of GDBObjBlockdef;
 GDBObjBlockdefArray= object(GZVectorObjects{-}<GDBObjBlockdef>{//})(*OpenArrayOfData=GDBObjBlockdef*)
-                      constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger);
+                      constructor init(m:Integer);
                       constructor initnul;
 
-                      function getindex(name:GDBString):GDBInteger;virtual;
-                      function getblockdef(name:GDBString):PGDBObjBlockdef;virtual;
-                      //function loadblock(filename,bname:pansichar;pdrawing:GDBPointer):GDBInteger;virtual;
-                      function create(name:GDBString):PGDBObjBlockdef;virtual;
+                      function getindex(name:String):Integer;virtual;
+                      function getblockdef(name:String):PGDBObjBlockdef;virtual;
+                      //function loadblock(filename,bname:pansichar;pdrawing:Pointer):Integer;virtual;
+                      function create(name:String):PGDBObjBlockdef;virtual;
                       procedure freeelement(PItem:PT);virtual;
                       procedure FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
                       procedure Grow(newmax:Integer=0);virtual;
-                      procedure IterateCounter(PCounted:GDBPointer;var Counter:GDBInteger;proc:TProcCounter);virtual;
+                      procedure IterateCounter(PCounted:Pointer;var Counter:Integer;proc:TProcCounter);virtual;
                     end;
 {Export-}
 implementation
 //uses log;
-procedure GDBObjBlockdefArray.IterateCounter(PCounted:GDBPointer;var Counter:GDBInteger;proc:TProcCounter);
+procedure GDBObjBlockdefArray.IterateCounter(PCounted:Pointer;var Counter:Integer;proc:TProcCounter);
 var p:PGDBObjBlockdef;
     ir:itrec;
 begin
@@ -76,7 +76,7 @@ begin
 end;
 constructor GDBObjBlockdefArray.init;
 begin
-     inherited init({$IFDEF DEBUGBUILD}ErrGuid,{$ENDIF}m{,sizeof(GDBObjBlockdef)});
+     inherited init(m);
 end;
 constructor GDBObjBlockdefArray.initnul;
 begin
@@ -95,7 +95,7 @@ begin
 end;
 function GDBObjBlockdefArray.getindex;
 var
-   i:GDBInteger;
+   i:Integer;
    //debugs:string;
 begin
   result:=-1;
@@ -119,13 +119,11 @@ begin
   repeat
        if Tria_Utf8ToAnsi(p^.Name)='*D234' then
                             p^.Name:=p^.Name;
-       if VerboseLog^ then
-         debugln('{D+}Formatting blockdef name="%s"',[p^.Name]);
+       zTraceLn('{D+}Formatting blockdef name="%s"',[p^.Name]);
 
        //programlog.LogOutFormatStr('Formatting blockdef name="%s"',[p^.Name],lp_IncPos,LM_Debug);
        p^.FormatEntity(drawing,dc);
-       if VerboseLog^ then
-         debugln('{D-}end;{Formatting}');
+       zTraceLn('{D-}end;{Formatting}');
 
        //programlog.LogOutStr('end;{Formatting}',lp_DecPos,LM_Debug);
        p:=iterate(ir);
@@ -152,7 +150,7 @@ begin
   until p=nil;
 end;
 {function GDBObjBlockdefArray.loadblock;
-var bc:GDBInteger;
+var bc:Integer;
 begin
   bc := count;
   inc(count);

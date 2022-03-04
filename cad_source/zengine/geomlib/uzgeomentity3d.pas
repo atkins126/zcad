@@ -17,11 +17,10 @@
 }
 
 unit uzgeomentity3d;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
-     sysutils,uzbtypes,uzbmemman,
-     uzgeomentity,uzegeometry;
+     sysutils,uzgeomentity,uzegeometry;
 type
 {Export+}
 {REGISTEROBJECTTYPE TGeomEntity3D}

@@ -17,12 +17,12 @@
 }
 
 unit uzcctrlcontextmenu;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 
 uses
   ExtCtrls,lclproc,Graphics,ActnList,{ComCtrls,StdCtrls,}Controls,Classes,menus,Forms,{$IFDEF FPC}lcltype,{$ENDIF}fileutil,Buttons,
-  uzclog,{$IFNDEF DELPHI}uzctranslations,{$ENDIF}sysutils{,strproc,varmandef,Varman,gdbasetypes,UGDBOpenArrayOfByte};
+  uzclog,{$IFNDEF DELPHI}uzctranslations,{$ENDIF}sysutils{,strproc,varmandef,Varman,gdbasetypes,uzctnrVectorBytes};
 
 type
    tcxmenumgr=class

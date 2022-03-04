@@ -17,7 +17,7 @@
 }
 
 unit uzccmdload;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -27,7 +27,7 @@ uses
   uzeffmanager,uzctranslations,
   uzccommandsimpl,uzccommandsabstract,
   uzcdrawings,uzcdrawing,
-  UGDBOpenArrayOfByte,UUnitManager,URecordDescriptor,gzctnrvectortypes,
+  uzctnrVectorBytes,UUnitManager,URecordDescriptor,gzctnrvectortypes,
   Varman,varmandef,typedescriptors,
   uzgldrawcontext,
   uzedrawingsimple,uzeconsts,
@@ -61,8 +61,8 @@ begin
                         pfd:=PRecordDescriptor(pvindb^.data.PTD)^.FindField('Variants');
                         if pfd<>nil then
                         begin
-                        pf:=pv.data.Instance+pfd.Offset;
-                        pfindb:=pvindb.data.Instance+pfd.Offset;
+                        pf:=pv.data.Addr.Instance+pfd.Offset;
+                        pfindb:=pvindb.data.Addr.Instance+pfd.Offset;
                         pf^:=pfindb^;
                         end;
                    end;
@@ -75,9 +75,9 @@ end;
 function Load_Merge(Operands:TCommandOperands;LoadMode:TLoadOpt):TCommandResult;
 var
    s: AnsiString;
-   //fileext:GDBString;
+   //fileext:String;
    isload:boolean;
-   mem:GDBOpenArrayOfByte;
+   mem:TZctnrVectorBytes;
    pu:ptunit;
    loadproc:TFileLoadProcedure;
    DC:TDrawContext;

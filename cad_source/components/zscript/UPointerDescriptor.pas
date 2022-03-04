@@ -17,36 +17,45 @@
 }
 
 unit UPointerDescriptor;
-{$INCLUDE def.inc}
+
 {$MODE DELPHI}
 interface
-uses types,TypeDescriptors,UGDBOpenArrayOfByte,
-     uzedimensionaltypes,uzbtypesbase,varmandef,uzbtypes,uzctnrvectorgdbstring,uzbmemman;
+uses types,TypeDescriptors,uzctnrVectorBytes,
+     uzedimensionaltypes,varmandef,uzbtypes,uzctnrvectorstrings,
+     UBaseTypeDescriptor;
 resourcestring
   rsUnassigned='Unassigned';
 type
-PGDBPointerDescriptor=^GDBPointerDescriptor;
-GDBPointerDescriptor=object(TUserTypeDescriptor)
-                     TypeOf:PUserTypeDescriptor;
-                     ReferType:GDBString;
-                     //constructor init(var t:gdbtypedesk);
-                     constructor init(ptype:GDBString;tname:string;pu:pointer);
-                     function CreateProperties(const f:TzeUnitsFormat;mode:PDMode;PPDA:PTPropertyDeskriptorArray;Name:TInternalScriptString;PCollapsed:Pointer;ownerattrib:Word;var bmode:Integer;const addr:Pointer;ValKey,ValType:TInternalScriptString):PTPropertyDeskriptorArray;virtual;
-                     //function Serialize(PInstance:Pointer;SaveFlag:GDBWord;var membuf:PGDBOpenArrayOfByte;var  linkbuf:PGDBOpenArrayOfTObjLinkRecord;var sub:integer):integer;virtual;
-                     //function DeSerialize(PInstance:Pointer;SaveFlag:GDBWord;var membuf:GDBOpenArrayOfByte;linkbuf:PGDBOpenArrayOfTObjLinkRecord):integer;virtual;
-                     procedure Format;virtual;
-                     function GetTypeAttributes:TTypeAttr;virtual;
-                     function CreateEditor(TheOwner:TPropEditorOwner;rect:trect{x,y,w,h:GDBInteger};pinstance:pointer;psa:PTZctnrVectorGDBString;FreeOnLostFocus:boolean;InitialValue:TInternalScriptString;preferedHeight:integer):TEditorDesc{TPropEditor};virtual;
-                     procedure SavePasToMem(var membuf:GDBOpenArrayOfByte;PInstance:Pointer;prefix:TInternalScriptString);virtual;
-                     destructor Done;virtual;
-               end;
-const PAssigned:Pointer=nil;
-      PNIL:byte=255;
+  PGDBPointerDescriptor=^GDBPointerDescriptor;
+  GDBPointerDescriptor=object(TUserTypeDescriptor)
+    TypeOf:PUserTypeDescriptor;
+    ReferType:String;
+    //constructor init(var t:gdbtypedesk);
+    constructor init(ptype:String;tname:string;pu:pointer);
+    function CreateProperties(const f:TzeUnitsFormat;mode:PDMode;PPDA:PTPropertyDeskriptorArray;Name:TInternalScriptString;PCollapsed:Pointer;ownerattrib:Word;var bmode:Integer;const addr:Pointer;ValKey,ValType:TInternalScriptString):PTPropertyDeskriptorArray;virtual;
+    //function Serialize(PInstance:Pointer;SaveFlag:Word;var membuf:PTZctnrVectorBytes;var  linkbuf:PGDBOpenArrayOfTObjLinkRecord;var sub:integer):integer;virtual;
+    //function DeSerialize(PInstance:Pointer;SaveFlag:Word;var membuf:TZctnrVectorBytes;linkbuf:PGDBOpenArrayOfTObjLinkRecord):integer;virtual;
+    procedure Format;virtual;
+    function GetTypeAttributes:TTypeAttr;virtual;
+    function CreateEditor(TheOwner:TPropEditorOwner;rect:trect{x,y,w,h:Integer};pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;InitialValue:TInternalScriptString;preferedHeight:integer):TEditorDesc{TPropEditor};virtual;
+    procedure SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;prefix:TInternalScriptString);virtual;
+    destructor Done;virtual;
+  end;
+
 var
-    defaultptypehandler:GDBPointerDescriptor;
+  defaultptypehandler:GDBPointerDescriptor;
+  FundamentalPStringDescriptorObj:GDBPointerDescriptor;
+  FundamentalPAnsiStringDescriptorObj:GDBPointerDescriptor;
+  FundamentalPBooleanDescriptorObj:GDBPointerDescriptor;
+  FundamentalPIntegerDescriptorObj:GDBPointerDescriptor;
+  FundamentalPDoubleDescriptorObj:GDBPointerDescriptor;
+
 implementation
-uses varman{,log};
-procedure GDBPointerDescriptor.SavePasToMem(var membuf:GDBOpenArrayOfByte;PInstance:Pointer;prefix:TInternalScriptString);
+
+uses
+  varman;
+
+procedure GDBPointerDescriptor.SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;prefix:TInternalScriptString);
 begin
 
 end;
@@ -72,7 +81,7 @@ begin
     typename:=tname;
     ReferType:=ptype;
     TypeOf:=nil;
-    self.SizeInGDBBytes:={4 cpu64}sizeof(pointer);
+    self.SizeInBytes:={4 cpu64}sizeof(pointer);
     punit:=pu;
     format;
 end;
@@ -81,7 +90,7 @@ var ta,oldta{,tb}:Pointer;
     ppd:PPropertyDeskriptor;
     bm,bm2:integer;
 begin
-    ta:=pGDBPointer(addr)^;
+    ta:=PPointer(addr)^;
     oldta:=ta;
     bm:=bmode;
     bm2:=property_build;
@@ -117,7 +126,7 @@ begin
 
                                                                                                                                                                                                  PTPropertyDeskriptorArray(ppd^.SubNode)^.cleareraseobj;
                                                                                                                                                                                                  ppd^.SubNode^.Done;
-                                                                                                                                                                                                 gdbfreemem(ppd^.SubNode);
+                                                                                                                                                                                                 Freemem(ppd^.SubNode);
                                                                                                                                                                                                  ppd^.SubNode:=nil;
 
                                                                                                                                                                                             end;
@@ -140,7 +149,7 @@ begin
                                                           begin
                                                                PTPropertyDeskriptorArray(ppd^.SubNode)^.cleareraseobj;
                                                                ppd^.SubNode^.Done;
-                                                               gdbfreemem(ppd^.SubNode);
+                                                               Freemem(ppd^.SubNode);
                                                           end;
                              ppd^.Name:=name;
                              ppd^.PTypeManager:=PTUserTypeDescriptor(PUserTypeDescriptor((TypeOf)));
@@ -165,6 +174,7 @@ function GDBPointerDescriptor.GetTypeAttributes;
 begin
      result:=TA_COMPOUND;
 end;
+
 begin
   defaultptypehandler.init('','',nil);
 end.

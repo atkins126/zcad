@@ -17,7 +17,7 @@
 }
 
 unit uzgldrawerdx;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
     uzgindexsarray,LCLProc,uzepalette,
@@ -27,7 +27,7 @@ uses
     {$IFNDEF DELPHI}LCLIntf,LCLType,{$ENDIF}
     Classes,Controls,
     uzgvertex3sarray,uzegeometry,uzgldrawergeneral,uzgldrawerabstract,{uzgloglstatemanager,}Graphics,uzbtypes,
-    uzbgeomtypes,uzbtypesbase,uzecamera;
+    uzegeometrytypes,uzecamera;
 const
   texturesize=128;
 type
@@ -35,7 +35,7 @@ type
 PTDXData=^TDXData;
 {//REGISTERRECORDTYPE TDXData}
 TDXData=record
-          RD_Renderer:GDBString;(*'Device'*)(*oi_readonly*)
+          RD_Renderer:String;(*'Device'*)(*oi_readonly*)
     end;
 {EXPORT-}
 TZGLDXDrawer=class(TZGLGeneralDrawer)

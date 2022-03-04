@@ -5,12 +5,12 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }  
 unit uzccablemanager;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses uzcenitiesvariablesextender,uzcvariablesutils,Varman,uzbstrproc,uzcentcable,
-     uzeentdevice,uzeconsts,gzctnrvectorpobjects,languade,gzctnrvectorobjects,
-     gzctnrvectortypes,SysUtils,uzbtypesbase,uzbtypes,varmandef,uzbmemman,uzcdrawings,
-     uzcstrconsts;
+     uzeentdevice,uzeconsts,gzctnrVectorObjects,
+     gzctnrvectortypes,SysUtils,uzbtypes,varmandef,uzcdrawings,
+     uzcstrconsts,uzctnrvectorpgdbaseobjects;
 resourcestring
      DefCableName='Created. Not named';
 type
@@ -18,16 +18,16 @@ type
     PTCableDesctiptor=^TCableDesctiptor;
     {REGISTEROBJECTTYPE TCableDesctiptor}
     TCableDesctiptor= object(GDBaseObject)
-                     Name:GDBString;
+                     Name:String;
                      Segments:TZctnrVectorPGDBaseObjects;   // сборщик всех кабелей с одинаковым именем (ШС..)
                      StartDevice,EndDevice:PGDBObjDevice;
                      StartSegment:PGDBObjCable;
                      Devices:TZctnrVectorPGDBaseObjects;
-                     length:GDBDouble;
+                     length:Double;
                      constructor init;
                      destructor done;virtual;
-                     function GetObjTypeName:GDBString;virtual;
-                     function GetObjName:GDBString;virtual;
+                     function GetObjTypeName:String;virtual;
+                     function GetObjName:String;virtual;
                  end;
 
     PTCableManager=^TCableManager;
@@ -36,8 +36,8 @@ type
                        constructor init;
                        destructor done;virtual;
                        procedure build;virtual;
-                       function FindOrCreate(sname:gdbstring):PTCableDesctiptor;virtual;
-                       function Find(sname:gdbstring):PTCableDesctiptor;virtual;
+                       function FindOrCreate(sname:String):PTCableDesctiptor;virtual;
+                       function Find(sname:String):PTCableDesctiptor;virtual;
                  end;
 {EXPORT-}
 implementation
@@ -57,12 +57,12 @@ begin
      inherited;
      name:=defcablename;
      length:=0;
-     Segments.init({$IFDEF DEBUGBUILD}'{FE431793-97FF-48AE-9B55-22D186BD5471}',{$ENDIF}10);
-     Devices.init({$IFDEF DEBUGBUILD}'{7C4DC8CC-F0C0-402A-84F6-6FEA2C06F0C8}',{$ENDIF}10);
+     Segments.init(10);
+     Devices.init(10);
 end;
 constructor TCableManager.init;
 begin
-     inherited init({$IFDEF DEBUGBUILD}'{D8494E55-1296-45ED-A5ED-175D6C0671F5}',{$ENDIF}100{,sizeof(TCableDesctiptor)});
+     inherited init(100);
 end;
 destructor TCableDesctiptor.done;
 begin
@@ -77,7 +77,7 @@ var pobj,pobj2:PGDBObjCable;
     p1,p2:ppointer;
     tp:pointer;
     pvn,pvn2:pvardesk;
-    sname:gdbstring;
+    sname:String;
     pcd,prevpcd:PTCableDesctiptor;
     tcd:TCableDesctiptor;
     itsok:boolean;
@@ -96,7 +96,7 @@ begin
                 //pvn:=PTObjectUnit(pobj^.ou.Instance)^.FindVariable('NMO_Name');
                 pvn:=pentvarext.entityunit.FindVariable('NMO_Name');      //находим обозначение кабеля (ШС2)
                 if pvn<>nil then
-                                sname:=pgdbstring(pvn^.data.Instance)^
+                                sname:=pString(pvn^.data.Addr.Instance)^
                             else
                                 sname:=rsNameAbsent;
                 if sname='RS' then
@@ -106,7 +106,7 @@ begin
                 //pvn:=PTObjectUnit(pobj^.ou.Instance)^.FindVariable('AmountD');
                 pvn:=pentvarext.entityunit.FindVariable('AmountD');              //получаем длину кабеля
                 if pvn<>nil then
-                                pcd^.length:=pcd^.length+pgdbdouble(pvn^.data.Instance)^; //доюавляем к шлейфу общую длину
+                                pcd^.length:=pcd^.length+pDouble(pvn^.data.Addr.Instance)^; //доюавляем к шлейфу общую длину
            end;
            pobj:=drawings.GetCurrentROOT.ObjArray.iterate(ir);    //следующий элемент в списке чертежа
      until pobj=nil;
@@ -131,8 +131,8 @@ begin
                       //pvn2:=PTObjectUnit(pobj2^.ou.Instance)^.FindVariable('CABLE_Segment');
                       pvn :=pentvarext.entityunit.FindVariable('CABLE_Segment');
                       pvn2:=pentvarext2.entityunit.FindVariable('CABLE_Segment');
-                      if pgdbinteger(pvn^.data.Instance)^<
-                         pgdbinteger(pvn2^.data.Instance)^ then
+                      if PInteger(pvn^.data.Addr.Instance)^<
+                         PInteger(pvn2^.data.Addr.Instance)^ then
                          begin
                               tp:=p2^;
                               p2^:=p1^;
@@ -181,13 +181,13 @@ begin
                                       pvn2:=FindVariableInEnt(pcd^.EndDevice,'RiserName');
                                       if (pvn<>nil)and(pvn2<>nil)then
                                       begin
-                                           if pstring(pvn^.data.Instance)^=pstring(pvn2^.data.Instance)^ then
+                                           if pstring(pvn^.data.Addr.Instance)^=pstring(pvn2^.data.Addr.Instance)^ then
                                            begin
                                                 pvn :=FindVariableInEnt(pnp^.DevLink,'Elevation');
                                                 pvn2:=FindVariableInEnt(pcd^.EndDevice,'Elevation');
                                                 if (pvn<>nil)and(pvn2<>nil)then
                                                 begin
-                                                     pcd^.length:=pcd^.length+abs(pgdbdouble(pvn^.data.Instance)^-pgdbdouble(pvn2^.data.Instance)^);
+                                                     pcd^.length:=pcd^.length+abs(pDouble(pvn^.data.Addr.Instance)^-pDouble(pvn2^.data.Addr.Instance)^);
                                                 end;
                                            end;
                                       end;
@@ -233,7 +233,7 @@ function TCableManager.FindOrCreate;
 var
     pcd:PTCableDesctiptor;
     ir:itrec;
-    sn:gdbstring;
+    sn:String;
 begin
      sn:=uppercase(sname);
      pcd:=beginiterate(ir);
@@ -270,7 +270,7 @@ function TCableManager.Find;
 var
     pcd:PTCableDesctiptor;
     ir:itrec;
-    sn:gdbstring;
+    sn:String;
 begin
      sn:=uppercase(sname);
      pcd:=beginiterate(ir);

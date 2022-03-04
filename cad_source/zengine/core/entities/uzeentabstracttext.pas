@@ -16,26 +16,39 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 } 
 unit uzeentabstracttext;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses {эти нужно убрать}{uzglviewareageneral,}UGDBSelectedObjArray,
-     uzgldrawcontext,uzeentity,uzecamera,gzctnrvectorpobjects,
-     uzbstrproc,sysutils,uzeentplainwithox,uzbtypesbase,
-     UGDBOutbound2DIArray,uzbgeomtypes,uzbtypes,uzeconsts,uzegeometry,math;
+     uzgldrawcontext,uzeentity,uzecamera,
+     uzbstrproc,sysutils,uzeentplainwithox,
+     UGDBOutbound2DIArray,uzegeometrytypes,uzbtypes,uzeconsts,uzegeometry,math,
+     uzctnrvectorpgdbaseobjects;
 type
 //jstm(*'TopCenter'*)=2,
 {EXPORT+}
+TTextJustify=(jstl(*'TopLeft'*),
+              jstc(*'TopCenter'*),
+              jstr(*'TopRight'*),
+              jsml(*'MiddleLeft'*),
+              jsmc(*'MiddleCenter'*), //СерединаЦентр
+              jsmr(*'MiddleRight'*),
+              jsbl(*'BottomLeft'*),
+              jsbc(*'BottomCenter'*),
+              jsbr(*'BottomRight'*),
+              jsbtl(*'Left'*),
+              jsbtc(*'Center'*),
+              jsbtr(*'Right'*));
 PGDBTextProp=^GDBTextProp;
 {REGISTERRECORDTYPE GDBTextProp}
 GDBTextProp=record
-                  size:GDBDouble;(*saved_to_shd*)
-                  oblique:GDBDouble;(*saved_to_shd*)
-                  wfactor:GDBDouble;(*saved_to_shd*)
-                  aaaangle:GDBDouble;(*saved_to_shd*)
+                  size:Double;(*saved_to_shd*)
+                  oblique:Double;(*saved_to_shd*)
+                  wfactor:Double;(*saved_to_shd*)
+                  aaaangle:Double;(*saved_to_shd*)
                   justify:TTextJustify;(*saved_to_shd*)
-                  upsidedown:GDBBoolean;
-                  backward:GDBBoolean;
+                  upsidedown:Boolean;
+                  backward:Boolean;
             end;
 PGDBObjAbstractText=^GDBObjAbstractText;
 {REGISTEROBJECTTYPE GDBObjAbstractText}
@@ -45,24 +58,24 @@ GDBObjAbstractText= object(GDBObjPlainWithOX)
                          DrawMatrix:DMatrix4D;(*oi_readonly*)(*hidden_in_objinsp*)
                          //Vertex3D_in_WCS_Array:GDBPolyPoint3DArray;(*oi_readonly*)(*hidden_in_objinsp*)
                          procedure CalcObjMatrix;virtual;
-                         procedure DrawGeometry(lw:GDBInteger;var DC:TDrawContext{infrustumactualy:TActulity;subrender:GDBInteger});virtual;
+                         procedure DrawGeometry(lw:Integer;var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
                          procedure SimpleDrawGeometry(var DC:TDrawContext);virtual;
                          procedure RenderFeedback(pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;
-                         function CalcInFrustum(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:GDBInteger; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:GDBDouble):GDBBoolean;virtual;
+                         function CalcInFrustum(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
                          function CalcTrueInFrustum(frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
-                         function onmouse(var popa:TZctnrVectorPGDBaseObjects;const MF:ClipArray;InSubEntry:GDBBoolean):GDBBoolean;virtual;
+                         function onmouse(var popa:TZctnrVectorPGDBaseObjects;const MF:ClipArray;InSubEntry:Boolean):Boolean;virtual;
                          //function InRect:TInRect;virtual;
-                         procedure addcontrolpoints(tdesc:GDBPointer);virtual;
+                         procedure addcontrolpoints(tdesc:Pointer);virtual;
                          procedure remaponecontrolpoint(pdesc:pcontrolpointdesc);virtual;
                          procedure ReCalcFromObjMatrix;virtual;
-                         function CalcRotate:GDBDouble;virtual;
-                         procedure FormatAfterFielfmod(PField,PTypeDescriptor:GDBPointer);virtual;
-                         procedure setrot(r:GDBDouble);
+                         function CalcRotate:Double;virtual;
+                         procedure FormatAfterFielfmod(PField,PTypeDescriptor:Pointer);virtual;
+                         procedure setrot(r:Double);
                          procedure transform(const t_matrix:DMatrix4D);virtual;
                    end;
 {EXPORT-}
 var
-   SysVarRDPanObjectDegradation:GDBBoolean=false;
+   SysVarRDPanObjectDegradation:Boolean=false;
 implementation
 //uses
 //   log;
@@ -85,7 +98,7 @@ begin
 
   inherited;
 end;
-procedure GDBObjAbstractText.setrot(r:GDBDouble);
+procedure GDBObjAbstractText.setrot(r:Double);
 var m1:DMatrix4D;
 begin
 m1:=onematrix;
@@ -95,7 +108,7 @@ m1[1,0]:=-sin(r);
 m1[0,1]:=sin(r);
 objMatrix:=MatrixMultiply(m1,objMatrix);
 end;
-procedure GDBObjAbstractText.FormatAfterFielfmod(PField,PTypeDescriptor:GDBPointer);
+procedure GDBObjAbstractText.FormatAfterFielfmod(PField,PTypeDescriptor:Pointer);
 (*var
    r:double;
    ox:gdbvertex;
@@ -159,7 +172,7 @@ begin
      //Local.basis.ox:=ox;
 end;
 
-function GDBObjAbstractText.CalcRotate:GDBDouble;
+function GDBObjAbstractText.CalcRotate:Double;
 (*var
     ox:gdbvertex;
 begin
@@ -187,8 +200,8 @@ begin
 end;*)
 var
     v1,v2:GDBVertex;
-    l1,l0:GDBDouble;
-    a0,a1,a:double;
+    l1,l0:Double;
+    //a0,a1,a:double;
 begin
 
      if bp.ListPos.owner<>nil then begin
@@ -205,7 +218,7 @@ begin
      l1:=scalardot(v1,v2);
      l1:=arccos(l1);
      if v1.y<-eps then l1:=2*pi-l1;
-     a1:=l0*180/pi;
+     //a1:=l0*180/pi;
      l1:=l1+L0;
      if l1>2*pi then l1:=l1-2*pi;
      result:=l1;
@@ -220,10 +233,10 @@ begin
                              end;
                     end;
 end;
-procedure GDBObjAbstractText.addcontrolpoints(tdesc:GDBPointer);
+procedure GDBObjAbstractText.addcontrolpoints(tdesc:Pointer);
 var pdesc:controlpointdesc;
 begin
-          PSelectedObjDesc(tdesc)^.pcontrolpoint^.init({$IFDEF DEBUGBUILD}'{5A458E80-F735-432A-8E6D-85B580F5F0DC}',{$ENDIF}1);
+          PSelectedObjDesc(tdesc)^.pcontrolpoint^.init(1);
           pdesc.selected:=false;
           pdesc.pobject:=nil;
           pdesc.pointtype:=os_point;
@@ -234,7 +247,7 @@ begin
           PSelectedObjDesc(tdesc)^.pcontrolpoint^.PushBackData(pdesc);
 end;
 (*function GDBObjAbstractText.InRect;
-//var i:GDBInteger;
+//var i:Integer;
 //    ptpv:PGDBPolyVertex2D;
 begin
      if pprojoutbound<>nil then
@@ -252,8 +265,8 @@ begin
      result:=IREmpty;
 end;*)
 function GDBObjAbstractText.onmouse;
-var //i,counter:GDBInteger;
-    //d:GDBDouble;
+var //i,counter:Integer;
+    //d:Double;
     //ptpv0,ptpv1:PGDBPolyVertex3D;
     subresult:TInBoundingVolume;
 begin
@@ -314,7 +327,7 @@ begin
    end;}
 end;
 function GDBObjAbstractText.CalcInFrustum;
-var i:GDBInteger;
+var i:Integer;
 begin
       result:=true;
       for i:=0 to 4 do
@@ -331,8 +344,8 @@ begin
       end;
 end;
 function GDBObjAbstractText.CalcTrueInFrustum;
-//var i,count:GDBInteger;
-//    d1,d2,d3,d4:gdbdouble;
+//var i,count:Integer;
+//    d1,d2,d3,d4:Double;
 begin
       result:=CalcOutBound4VInFrustum(outbound,frustum);
       if result<>IRPartially then
@@ -372,7 +385,7 @@ begin
 end;
 procedure GDBObjAbstractText.CalcObjMatrix;
 var m1,m2,m3:DMatrix4D;
-    angle:GDBDouble;
+    angle:Double;
 begin
   inherited CalcObjMatrix;
   if textprop.upsidedown then

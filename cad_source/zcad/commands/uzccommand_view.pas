@@ -18,13 +18,13 @@
 {$mode delphi}
 unit uzccommand_view;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
   LazLogger,
   sysutils,
-  uzbgeomtypes,uzegeometry,
+  uzegeometrytypes,uzegeometry,
   uzccommandsabstract,uzccommandsimpl,
   uzcdrawings;
 

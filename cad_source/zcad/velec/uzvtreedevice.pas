@@ -15,10 +15,10 @@
 {
 @author(Vladimir Bobrov)
 }
-{$mode objfpc}
+{$mode objfpc}{$H+}
 
 unit uzvtreedevice;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -28,7 +28,7 @@ uses
   URecordDescriptor,TypeDescriptors,
 
   Forms, //uzcfblockinsert,
-   uzcfarrayinsert,
+  //uzcfarrayinsert,
 
   uzeentblockinsert,      //unit describes blockinsert entity
                        //модуль описывающий примитив вставка блока
@@ -54,26 +54,26 @@ uses
   uzeentarc,
   uzeentcircle,
   uzeentity,
-  uzbgeomtypes,
+  uzegeometrytypes,
 
 
-  gvector,garrayutils, // Подключение Generics и модуля для работы с ним
-  uzcstrconsts,
+  gvector,//garrayutils, // Подключение Generics и модуля для работы с ним
+  //uzcstrconsts,
   uzcentcable,
   uzeentdevice,
-  UGDBOpenArrayOfPV,
+  //UGDBOpenArrayOfPV,
 
   uzegeometry,
-  uzeentitiesmanager,
+  //uzeentitiesmanager,
 
   //uzcmessagedialogs,
   uzeentityfactory,    //unit describing a "factory" to create primitives
                       //модуль описывающий "фабрику" для создания примитивов
   uzcsysvars,        //system global variables
                       //системные переменные
-  uzgldrawcontext,
+  //uzgldrawcontext,
   uzcinterface,
-  uzbtypesbase,uzbtypes, //base types
+  uzbtypes, //base types
                       //описания базовых типов
   uzeconsts, //base constants
                       //описания базовых констант
@@ -81,7 +81,7 @@ uses
   uzccommandsabstract,
   uzccommandsimpl, //Commands manager and related objects
                       //менеджер команд и объекты связанные с ним
-  uzcdrawing,
+  //uzcdrawing,
   uzedrawingsimple,
   uzcdrawings,     //Drawings manager, all open drawings are processed him
                       //"Менеджер" чертежей
@@ -89,13 +89,13 @@ uses
                       //разные функции упрощающие создание примитивов, пока их там очень мало
   varmandef,
   Varman,
-  {UGDBOpenArrayOfUCommands,}zcchangeundocommand,
+  {UGDBOpenArrayOfUCommands,}//zcchangeundocommand,
 
   uzclog,                //log system
                       //<**система логирования
   uzcvariablesutils, // для работы с ртти
 
-   gzctnrvectortypes,                  //itrec
+  //gzctnrvectortypes,                  //itrec
 
   //для работы графа
   ExtType,
@@ -168,7 +168,7 @@ var
                begin
                    pvd:=FindVariableInEnt(listVertex[i].deviceEnt,'NMO_Name');
                    if pvd <> nil then
-                   if pgdbstring(pvd^.data.Instance)^ = name then begin
+                   if pString(pvd^.data.Addr.Instance)^ = name then begin
                       //result:=-1;
 
                       //работа с библиотекой Аграф
@@ -227,7 +227,7 @@ function getListMasterDev(listVertexEdge:TGraphBuilder;globalGraph: TGraph):TVec
        pvd:pvardesk; //для работы со свойствами устройств
        polyObj:PGDBObjPolyLine;
        i,counter1,counter2,counter3:integer;
-       tempName,nameParam:gdbstring;
+       tempName,nameParam:String;
        infoLay:TCableLaying;
        listStr1,listStr2,listStr3:TVertexofString;
 
@@ -239,7 +239,7 @@ function getListMasterDev(listVertexEdge:TGraphBuilder;globalGraph: TGraph):TVec
          pvd:=FindVariableInEnt(nowDev,'SLCABAGEN_HeadDeviceName');
          if pvd<>nil then
             BEGIN
-         tempName:=pgdbstring(pvd^.data.Instance)^;
+         tempName:=pString(pvd^.data.Addr.Instance)^;
          repeat
                GetPartOfPath(nameParam,tempName,';');
                listStr1.PushBack(nameParam);
@@ -249,7 +249,7 @@ function getListMasterDev(listVertexEdge:TGraphBuilder;globalGraph: TGraph):TVec
          pvd:=FindVariableInEnt(nowDev,'SLCABAGEN_NGHeadDevice');
                    if pvd<>nil then
             BEGIN
-         tempName:=pgdbstring(pvd^.data.Instance)^;
+         tempName:=pString(pvd^.data.Addr.Instance)^;
          repeat
                GetPartOfPath(nameParam,tempName,';');
                listStr2.PushBack(nameParam);
@@ -258,7 +258,7 @@ function getListMasterDev(listVertexEdge:TGraphBuilder;globalGraph: TGraph):TVec
          pvd:=FindVariableInEnt(nowDev,'SLCABAGEN_SLTypeagen');
               if pvd<>nil then
             BEGIN
-         tempName:=pgdbstring(pvd^.data.Instance)^;
+         tempName:=pString(pvd^.data.Addr.Instance)^;
          repeat
                GetPartOfPath(nameParam,tempName,';');
                listStr3.PushBack(nameParam);
@@ -335,7 +335,7 @@ function getListMasterDev(listVertexEdge:TGraphBuilder;globalGraph: TGraph):TVec
                              masterDevInfo.shortName:='nil';
                              pvd:=FindVariableInEnt(listVertexEdge.listVertex[numHeadDev].deviceEnt,'NMO_Suffix');
                              if pvd<>nil then
-                                   masterDevInfo.shortName:=pgdbstring(pvd^.data.Instance)^;
+                                   masterDevInfo.shortName:=pString(pvd^.data.Addr.Instance)^;
                              result.PushBack(masterDevInfo);
                              numHead:=result.Size-1;
                              masterDevInfo:=nil;
@@ -692,7 +692,7 @@ var
         begin
          pvd:=FindVariableInEnt(listVertexEdge.listVertex[num].deviceEnt,'NMO_BaseName');
          if pvd <> nil then
-            name:=pgdbstring(pvd^.data.Instance)^
+            name:=pString(pvd^.data.Addr.Instance)^
         end;
      if listCounterGroupDevice.size = 0 then
        begin
@@ -722,7 +722,7 @@ var
     end;
 
     //Визуализация текста его p1-координата, mText-текст, color-цвет, размер
-    function visualDrawText(p1:GDBVertex;mText:GDBString;color:integer;heightText:double):TCommandResult;
+    function visualDrawText(p1:GDBVertex;mText:String;color:integer;heightText:double):TCommandResult;
     var
         ptext:PGDBObjText;
     begin
@@ -730,7 +730,7 @@ var
           zcSetEntPropFromCurrentDrawingProp(ptext); //добавляем дефаултные свойства
           ptext^.TXTStyleIndex:=drawings.GetCurrentDWG^.GetCurrentTextStyle; //добавляет тип стиля текста, дефаултные свойства его не добавляют
           ptext^.Local.P_insert:=p1;  // координата
-          ptext^.Template:=mText;     // сам текст
+          ptext^.Template:=TDXFEntsInternalStringType(mText);     // сам текст
           ptext^.vp.LineWeight:=LnWt100;
           ptext^.vp.Color:=color;
           ptext^.vp.Layer:=uzvtestdraw.getTestLayer(vTempLayerName);
@@ -740,7 +740,7 @@ var
     end;
 
     //Визуализация круга его p1-координата, rr-радиус, color-цвет
-    function visualDrawCircle(p1:GDBVertex;rr:GDBDouble;color:integer):TCommandResult;
+    function visualDrawCircle(p1:GDBVertex;rr:Double;color:integer):TCommandResult;
     var
         pcircle:PGDBObjCircle;
     begin
@@ -893,12 +893,12 @@ var
         if isMetricNumeric then begin
          pvd:=FindVariableInEnt(dev,'NMO_BaseName');
          if pvd<>nil then
-           name:=pgdbstring(pvd^.data.Instance)^;
+           name:=pString(pvd^.data.Addr.Instance)^;
          end;
 
          pvd:=FindVariableInEnt(dev,'GC_InGroup_Metric');
            if pvd<>nil then
-               pgdbstring(pvd^.data.Instance)^:=name ;
+               pString(pvd^.data.Addr.Instance)^:=name ;
     end;
 
     procedure drawCableLine(listInteger:TVectorofInteger;numLMaster,numLGroup,counterSegment:Integer);
@@ -931,34 +931,34 @@ var
       //** Имя мастера устройства
        pvd:=FindVariableInEnt(cableLine,'GC_HeadDevice');
        if pvd<>nil then
-             pgdbstring(pvd^.data.Instance)^:=listMasterDevice[numLMaster].name;
+             pString(pvd^.data.Addr.Instance)^:=listMasterDevice[numLMaster].name;
 
        pvd:=FindVariableInEnt(cableLine,'GC_HDShortName');
        if pvd<>nil then
-             pgdbstring(pvd^.data.Instance)^:=listMasterDevice[numLMaster].shortName;
+             pString(pvd^.data.Addr.Instance)^:=listMasterDevice[numLMaster].shortName;
 
       //** обавляем суффикс
       pvd:=FindVariableInEnt(cableLine,'NMO_Suffix');
        if pvd<>nil then
-             pgdbstring(pvd^.data.Instance)^:=listMasterDevice[numLMaster].LGroup[numLGroup].name;
+             pString(pvd^.data.Addr.Instance)^:=listMasterDevice[numLMaster].LGroup[numLGroup].name;
 
        pvd:=FindVariableInEnt(cableLine,'CABLE_AutoGen');
               if pvd<>nil then
-                    pgdbboolean(pvd^.data.Instance)^:=true;
+                    pBoolean(pvd^.data.Addr.Instance)^:=true;
 
        pvd:=FindVariableInEnt(cableLine,'GC_HDGroup');
        if pvd<>nil then
-       pgdbstring(pvd^.data.Instance)^:=listMasterDevice[numLMaster].LGroup[numLGroup].name;
+       pString(pvd^.data.Addr.Instance)^:=listMasterDevice[numLMaster].LGroup[numLGroup].name;
 
 
       pvd:=FindVariableInEnt(cableLine,'NMO_BaseName');
        if pvd<>nil then
-             pgdbstring(pvd^.data.Instance)^:=listMasterDevice[numLMaster].name + '-';
+             pString(pvd^.data.Addr.Instance)^:=listMasterDevice[numLMaster].name + '-';
 
        pvd:=FindVariableInEnt(cableLine,'CABLE_Segment');
        if pvd<>nil then
           begin
-             pgdbinteger(pvd^.data.Instance)^:=counterSegment;
+             PInteger(pvd^.data.Addr.Instance)^:=counterSegment;
           end;
 
 
@@ -1051,7 +1051,7 @@ var
 
      edgeLength,edgeLengthParent:float;
 
-    CabellingMountigName:string;
+    beforeCabellingMountigName,CabellingMountigName:string;
     polyObj:PGDBObjPolyLine;
     //i,j,counter:integer;
     mtext:string;
@@ -1064,7 +1064,7 @@ var
     colorNum,numberGDev:integer;
     listCounterGroupDevice:TCounterGroupDevice;
     listInteger:TVectorofInteger;
-    needParent,needVertex:boolean;
+    needParent,needVertex,newCabellingMountig:boolean;
     nowDevCounter:counterGroupDevice;
 
 
@@ -1078,15 +1078,15 @@ var
         if isMetricNumeric then begin
          pvd:=FindVariableInEnt(dev,'NMO_BaseName');
          if pvd<>nil then
-           name:=pgdbstring(pvd^.data.Instance)^;
+           name:=pString(pvd^.data.Addr.Instance)^;
          end;
 
          pvd:=FindVariableInEnt(dev,'GC_InGroup_Metric');
            if pvd<>nil then
-               pgdbstring(pvd^.data.Instance)^:=name ;
+               pString(pvd^.data.Addr.Instance)^:=name ;
     end;
 
-    procedure drawCableLine(listInteger:TVectorofInteger;numLMaster,numLGroup,counterSegment:Integer);
+    procedure drawCableLine(listInteger:TVectorofInteger;numLMaster,numLGroup,counterSegment:Integer;cabMounting:string);
     var
     cableLine:PGDBObjCable;
     i:integer;
@@ -1116,35 +1116,39 @@ var
       //** Имя мастера устройства
        pvd:=FindVariableInEnt(cableLine,'GC_HeadDevice');
        if pvd<>nil then
-             pgdbstring(pvd^.data.Instance)^:=listMasterDevice[numLMaster].name;
+             pString(pvd^.data.Addr.Instance)^:=listMasterDevice[numLMaster].name;
 
        pvd:=FindVariableInEnt(cableLine,'GC_HDShortName');
        if pvd<>nil then
-             pgdbstring(pvd^.data.Instance)^:=listMasterDevice[numLMaster].name;
+             pString(pvd^.data.Addr.Instance)^:=listMasterDevice[numLMaster].name;
 
       //** обавляем суффикс
       pvd:=FindVariableInEnt(cableLine,'NMO_Suffix');
        if pvd<>nil then
-             pgdbstring(pvd^.data.Instance)^:=listMasterDevice[numLMaster].LGroup[numLGroup].name;
+             pString(pvd^.data.Addr.Instance)^:=listMasterDevice[numLMaster].LGroup[numLGroup].name;
 
        pvd:=FindVariableInEnt(cableLine,'CABLE_AutoGen');
               if pvd<>nil then
-                    pgdbboolean(pvd^.data.Instance)^:=true;
+                    pBoolean(pvd^.data.Addr.Instance)^:=true;
 
        pvd:=FindVariableInEnt(cableLine,'GC_HDGroup');
        if pvd<>nil then
-       pgdbstring(pvd^.data.Instance)^:=listMasterDevice[numLMaster].LGroup[numLGroup].name;
+       pString(pvd^.data.Addr.Instance)^:=listMasterDevice[numLMaster].LGroup[numLGroup].name;
 
 
       pvd:=FindVariableInEnt(cableLine,'NMO_BaseName');
        if pvd<>nil then
-             pgdbstring(pvd^.data.Instance)^:=listMasterDevice[numLMaster].name + '-';
+             pString(pvd^.data.Addr.Instance)^:=listMasterDevice[numLMaster].name + '-';
 
        pvd:=FindVariableInEnt(cableLine,'CABLE_Segment');
        if pvd<>nil then
           begin
-             pgdbinteger(pvd^.data.Instance)^:=counterSegment;
+             PInteger(pvd^.data.Addr.Instance)^:=counterSegment;
           end;
+
+       pvd:=FindVariableInEnt(cableLine,'Cable_Mounting_Method');
+         if pvd<>nil then
+         pString(pvd^.data.Addr.Instance)^:=cabMounting;
 
 
      zcAddEntToCurrentDrawingWithUndo(cableLine);
@@ -1152,6 +1156,8 @@ var
      end;
 
 begin
+
+    //ZCMsgCallBackInterface.TextMessage('1',TMWOHistoryOut);
 
       //Создаем граф на основе класса TGraphBuilder полученого при обработке устройств и суперлиний
     globalGraph:=TGraph.Create;
@@ -1163,7 +1169,7 @@ begin
       globalGraph.Edges[i].Weight:=listVertexEdge.listEdge[i].edgeLength;
     end;
 
-
+    //ZCMsgCallBackInterface.TextMessage('2',TMWOHistoryOut);
 
     //colorNum:=1;
      for i:=0 to listMasterDevice.Size-1 do
@@ -1181,16 +1187,18 @@ begin
 
                 listInteger:=TVectorofInteger.Create;
 
-                CabellingMountigName:='';
+                CabellingMountigName:='-';
+                beforeCabellingMountigName:='-';
                 superlinedev:=nil;
                 needParent:=false;
                 needVertex:=false;
+                newCabellingMountig:=false;  // если новый тип прокладки кабеля
                 for l:= 0 to VPath.Count - 1 do
                  begin
                   //ZCMsgCallBackInterface.TextMessage('вершина - '+inttostr(tvertex(VPath[l]).AsInt32[vGGIndex]),TMWOHistoryOut);
-                  //if l<> 0 then
-                  //ZCMsgCallBackInterface.TextMessage('вершина отец - '+inttostr(tvertex(VPath[l]).Parent.AsInt32[vGGIndex]),TMWOHistoryOut);
-                   //Создаем список точек кабеля который передадим в отрисовку кабельной линии
+                  //if l <> 0 then
+                  //   ZCMsgCallBackInterface.TextMessage('вершина отец - '+inttostr(tvertex(VPath[l]).Parent.AsInt32[vGGIndex]),TMWOHistoryOut);
+                  // //Создаем список точек кабеля который передадим в отрисовку кабельной линии
                    if needParent then begin
                      listInteger.PushBack(tvertex(VPath[l]).Parent.AsInt32[vGGIndex]);
                      needParent:=false;
@@ -1199,38 +1207,51 @@ begin
                    //  listInteger.PushBack(tvertex(VPath[l]).AsInt32[vGGIndex]);
                    //  needVertex:=false;
                    //end;
-                   //ZCMsgCallBackInterface.TextMessage('0 - '+ inttostr(listInteger.Size),TMWOHistoryOut);
-                   if listInteger.Size>1 then begin
-                    //ZCMsgCallBackInterface.TextMessage('1 - '+listMasterDevice[i].LGroup[j].AllTreeDev.GetEdge(tvertex(VPath[l-1]),tvertex(VPath[l])).AsString[vGInfoEdge],TMWOHistoryOut);
-                    superlinedev:=PGDBObjSuperLine(listMasterDevice[i].LGroup[j].AllTreeDev.GetEdge(tvertex(VPath[l-1]),tvertex(VPath[l])).AsPointer[vGPGDBObjEdge]);
-                    if superlinedev<>nil then
-                       //ZCMsgCallBackInterface.TextMessage('2 - '+superlinedev^.GetObjName,TMWOHistoryOut);
-                    if superlinedev<>nil then
-                       //CabellingMountigName:='УКАЗАН'
-                       CabellingMountigName:=pgdbstring(FindVariableInEnt(superlinedev,velec_cableMounting)^.data.Instance)^
-                    else
-                      CabellingMountigName:= 'не указан';
-                    ZCMsgCallBackInterface.TextMessage('метод прокладки - '+CabellingMountigName,TMWOHistoryOut);
-                   end;
-                     //ZCMsgCallBackInterface.TextMessage('111 - ',TMWOHistoryOut);
-                     listInteger.PushBack(tvertex(VPath[l]).AsInt32[vGGIndex]);
-                     //ZCMsgCallBackInterface.TextMessage('222 - ',TMWOHistoryOut);
+                   //ZCMsgCallBackInterface.TextMessage('номер устройства - '+ inttostr(listInteger.Size),TMWOHistoryOut);
+                      if listInteger.Size>1 then
+                        begin
+                          //ZCMsgCallBackInterface.TextMessage('ребро - '+listMasterDevice[i].LGroup[j].AllTreeDev.GetEdge(tvertex(VPath[l-1]),tvertex(VPath[l])).AsString[vGInfoEdge],TMWOHistoryOut);
+                          superlinedev:=PGDBObjSuperLine(listMasterDevice[i].LGroup[j].AllTreeDev.GetEdge(tvertex(VPath[l-1]),tvertex(VPath[l])).AsPointer[vGPGDBObjEdge]);
+                          //ZCMsgCallBackInterface.TextMessage('ребро получено',TMWOHistoryOut);
+                          //if superlinedev<>nil then
+                             //ZCMsgCallBackInterface.TextMessage('2 - '+superlinedev^.GetObjName,TMWOHistoryOut);
+                          if superlinedev<>nil then
+                             //CabellingMountigName:='УКАЗАН'
+                             CabellingMountigName:=pString(FindVariableInEnt(superlinedev,velec_cableMounting)^.data.Addr.Instance)^
+                          else
+                             CabellingMountigName:= '-';
+                          //ZCMsgCallBackInterface.TextMessage('метод прокладки - '+CabellingMountigName,TMWOHistoryOut);
+                       end;
+
+                      ////****прокладка кабеля согласно методов прокладки
+                      if beforeCabellingMountigName <> CabellingMountigName then begin
+                            //ZCMsgCallBackInterface.TextMessage('Прокладываем кабель новый метод прокладки',TMWOHistoryOut);
+                            drawCableLine(listInteger,i,j,counterSegment,beforeCabellingMountigName);
+                            listInteger:=TVectorofInteger.Create;
+                            inc(counterSegment);
+                            listInteger.PushBack(tvertex(VPath[l]).Parent.AsInt32[vGGIndex]);
+                      end;
+                      beforeCabellingMountigName:=CabellingMountigName;
+                      ////*******/////
+                      //ZCMsgCallBackInterface.TextMessage('111 - ',TMWOHistoryOut);
+
+                      listInteger.PushBack(tvertex(VPath[l]).AsInt32[vGGIndex]);
+
+                      //ZCMsgCallBackInterface.TextMessage('222 - ',TMWOHistoryOut);
                      if listVertexEdge.listVertex[tvertex(VPath[l]).AsInt32[vGGIndex]].break and listVertexEdge.listVertex[tvertex(VPath[l]).Parent.AsInt32[vGGIndex]].break then begin
                        needParent:=true;
                        listInteger:=TVectorofInteger.Create;
                      end else
-
-                   //ZCMsgCallBackInterface.TextMessage('длина списка - '+inttostr(listInteger.Size),TMWOHistoryOut);
-                   if listInteger.Size > 1 then
-                   if (tvertex(VPath[l]).ChildCount > 1) or (tvertex(VPath[l]).ChildCount = 0) or tvertex(VPath[l]).AsBool[vGIsDevice] or (listVertexEdge.listVertex[tvertex(VPath[l]).AsInt32[vGGIndex]].break and listVertexEdge.listVertex[tvertex(VPath[l]).Parent.AsInt32[vGGIndex]].break) then
-                   //if (tvertex(VPath[l]).ChildCount > 1) or (tvertex(VPath[l]).ChildCount = 0) or (listVertexEdge.listVertex[tvertex(VPath[l]).AsInt32[vGGIndex]].break and listVertexEdge.listVertex[tvertex(VPath[l]).Parent.AsInt32[vGGIndex]].break) then
-                     begin
-                       ZCMsgCallBackInterface.TextMessage('Прокладываем кабель',TMWOHistoryOut);
-                        drawCableLine(listInteger,i,j,counterSegment);
-                        listInteger:=TVectorofInteger.Create;
-                        inc(counterSegment);
-                        needParent:=true;
-                     end;
+                       if listInteger.Size > 1 then
+                       if (tvertex(VPath[l]).ChildCount > 1) or (tvertex(VPath[l]).ChildCount = 0) or tvertex(VPath[l]).AsBool[vGIsDevice] or (listVertexEdge.listVertex[tvertex(VPath[l]).AsInt32[vGGIndex]].break and listVertexEdge.listVertex[tvertex(VPath[l]).Parent.AsInt32[vGGIndex]].break) then
+                       //if (tvertex(VPath[l]).ChildCount > 1) or (tvertex(VPath[l]).ChildCount = 0) or (listVertexEdge.listVertex[tvertex(VPath[l]).AsInt32[vGGIndex]].break and listVertexEdge.listVertex[tvertex(VPath[l]).Parent.AsInt32[vGGIndex]].break) then
+                         begin
+                           ZCMsgCallBackInterface.TextMessage('Прокладываем кабель',TMWOHistoryOut);
+                            drawCableLine(listInteger,i,j,counterSegment,beforeCabellingMountigName);
+                            listInteger:=TVectorofInteger.Create;
+                            inc(counterSegment);
+                            needParent:=true;
+                         end;
 
                   end;
               //inc(colorNum);
@@ -1628,7 +1649,7 @@ var
                begin
                    pvd:=FindVariableInEnt(listVertex[i].deviceEnt,'NMO_Name');
                    if pvd <> nil then
-                   if pgdbstring(pvd^.data.Instance)^ = name then
+                   if pString(pvd^.data.Addr.Instance)^ = name then
                       result:= false;
                end;
     end;
@@ -1717,11 +1738,11 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
   groupInfo:TMasterDevice.TGroupInfo;
   infoSubDev:TMasterDevice.TGroupInfo.TInfoSubDev;
   //deviceInfo:TMasterDevice.TGroupInfo.TDeviceInfo;
-  i,j,k,m,counter,tnum: Integer;
+  i,j,{k,}m,{counter,}tnum: Integer;
   numHead,numHeadGroup,numHeadDev : integer;
 
   isHeadnum:boolean;
-  shortNameHead, headDevName, groupName:string;
+  {shortNameHead, }headDevName, groupName:string;
   pvd:pvardesk; //для работы со свойствами устройств
 
     //** Получаем количество кабелей подключения данного устройства к головным устройствам, с последующим разбором
@@ -1730,7 +1751,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
        pvd:pvardesk; //для работы со свойствами устройств
        polyObj:PGDBObjPolyLine;
        i,counter1,counter2,counter3:integer;
-       tempName,nameParam:gdbstring;
+       tempName,nameParam:String;
        infoLay:TCableLaying;
        listStr1,listStr2,listStr3:TVertexofString;
 
@@ -1742,7 +1763,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
          pvd:=FindVariableInEnt(nowDev,'SLCABAGEN_HeadDeviceName');
          if pvd<>nil then
             BEGIN
-         nameParam:=pgdbstring(pvd^.data.Instance)^;
+         nameParam:=pString(pvd^.data.Addr.Instance)^;
          listStr1.PushBack(nameParam);
          //repeat
          //      GetPartOfPath(nameParam,tempName,';');
@@ -1753,7 +1774,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
          pvd:=FindVariableInEnt(nowDev,'SLCABAGEN_NGHeadDevice');
                    if pvd<>nil then
             BEGIN
-         nameParam:=pgdbstring(pvd^.data.Instance)^;
+         nameParam:=pString(pvd^.data.Addr.Instance)^;
          //repeat
          //      GetPartOfPath(nameParam,tempName,';');
          listStr2.PushBack(nameParam);
@@ -1762,7 +1783,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
          pvd:=FindVariableInEnt(nowDev,'SLCABAGEN_SLTypeagen');
               if pvd<>nil then
             BEGIN
-         nameParam:=pgdbstring(pvd^.data.Instance)^;
+         nameParam:=pString(pvd^.data.Addr.Instance)^;
          //repeat
          //      GetPartOfPath(nameParam,tempName,';');
                listStr3.PushBack(nameParam);
@@ -1839,7 +1860,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
                              masterDevInfo.shortName:='nil';
                              pvd:=FindVariableInEnt(listVertexEdge.listVertex[numHeadDev].deviceEnt,'NMO_Suffix');
                              if pvd<>nil then
-                                   masterDevInfo.shortName:=pgdbstring(pvd^.data.Instance)^;
+                                   masterDevInfo.shortName:=pString(pvd^.data.Addr.Instance)^;
                              result.PushBack(masterDevInfo);
                              numHead:=result.Size-1;
                              masterDevInfo:=nil;
@@ -1890,17 +1911,17 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
   //type
     //tempuseVertex:Tvectorofinteger;
   var
-     pvd:pvardesk; //для работы со свойствами устройств
-     polyObj:PGDBObjPolyLine;
-     i,j,k,m,n,counter1,counter2,counter3:integer;
+     //pvd:pvardesk; //для работы со свойствами устройств
+     //polyObj:PGDBObjPolyLine;
+     i,j,k,m,n{,counter1,counter2,counter3}:integer;
      tIndex,tIndexLocal,tIndexGlobal:integer;
      EdgePath, VertexPath: TClassList;
      infoGTree:TGraph;
 
      tempString:string;
-     sumWeightPath,tempFloat: Float;
+     sumWeightPath{,tempFloat}: Float;
      tempLVertex:TvectorOfInteger;
-     gg:GDBVertex;
+     //gg:GDBVertex;
 
      function isVertexAdded(tempLVertex:tvectorofinteger;index:integer):boolean;
      var
@@ -2178,9 +2199,9 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
   //type
     //tempuseVertex:Tvectorofinteger;
   var
-     pvd:pvardesk; //для работы со свойствами устройств
-     polyObj:PGDBObjPolyLine;
-     i,j,k,m,n,counter1,counter2,counter3:integer;
+     //pvd:pvardesk; //для работы со свойствами устройств
+     //polyObj:PGDBObjPolyLine;
+     i,j,k,m,n{,counter1,counter2,counter3}:integer;
      tIndex,tIndexLocal,tIndexGlobal:integer;
      EdgePath, VertexPath: TClassList;
      infoGTree:TGraph;
@@ -2188,9 +2209,9 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
      isNewMasterDev:boolean;
 
      tempString:string;
-     sumWeightPath,tempFloat: Float;
+     sumWeightPath{,tempFloat}: Float;
      tempLVertex:TvectorOfInteger;
-     gg:GDBVertex;
+     //gg:GDBVertex;
 
      function isVertexAdded(tempLVertex:tvectorofinteger;index:integer):boolean;
      var
@@ -2518,9 +2539,9 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
   type
       TVertexofString=specialize TVector<string>;
   var
-     pvd:pvardesk; //для работы со свойствами устройств
-     polyObj:PGDBObjPolyLine;
-     i,j,k,m,n,o,p,counter1,counter2,counter3:integer;
+     //pvd:pvardesk; //для работы со свойствами устройств
+     //polyObj:PGDBObjPolyLine;
+     i,j,k,m,n,o{,p,counter1,counter2,counter3}:integer;
      tIndex,tIndexLocal,tIndexGlobal:integer;
      EdgePath, VertexPath: TClassList;
      infoGTree:TGraph;
@@ -2531,9 +2552,9 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
 
      tempString:string;
      specChar:string;
-     sumWeightPath,tempFloat: Float;
-     tempLVertex:TvectorOfInteger;
-     gg:GDBVertex;
+     sumWeightPath{,tempFloat}: Float;
+     //tempLVertex:TvectorOfInteger;
+     //gg:GDBVertex;
      listVertexSNCU, listVertexDevUnit:TVertexofString;
      subMasterDeviceSpecName,subCUDeviceSpecName,nodeCUSpecName,saveSpecNameNode:string;
 
@@ -2577,8 +2598,8 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
      end;
 
      function isVertexLonely(graphNow:TGraph;index:integer):boolean;
-     var
-       i:integer;
+     //var
+       //i:integer;
      begin
        //result:=true;
        // for i:=0 to graphNow.VertexCount-1 do
@@ -2656,7 +2677,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
 
     end;
         //**удаление спец символа
-    function delSpecChar(name:gdbstring):gdbstring;
+    function delSpecChar(name:String):String;
     begin
        if (name[1] = '^') then
           delete(name,1,1);
@@ -2666,10 +2687,10 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
 
     end;
     //**Получаем список промежуточных узлов
-    function getListSubDevVertex(strSub:gdbstring):TVertexofString;
+    function getListSubDevVertex(strSub:String):TVertexofString;
     var
-      nameParam:gdbstring;
-      i:integer;
+      nameParam:String;
+      //i:integer;
     begin
         result:=TVertexofString.Create;
         //ZCMsgCallBackInterface.TextMessage('исходная строка :' + strSub,TMWOHistoryOut);
@@ -2688,10 +2709,10 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
     end;
 
     //**Получаем список промежуточных узлов
-    function getListNameSeparator(strSub:gdbstring):TVertexofString;
+    function getListNameSeparator(strSub:String):TVertexofString;
     var
-      nameParam:gdbstring;
-      i:integer;
+      nameParam:String;
+      //i:integer;
     begin
         result:=TVertexofString.Create;
         //ZCMsgCallBackInterface.TextMessage('исходная строка :' + strSub,TMWOHistoryOut);
@@ -2710,7 +2731,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
         //     ZCMsgCallBackInterface.TextMessage('промежуточный узел - ' + result[i],TMWOHistoryOut);
     end;
      //**я есть в списей
-    function inListStr(list:TVertexofString;name:gdbstring):boolean;
+    function inListStr(list:TVertexofString;name:String):boolean;
     var
       i:integer;
     begin
@@ -2723,8 +2744,8 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
     //**Получаем список имен промежуточных узлов и узлов управления
     function getListVertexSNCU(listSubDev:TMasterDevice.TGroupInfo.TVectorOfSubDev):TVertexofString;
     var
-      i,j:integer;
-      listName:TVertexofString;
+      i{,j}:integer;
+      //listName:TVertexofString;
       nameCU:string;
     begin
         result:=TVertexofString.Create;
@@ -2732,7 +2753,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
         for i:=0 to listSubDev.Size-1 do
             begin
                  //** Список промежуточных узлов ГУ
-                 //listName:=getListNameSeparator((pgdbstring(FindVariableInEnt(listVertexEdge.listVertex[listSubDev[i].indexSub].deviceEnt,velec_CableRoutingNodes)^.data.Instance)^));
+                 //listName:=getListNameSeparator((pString(FindVariableInEnt(listVertexEdge.listVertex[listSubDev[i].indexSub].deviceEnt,velec_CableRoutingNodes)^.Instance)^));
                  //if not listName.IsEmpty then
                  //  for j:=0 to listName.Size-1 do
                  //    if  inListStr(result,listName[j]) then
@@ -2744,7 +2765,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
                         result.PushBack(delSpecChar(nameCU));
 
                  //** Добавления имени узла управления
-                 nameCU:=pgdbstring(FindVariableInEnt(listVertexEdge.listVertex[listSubDev[i].indexSub].deviceEnt,velec_ControlUnitName)^.data.Instance)^;
+                 nameCU:=pString(FindVariableInEnt(listVertexEdge.listVertex[listSubDev[i].indexSub].deviceEnt,velec_ControlUnitName)^.data.Addr.Instance)^;
                  if inListStr(result,delSpecChar(nameCU)) then
                    if (nameCU[1] <> velec_onlyThisDev) then
                      if (nameCU <> '-') then
@@ -2752,7 +2773,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
                           result.PushBack(delSpecChar(nameCU));
 
                  //** Список промежуточных узлов УУ
-                 //listName:=getListNameSeparator((pgdbstring(FindVariableInEnt(listVertexEdge.listVertex[listSubDev[i].indexSub].deviceEnt,velec_NGControlUnitNodes)^.data.Instance)^));
+                 //listName:=getListNameSeparator((pString(FindVariableInEnt(listVertexEdge.listVertex[listSubDev[i].indexSub].deviceEnt,velec_NGControlUnitNodes)^.Instance)^));
                  //if not listName.IsEmpty then
                  //  for j:=0 to listName.Size-1 do
                  //    if  inListStr(result,listName[j]) then
@@ -2771,7 +2792,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
     //**Получаем список имен узлов прокладки кабеля от устройства до ГУ
     function getListVertexDevUnit(dev:PGDBObjDevice):TVertexofString;
     var
-      i,j:integer;
+      //i,j:integer;
       listName:TVertexofString;
       nameCU:string;
     begin
@@ -2779,7 +2800,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
         listName:=TVertexofString.Create;
 
          //** Список промежуточных узлов УУ
-         //listName:=getListNameSeparator((pgdbstring(FindVariableInEnt(dev,velec_NGControlUnitNodes)^.data.Instance)^));
+         //listName:=getListNameSeparator((pString(FindVariableInEnt(dev,velec_NGControlUnitNodes)^.Instance)^));
          //if not listName.IsEmpty then
          //  for j:=0 to listName.Size-1 do
          //    //if  inListStr(result,listName[j]) then
@@ -2791,7 +2812,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
 
 
          //** Добавления имени узла управления
-         nameCU:=pgdbstring(FindVariableInEnt(dev,velec_ControlUnitName)^.data.Instance)^;
+         nameCU:=pString(FindVariableInEnt(dev,velec_ControlUnitName)^.data.Addr.Instance)^;
          //if inListStr(result,delSpecChar(nameCU)) then
          //if inListStr(result,nameCU) then
            if (nameCU <> '-') then
@@ -2800,7 +2821,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
                 result.PushBack(nameCU);
 
          //** Список промежуточных узлов ГУ
-         //listName:=getListNameSeparator((pgdbstring(FindVariableInEnt(dev,velec_CableRoutingNodes)^.data.Instance)^));
+         //listName:=getListNameSeparator((pString(FindVariableInEnt(dev,velec_CableRoutingNodes)^.Instance)^));
          //if not listName.IsEmpty then
          //  for j:=0 to listName.Size-1 do
          //    //if  inListStr(result,listName[j]) then
@@ -2811,7 +2832,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
                 result.PushBack(nameCU);
 
          //** Добавления имени ГУ
-         nameCU:=pgdbstring(FindVariableInEnt(dev,velec_HeadDeviceName)^.data.Instance)^;
+         nameCU:=pString(FindVariableInEnt(dev,velec_HeadDeviceName)^.data.Addr.Instance)^;
          //if inListStr(result,delSpecChar(nameCU)) then
          //if inListStr(result,nameCU) then
            if (nameCU <> '-') then
@@ -2827,14 +2848,14 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
     //**Получаем список имен узлов прокладки кабеля от устройства до узла учета включительно + группа узле учета
     function getListVertexSubDevControlUnit(dev:PGDBObjDevice):string;
     var
-      i,j:integer;
-      listName:TVertexofString;
+      //i,j:integer;
+      //listName:TVertexofString;
       nameUnit:string;
     begin
         result:='';
 
         //** Текст промежуточных узлов УУ
-        //nameUnit:=pgdbstring(FindVariableInEnt(dev,velec_NGControlUnitNodes)^.data.Instance)^;
+        //nameUnit:=pString(FindVariableInEnt(dev,velec_NGControlUnitNodes)^.Instance)^;
         //if (nameUnit <> '-') then
         //     if (nameUnit <> '') then
         //       result:= nameUnit;
@@ -2844,7 +2865,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
                 result:=result+nameUnit;
 
         //** Текст имени узла управления
-        nameUnit:=pgdbstring(FindVariableInEnt(dev,velec_ControlUnitName)^.data.Instance)^;
+        nameUnit:=pString(FindVariableInEnt(dev,velec_ControlUnitName)^.data.Addr.Instance)^;
            if (nameUnit <> '-') then
               if (nameUnit <> '') then
                 if result = '' then
@@ -2852,7 +2873,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
                 else
                    result:=result+velec_separator+nameUnit;
         //** Текст группы узла управления
-        nameUnit:=pgdbstring(FindVariableInEnt(dev,velec_NGControlUnit)^.data.Instance)^;
+        nameUnit:=pString(FindVariableInEnt(dev,velec_NGControlUnit)^.data.Addr.Instance)^;
            if (nameUnit <> '-') then
               if (nameUnit <> '') then
                 if result = '' then
@@ -2865,15 +2886,15 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
      //**Получаем список имен узлов прокладки кабеля от узла управления до устройства мастер
     function getListVertexMasterDevControlUnit(dev:PGDBObjDevice):string;
     var
-      i,j:integer;
-      listName:TVertexofString;
+      //i,j:integer;
+      //listName:TVertexofString;
       nameUnit:string;
     begin
         result:='';
 
         //** Текст промежуточных узлов ГУ
          //listName:=TVertexofString.Create;
-         //listName:=getListNameSeparator((pgdbstring(FindVariableInEnt(dev,velec_CableRoutingNodes)^.data.Instance)^));
+         //listName:=getListNameSeparator((pString(FindVariableInEnt(dev,velec_CableRoutingNodes)^.Instance)^));
          //if not listName.IsEmpty then
          //  for j:=0 to listName.Size-1 do
          //    if result='' then
@@ -2886,7 +2907,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
                 result:=result+nameUnit;
 
                  //** Добавления имени ГУ
-         nameUnit:=pgdbstring(FindVariableInEnt(dev,velec_HeadDeviceName)^.data.Instance)^;
+         nameUnit:=pString(FindVariableInEnt(dev,velec_HeadDeviceName)^.data.Addr.Instance)^;
          //if inListStr(result,delSpecChar(nameCU)) then
          //if inListStr(result,nameCU) then
            if (nameUnit <> '-') then
@@ -2909,9 +2930,16 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
         result:=-1;
         for i:= 0 to listVertexEdge.listVertex.size-1 do
         begin
-        if listVertexEdge.listVertex[i].deviceEnt <> nil then
+        //ZCMsgCallBackInterface.TextMessage(inttostr(i),TMWOHistoryOut);
+        //ZCMsgCallBackInterface.TextMessage(floattostr(listVertexEdge.listVertex[i].centerPoint.x) + ' - ' + floattostr(listVertexEdge.listVertex[i].centerPoint.y),TMWOHistoryOut);
+        if listVertexEdge.listVertex[i].deviceEnt <> nil  then
           begin
-          tempNameMaster:= pgdbstring(FindVariableInEnt(listVertexEdge.listVertex[i].deviceEnt,velec_nameDevice)^.data.Instance)^;
+           //ZCMsgCallBackInterface.TextMessage(inttostr(listVertexEdge.listVertex.size-1),TMWOHistoryOut);
+           //ZCMsgCallBackInterface.TextMessage(booltostr(listVertexEdge.listVertex[i].break),TMWOHistoryOut);
+           if listVertexEdge.listVertex[i].break <> true then begin
+                     //ZCMsgCallBackInterface.TextMessage('2',TMWOHistoryOut);
+          tempNameMaster:= pString(FindVariableInEnt(listVertexEdge.listVertex[i].deviceEnt,velec_nameDevice)^.data.Addr.Instance)^;
+                     //ZCMsgCallBackInterface.TextMessage('3',TMWOHistoryOut);
           //ZCMsgCallBackInterface.TextMessage('tempNameMaster - ' + tempNameMaster + ' nameMaster:' + nameMaster,TMWOHistoryOut);
             if tempNameMaster = nameMaster then
               begin
@@ -2919,6 +2947,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
                    continue;
                result:=i;
                end;
+            end;
           end;
         end;
         if result <0 then
@@ -2940,7 +2969,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
     function delNameTravelNode(specName,nameNode:string):string;
     var
       l,i:integer;
-      k:string;
+      //k:string;
     begin
         result:='';
         l:=length(nameNode);
@@ -2966,7 +2995,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
          //ZCMsgCallBackInterface.TextMessage(FindVariableInEnt(listVertexEdge.listVertex[infoGT.Vertices[i].AsInt32[vGGIndex]].deviceEnt,velec_serialConnectDev)^,TMWOHistoryOut);
            pvd:=FindVariableInEnt(listVertexEdge.listVertex[infoGT.Vertices[i].AsInt32[vGGIndex]].deviceEnt,velec_serialConnectDev);
            if pvd <> nil then
-             if PTDevConnectMethod(FindVariableInEnt(listVertexEdge.listVertex[infoGT.Vertices[i].AsInt32[vGGIndex]].deviceEnt,velec_serialConnectDev)^.data.Instance)^ = TDevConnectMethod.TDT_CableConnectSeries then
+             if PTDevConnectMethod(FindVariableInEnt(listVertexEdge.listVertex[infoGT.Vertices[i].AsInt32[vGGIndex]].deviceEnt,velec_serialConnectDev)^.data.Addr.Instance)^ = TDevConnectMethod.TDT_CableConnectSeries then
                begin
                   tempLVertex:=tvectorofinteger.create;
                   //ZCMsgCallBackInterface.TextMessage('Номер вершины № '+ inttostr(infoGT.Vertices[i].AsInt32[vGGIndex]) + ' - выполняется последовательное соединение',TMWOHistoryOut);
@@ -3089,23 +3118,23 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
                 begin
 
                   //ZCMsgCallBackInterface.TextMessage('УСТРОЙСТВО - '+inttostr(listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexSub),TMWOHistoryOut);
-                  //ZCMsgCallBackInterface.TextMessage('ИМЯ УСТРОЙСТВА - ' + pgdbstring(FindVariableInEnt(listVertexEdge.listVertex[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexSub].deviceEnt,velec_nameDevice)^.data.Instance)^,TMWOHistoryOut);
+                  //ZCMsgCallBackInterface.TextMessage('ИМЯ УСТРОЙСТВА - ' + pString(FindVariableInEnt(listVertexEdge.listVertex[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexSub].deviceEnt,velec_nameDevice)^.Instance)^,TMWOHistoryOut);
 
                   //**от промежуточных узлов и узлов управления дерево строиться не должно!!!
                   if not listVertexSNCU.IsEmpty then
-                    if not inListStr(listVertexSNCU,pgdbstring(FindVariableInEnt(listVertexEdge.listVertex[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexSub].deviceEnt,velec_nameDevice)^.data.Instance)^) then continue;
+                    if not inListStr(listVertexSNCU,pString(FindVariableInEnt(listVertexEdge.listVertex[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexSub].deviceEnt,velec_nameDevice)^.data.Addr.Instance)^) then continue;
                   //ZCMsgCallBackInterface.TextMessage('1111112',TMWOHistoryOut);
                   //** Есть ли соединение данного устройства с данным номером головного устройства
                     //** суть в том что одно и тоже устройство может быть на разных планах, это нужно для избежания ошибок связей
                   if isHaveLineMaster(listMasterDevice[i].LIndex[n],listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexSub) then
                      continue;
                   //
-                  //if pgdbboolean(FindVariableInEnt(listVertexEdge.listVertex[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexSub].deviceEnt,velec_inerNodeWithoutConnection)^.data.Instance)^ then
+                  //if pBoolean(FindVariableInEnt(listVertexEdge.listVertex[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexSub].deviceEnt,velec_inerNodeWithoutConnection)^.Instance)^ then
                   //  continue;
 
                   //**Смотрим сколько промежуточных узлов должен посетить кабель
                   //ZCMsgCallBackInterface.TextMessage('111111',TMWOHistoryOut);
-                  //getListSubDevVertex(pgdbstring(FindVariableInEnt(listVertexEdge.listVertex[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexSub].deviceEnt,velec_CableRoutingNodes)^.data.Instance)^);
+                  //getListSubDevVertex(pString(FindVariableInEnt(listVertexEdge.listVertex[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexSub].deviceEnt,velec_CableRoutingNodes)^.Instance)^);
                   //ZCMsgCallBackInterface.TextMessage('22222',TMWOHistoryOut);
 
                   //**Узнать существует уже граф, если нет, то создать его и добавляем начальную вершину
@@ -3116,7 +3145,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
                      //ZCMsgCallBackInterface.TextMessage('2',TMWOHistoryOut);
                      //Добавил ссылку на устройство
                      infoGTree.Vertices[infoGTree.VertexCount-1].AsPointer[vGPGDBObjVertex]:=listVertexEdge.listVertex.Mutable[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexMaster];
-                     infoGTree.Vertices[infoGTree.VertexCount-1].AsString[vGIsSubNodeDevice]:=velec_masterTravelNode + pgdbstring(FindVariableInEnt(listVertexEdge.listVertex.Mutable[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexMaster]^.deviceEnt,velec_nameDevice)^.data.Instance)^;
+                     infoGTree.Vertices[infoGTree.VertexCount-1].AsString[vGIsSubNodeDevice]:=velec_masterTravelNode + pString(FindVariableInEnt(listVertexEdge.listVertex.Mutable[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexMaster]^.deviceEnt,velec_nameDevice)^.data.Addr.Instance)^;
                      //ZCMsgCallBackInterface.TextMessage('3',TMWOHistoryOut);
                     if listVertexEdge.listVertex[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexMaster].deviceEnt <> nil then
                       begin
@@ -3156,7 +3185,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
                      infoGTree.Vertices[infoGTree.VertexCount-1].AsInt32[vGGIndex]:=listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexMaster;
                      //Добавил ссылку на устройство
                      infoGTree.Vertices[infoGTree.VertexCount-1].AsPointer[vGPGDBObjVertex]:=listVertexEdge.listVertex.Mutable[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexMaster];
-                     infoGTree.Vertices[infoGTree.VertexCount-1].AsString[vGIsSubNodeDevice]:=velec_masterTravelNode+pgdbstring(FindVariableInEnt(listVertexEdge.listVertex.Mutable[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexMaster]^.deviceEnt,velec_nameDevice)^.data.Instance)^;
+                     infoGTree.Vertices[infoGTree.VertexCount-1].AsString[vGIsSubNodeDevice]:=velec_masterTravelNode+pString(FindVariableInEnt(listVertexEdge.listVertex.Mutable[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexMaster]^.deviceEnt,velec_nameDevice)^.data.Addr.Instance)^;
                     if listVertexEdge.listVertex[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexMaster].deviceEnt <> nil then
                       begin
                         infoGTree.Vertices[infoGTree.VertexCount-1].AsBool[vGIsDevice]:=true;
@@ -3195,6 +3224,8 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
                   //else
 
 
+                  //ZCMsgCallBackInterface.TextMessage('СТАРТ смыслового создания дерева',TMWOHistoryOut);
+
                   //** СТАРТ смыслового создания дерева
                   //**Если граф уже начал построение и это не еще одно головное устройство
 
@@ -3206,7 +3237,7 @@ function getListMasterDevNew(listVertexEdge:TGraphBuilder;globalGraph: TGraph):T
                     //получаем специмя всех промежуточных точек
                     subMasterDeviceSpecName:=getListVertexMasterDevControlUnit(listVertexEdge.listVertex[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexSub].deviceEnt);
                     subCUDeviceSpecName:=getListVertexSubDevControlUnit(listVertexEdge.listVertex[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexSub].deviceEnt);
-                    nodeCUSpecName:= pgdbstring(FindVariableInEnt(listVertexEdge.listVertex[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexSub].deviceEnt,velec_ControlUnitName)^.data.Instance)^;
+                    nodeCUSpecName:= pString(FindVariableInEnt(listVertexEdge.listVertex[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexSub].deviceEnt,velec_ControlUnitName)^.data.Addr.Instance)^;
                     //ZCMsgCallBackInterface.TextMessage('subMasterDeviceSpecName:' + subMasterDeviceSpecName,TMWOHistoryOut);
                     //ZCMsgCallBackInterface.TextMessage('subCUDeviceSpecName:' + subCUDeviceSpecName,TMWOHistoryOut);
                     //ZCMsgCallBackInterface.TextMessage('nodeCUSpecName:' + nodeCUSpecName,TMWOHistoryOut);
@@ -3443,7 +3474,7 @@ var
     globalGraph: TGraph;
     listMasterDevice:TVectorOfMasterDevice;
 
-    i,j,k: Integer;
+    i,j{,k}: Integer;
 
     gg:GDBVertex;
 
@@ -3460,7 +3491,7 @@ var
                begin
                    pvd:=FindVariableInEnt(listVertex[i].deviceEnt,'NMO_Name');
                    if pvd <> nil then
-                   if pgdbstring(pvd^.data.Instance)^ = name then
+                   if pString(pvd^.data.Addr.Instance)^ = name then
                       result:= false;
                end;
     end;
@@ -3516,7 +3547,7 @@ var
     //     //      begin
     //     //          pvd:=FindVariableInEnt(listVertex[i].deviceEnt,'NMO_Name');
     //     //          if pvd <> nil then
-    //     //          if pgdbstring(pvd^.data.Instance)^ = name then
+    //     //          if pString(pvd^.Instance)^ = name then
     //     //             result:= false;
     //     //      end;
     //end;
@@ -3567,6 +3598,7 @@ var
      //**Переробатываем список устройств подключенный к группам. И на основе него создаем сложное дерево усройств.
      //** Головное устройства -> группа -> ОДНО дерево (устройства могут находится на разных планах), для каждого плана свое дерево
 
+     ZCMsgCallBackInterface.TextMessage('*** Получаем дерево устройств! ***',TMWOHistoryOut);
      if listMasterDevice.Size-1 <> -1 then     //пропуск когда лист пустой
         getFinishTreeDevOnGroup(listVertexEdge,globalGraph,listMasterDevice);
      //getOneTreeDevOnGroup(listVertexEdge,globalGraph,listMasterDevice);
@@ -3634,7 +3666,7 @@ var
     G: TGraph;
     headNum : integer;
 
-    counter,counter2,counter3,counterColor:integer; //счетчики
+    counter{,counter2,counter3,counterColor}:integer; //счетчики
     i,j,k: Integer;
     T: Float;
 
@@ -3646,13 +3678,13 @@ var
     function getListParamDev(nowDev:PGDBObjDevice;nameType:string):TListString;
     var
        pvd:pvardesk; //для работы со свойствами устройств
-       tempName,nameParam:gdbstring;
+       tempName,nameParam:String;
     begin
         result:=TListString.Create;
         pvd:=FindVariableInEnt(nowDev,nameType);
          if pvd<>nil then
             BEGIN
-             tempName:=pgdbstring(pvd^.data.Instance)^;
+             tempName:=pString(pvd^.data.Addr.Instance)^;
              repeat
                    GetPartOfPath(nameParam,tempName,';');
                    result.PushBack(nameParam);
@@ -3662,8 +3694,8 @@ var
     end;
     procedure addErrorinList(nowDev:PGDBObjDevice;var listError:TListError;textError:string);
     var
-       pvd:pvardesk; //для работы со свойствами устройств
-       //tempName,nameParam:gdbstring;
+       //pvd:pvardesk; //для работы со свойствами устройств
+       //tempName,nameParam:String;
        errorInfo:TErrorInfo;
        //tempstring:string;
        isNotDev:boolean;
@@ -3702,7 +3734,7 @@ var
                begin
                    pvd:=FindVariableInEnt(listVertex[i].deviceEnt,'NMO_Name');
                    if pvd <> nil then
-                   if pgdbstring(pvd^.data.Instance)^ = name then begin
+                   if pString(pvd^.data.Addr.Instance)^ = name then begin
                       result:= false;
                    end;
                end;
@@ -3806,13 +3838,13 @@ procedure errorList(allGraph:TListAllGraph;Epsilon:double;var listError:TListErr
 type
     TListString=specialize TVector<string>;
 var
-    EdgePath, VertexPath: TClassList;
+    //EdgePath,VertexPath: TClassList;
     G: TGraph;
     headNum : integer;
 
-    counter,counter2,counter3,counterColor:integer; //счетчики
+    counter{,counter2,counter3,counterColor}:integer; //счетчики
     i,j,k: Integer;
-    T: Float;
+    //T: Float;
 
     headName,GroupNum,typeSLine,nameSL:string;
 
@@ -3824,13 +3856,13 @@ var
     function getListParamDev(nowDev:PGDBObjDevice;nameType:string):TListString;
     var
        pvd:pvardesk; //для работы со свойствами устройств
-       tempName,nameParam:gdbstring;
+       tempName,nameParam:String;
     begin
         result:=TListString.Create;
         pvd:=FindVariableInEnt(nowDev,nameType);
          if pvd<>nil then
             BEGIN
-             tempName:=pgdbstring(pvd^.data.Instance)^;
+             tempName:=pString(pvd^.data.Addr.Instance)^;
              repeat
                    GetPartOfPath(nameParam,tempName,';');
                    result.PushBack(nameParam);
@@ -3840,8 +3872,8 @@ var
     end;
     procedure addErrorinList(nowDev:PGDBObjDevice;var listError:TListError;textError:string);
     var
-       pvd:pvardesk; //для работы со свойствами устройств
-       //tempName,nameParam:gdbstring;
+       //pvd:pvardesk; //для работы со свойствами устройств
+       //tempName,nameParam:String;
        errorInfo:TErrorInfo;
        //tempstring:string;
        isNotDev:boolean;
@@ -3880,7 +3912,7 @@ var
                begin
                    pvd:=FindVariableInEnt(listVertex[i].deviceEnt,'NMO_Name');
                    if pvd <> nil then
-                   if pgdbstring(pvd^.data.Instance)^ = name then begin
+                   if pString(pvd^.data.Addr.Instance)^ = name then begin
                       result:= false;
                    end;
                end;
@@ -3901,7 +3933,7 @@ var
                begin
                    pvd:=FindVariableInEnt(listVertex[i].deviceEnt,'NMO_Name');
                    if pvd <> nil then
-                   if pgdbstring(pvd^.data.Instance)^ = name then begin
+                   if pString(pvd^.data.Addr.Instance)^ = name then begin
                       //result:=-1;
 
                       //работа с библиотекой Аграф
@@ -4120,7 +4152,7 @@ var
   function TestTREEUses_com(operands:TCommandOperands):TCommandResult;
   var
     G: TGraph;
-    EdgePath, VertexPath: TClassList;
+    {EdgePath, }VertexPath: TClassList;
     //I: Integer;
     //T: Float;
     procedure ShowPath(const CorrectPath: array of Integer);
@@ -4255,10 +4287,10 @@ begin
    //в зависимости что чего меньше-больше
 end;
 function TDummyComparer.CompareEdges (Edge1, Edge2: Pointer): Integer;
-var
-  e1,e2:TAttrSet;
+{var
+  e1,e2:TAttrSet;}
 begin
-   ////result:=1;
+   result:=-1;
    //e1:=TAttrSet(Edge1);
    //e2:=TAttrSet(Edge2);
    //
@@ -4292,7 +4324,9 @@ initialization
   CreateCommandFastObjectPlugin(@TestgraphUses_com,'test454',CADWG,0);
   //CreateCommandFastObjectPlugin(@TestTREEUses_com2,'test333',CADWG,0);
   DummyComparer:=TDummyComparer.Create;
+  SortTreeLengthComparer:=TSortTreeLengthComparer.Create;
 finalization
   DummyComparer.free;
+  SortTreeLengthComparer.free;
 end.
 

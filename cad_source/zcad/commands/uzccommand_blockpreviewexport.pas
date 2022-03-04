@@ -15,9 +15,9 @@
 {
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
-{$MODE OBJFPC}
+{$MODE OBJFPC}{$H+}
 unit uzccommand_blockpreviewexport;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -33,8 +33,8 @@ uses
   uzbtypes,
   uzeutils,uzcutils,
   uzcinterface,
-  uzbgeomtypes,uzegeometry,
-  uzbmemman,uzbpaths,
+  uzegeometrytypes,uzegeometry,
+  uzbpaths,
   uzeentdevice,uzeentblockinsert,uzeblockdef,uzeentsubordinated,
   //uzestyleslayers,
   uzeconsts;
@@ -59,7 +59,7 @@ var
    SAVEsysvarDISPmaxLWDisplayScale:integer;
    SAVELWDisplay:boolean;
    //plp:PGDBLayerProp;
-   bb,bb2:TBoundingBox;
+   bb{,bb2}:TBoundingBox;
 begin
   //пример вызова(РазмерИзображекния|ИмяБлока|Путь)
   //BlockPreViewExport(128|DEVICE_PS_DAT_HAND|*images\palettes)
@@ -99,7 +99,7 @@ begin
     if tb<>nil then begin
       tb^.bp:=pb^.bp;
       pb^.done;
-      gdbfreemem(pointer(pb));
+      Freemem(pointer(pb));
       pb:=pointer(tb);
     end;
 

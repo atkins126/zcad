@@ -18,15 +18,15 @@
 
 {**Модуль утилит зкада}
 unit uzcutils;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 
 interface
 uses uzeutils,LCLProc,zcmultiobjectcreateundocommand,uzepalette,
      uzeentityfactory,uzgldrawcontext,uzcdrawing,uzestyleslinetypes,uzcsysvars,
-     uzestyleslayers,sysutils,uzbtypesbase,uzbtypes,uzcdrawings,varmandef,
+     uzestyleslayers,sysutils,uzbtypes,uzcdrawings,varmandef,
      uzeconsts,UGDBVisibleOpenArray,uzeentgenericsubentry,uzeentity,
-     uzbgeomtypes,uzeentblockinsert,uzbmemman,uzcinterface,gzctnrvectortypes;
+     uzegeometrytypes,uzeentblockinsert,uzcinterface,gzctnrvectortypes;
 
   {**Добавление в чертеж примитива с обвязкой undo
     @param(PEnt Указатель на добавляемый примитив)
@@ -57,7 +57,7 @@ uses uzeutils,LCLProc,zcmultiobjectcreateundocommand,uzepalette,
      конца должно совпадать
     @param(CommandName Имя команды. Будет показано в окне истории при отмене\повторе)
     @param(PushStone Поместить в стек ундо "камень". Ундо не сможет пройти через него пока не завершена текущая команда)}
-  procedure zcStartUndoCommand(CommandName:GDBString;PushStone:boolean=false);
+  procedure zcStartUndoCommand(CommandName:String;PushStone:boolean=false);
 
   {**Помещение в стек undo маркера конца команды. Используется для группировки
      операций отмены. Допускаются вложеные команды. Количество маркеров начала и
@@ -68,7 +68,7 @@ uses uzeutils,LCLProc,zcmultiobjectcreateundocommand,uzepalette,
     @param(UndoStartMarkerPlaced Флаг установки маркера: false - маркер еще не поставлен, ставим маркер, поднимаем флаг. true - ничего не делаем)
     @param(CommandName Имя команды. Будет показано в окне истории при отмене\повторе)
     @param(PushStone Поместить в стек ундо "камень". Ундо не сможет пройти через него пока не завершена текущая команда)}
-  procedure zcPlaceUndoStartMarkerIfNeed(var UndoStartMarkerPlaced:boolean;const CommandName:GDBString;PushStone:boolean=false);
+  procedure zcPlaceUndoStartMarkerIfNeed(var UndoStartMarkerPlaced:boolean;const CommandName:String;PushStone:boolean=false);
 
   {**Добавление в стек undo маркера конца команды при необходимости
     @param(UndoStartMarkerPlaced Флаг установки маркера начала: true - маркер начала поставлен, ставим маркер конца, сбрасываем флаг. false - ничего не делаем)}
@@ -89,21 +89,21 @@ uses uzeutils,LCLProc,zcmultiobjectcreateundocommand,uzepalette,
   {**Выбрать примитив}
   procedure zcSelectEntity(pp:PGDBObjEntity);
 
-function GDBInsertBlock(own:PGDBObjGenericSubEntry;BlockName:GDBString;p_insert:GDBVertex;
-                        scale:GDBVertex;rotate:GDBDouble;needundo:GDBBoolean=false
+function GDBInsertBlock(own:PGDBObjGenericSubEntry;BlockName:String;p_insert:GDBVertex;
+                        scale:GDBVertex;rotate:Double;needundo:Boolean=false
                         ):PGDBObjBlockInsert;
 
 function old_ENTF_CreateBlockInsert(owner:PGDBObjGenericSubEntry;ownerarray: PGDBObjEntityOpenArray;
                                 layeraddres:PGDBLayerProp;LTAddres:PGDBLtypeProp;color:TGDBPaletteColor;LW:TGDBLineWeight;
-                                point: gdbvertex; scale, angle: GDBDouble; s: pansichar):PGDBObjBlockInsert;
+                                point: gdbvertex; scale, angle: Double; s: pansichar):PGDBObjBlockInsert;
 function zcGetRealSelEntsCount:integer;
 implementation
 function old_ENTF_CreateBlockInsert(owner:PGDBObjGenericSubEntry;ownerarray: PGDBObjEntityOpenArray;
                                 layeraddres:PGDBLayerProp;LTAddres:PGDBLtypeProp;color:TGDBPaletteColor;LW:TGDBLineWeight;
-                                point: gdbvertex; scale, angle: GDBDouble; s: pansichar):PGDBObjBlockInsert;
+                                point: gdbvertex; scale, angle: Double; s: pansichar):PGDBObjBlockInsert;
 var
   pb:pgdbobjblockinsert;
-  nam:gdbstring;
+  nam:String;
   DC:TDrawContext;
   CreateProc:TAllocAndInitAndSetGeomPropsFunc;
 begin
@@ -171,7 +171,7 @@ procedure zcAddEntToCurrentDrawingWithUndo(const PEnt:PGDBObjEntity);
 begin
      zcAddEntToDrawingWithUndo(PEnt,PTZCADDrawing(drawings.GetCurrentDWG)^);
 end;
-procedure zcStartUndoCommand(CommandName:GDBString;PushStone:boolean=false);
+procedure zcStartUndoCommand(CommandName:String;PushStone:boolean=false);
 begin
      PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack.PushStartMarker(CommandName);
      if PushStone then
@@ -194,7 +194,7 @@ procedure zcEndUndoCommand;
 begin
      PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack.PushEndMarker;
 end;
-procedure zcPlaceUndoStartMarkerIfNeed(var UndoStartMarkerPlaced:boolean;const CommandName:GDBString;PushStone:boolean=false);
+procedure zcPlaceUndoStartMarkerIfNeed(var UndoStartMarkerPlaced:boolean;const CommandName:String;PushStone:boolean=false);
 begin
     if UndoStartMarkerPlaced then exit;
     zcStartUndoCommand(CommandName,PushStone);
@@ -228,18 +228,18 @@ begin
   drawings.CurrentDWG.wa.param.SelDesc.LastSelectedObject:=pp;
 end;
 function GDBInsertBlock(own:PGDBObjGenericSubEntry;//владелец
-                        BlockName:GDBString;       //имя блока
+                        BlockName:String;       //имя блока
                         p_insert:GDBVertex;        //точка вставки
                         scale:GDBVertex;           //масштаб
-                        rotate:GDBDouble;          //поворот
-                        needundo:GDBBoolean=false  //завернуть в ундо
+                        rotate:Double;          //поворот
+                        needundo:Boolean=false  //завернуть в ундо
                         ):PGDBObjBlockInsert;
 var
   tb:PGDBObjBlockInsert;
   domethod,undomethod:tmethod;
   DC:TDrawContext;
 begin
-  result := GDBPointer(own.ObjArray.CreateObj(GDBBlockInsertID));
+  result := Pointer(own.ObjArray.CreateObj(GDBBlockInsertID));
   result.init(drawings.GetCurrentROOT,drawings.GetCurrentDWG^.GetCurrentLayer,0);
   result^.Name:=BlockName;
   //result^.vp.ID:=GDBBlockInsertID;
@@ -252,7 +252,7 @@ begin
   if tb<>nil then begin
                        tb^.bp:=result^.bp;
                        result^.done;
-                       gdbfreemem(pointer(result));
+                       Freemem(pointer(result));
                        result:=pointer(tb);
   end;
   if needundo then

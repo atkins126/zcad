@@ -17,14 +17,14 @@
 }
 
 unit uzeentwithlocalcs;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
-uses uzepalette,uzgldrawcontext,uzedrawingdef,uzecamera,uzbtypesbase,uzeentity,
-     uzbgeomtypes,UGDBOutbound2DIArray,UGDBOpenArrayOfByte,uzeentwithmatrix,uzbtypes,
-     uzegeometry,uzeffdxfsupport,sysutils,uzbmemman,uzeentsubordinated,uzestyleslayers;
+uses uzepalette,uzgldrawcontext,uzedrawingdef,uzecamera,uzeentity,
+     uzegeometrytypes,UGDBOutbound2DIArray,uzctnrVectorBytes,uzeentwithmatrix,uzbtypes,
+     uzegeometry,uzeffdxfsupport,sysutils,uzeentsubordinated,uzestyleslayers;
 type
-//pprojoutbound:{-}PGDBOOutbound2DIArray{/GDBPointer/};
+//pprojoutbound:{-}PGDBOOutbound2DIArray{/Pointer/};
 {EXPORT+}
 PGDBObj2dprop=^GDBObj2dprop;
 {REGISTERRECORDTYPE GDBObj2dprop}
@@ -41,12 +41,12 @@ GDBObjWithLocalCS= object(GDBObjWithMatrix)
                P_insert_in_WCS:GDBvertex;(*'Insertion point WCS'*)(*saved_to_shd*)(*oi_readonly*)(*hidden_in_objinsp*)
                ProjP_insert:GDBvertex;(*'Insertion point DCS'*)(*oi_readonly*)(*hidden_in_objinsp*)
                PProjOutBound:PGDBOOutbound2DIArray;(*'Bounding box DCS'*)(*oi_readonly*)(*hidden_in_objinsp*)
-               lod:GDBByte;(*'Level of detail'*)(*oi_readonly*)(*hidden_in_objinsp*)
-               constructor init(own:GDBPointer;layeraddres:PGDBLayerProp;LW:GDBSmallint);
+               lod:Byte;(*'Level of detail'*)(*oi_readonly*)(*hidden_in_objinsp*)
+               constructor init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt);
                constructor initnul(owner:PGDBObjGenericWithSubordinated);
                destructor done;virtual;
-               procedure SaveToDXFObjPostfix(var outhandle:{GDBInteger}GDBOpenArrayOfByte);
-               function LoadFromDXFObjShared(var f:GDBOpenArrayOfByte;dxfcod:GDBInteger;ptu:PExtensionData;var drawing:TDrawingDef):GDBBoolean;
+               procedure SaveToDXFObjPostfix(var outhandle:{Integer}TZctnrVectorBytes);
+               function LoadFromDXFObjShared(var f:TZctnrVectorBytes;dxfcod:Integer;ptu:PExtensionData;var drawing:TDrawingDef):Boolean;
 
                procedure FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
                procedure CalcObjMatrix;virtual;
@@ -56,19 +56,19 @@ GDBObjWithLocalCS= object(GDBObjWithMatrix)
                function GetCenterPoint:GDBVertex;virtual;
                procedure createfield;virtual;
 
-               procedure rtsave(refp:GDBPointer);virtual;
+               procedure rtsave(refp:Pointer);virtual;
                procedure TransformAt(p:PGDBObjEntity;t_matrix:PDMatrix4D);virtual;
                procedure higlight(var DC:TDrawContext);virtual;
                procedure ReCalcFromObjMatrix;virtual;
-               function IsHaveLCS:GDBBoolean;virtual;
-               function CanSimplyDrawInOCS(const DC:TDrawContext;const ParamSize,TargetSize:GDBDouble):GDBBoolean;inline;
+               function IsHaveLCS:Boolean;virtual;
+               function CanSimplyDrawInOCS(const DC:TDrawContext;const ParamSize,TargetSize:Double):Boolean;inline;
          end;
 {EXPORT-}
 implementation
 //uses log;
-function GDBObjWithLocalCS.CanSimplyDrawInOCS(const DC:TDrawContext;const ParamSize,TargetSize:GDBDouble):GDBBoolean;
+function GDBObjWithLocalCS.CanSimplyDrawInOCS(const DC:TDrawContext;const ParamSize,TargetSize:Double):Boolean;
 var
-   templod:GDBDouble;
+   templod:Double;
 begin
      if dc.maxdetail then
                          exit(true);
@@ -79,7 +79,7 @@ begin
                         else
                             exit(false);
 end;
-function GDBObjWithLocalCS.IsHaveLCS:GDBBoolean;
+function GDBObjWithLocalCS.IsHaveLCS:Boolean;
 begin
      result:=true;
 end;
@@ -87,7 +87,6 @@ procedure GDBObjWithLocalCS.ReCalcFromObjMatrix;
 //var
     //ox:gdbvertex;
 begin
-     inherited;
      Local.basis.ox:=PGDBVertex(@objmatrix[0])^;
      Local.basis.oy:=PGDBVertex(@objmatrix[1])^;
      Local.basis.oz:=PGDBVertex(@objmatrix[2])^;
@@ -304,7 +303,7 @@ begin
   end;
 end;
 function GDBObjWithLocalCS.LoadFromDXFObjShared;
-//var s:GDBString;
+//var s:String;
 begin
      result:=inherited LoadFromDXFObjShared(f,dxfcod,ptu,drawing);
      if not result then result:=dxfvertexload(f,210,dxfcod,Local.basis.oz);
@@ -314,7 +313,7 @@ begin
           if assigned(PProjoutbound) then
                             begin
                             PProjoutbound^.{FreeAnd}Done;
-                            GDBFreeMem(GDBPointer(PProjoutbound));
+                            Freemem(Pointer(PProjoutbound));
                             end;
           inherited done;
 end;

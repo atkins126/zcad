@@ -17,12 +17,12 @@
 }
 
 unit uzcregnavigatorentities;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses uzcfnavigatorentities,uzcfcommandline,uzbpaths,TypeDescriptors,uzctranslations,Forms,
-     uzbtypes,varmandef,
+     varmandef,
      uzeentity,zcobjectinspector,uzcguimanager,
-     Types,Controls,uzcdrawings,Varman,UUnitManager,uzcsysvars,uzcsysinfo,LazLogger;
+     Types,Controls,Varman,UUnitManager,uzcsysvars,uzcsysinfo,LazLogger;
 resourcestring
   rsEntities='Entities';
 implementation

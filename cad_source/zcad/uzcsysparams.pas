@@ -17,33 +17,33 @@
 }
 
 unit uzcsysparams;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses XMLConf,XMLPropStorage,LazConfigStorage,fileutil,
-  LCLProc,uzclog,uzbpaths,uzbtypesbase,Forms,uzbtypes{$IFNDEF DELPHI},LazUTF8{$ENDIF},sysutils;
+  LCLProc,uzclog,uzbpaths,Forms{$IFNDEF DELPHI},LazUTF8{$ENDIF},sysutils;
 type
 {EXPORT+}
   {REGISTERRECORDTYPE TmyFileVersionInfo}
   TmyFileVersionInfo=record
-    Major,Minor,Micro,Release,CommitsAfter:GDBInteger;
+    Major,Minor,Micro,Release,CommitsAfter:Integer;
     AbbreviatedName:AnsiString;
     VersionString:AnsiString;
   end;
   {REGISTERRECORDTYPE tsavedparams}
   tsavedparams=record
-    UniqueInstance:GDBBoolean;(*'Unique instance'*)
-    NoSplash:GDBBoolean;(*'No splash screen'*)
-    NoLoadLayout:GDBBoolean;(*'No load layout'*)
-    UpdatePO:GDBBoolean;(*'Update PO file'*)
+    UniqueInstance:Boolean;(*'Unique instance'*)
+    NoSplash:Boolean;(*'No splash screen'*)
+    NoLoadLayout:Boolean;(*'No load layout'*)
+    UpdatePO:Boolean;(*'Update PO file'*)
   end;
   {REGISTERRECORDTYPE tnotsavedparams}
   tnotsavedparams=record
-    ScreenX:GDBInteger;(*'Screen X'*)(*oi_readonly*)
-    ScreenY:GDBInteger;(*'Screen Y'*)(*oi_readonly*)
-    otherinstancerun:GDBBoolean;(*'Other instance run'*)(*oi_readonly*)
-    PreloadedFile:GDBString;(*'Preloaded file'*)(*oi_readonly*)
+    ScreenX:Integer;(*'Screen X'*)(*oi_readonly*)
+    ScreenY:Integer;(*'Screen Y'*)(*oi_readonly*)
+    otherinstancerun:Boolean;(*'Other instance run'*)(*oi_readonly*)
+    PreloadedFile:String;(*'Preloaded file'*)(*oi_readonly*)
     Ver:TmyFileVersionInfo;(*'Version'*)(*oi_readonly*)
-    DefaultHeight:GDBInteger;(*'Default controls height'*)(*oi_readonly*)
+    DefaultHeight:Integer;(*'Default controls height'*)(*oi_readonly*)
   end;
   ptsysparam=^tsysparam;
   {REGISTERRECORDTYPE tsysparam}

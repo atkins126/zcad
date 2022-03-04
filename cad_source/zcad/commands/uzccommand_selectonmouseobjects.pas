@@ -18,7 +18,7 @@
 {$mode delphi}
 unit uzccommand_selectonmouseobjects;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -65,7 +65,7 @@ begin
                                               exit;
                                          end;
                                          line:=pp^.GetObjName+' Layer='+pp^.vp.Layer.GetFullName;
-                                         line:=line+' Name='+pvd.data.PTD.GetValueAsString(pvd.data.Instance);
+                                         line:=line+' Name='+pvd.data.PTD.GetValueAsString(pvd.data.Addr.Instance);
                                          system.str(ptruint(pp),saddr);
                                          ContextMenu.Items.Add(TmyMenuItem.create(ContextMenu,line,'SelectObjectByAddres('+saddr+')'));
                                          //if result='' then

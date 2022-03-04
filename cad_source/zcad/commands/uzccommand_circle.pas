@@ -18,7 +18,7 @@
 {$mode delphi}
 unit uzccommand_circle;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -27,7 +27,6 @@ uses
   uzccommandsabstract,uzccommandsimpl,
   uzccominteractivemanipulators,
   uzeconsts,uzcstrconsts,
-  uzbgeomtypes,
   uzccommandsmanager,
   uzeentcircle,uzeentityfactory,
   uzcdrawings,

@@ -17,9 +17,9 @@
 }
 
 unit uzgprimitivescreatorabstract;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses uzgprimitivessarray,uzgindexsarray,uzbtypesbase,sysutils,uzbtypes,uzbmemman,
+uses uzgprimitivessarray,uzgindexsarray,sysutils,uzbtypes,//
      gzctnrvectortypes,uzegeometry;
 type
 TLLPrimitivesCreatorAbstract=class
@@ -32,7 +32,7 @@ TLLPrimitivesCreatorAbstract=class
                 function CreateLLSymbol(var pa:TLLPrimitivesArray):TArrayIndex;virtual;abstract;
                 function CreateLLSymbolLine(var pa:TLLPrimitivesArray):TArrayIndex;virtual;abstract;
                 function CreateLLSymbolEnd(var pa:TLLPrimitivesArray):TArrayIndex;virtual;abstract;
-                function CreateLLPolyLine(var pa:TLLPrimitivesArray;const P1Index,_Count:TLLVertexIndex;_closed:GDBBoolean=false):TArrayIndex;virtual;abstract;
+                function CreateLLPolyLine(var pa:TLLPrimitivesArray;const P1Index,_Count:TLLVertexIndex;_closed:Boolean=false):TArrayIndex;virtual;abstract;
              end;
 implementation
 //uses log;

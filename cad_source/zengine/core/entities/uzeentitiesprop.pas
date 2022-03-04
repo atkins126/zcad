@@ -17,10 +17,10 @@
 }
 
 unit uzeentitiesprop;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses uzedimensionaltypes,uzepalette,uzestyleslinetypes,uzbgeomtypes,uzbtypes,uzegeometry,sysutils,uzbmemman,
-     UGDBOpenArrayOfByte,uzestyleslayers;
+uses uzedimensionaltypes,uzepalette,uzestyleslinetypes,uzegeometrytypes,uzbtypes,uzegeometry,sysutils,
+     uzctnrVectorBytes,uzestyleslayers;
 type
 //ID:TObjID;(*'Object type'*)(*oi_readonly*)(*hidden_in_objinsp*)
 {Export+}

@@ -17,18 +17,18 @@
 }
 
 unit uzcfsplash;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
  uzcsysparams,uzbpaths,uzclog,uniqueinstanceraw,uzcstrconsts,uzbstrproc,Forms,
- stdctrls, Controls, Graphics,ExtCtrls,uzbtypesbase,uzcsysinfo,LazUTF8,sysutils,
+ stdctrls, Controls, Graphics,ExtCtrls,uzcsysinfo,LazUTF8,sysutils,
  LazLogger;
 type
   TSplashForm = class(TForm)
     txt:tlabel;
     Logo: TImage;
     cb:TComboBox;
-    procedure TXTOut(s:GDBstring;pm:boolean);virtual;
+    procedure TXTOut(s:String;pm:boolean);virtual;
     public
     procedure AfterConstruction; override;
   end;

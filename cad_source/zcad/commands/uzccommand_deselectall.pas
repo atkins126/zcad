@@ -18,14 +18,13 @@
 {$mode delphi}
 unit uzccommand_deselectall;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
   LazLogger,
   uzccommandsabstract,uzccommandsimpl,
   uzeentity,
-  uzcdrawings,
   uzcinterface;
 
 var

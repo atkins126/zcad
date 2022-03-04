@@ -16,32 +16,32 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 } 
 unit uzeblockdef;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses gzctnrvectortypes,uzeentity,uzeentityfactory,uzgldrawcontext,uzeobjectextender,uzedrawingdef,
-     uzeentsubordinated,uzeffdxfsupport,UGDBOpenArrayOfByte,uzbtypesbase,sysutils,uzbtypes,
-     uzbgeomtypes,uzbmemman,uzegeometry,uzestyleslayers,uzeconsts,uzeentgenericsubentry,LazLogger;
+     uzeentsubordinated,uzeffdxfsupport,uzctnrVectorBytes,sysutils,uzbtypes,
+     uzegeometrytypes,uzegeometry,uzestyleslayers,uzeconsts,uzeentgenericsubentry,LazLogger;
 type
 {Export+}
 PGDBObjBlockdef=^GDBObjBlockdef;
 {REGISTEROBJECTTYPE GDBObjBlockdef}
 GDBObjBlockdef= object(GDBObjGenericSubEntry)
-                     Name:GDBString;(*saved_to_shd*)
-                     VarFromFile:GDBString;(*saved_to_shd*)
+                     Name:String;(*saved_to_shd*)
+                     VarFromFile:String;(*saved_to_shd*)
                      Base:GDBvertex;(*saved_to_shd*)
-                     Formated:GDBBoolean;
+                     Formated:Boolean;
                      BlockDesc:TBlockDesc;(*'Block params'*)(*saved_to_shd*)(*oi_readonly*)
                      constructor initnul(owner:PGDBObjGenericWithSubordinated);
-                     constructor init(_name:GDBString);
+                     constructor init(_name:String);
                      procedure FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
-                     //function FindVariable(varname:GDBString):pvardesk;virtual;
-                     procedure LoadFromDXF(var f: GDBOpenArrayOfByte;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
-                     function ProcessFromDXFObjXData(_Name,_Value:GDBString;ptu:PExtensionData;const drawing:TDrawingDef):GDBBoolean;virtual;
+                     //function FindVariable(varname:String):pvardesk;virtual;
+                     procedure LoadFromDXF(var f: TZctnrVectorBytes;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
+                     function ProcessFromDXFObjXData(_Name,_Value:String;ptu:PExtensionData;const drawing:TDrawingDef):Boolean;virtual;
                      destructor done;virtual;
                      function GetMatrix:PDMatrix4D;virtual;
-                     function GetHandle:GDBPlatformint;virtual;
+                     function GetHandle:PtrInt;virtual;
                      function GetMainOwner:PGDBObjSubordinated;virtual;
-                     function GetType:GDBPlatformint;virtual;
+                     function GetType:PtrInt;virtual;
                      class function GetDXFIOFeatures:TDXFEntIODataManager;static;
                end;
 {Export-}
@@ -50,7 +50,7 @@ var
 
 implementation
 
-function GDBObjBlockdef.GetType:GDBPlatformint;
+function GDBObjBlockdef.GetType:PtrInt;
 begin
      result:=1;
 end;
@@ -58,7 +58,7 @@ function GDBObjBlockdef.GetMainOwner:PGDBObjSubordinated;
 begin
      result:=@self;
 end;
-function GDBObjBlockdef.GetHandle:GDBPlatformint;
+function GDBObjBlockdef.GetHandle:PtrInt;
 begin
      result:=H_Root;
 end;
@@ -74,14 +74,14 @@ begin
 end;
 procedure GDBObjBlockdef.LoadFromDXF;
 var
-  byt: GDBInteger;
+  byt: Integer;
 begin
   //initnul(@gdb.ObjRoot);
   byt:=readmystrtoint(f);
   while byt <> 0 do
   begin
     if not LoadFromDXFObjShared(f,byt,ptu,drawing) then
-                                           f.ReadGDBString;
+                                           f.ReadString;
     byt:=readmystrtoint(f);
   end;
   GetDXFIOFeatures.RunAfterLoadFeature(@self);
@@ -110,8 +110,8 @@ end;
 constructor GDBObjBlockdef.initnul;
 begin
      inherited;
-     GDBPointer(Name):=nil;
-     GDBPointer(VarFromFile):=nil;
+     Pointer(Name):=nil;
+     Pointer(VarFromFile):=nil;
      Formated:=false;
      ObjArray.initnul;
      Base:=nulvertex;
@@ -120,10 +120,10 @@ end;
 constructor GDBObjBlockdef.init;
 begin
      inherited initnul(nil);
-     GDBPointer(Name):=nil;
-     GDBPointer(VarFromFile):=nil;
+     Pointer(Name):=nil;
+     Pointer(VarFromFile):=nil;
      Formated:=false;
-     //ObjArray.init({$IFDEF DEBUGBUILD}'{E5C5FEFE-BF2A-48FA-8E54-D1F406DA9462}',{$ENDIF}10000);
+     //ObjArray.init(10000);
      Name:=_name;
      Base:=nulvertex;
      GetDXFIOFeatures.AddExtendersToEntity(@self);
@@ -152,7 +152,7 @@ begin
 end;
 function AllocBlockDef:PGDBObjBlockDef;
 begin
-  GDBGetMem({$IFDEF DEBUGBUILD}'{AllocBlockDef}',{$ENDIF}pointer(result),sizeof(GDBObjBlockdef));
+  Getmem(pointer(result),sizeof(GDBObjBlockdef));
 end;
 function AllocAndInitBlockDef(owner:PGDBObjGenericWithSubordinated):PGDBObjBlockDef;
 begin
@@ -164,7 +164,7 @@ var
    counter:integer;
 begin
   counter:=low(args);
-  PBlockdef.Name:=CreateGDBStringFromArray(counter,args);
+  PBlockdef.Name:=CreateStringFromArray(counter,args);
   PBlockdef.Base:=CreateVertexFromArray(counter,args);
 end;
 function AllocAndCreateBlockDef(owner:PGDBObjGenericWithSubordinated;args:array of const):PGDBObjBlockDef;

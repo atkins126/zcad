@@ -18,13 +18,13 @@
 {$mode delphi}
 unit uzccommand_cllayeroff;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
   LazLogger,SysUtils,
   uzccommandsabstract,uzeentity,uzcdrawing,uzcdrawings,uzccommandsmanager,
-  uzcstrconsts,uzcutils,zcchangeundocommand,uzbtypes,uzccommandsimpl,
+  uzcstrconsts,uzcutils,zcchangeundocommand,uzccommandsimpl,
   uzestyleslayers,uzcinterface;
 
 implementation

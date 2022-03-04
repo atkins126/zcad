@@ -17,18 +17,18 @@
 }
 
 unit uzcuilcl2zc;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
     Controls,LCLTaskDialog,SysUtils,Forms,{$IFNDEF DELPHI}LCLtype,{$ELSE}windows,{$ENDIF}
     uzcuitypes,uzcuiutils;
 type
   TZCMsgCommonButton2TCommonButton_Converter=class
-    class function Convert(valueIn:TZCMsgCommonButton;out valueOut:TCommonButton):boolean;
+    class function TryConvert(valueIn:TZCMsgCommonButton;out valueOut:TCommonButton):boolean;
   end;
 
   TLCLModalResult2TZCMsgModalResult_Converter=class
-    class function Convert(valueIn:Integer;out valueOut:TZCMsgModalResult):boolean;
+    class function TryConvert(valueIn:Integer;out valueOut:TZCMsgModalResult):boolean;
   end;
 
   TZCMsgCommonButtons2TCommonButtons=TGSetConverter<TZCMsgCommonButton,TZCMsgCommonButtons,TCommonButton,TCommonButtons,TZCMsgCommonButton2TCommonButton_Converter>;
@@ -39,21 +39,25 @@ function TZCMsgModalResult2TZCMsgCommonButton(MR:TZCMsgModalResult):TZCMsgCommon
 
 implementation
 
-class function TZCMsgCommonButton2TCommonButton_Converter.Convert(valueIn:TZCMsgCommonButton;out valueOut:TCommonButton):boolean;
+class function TZCMsgCommonButton2TCommonButton_Converter.TryConvert(valueIn:TZCMsgCommonButton;out valueOut:TCommonButton):boolean;
 begin
-  result:=true;
-  case valueIn of
-    zccbOK:valueOut:=cbOK;
-    zccbYes:valueOut:=cbYes;
-    zccbNo:valueOut:=cbNo;
-    zccbCancel:valueOut:=cbCancel;
-    zccbRetry:valueOut:=cbRetry;
-    zccbClose:valueOut:=cbClose;
-    else result:=false;
+  if valueIn in [zccbOK..zccbClose] then begin
+    case valueIn of
+      zccbOK:valueOut:=cbOK;
+      zccbYes:valueOut:=cbYes;
+      zccbNo:valueOut:=cbNo;
+      zccbCancel:valueOut:=cbCancel;
+      zccbRetry:valueOut:=cbRetry;
+      zccbClose:valueOut:=cbClose;
+    end;
+    result:=true;
+  end else begin
+    valueOut:=cbCancel;
+    result:=false;
   end;
 end;
 
-class function TLCLModalResult2TZCMsgModalResult_Converter.Convert(valueIn:Integer;out valueOut:TZCMsgModalResult):boolean;
+class function TLCLModalResult2TZCMsgModalResult_Converter.TryConvert(valueIn:Integer;out valueOut:TZCMsgModalResult):boolean;
 begin
   result:=true;
   if valueIn in [mrNone..mrLast] then
@@ -115,13 +119,6 @@ begin
     raise Exception.CreateFmt('Unknown modal result : "%d"', [MR]);
   end;
 end;
-
-type
-TZCTaskStr=string;
-TZCMsgId=string;
-TZCMsgStr=string;
-TZCMsgCommonButton=(zccbOK,zccbYes,zccbNo,zccbCancel,zccbRetry,zccbClose);
-TZCMsgCommonButtons=set of TZCMsgCommonButton;
 
 initialization
 finalization

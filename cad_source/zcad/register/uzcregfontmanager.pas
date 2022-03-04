@@ -17,14 +17,14 @@
 }
 
 unit uzcregfontmanager;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses uzcsysvars,uzefontmanager,uzbpaths,uzctranslations,UUnitManager,TypeDescriptors,LazLogger;
 implementation
 
 initialization
-units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'PATH_Fonts','GDBString',@sysvarPATHFontsPath);
-units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'PATH_AlternateFont','GDBString',@sysvarAlternateFont);
+units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'PATH_Fonts','String',@sysvarPATHFontsPath);
+units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'PATH_AlternateFont','String',@sysvarAlternateFont);
 sysvar.PATH.Fonts_Path:=@sysvarPATHFontsPath;
 sysvar.PATH.Alternate_Font:=@sysvarAlternateFont;
 finalization

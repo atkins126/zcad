@@ -17,10 +17,10 @@
 }
 
 unit uzcprinterspecfunc;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
-uses uzbgeomtypes,uzepalette,uzbtypesbase,uzbtypes,LCLType,Printers,
+uses uzegeometrytypes,uzepalette,uzbtypes,LCLType,Printers,
      gl,glu,uzgloglstatemanager,
      {$IFDEF SLINUX}glx,{$ENDIF}
      sysutils,varmandef,Graphics,uzcdrawings,uzegeometry;
@@ -30,9 +30,9 @@ type
                            model,project,RM:DMatrix4D;
                            prevpoint:gdbvertex;
                            w,h:Integer;
-                           wmm,hmm,scalex,scaley:GDBDouble;
+                           wmm,hmm,scalex,scaley:Double;
                            procedure myglVertex3d(const V:GDBVertex);virtual;//inline;
-                           procedure myglVertex(const x,y,z:GDBDouble);virtual;//inline;
+                           procedure myglVertex(const x,y,z:Double);virtual;//inline;
                            procedure myglVertex3dV(const V:PGDBVertex);virtual;//inline;
                            procedure startrender;virtual;//inline;
                            procedure myglPushMatrix;virtual;//inline;

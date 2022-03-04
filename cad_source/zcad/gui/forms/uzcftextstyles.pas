@@ -16,7 +16,7 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>)
 }
 unit uzcftextstyles;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 {$mode objfpc}{$H+}
 
 interface
@@ -27,11 +27,11 @@ uses
   FileUtil, LResources, Forms, Controls, Graphics, GraphType,
   Buttons, ExtCtrls, StdCtrls, ComCtrls,LCLIntf,lcltype, ActnList,
 
-  uzeconsts,uzestylestexts,uzcdrawings,uzbtypesbase,uzbtypes,varmandef,
+  uzeconsts,uzestylestexts,uzcdrawings,uzbtypes,varmandef,
   uzcsuptypededitors,
 
   uzbpaths,uzcinterface, uzcstrconsts, uzcsysinfo,uzbstrproc,UBaseTypeDescriptor,
-  uzcimagesmanager, usupportgui, ZListView,uzefontmanager,varman,uzctnrvectorgdbstring,
+  uzcimagesmanager, usupportgui, ZListView,uzefontmanager,varman,uzctnrvectorstrings,
   gzctnrvectortypes,uzeentity,uzeenttext;
 
 const
@@ -85,7 +85,7 @@ type
     procedure MaceItemCurrent(ListItem:TListItem);
     procedure FillFontsSelector(currentitem:string;currentitempfont:PGDBfont);
     procedure onrsz(Sender: TObject);
-    procedure countstyle(ptextstyle:PGDBTextStyle;out e,b,inDimStyles:GDBInteger);
+    procedure countstyle(ptextstyle:PGDBTextStyle;out e,b,inDimStyles:Integer);
   private
     changedstamp:boolean;
     //EditedItem:TListItem;
@@ -154,35 +154,30 @@ end;
 procedure TTextStylesForm.UpdateItem2(Item:TObject);
 var
    newfont:PGDBfont;
-   ts:PGDBTextStyle;
+   //dbg:PGDBTextStyle;
 begin
-  ts:=PGDBTextStyle(TListItem(Item).Data);
-     if FontChange then
-     begin
-          newfont:=FontManager.addFont(pstring(FontsSelector.Enums.getDataMutable(FontsSelector.Selected))^,'');
-          if  (newfont<>PGDBTextStyle(TListItem(Item).Data)^.pfont)and(newfont<>nil) then
-          begin
-               CreateUndoStartMarkerNeeded;
-               with PushCreateTGChangeCommand(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,pointer(PGDBTextStyle(TListItem(Item).Data)^.pfont))^ do
-               begin
-               PGDBTextStyle(TListItem(Item).Data)^.pfont:=newfont;
-               ComitFromObj;
-               end;
-               with PushCreateTGChangeCommand(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,PGDBTextStyle(TListItem(Item).Data)^.FontFile)^ do
-               begin
-               PGDBTextStyle(TListItem(Item).Data)^.FontFile:=PGDBTextStyle(TListItem(Item).Data)^.pfont^.Name;
-               ComitFromObj;
-               end;
-               with PushCreateTGChangeCommand(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,PGDBTextStyle(TListItem(Item).Data)^.FontFile)^ do
-               begin
-               PGDBTextStyle(TListItem(Item).Data)^.FontFamily:='';
-               ComitFromObj;
-               end;
-          end;
-     end;
-     ListView1.UpdateItem2(TListItem(Item));
-     FontChange:=false;
-     FontTypeFilterComboBox.enabled:=true;
+  //dbg:=PGDBTextStyle(TListItem(Item).Data);
+  if FontChange then begin
+    newfont:=FontManager.addFont(pstring(FontsSelector.Enums.getDataMutable(FontsSelector.Selected))^,'');
+    if  (newfont<>PGDBTextStyle(TListItem(Item).Data)^.pfont)and(newfont<>nil) then begin
+      CreateUndoStartMarkerNeeded;
+      with PushCreateTGChangeCommand(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,pointer(PGDBTextStyle(TListItem(Item).Data)^.pfont))^ do begin
+        PGDBTextStyle(TListItem(Item).Data)^.pfont:=newfont;
+        ComitFromObj;
+      end;
+      with PushCreateTGChangeCommand(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,PGDBTextStyle(TListItem(Item).Data)^.FontFile)^ do begin
+        PGDBTextStyle(TListItem(Item).Data)^.FontFile:=PGDBTextStyle(TListItem(Item).Data)^.pfont^.Name;
+        ComitFromObj;
+      end;
+      with PushCreateTGChangeCommand(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,PGDBTextStyle(TListItem(Item).Data)^.FontFile)^ do begin
+        PGDBTextStyle(TListItem(Item).Data)^.FontFamily:='';
+        ComitFromObj;
+      end;
+    end;
+  end;
+  ListView1.UpdateItem2(TListItem(Item));
+  FontChange:=false;
+  FontTypeFilterComboBox.enabled:=true;
 end;
 
 {Style name handle procedures}
@@ -192,24 +187,32 @@ begin
 end;
 function TTextStylesForm.CreateNameEditor(Item: TListItem;r: TRect):boolean;
 begin
-  result:=SupportTypedEditors.createeditor(ListView1,Item,r,PGDBTextStyle(Item.Data)^.Name,'GDBAnsiString',@CreateUndoStartMarkerNeeded,r.Bottom-r.Top)
+  result:=SupportTypedEditors.createeditor(ListView1,Item,r,PGDBTextStyle(Item.Data)^.Name,'AnsiString',@CreateUndoStartMarkerNeeded,r.Bottom-r.Top)
 end;
 {Font name handle procedures}
 function TTextStylesForm.GetFontName(Item: TListItem):string;
 begin
-  result:=ExtractFileName(PGDBTextStyle(Item.Data)^.pfont^.fontfile);
+  if PGDBTextStyle(Item.Data)^.pfont<>nil then
+    result:=ExtractFileName(PGDBTextStyle(Item.Data)^.pfont^.fontfile)
+  else
+    result:='TextStyle.pfont=nil(('
 end;
 function TTextStylesForm.CreateFontNameEditor(Item: TListItem;r: TRect):boolean;
 begin
-  FillFontsSelector(PGDBTextStyle(Item.Data)^.pfont^.fontfile,PGDBTextStyle(Item.Data)^.pfont);
-  FontChange:=true;
-  FontTypeFilterComboBox.enabled:=false;
-  result:=SupportTypedEditors.createeditor(ListView1,Item,r,FontsSelector,'TEnumData',nil,r.Bottom-r.Top,false)
+  if PGDBTextStyle(Item.Data)^.pfont<>nil then begin
+    FillFontsSelector(PGDBTextStyle(Item.Data)^.pfont^.fontfile,PGDBTextStyle(Item.Data)^.pfont);
+    FontChange:=true;
+    FontTypeFilterComboBox.enabled:=false;
+    result:=SupportTypedEditors.createeditor(ListView1,Item,r,FontsSelector,'TEnumData',nil,r.Bottom-r.Top,false)
+  end;
 end;
 {Font path handle procedures}
 function TTextStylesForm.GetFontPath(Item: TListItem):string;
 begin
-  result:=ExtractFilePath(PGDBTextStyle(Item.Data)^.pfont^.fontfile);
+  if PGDBTextStyle(Item.Data)^.pfont<>nil then
+    result:=ExtractFilePath(PGDBTextStyle(Item.Data)^.pfont^.fontfile)
+  else
+    result:='TextStyle.pfont=nil(('
 end;
 {Height handle procedures}
 function TTextStylesForm.GetHeight(Item: TListItem):string;
@@ -218,7 +221,7 @@ begin
 end;
 function TTextStylesForm.CreateHeightEditor(Item: TListItem;r: TRect):boolean;
 begin
-  result:=SupportTypedEditors.createeditor(ListView1,Item,r,PGDBTextStyle(Item.Data)^.prop.size,'GDBDouble',@CreateUndoStartMarkerNeeded,r.Bottom-r.Top)
+  result:=SupportTypedEditors.createeditor(ListView1,Item,r,PGDBTextStyle(Item.Data)^.prop.size,'Double',@CreateUndoStartMarkerNeeded,r.Bottom-r.Top)
 end;
 {Wfactor handle procedures}
 function TTextStylesForm.GetWidthFactor(Item: TListItem):string;
@@ -227,7 +230,7 @@ begin
 end;
 function TTextStylesForm.CreateWidthFactorEditor(Item: TListItem;r: TRect):boolean;
 begin
-  result:=SupportTypedEditors.createeditor(ListView1,Item,r,PGDBTextStyle(Item.Data)^.prop.wfactor,'GDBDouble',@CreateUndoStartMarkerNeeded,r.Bottom-r.Top)
+  result:=SupportTypedEditors.createeditor(ListView1,Item,r,PGDBTextStyle(Item.Data)^.prop.wfactor,'Double',@CreateUndoStartMarkerNeeded,r.Bottom-r.Top)
 end;
 {Oblique handle procedures}
 function TTextStylesForm.GetOblique(Item: TListItem):string;
@@ -236,7 +239,7 @@ begin
 end;
 function TTextStylesForm.CreateObliqueEditor(Item: TListItem;r: TRect):boolean;
 begin
-  result:=SupportTypedEditors.createeditor(ListView1,Item,r,PGDBTextStyle(Item.Data)^.prop.oblique,'GDBDouble',@CreateUndoStartMarkerNeeded,r.Bottom-r.Top)
+  result:=SupportTypedEditors.createeditor(ListView1,Item,r,PGDBTextStyle(Item.Data)^.prop.oblique,'Double',@CreateUndoStartMarkerNeeded,r.Bottom-r.Top)
 end;
 procedure TTextStylesForm.FillFontsSelector(currentitem:string;currentitempfont:PGDBfont);
 var i:integer;
@@ -417,18 +420,18 @@ begin
      DescLabel.Caption:=Format(rsCountTStylesFound,[tscounter]);
 end;
 
-procedure TextStyleCounter(const PInstance,PCounted:GDBPointer;var Counter:GDBInteger);
+procedure TextStyleCounter(const PInstance,PCounted:Pointer;var Counter:Integer);
 begin
      if (PGDBObjEntity(PInstance)^.GetObjType=GDBMTextID)or(PGDBObjEntity(PInstance)^.GetObjType=GDBTextID) then
      if PCounted=PGDBObjText(PInstance)^.TXTStyleIndex then
                                                            inc(Counter);
 end;
-procedure TextStyleCounterInDimStyles(const PInstance,PCounted:GDBPointer;var Counter:GDBInteger);
+procedure TextStyleCounterInDimStyles(const PInstance,PCounted:Pointer;var Counter:Integer);
 begin
      //if PCounted=PGDBDimStyle(PInstance)^.Text.DIMTXSTY then
      //                                                      inc(Counter);
 end;
-procedure TTextStylesForm.countstyle(ptextstyle:PGDBTextStyle;out e,b,inDimStyles:GDBInteger);
+procedure TTextStylesForm.countstyle(ptextstyle:PGDBTextStyle;out e,b,inDimStyles:Integer);
 var
    pdwg:PTSimpleDrawing;
 begin
@@ -515,7 +518,7 @@ procedure TTextStylesForm.DeleteItem(Sender: TObject);
 var
    pstyle:PGDBTextStyle;
    pdwg:PTSimpleDrawing;
-   inEntities,inBlockTable,indimstyles:GDBInteger;
+   inEntities,inBlockTable,indimstyles:Integer;
    //domethod,undomethod:tmethod;
 begin
   pdwg:=drawings.GetCurrentDWG;
@@ -556,7 +559,7 @@ procedure TTextStylesForm.PurgeTStyles(Sender: TObject);
 var
    i,purgedcounter:integer;
    ProcessedItem:TListItem;
-   inEntities,inBlockTable,indimstyles:GDBInteger;
+   inEntities,inBlockTable,indimstyles:Integer;
    PCurrentStyle:PGDBTextStyle;
 begin
      i:=0;

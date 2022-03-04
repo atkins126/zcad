@@ -17,11 +17,11 @@
 }
 
 unit uzgldrawergeneral;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses uzbgeomtypes,uzgvertex3sarray,uzgprimitivescreatorabstract,uzgprimitivescreator,
+uses uzegeometrytypes,uzgvertex3sarray,uzgprimitivescreatorabstract,uzgprimitivescreator,
      uzgldrawerabstract,uzepalette,types,Classes,Graphics,
-     uzbtypesbase,uzbtypes,uzecamera,uzegeometry,UGDBPoint3DArray,LazLogger;
+     uzbtypes,uzecamera,uzegeometry,UGDBPoint3DArray,LazLogger;
 type
 TPaintState=(TPSBufferNotSaved,TPSBufferSaved);
 TZGLGeneralDrawer=class(TZGLAbstractDrawer)
@@ -83,7 +83,7 @@ var
   testrender:TZGLAbstractDrawer;
   CurrentCamCSOffset:GDBvertex;
   CurrentCamCSOffsetS:GDBvertex3S;
-  notuseLCS:GDBBOOLEAN;
+  notuseLCS:Boolean;
 implementation
 //uses log;
 var
@@ -222,7 +222,7 @@ begin
 end;
 procedure TZGLGeneralDrawer.DrawClosedContour3DInModelSpace(const pa:GDBPoint3dArray;var matrixs:tmatrixs);
 var p,pold,pstart:PGDBVertex;
-    i:GDBInteger;
+    i:Integer;
 begin
   if pa.count<2 then exit;
   p:=pa.GetParrayAsPointer;

@@ -18,7 +18,7 @@
 {$mode delphi}
 unit uzccommand_import;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -38,7 +38,7 @@ implementation
 function Import_com(operands:TCommandOperands):TCommandResult;
 var
    s: AnsiString;
-   //fileext:GDBString;
+   //fileext:String;
    isload:boolean;
 begin
   if length(operands)=0 then

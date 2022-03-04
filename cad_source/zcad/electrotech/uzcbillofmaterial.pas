@@ -17,27 +17,27 @@
 }
 
 unit uzcbillofmaterial;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses gzctnrvectortypes,uzbtypesbase,uzbtypes,gzctnrvectordata,sysutils;
+uses gzctnrvectortypes,gzctnrVector,sysutils;
 type
 {EXPORT+}
 PGDBBOMItem=^GDBBOMItem;
 {REGISTERRECORDTYPE GDBBOMItem}
 GDBBOMItem=record
-                 Material:GDBString;
-                 Amount:GDBDouble;
-                 Names:GDBString;
-                 processed:GDBBoolean;
+                 Material:String;
+                 Amount:Double;
+                 Names:String;
+                 processed:Boolean;
                 end;
 PBbillOfMaterial=^GDBBbillOfMaterial;
 {REGISTEROBJECTTYPE GDBBbillOfMaterial}
-GDBBbillOfMaterial= object(GZVectorData{-}<GDBBOMItem>{//})(*OpenArrayOfData=GDBNumItem*)
-                       constructor init(m:GDBInteger);
+GDBBbillOfMaterial= object(GZVector{-}<GDBBOMItem>{//})(*OpenArrayOfData=GDBNumItem*)
+                       constructor init(m:Integer);
                        procedure freeelement(PItem:PT);virtual;
-                       //function getnamenumber(_Name:GDBString):GDBstring;
-                       //function AddByPointer(p:GDBPointer):TArrayIndex;virtual;
-                       function findorcreate(_Name:GDBString):PGDBBOMItem;virtual;
+                       //function getnamenumber(_Name:String):String;
+                       //function AddByPointer(p:Pointer):TArrayIndex;virtual;
+                       function findorcreate(_Name:String):PGDBBOMItem;virtual;
                        end;
 {EXPORT-}
 implementation
@@ -53,7 +53,7 @@ end;}
 function GDBBbillOfMaterial.findorcreate;
 var p:PGDBBOMItem;
     ir:itrec;
-    nn:GDBString;
+    nn:String;
     ni:GDBBOMItem;
 begin
   nn:=uppercase(_name);
@@ -79,9 +79,9 @@ begin
      PGDBBOMItem(PItem)^.Names:='';
      PGDBBOMItem(PItem)^.Material:='';
 end;
-constructor GDBBbillOfMaterial.init(m:GDBInteger);
+constructor GDBBbillOfMaterial.init(m:Integer);
 begin
-     inherited init({$IFDEF DEBUGBUILD}'{4249FDF0-86E5-4D42-8538-1402D5B7C55B}',{$ENDIF}m{,sizeof(GDBBOMItem)});
+     inherited init(m);
 end;
 begin
 end.

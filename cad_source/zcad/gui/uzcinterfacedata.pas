@@ -17,15 +17,15 @@
 }
 
 unit uzcinterfacedata;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
-       uzbtypesbase,uzestyleslayers,uzestyleslinetypes,uzestylestexts,uzestylesdim,
+       uzestyleslayers,uzestyleslinetypes,uzestylestexts,uzestylesdim,
        classes;
 type
   TInterfaceVars=record
-                       CColor,CLWeight:GDBInteger;
+                       CColor,CLWeight:Integer;
                        CLayer:PGDBLayerProp;
                        CLType:PGDBLTypeProp;
                        CTStyle:PGDBTextStyle;

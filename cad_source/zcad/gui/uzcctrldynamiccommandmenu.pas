@@ -17,12 +17,12 @@
 }
 
 unit uzcctrldynamiccommandmenu;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
- uzcinfoform,ComCtrls,uzbtypes,Controls,Forms,uzbmemman,uzbtypesbase,uzclog,uzcstrconsts;
+ uzcinfoform,ComCtrls,Controls,Forms,uzclog,uzcstrconsts;
 type
-  DMMethod=procedure(sender:GDBPointer) of object;
+  DMMethod=procedure(sender:Pointer) of object;
   //PTDMenuWnd=^TDMenuWnd;
 
   { TDMenuWnd }
@@ -30,10 +30,10 @@ type
   TDMenuWnd = class(tform)
     ToolBar1: TToolBar;
     procedure AfterConstruction; override;
-    //procedure AddProcedure(Text,HText:GDBString;proc:TonClickProc);
-    procedure AddMethod(Text,HText:GDBString;FMethod:TButtonMethod);
-    procedure AddProcedure(Text,HText:GDBString;FProc:TButtonProc);
-    function AddButton(Text,HText:GDBString):TmyProcToolButton;
+    //procedure AddProcedure(Text,HText:String;proc:TonClickProc);
+    procedure AddMethod(Text,HText:String;FMethod:TButtonMethod);
+    procedure AddProcedure(Text,HText:String;FProc:TButtonProc);
+    function AddButton(Text,HText:String):TmyProcToolButton;
     public
       procedure CreateToolBar;
       procedure clear;
@@ -49,17 +49,17 @@ begin
      inherited;
 end;
 
-{procedure TDMenuWnd.AddMethod(Text, HText: GDBString; FMethod: TButtonMethod);
+{procedure TDMenuWnd.AddMethod(Text, HText: String; FMethod: TButtonMethod);
 begin
 
 end;
 
-procedure TDMenuWnd.AddProcedure(Text, HText: GDBString; FProc: TButtonProc);
+procedure TDMenuWnd.AddProcedure(Text, HText: String; FProc: TButtonProc);
 begin
 
 end;
 
-function TDMenuWnd.AddButton(Text, HText: GDBString): TmyProcToolButton;
+function TDMenuWnd.AddButton(Text, HText: String): TmyProcToolButton;
 begin
 
 end;}
@@ -105,7 +105,7 @@ begin
 
 
 
-  GDBGetMem({$IFDEF DEBUGBUILD}'{2C132A7B-BFC1-4BA8-AF27-9F7DF19F69F7}',{$ENDIF}GDBPointer(result),sizeof(ZButtonGeneric));
+  Getmem(Pointer(result),sizeof(ZButtonGeneric));
   result^.initxywh(Text,hText,@self,0,yy,ww,statusbarclientheight,true);
   result^.align:=al_clientw;
 	SelectObject(_dc, hfntOld);
@@ -113,7 +113,7 @@ begin
   self.setxywh(wndx,wndy,nw,nh+(height-clientheight));
 *)
 end;
-(*procedure TDMenuWnd.AddProcedure(Text,HText:GDBString;proc:TonClickProc);
+(*procedure TDMenuWnd.AddProcedure(Text,HText:String;proc:TonClickProc);
 begin
      AddButton(Text,HText).onclickproc:=proc;
 end;*)

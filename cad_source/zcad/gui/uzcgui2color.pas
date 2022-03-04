@@ -17,13 +17,13 @@
 }
 
 unit uzcgui2color;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 
 uses
   uzcinterfacedata,uzepalette,uzeconsts,uzcflineweights,uzgldrawergdi,uzegeometry,
-  uzbtypes,graphics,  usupportgui,StdCtrls,uzcdrawings,Controls,Classes,
+  graphics,  usupportgui,StdCtrls,uzcdrawings,Controls,Classes,
   uzbstrproc,uzcsysvars,uzccommandsmanager;
 
 procedure DrawColor(Canvas:TCanvas; Index: Integer; ARect: TRect);

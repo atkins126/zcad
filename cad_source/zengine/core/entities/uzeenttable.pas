@@ -17,13 +17,13 @@
 }
 
 unit uzeenttable;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
-uses uzgldrawcontext,uzeentabstracttext,uzetrash,uzedrawingdef,uzbstrproc,UGDBOpenArrayOfByte,
-     uzestylestables,uzeentline,uzbtypesbase,uzeentcomplex,sysutils,UGDBTable,
-     uzctnrvectorgdbstring,uzeentmtext,uzeentity,uzbtypes,uzeconsts,uzegeometry,
-     gzctnrvectortypes,uzbgeomtypes,uzbmemman,uzeentblockinsert,uzeffdxfsupport;
+uses uzgldrawcontext,uzeentabstracttext,uzetrash,uzedrawingdef,uzbstrproc,uzctnrVectorBytes,
+     uzestylestables,uzeentline,uzeentcomplex,sysutils,UGDBTable,
+     uzctnrvectorstrings,uzeentmtext,uzeentity,uzbtypes,uzeconsts,uzegeometry,
+     gzctnrvectortypes,uzegeometrytypes,uzeentblockinsert,uzeffdxfsupport;
 //jcm(*'TopMiddle'*),
 type
 {TTableCellJustify=(jcl(*'TopLeft'*),
@@ -34,7 +34,7 @@ type
 PTGDBTableItemFormat=^TGDBTableItemFormat;
 {REGISTERRECORDTYPE TGDBTableItemFormat}
 TGDBTableItemFormat=record
-                 Width,TextWidth:GDBDouble;
+                 Width,TextWidth:Double;
                  CF:TTableCellJustify;
                 end;
 PGDBObjTable=^GDBObjTable;
@@ -42,13 +42,13 @@ PGDBObjTable=^GDBObjTable;
 GDBObjTable= object(GDBObjComplex)
             PTableStyle:PTGDBTableStyle;
             tbl:GDBTableArray;
-            w,h:GDBDouble;
-            scale:GDBDouble;
+            w,h:Double;
+            scale:Double;
             constructor initnul;
             destructor done;virtual;
-            function Clone(own:GDBPointer):PGDBObjEntity;virtual;
+            function Clone(own:Pointer):PGDBObjEntity;virtual;
             procedure Build(var drawing:TDrawingDef);virtual;
-            procedure SaveToDXFFollow(var outhandle:{GDBInteger}GDBOpenArrayOfByte;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
+            procedure SaveToDXFFollow(var outhandle:{Integer}TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
             procedure ReCalcFromObjMatrix;virtual;
             function GetObjType:TObjID;virtual;
             end;
@@ -75,14 +75,14 @@ begin
 end;
 procedure GDBObjTable.SaveToDXFFollow;
 var
-  //i:GDBInteger;
+  //i:Integer;
   p:pointer;
   pv,pvc,pvc2:pgdbobjEntity;
   ir:itrec;
   m4:DMatrix4D;
   DC:TDrawContext;
 begin
-     //historyoutstr('Table DXFOut self='+inttohex(longword(@self),10)+' owner'+inttohex(bp.owner.gethandle,10));
+     //historyoutstr('Table DXFOut self='+inttohex(LongWord(@self),10)+' owner'+inttohex(bp.owner.gethandle,10));
      inherited;
      m4:={self.ObjMatrix; //}getmatrix^;
      //MatrixInvert(m4);
@@ -92,7 +92,7 @@ begin
      repeat
          pvc:=pv^.Clone(@self{.bp.Owner});
          pvc2:=pv^.Clone(@self{.bp.Owner});
-         //historyoutstr(pv^.ObjToGDBString('','')+'  cloned obj='+pvc^.ObjToGDBString('',''));
+         //historyoutstr(pv^.ObjToString('','')+'  cloned obj='+pvc^.ObjToString('',''));
          if pvc^.GetObjType=GDBDeviceID then
             pvc:=pvc;
 
@@ -125,9 +125,9 @@ begin
 
 
          pvc^.done;
-         GDBFREEMEM(pointer(pvc));
+         Freemem(pointer(pvc));
          pvc2^.done;
-         GDBFREEMEM(pointer(pvc2));
+         Freemem(pointer(pvc2));
          pv:=ConstObjArray.iterate(ir);
      until pv=nil;
      objmatrix:=m4;
@@ -137,7 +137,7 @@ end;
 function GDBObjTable.Clone;
 var tvo: PGDBObjTable;
 begin
-  GDBGetMem({$IFDEF DEBUGBUILD}'{F9D41F4A-1E80-4D3A-9DD1-D0037EFCA988}',{$ENDIF}GDBPointer(tvo), sizeof(GDBObjTable));
+  Getmem(Pointer(tvo), sizeof(GDBObjTable));
   tvo^.initnul;
   //tbl.copyto(@tvo^.tbl);
 
@@ -162,11 +162,11 @@ var
    pgdbins:pgdbobjblockinsert;
    i:integer;
    ir,ic,icf:itrec;
-   psa:PTZctnrVectorGDBString;
-   pstr:pGDBsTRiNG;
+   psa:PTZctnrVectorStrings;
+   pstr:pString;
    //cf:TGDBTableItemFormat;
    pcf:PTGDBTableItemFormat;
-   x{,y},xw:gdbdouble;
+   x{,y},xw:Double;
    xcount,xcurrcount,ycount,ycurrcount,ccount:integer;
    DC:TDrawContext;
 begin
@@ -317,24 +317,24 @@ constructor GDBObjTable.initnul;
    //pgdbmtext:pgdbobjmtext;
    //i:integer;
    //ir,ic,icf:itrec;
-   //psa:PTZctnrVectorGDBString;
-   //pstr:pGDBsTRiNG;
+   //psa:PTZctnrVectorStrings;
+   //pstr:pString;
    //cf:TGDBTableItemFormat;
    //pcf:PTGDBTableItemFormat;
-   //x,y:gdbdouble;
+   //x,y:Double;
    //xcount,xcurrcount,ycount,ycurrcount,ccount:integer;
 begin
      inherited;
      //vp.ID:=GDBTableID;
 
-     tbl.init({$IFDEF DEBUGBUILD}'{C6EE9076-623F-4D7A-A355-122C6271B9ED}',{$ENDIF}9,20);
+     tbl.init(9,20);
      //ptablestyle:=gdb.GetCurrentDWG.TableStyleTable.getAddres('Standart');{проверить}
      scale:=1;
 
      //build();
 
 
-     //tblformat.init({$IFDEF DEBUGBUILD}'{9616C423-CF78-45A4-9244-62F2821332D2}',{$ENDIF}25,sizeof(TGDBTableItemFormat));
+     //tblformat.init(25,sizeof(TGDBTableItemFormat));
 
 end;
 function GDBObjTable.GetObjType;

@@ -17,13 +17,13 @@
 }
 
 unit uzcoiregister;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses Laz2_DOM,Toolwin,Clipbrd,sysutils,uzccommandsabstract,uzcfcommandline,uzcutils,uzbpaths,TypeDescriptors,uzctranslations,Forms,uzcinterface,uzeroot,
-     uzbtypes,uzedrawingdef,uzgldrawcontext,uzctnrvectorgdbstring,varmandef,uzedrawingsimple,
+     uzbtypes,uzedrawingdef,uzgldrawcontext,uzctnrvectorstrings,varmandef,uzedrawingsimple,
      uzeentity,uzcenitiesvariablesextender,zcobjectinspector,uzcguimanager,uzcstrconsts,
      gzctnrvectortypes,Types,Controls,uzcdrawings,Varman,UUnitManager,uzcsysvars,
-     uzcsysparams,zcobjectinspectorui,uzcoimultiobjects,uzccommandsimpl,uzbtypesbase,
+     uzcsysparams,zcobjectinspectorui,uzcoimultiobjects,uzccommandsimpl,
      uzmenusmanager,uzcsysinfo,LazLogger,menus,ComCtrls,uztoolbarsmanager,uzcimagesmanager;
 const
     PEditorFocusPriority=550;
@@ -39,7 +39,7 @@ type
     function GetPeditorFocusPriority:TControlWithPriority;
   end;
 var
-  INTFObjInspRowHeight:TGDBIntegerOverrider;
+  INTFObjInspRowHeight:TIntegerOverrider;
   dummyclass:tdummyclass;
 implementation
 procedure SetCurrentObjDefault;
@@ -59,7 +59,7 @@ begin
 end;
 procedure ZCADFormSetupProc(Form:TControl);
 var
-  pint:PGDBInteger;
+  pint:PInteger;
   TBNode:TDomNode;
   tb:TToolBar;
 begin
@@ -73,10 +73,10 @@ begin
   SetCurrentObjDefault;
   //pint:=SavedUnit.FindValue('VIEW_ObjInspV');
   SetNameColWidth(Form.Width div 2);
-  pint:=SavedUnit.FindValue('VIEW_ObjInspSubV');
+  pint:=SavedUnit.FindValue('VIEW_ObjInspSubV').data.Addr.Instance;
   if assigned(pint)then
                        SetNameColWidth(pint^);
-  pint:=SavedUnit.FindValue('VIEW_ObjInspV');
+  pint:=SavedUnit.FindValue('VIEW_ObjInspV').data.Addr.Instance;
   if assigned(pint)then
                        SetLastClientWidth(pint^);
   TBNode:=nil;
@@ -145,18 +145,20 @@ begin
   ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIResetOGLWNDProc);
   zcRedrawCurrentDrawing;
   ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIActionRedraw);
-  if GDBobj then
-    if typeof(PGDBaseObject(pcurrobj)^)=typeof(TMSEditor) then
-      PMSEditor(pcurrobj)^.CreateUnit(PMSEditor(pcurrobj)^.SavezeUnitsFormat);
+
+  // убрано, потому что с этим не работают фильтры в инспекторе
+  //if GDBobj then
+  //  if typeof(PGDBaseObject(pcurrobj)^)=typeof(TMSEditor) then
+  //    PMSEditor(pcurrobj)^.CreateUnit(PMSEditor(pcurrobj)^.SavezeUnitsFormat);
 end;
 
-procedure _onGetOtherValues(var vsa:TZctnrVectorGDBString;const valkey:string;const pcurcontext:pointer;const pcurrobj:pointer;const GDBobj:boolean);
+procedure _onGetOtherValues(var vsa:TZctnrVectorStrings;const valkey:string;const pcurcontext:pointer;const pcurrobj:pointer;const GDBobj:boolean);
 var
   pentvarext:TVariablesExtender;
   pobj:pGDBObjEntity;
   ir:itrec;
   pv:pvardesk;
-  vv:gdbstring;
+  vv:String;
 begin
   if (valkey<>'')and(pcurcontext<>nil) then
   begin
@@ -171,7 +173,7 @@ begin
                   pv:={PTObjectUnit(pobj.ou.Instance)}pentvarext.entityunit.FindVariable(valkey);
                   if pv<>nil then
                   begin
-                       vv:=pv.data.PTD.GetValueAsString(pv.data.Instance);
+                       vv:=pv.data.PTD.GetValueAsString(pv.data.Addr.Instance);
                        if vv<>'' then
 
                        vsa.PushBackIfNotPresent(vv);
@@ -298,21 +300,21 @@ begin
 end;
 
 initialization
-units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'INTF_ObjInsp_WhiteBackground','GDBBoolean',@INTFObjInspWhiteBackground);
-units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'INTF_ObjInsp_ShowHeaders','GDBBoolean',@INTFObjInspShowHeaders);
-units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'INTF_ObjInsp_ShowSeparator','GDBBoolean',@INTFObjInspShowSeparator);
-units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'INTF_ObjInsp_OldStyleDraw','GDBBoolean',@INTFObjInspOldStyleDraw);
-units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'INTF_ObjInsp_ShowFastEditors','GDBBoolean',@INTFObjInspShowFastEditors);
-units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'INTF_ObjInsp_ShowOnlyHotFastEditors','GDBBoolean',@INTFObjInspShowOnlyHotFastEditors);
+units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'INTF_ObjInsp_WhiteBackground','Boolean',@INTFObjInspWhiteBackground);
+units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'INTF_ObjInsp_ShowHeaders','Boolean',@INTFObjInspShowHeaders);
+units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'INTF_ObjInsp_ShowSeparator','Boolean',@INTFObjInspShowSeparator);
+units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'INTF_ObjInsp_OldStyleDraw','Boolean',@INTFObjInspOldStyleDraw);
+units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'INTF_ObjInsp_ShowFastEditors','Boolean',@INTFObjInspShowFastEditors);
+units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'INTF_ObjInsp_ShowOnlyHotFastEditors','Boolean',@INTFObjInspShowOnlyHotFastEditors);
 INTFObjInspRowHeight.Enable:=LocalRowHeightOverride;
 INTFObjInspRowHeight.Value:=LocalRowHeight;
-units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'INTF_ObjInsp_RowHeight_OverriderEnable','GDBBoolean',@INTFObjInspRowHeight.Enable);
+units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'INTF_ObjInsp_RowHeight_OverriderEnable','Boolean',@INTFObjInspRowHeight.Enable);
 PRowHeight:=@INTFObjInspRowHeight.Value;
 PRowHeightOverride:=@INTFObjInspRowHeight.Enable;
-units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'INTF_ObjInsp_RowHeight_OverriderValue','GDBInteger',@INTFObjInspRowHeight.Value);
-units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'INTF_ObjInsp_SpaceHeight','GDBInteger',@INTFObjInspSpaceHeight);
-units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'INTF_ObjInsp_ShowEmptySections','GDBBoolean',@INTFObjInspShowEmptySections);
-units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'INTF_ObjInsp_ButtonSizeReducing','GDBInteger',@INTFObjInspButtonSizeReducing);
+units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'INTF_ObjInsp_RowHeight_OverriderValue','Integer',@INTFObjInspRowHeight.Value);
+units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'INTF_ObjInsp_SpaceHeight','Integer',@INTFObjInspSpaceHeight);
+units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'INTF_ObjInsp_ShowEmptySections','Boolean',@INTFObjInspShowEmptySections);
+units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'INTF_ObjInsp_ButtonSizeReducing','Integer',@INTFObjInspButtonSizeReducing);
 SysVar.INTF.INTF_OBJINSP_Properties.INTF_ObjInsp_RowHeight:=@INTFObjInspRowHeight;
 zcobjectinspector.INTFDefaultControlHeight:=sysparam.notsaved.defaultheight;
 ZCADGUIManager.RegisterZCADFormInfo('ObjectInspector',rsGDBObjinspWndName,TGDBobjinsp,rect(0,100,200,600),ZCADFormSetupProc,CreateObjInspInstance,@GDBobjinsp);

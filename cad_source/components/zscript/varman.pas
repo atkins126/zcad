@@ -17,28 +17,30 @@
 }
 
 unit Varman;
-{$INCLUDE def.inc}
+
 {$MODE DELPHI}
 
 interface
 uses
-  UEnumDescriptor,uzctnrvectorgdbpointer,gzctnrvectordata,gzctnrvectorpobjects,LCLProc,uabstractunit,
-  SysUtils,UBaseTypeDescriptor,uzbtypesbase,uzbtypes,UGDBOpenArrayOfByte,
-  gzctnrvectortypes,uzctnrvectorgdbstring,varmandef,gzctnrstl,uzbmemman,
-  TypeDescriptors,URecordDescriptor,UObjectDescriptor,uzbstrproc,classes,typinfo,UPointerDescriptor,
-  uzctnrobjectschunk;
+  UEnumDescriptor,uzctnrVectorPointers,LCLProc,uabstractunit,
+  SysUtils,UBaseTypeDescriptor,uzctnrVectorBytes,
+  gzctnrvectortypes,uzctnrvectorstrings,varmandef,gzctnrSTL,
+  TypeDescriptors,URecordDescriptor,UObjectDescriptor,uzbstrproc,classes,typinfo,
+  UPointerDescriptor,
+  gzctnrVectorPData,gzctnrVector,
+  uzbLogIntf,uzctnrAlignedVectorBytes;
 type
     td=record
-             template:GDBString;
-             id:GDBInteger;
+             template:String;
+             id:Integer;
        end;
     ptdarray=^tdarray;
     tdarray=array [1..maxint div sizeof(td)] of td;
     pasparsemode=(modeOk,modeError,modeEnd);
     penumodj=^tenumodj;
     tenumodj=record
-                  source,user:GDBString;
-                  value:GDBLongword;
+                  source,user:String;
+                  value:LongWord;
             end;
 const
      SuffLeft='_Left';
@@ -69,7 +71,7 @@ const
       (template:'_identifier'#0'_softspace'#0'==_softspace'#0'=p=a=c=k=e=d_hardspace'#0'=a=r=r=a=y_softspace'#0;id:packedarraytype),
       (template:'_identifier'#0'_softspace'#0'==_softspace'#0'=p=r=o=c=e=d=u=r=e_hardspace'#0;id:proceduraltype),
       (template:'_identifier'#0'_softspace'#0'==_softspace'#0'=(_softspace'#0;id:enumtype),
-      (template:'_softspace'#0'=(=*=v=a=r=c=a=t=e=g=o=r=y=f=o=r=o=i_softspace'#0'_identifier'#0'==_GDBString'#0'=*=)';id:variablecategory)
+      (template:'_softspace'#0'=(=*=v=a=r=c=a=t=e=g=o=r=y=f=o=r=o=i_softspace'#0'_identifier'#0'==_String'#0'=*=)';id:variablecategory)
       );
      functionmember=1;
      proceduremember=2;
@@ -101,7 +103,7 @@ const
       (template:'_softspace'#0'=(=*=h=i=d=d=e=n=_=i=n=_=o=b=j=i=n=s=p=*=)';id:oi_hidden),
       (template:'_identifiers_cs'#0'=:_identifier'#0'_softend'#0;id:field),
       (template:'_softspace'#0'=e=n=d_softspace'#0'=;';id:objend),
-      (template:'_softspace'#0'=(=*_GDBString'#0'=*=)';id:username),
+      (template:'_softspace'#0'=(=*_String'#0'=*=)';id:username),
       (template:'_softspace'#0'=p=r=o=p=e=r=t=y_hardspace'#0;id:propertymember)
       );
      varmode=1;
@@ -141,17 +143,19 @@ const
       (template:'_softspace'#0'=a=b=s=t=r=a=c=t'+'_softspace'#0+'=;';id:mod_abstract)
       );
 type
-TNameToIndex=TMyGDBAnsiStringDictionary<TArrayIndex>;
+TNameToIndex=TMyAnsiStringDictionary<TArrayIndex>;
 TFieldName=(FNUser,FNProgram);
 TFieldNames=set of TFieldName;
 {EXPORT+}
+TZctnrVectorPUserTypeDescriptors=object(GZVectorPData{-}<PUserTypeDescriptor>{//})
+                           end;
 ptypemanager=^typemanager;
-{REGISTEROBJECTTYPE typemanager}
+{REGISTEROBJECTWITHOUTCONSTRUCTORTYPE typemanager}
 typemanager=object(typemanagerdef)
-                  protected
-                  n2i:TNameToIndex;
-                  public
-                  exttype:TZctnrVectorPGDBaseObjects;
+                  {-}protected{/Pointer;/}
+                  n2i:{-}TNameToIndex;{/Pointer;/}
+                  {-}public{/Pointer;/}
+                  exttype:TZctnrVectorPUserTypeDescriptors;
                   constructor init;
                   procedure CreateBaseTypes;virtual;
                   function _TypeName2PTD(name: TInternalScriptString):PUserTypeDescriptor;virtual;
@@ -161,68 +165,73 @@ typemanager=object(typemanagerdef)
                   destructor systemdone;virtual;
                   procedure free;virtual;
                   {for hide exttype}
-                  function getDataMutable(index:TArrayIndex):GDBPointer;virtual;
+                  function getDataMutable(index:TArrayIndex):Pointer;virtual;
                   function getcount:TArrayIndex;virtual;
-                  function AddTypeByPP(p:GDBPointer):TArrayIndex;virtual;
+                  function AddTypeByPP(p:Pointer):TArrayIndex;virtual;
                   function AddTypeByRef(var _type:UserTypeDescriptor):TArrayIndex;virtual;
             end;
-Tvardescarray=GZVectorData{-}<vardesk>{//};
-{REGISTEROBJECTTYPE varmanager}
+Tvardescarray=GZVector{-}<vardesk>{//};
+{REGISTEROBJECTWITHOUTCONSTRUCTORTYPE varmanager}
 pvarmanager=^varmanager;
 varmanager=object(varmanagerdef)
-            vardescarray:{GDBOpenArrayOfData}Tvardescarray;
-            vararray:{GDBOpenArrayOfByte}TObjectsChunk;
+            vardescarray:Tvardescarray;
+            vararray:TZctnrAlignedVectorBytes;
                  constructor init;
-                 function findvardesc(varname:TInternalScriptString): pvardesk;virtual;
-                 function findvardescbyinst(varinst:GDBPointer):pvardesk;virtual;
+                 function findvardesc(varname:TInternalScriptString):pvardesk;virtual;
+                 function findvardescbyinst(varinst:Pointer):pvardesk;virtual;
                  function findvardescbytype(pt:PUserTypeDescriptor):pvardesk;virtual;
-                 function createvariable(varname:TInternalScriptString; var vd:vardesk;attr:TVariableAttributes=0): pvardesk;virtual;
-                 function findfieldcustom(var pdesc: pGDBByte; var offset: GDBInteger;var tc:PUserTypeDescriptor; nam: ShortString): GDBBoolean;virtual;
+                 function createvariable(varname:TInternalScriptString; var vd:vardesk;attr:TVariableAttributes=0):pvardesk;virtual;
+                 function createvariable2(varname:TInternalScriptString; var vd:vardesk;attr:TVariableAttributes=0):TInVectorAddr;virtual;
+                 function findvardesc2(varname:TInternalScriptString):TInVectorAddr;virtual;
+                 function findfieldcustom(var pdesc: pByte; var offset: Integer;var tc:PUserTypeDescriptor; nam: ShortString): Boolean;virtual;
+                 function getDS:Pointer;virtual;
                  destructor done;virtual;
                  procedure free;virtual;
            end;
 TunitPart=(TNothing,TInterf,TImpl,TProg);
 PTUnit=^TUnit;
 PTSimpleUnit=^TSimpleUnit;
-{REGISTEROBJECTTYPE TSimpleUnit}
+{REGISTEROBJECTWITHOUTCONSTRUCTORTYPE TSimpleUnit}
 TSimpleUnit=object(TAbstractUnit)
                   Name:TInternalScriptString;
                   InterfaceUses:TZctnrVectorGDBPointer;
                   InterfaceVariables: varmanager;
                   constructor init(nam:TInternalScriptString);
                   destructor done;virtual;
-                  function CreateVariable(varname,vartype:TInternalScriptString;_pinstance:pointer=nil):GDBPointer;virtual;
+                  function CreateFixedVariable(varname,vartype:TInternalScriptString;_pinstance:pointer):Pointer;virtual;
+                  function CreateVariable(varname,vartype:TInternalScriptString):vardesk;virtual;
                   function FindVariable(varname:TInternalScriptString):pvardesk;virtual;
-                  function FindVariableByInstance(_Instance:GDBPointer):pvardesk;virtual;
-                  function FindValue(varname:TInternalScriptString):GDBPointer;virtual;
-                  function FindOrCreateValue(varname,vartype:TInternalScriptString):GDBPointer;virtual;
+                  function FindVarDesc(varname:TInternalScriptString):TInVectorAddr;virtual;
+                  function FindVariableByInstance(_Instance:Pointer):pvardesk;virtual;
+                  function FindValue(varname:TInternalScriptString):pvardesk;virtual;
+                  function FindOrCreateValue(varname,vartype:TInternalScriptString):vardesk;virtual;
                   function TypeName2PTD(n: TInternalScriptString):PUserTypeDescriptor;virtual;
-                  function SaveToMem(var membuf:GDBOpenArrayOfByte):PUserTypeDescriptor;virtual;
-                  function SavePasToMem(var membuf:GDBOpenArrayOfByte):PUserTypeDescriptor;virtual;abstract;
+                  function SaveToMem(var membuf:TZctnrVectorBytes):PUserTypeDescriptor;virtual;
+                  function SavePasToMem(var membuf:TZctnrVectorBytes):PUserTypeDescriptor;virtual;abstract;
                   procedure setvardesc(out vd: vardesk; varname, username, typename: TInternalScriptString;_pinstance:pointer=nil);
                   procedure free;virtual;abstract;
                   procedure CopyTo(source:PTSimpleUnit);virtual;
                   procedure CopyFrom(source:PTSimpleUnit);virtual;
             end;
 PTObjectUnit=^TObjectUnit;
-{REGISTEROBJECTTYPE TObjectUnit}
+{REGISTEROBJECTWITHOUTCONSTRUCTORTYPE TObjectUnit}
 TObjectUnit=object(TSimpleUnit)
-                  //function SaveToMem(var membuf:GDBOpenArrayOfByte):PUserTypeDescriptor;virtual;
+                  //function SaveToMem(var membuf:TZctnrVectorBytes):PUserTypeDescriptor;virtual;
                   procedure free;virtual;
             end;
-{REGISTEROBJECTTYPE TUnit}
+{REGISTEROBJECTWITHOUTCONSTRUCTORTYPE TUnit}
 TUnit=object(TSimpleUnit)
             InterfaceTypes:typemanager;
-            //ImplementationUses:GDBInteger;
+            //ImplementationUses:Integer;
             ImplementationTypes:typemanager;
             ImplementationVariables: varmanager;
 
             constructor init(nam:TInternalScriptString);
-            function TypeIndex2PTD(ind:GDBinteger):PUserTypeDescriptor;virtual;
+            function TypeIndex2PTD(ind:Integer):PUserTypeDescriptor;virtual;
             function TypeName2PTD(n: TInternalScriptString):PUserTypeDescriptor;virtual;
             function ObjectTypeName2PTD(n: TInternalScriptString):PObjectDescriptor;virtual;
-            function AssignToSymbol(var psymbol;symbolname:TInternalScriptString):GDBInteger;
-            function SavePasToMem(var membuf:GDBOpenArrayOfByte):PUserTypeDescriptor;virtual;
+            function AssignToSymbol(var psymbol;symbolname:TInternalScriptString):Integer;
+            function SavePasToMem(var membuf:TZctnrVectorBytes):PUserTypeDescriptor;virtual;
             destructor done;virtual;
             procedure free;virtual;
             function RegisterType(ti:PTypeInfo):PUserTypeDescriptor;
@@ -239,20 +248,20 @@ var
   SysUnit:PTUnit=nil;
   SysVarUnit:PTUnit=nil;
   SavedUnit,DBUnit,DWGDBUnit,DWGUnit:PTUnit;
-  BaseTypesEndIndex:GDBInteger;
-  OldTypesCount:GDBInteger;
-  VarCategory:TZctnrVectorGDBString;
-  CategoryCollapsed:GDBOpenArrayOfByte;
+  BaseTypesEndIndex:Integer;
+  OldTypesCount:Integer;
+  VarCategory:TZctnrVectorStrings;
+  CategoryCollapsed:TZctnrVectorBytes;
   CategoryUnknownCOllapsed:boolean;
 
-function getpattern(ptd:ptdarray; max:GDBInteger;var line:TInternalScriptString; out typ:GDBInteger):PTZctnrVectorGDBString;
-function ObjOrRecordRead(TranslateFunc:TTranslateFunction;var f: GDBOpenArrayOfByte; var line,GDBStringtypearray:TInternalScriptString; var fieldoffset: GDBSmallint; ptd:PRecordDescriptor):GDBBoolean;
-function GetPVarMan: GDBPointer; export;
+function getpattern(ptd:ptdarray; max:Integer;var line:TInternalScriptString; out typ:Integer):PTZctnrVectorStrings;
+function ObjOrRecordRead(TranslateFunc:TTranslateFunction;var f: TZctnrVectorBytes; var line,Stringtypearray:TInternalScriptString; var fieldoffset: SmallInt; ptd:PRecordDescriptor):Boolean;
+function GetPVarMan: Pointer; export;
 function FindCategory(category:TInternalScriptString;var catname:TInternalScriptString):Pointer;
-procedure SetCategoryCollapsed(category:TInternalScriptString;value:GDBBoolean);
+procedure SetCategoryCollapsed(category:TInternalScriptString;value:Boolean);
 function GetBoundsFromSavedUnit(name:string;w,h:integer):Trect;
 procedure StoreBoundsToSavedUnit(name:string;tr:Trect);
-procedure SetTypedDataVariable(out TypedTataVariable:TTypedData;pTypedTata:pointer;TypeName:string);
+procedure SetTypedDataVariable(out TypedTataVariable:THardTypedData;pTypedTata:pointer;TypeName:string);
 function GetIntegerFromSavedUnit(name,suffix:string;def,min,max:integer):integer;
 function GetAnsiStringFromSavedUnit(name,suffix:ansistring;def:ansistring):ansistring;
 procedure StoreIntegerToSavedUnit(name,suffix:string;value:integer);
@@ -260,7 +269,7 @@ procedure StoreAnsiStringToSavedUnit(name,suffix:string;value:string);
 implementation
 uses strmy;
 
-procedure SetTypedDataVariable(out TypedTataVariable:TTypedData;pTypedTata:pointer;TypeName:string);
+procedure SetTypedDataVariable(out TypedTataVariable:THardTypedData;pTypedTata:pointer;TypeName:string);
 var
   ptd:PUserTypeDescriptor;
 begin
@@ -287,91 +296,132 @@ begin
 end;
 function GetIntegerFromSavedUnit(name,suffix:string;def,min,max:integer):integer;
 var
-   pint:PGDBInteger;
+  pvd:pvardesk;
+  pint:PInteger;
 begin
-  pint:=SavedUnit.FindValue(name+suffix);
-  if assigned(pint)then begin
-    result:=pint^;
-    result:=setfrominterval(result,min,max);
+  pvd:=SavedUnit.FindValue(name+suffix);
+  if assigned(pvd) then begin
+    pint:=pvd.data.Addr.Instance;
+    if assigned(pint)then begin
+      result:=pint^;
+      result:=setfrominterval(result,min,max);
+    end else
+      result:=def;
   end else
     result:=def;
 end;
 function GetAnsiStringFromSavedUnit(name,suffix:ansistring;def:ansistring):ansistring;
 var
-   pstr:PAnsiString;
+  pvd:pvardesk;
+  pstr:PAnsiString;
 begin
-  pstr:=SavedUnit.FindValue(name+suffix);
-  if assigned(pstr)then begin
-    result:=pstr^;
+  pvd:=SavedUnit.FindValue(name+suffix);
+  if assigned(pvd) then begin
+    pstr:=pvd.data.Addr.Instance;
+    if assigned(pstr)then begin
+      result:=pstr^;
+    end else
+      result:=def;
   end else
     result:=def;
 end;
 procedure StoreIntegerToSavedUnit(name,suffix:string;value:integer);
 var
-   pint:PGDBInteger;
+   pint:PInteger;
+   pvd:pvardesk;
    vn:TInternalScriptString;
 begin
      vn:=name+suffix;
-     pint:=SavedUnit.FindValue(vn);
-     if not assigned(pint)then
-       pint:=SavedUnit.CreateVariable(vn,'GDBInteger');
+     pvd:=SavedUnit.FindValue(vn);
+     if not assigned(pvd) then
+       pint:=SavedUnit.CreateVariable(vn,'Integer').data.Addr.instance
+     else
+       pint:=pvd^.data.Addr.Instance;
      pint^:=value;
 end;
 procedure StoreAnsiStringToSavedUnit(name,suffix:string;value:string);
 var
    pas:PAnsiString;
+   pvd:pvardesk;
    vn:TInternalScriptString;
 begin
      vn:=name+suffix;
-     pas:=SavedUnit.FindValue(vn);
-     if not assigned(pas)then
-       pas:=SavedUnit.CreateVariable(vn,'GDBAnsiString');
+     pvd:=SavedUnit.FindValue(vn);
+     if not assigned(pvd) then
+       pas:=SavedUnit.CreateVariable(vn,'AnsiString').data.Addr.instance
+     else
+       pas:=pvd^.data.Addr.Instance;
      pas^:=value;
 end;
 function GetBoundsFromSavedUnit(name:string;w,h:integer):Trect;
 var
-   pint:PGDBInteger;
+   pint:PInteger;
+   pvd:pvardesk;
 begin
      result:=rect(0,0,100,100);
-     pint:=SavedUnit.FindValue(name+SuffLeft);
-     if assigned(pint)then
-                          result.Left:=pint^;
-     result.Left:=setfrominterval(result.Left,0,w);
-     pint:=SavedUnit.FindValue(name+SuffTop);
-     if assigned(pint)then
-                          result.Top:=pint^;
-     result.Top:=setfrominterval(result.Top,0,h);
-     pint:=SavedUnit.FindValue(name+SuffWidth);
-     if assigned(pint)then
-                          result.Right:=result.Left+pint^;
-     pint:=SavedUnit.FindValue(name+SuffHeight);
-     if assigned(pint)then
-                          result.Bottom:=result.Top+pint^;
+     pvd:=SavedUnit.FindValue(name+SuffLeft);
+     if assigned(pvd) then begin
+       pint:=pvd.data.Addr.Instance;
+       if assigned(pint)then
+                            result.Left:=pint^;
+       result.Left:=setfrominterval(result.Left,0,w);
+     end;
+     pvd:=SavedUnit.FindValue(name+SuffTop);
+     if assigned(pvd) then begin
+       pint:=pvd.data.Addr.Instance;
+       if assigned(pint)then
+                            result.Top:=pint^;
+       result.Top:=setfrominterval(result.Top,0,h);
+     end;
+     pvd:=SavedUnit.FindValue(name+SuffWidth);
+     if assigned(pvd) then begin
+       pint:=pvd.data.Addr.Instance;
+       if assigned(pint)then
+                            result.Right:=result.Left+pint^;
+     end;
+     pvd:=SavedUnit.FindValue(name+SuffHeight);
+     if assigned(pvd) then begin
+       pint:=pvd.data.Addr.Instance;
+       if assigned(pint)then
+                            result.Bottom:=result.Top+pint^;
+     end;
 end;
 procedure StoreBoundsToSavedUnit(name:string;tr:Trect);
 var
-   pint:PGDBInteger;
+   pint:PInteger;
    vn:TInternalScriptString;
+   pvd:pvardesk;
 begin
      vn:=name+SuffLeft;
-     pint:=SavedUnit.FindValue(vn);
-     if not assigned(pint)then
-                              pint:=SavedUnit.CreateVariable(vn,'GDBInteger');
+     pvd:=SavedUnit.FindValue(vn);
+     if assigned(pvd) then
+       pint:=SavedUnit.FindValue(vn).data.Addr.Instance
+     else
+       pint:=SavedUnit.CreateVariable(vn,'Integer').data.Addr.instance;
      pint^:=tr.Left;
+
      vn:=name+SuffTop;
-     pint:=SavedUnit.FindValue(vn);
-     if not assigned(pint)then
-                              pint:=SavedUnit.CreateVariable(vn,'GDBInteger');
+     pvd:=SavedUnit.FindValue(vn);
+     if assigned(pvd) then
+       pint:=SavedUnit.FindValue(vn).data.Addr.Instance
+     else
+       pint:=SavedUnit.CreateVariable(vn,'Integer').data.Addr.instance;
      pint^:=tr.Top;
+
      vn:=name+SuffWidth;
-     pint:=SavedUnit.FindValue(vn);
-     if not assigned(pint)then
-                              pint:=SavedUnit.CreateVariable(vn,'GDBInteger');
+     pvd:=SavedUnit.FindValue(vn);
+     if assigned(pvd) then
+       pint:=SavedUnit.FindValue(vn).data.Addr.Instance
+     else
+       pint:=SavedUnit.CreateVariable(vn,'Integer').data.Addr.instance;
      pint^:=tr.Right-tr.Left;
+
      vn:=name+SuffHeight;
-     pint:=SavedUnit.FindValue(vn);
-     if not assigned(pint)then
-                              pint:=SavedUnit.CreateVariable(vn,'GDBInteger');
+     pvd:=SavedUnit.FindValue(vn);
+     if assigned(pvd) then
+       pint:=SavedUnit.FindValue(vn).data.Addr.Instance
+     else
+       pint:=SavedUnit.CreateVariable(vn,'Integer').data.Addr.instance;
      pint^:=tr.Bottom-tr.Top;
 end;
 procedure TSimpleUnit.CopyTo;
@@ -394,7 +444,7 @@ begin
           if source^.FindVariable(pv^.name)=nil then begin
             source^.setvardesc(vd,pv^.name,pv^.username,pv^.data.ptd^.TypeName);
             source^.InterfaceVariables.createvariable(vd.name, vd);
-            pv^.data.ptd^.CopyInstanceTo(pv^.data.Instance,vd.data.Instance);
+            pv^.data.ptd^.CopyInstanceTo(pv^.data.Addr.Instance,vd.data.Addr.Instance);
           end;
           pv:=InterfaceVariables.vardescarray.iterate(ir);
         until pv=nil;
@@ -419,7 +469,7 @@ begin
           if FindVariable(pv^.name)=nil then begin
               setvardesc(vd,pv^.name,pv^.username,pv^.data.ptd^.TypeName);
               InterfaceVariables.createvariable(vd.name, vd);
-              pv^.data.ptd^.CopyInstanceTo(pv^.data.Instance,vd.data.Instance);
+              pv^.data.ptd^.CopyInstanceTo(pv^.data.Addr.Instance,vd.data.Addr.Instance);
           end;
           pv:=source.InterfaceVariables.vardescarray.iterate(ir);
         until pv=nil;
@@ -432,7 +482,7 @@ var
    etd:PRecordDescriptor;
    fd:FieldDescriptor;
 begin
-     gdbgetmem({$IFDEF DEBUGBUILD}'{874DEDEF-E023-4558-A3C6-392D9C3B23C9}',{$ENDIF}GDBPointer(etd),sizeof(RecordDescriptor));
+     Getmem(Pointer(etd),sizeof(RecordDescriptor));
      PRecordDescriptor(etd)^.init(ti^.Name,@self);
      td:=GetTypeData(ti);
      mf:=@td.ManagedFldCount;
@@ -449,14 +499,14 @@ begin
           fd.Collapsed:=true;
           fd.Offset:=mf.FldOffset;
           if fd.base.PFT<>nil then
-                             fd.Size:=fd.base.PFT^.SizeInGDBBytes
+                             fd.Size:=fd.base.PFT^.SizeInBytes
                          else
                              fd.Size:=1;
           etd^.AddField(fd);
 
           inc(mf);
      end;
-     etd^.SizeInGDBBytes:=td.RecSize;
+     etd^.SizeInBytes:=td.RecSize;
      InterfaceTypes.AddTypeByPP(@etd);
      result:=etd;
 end;
@@ -469,7 +519,7 @@ var
    fd:FieldDescriptor;
 begin
      td:=GetTypeData(ti);
-     gdbgetmem({$IFDEF DEBUGBUILD}'{EB691608-9520-4E6F-9042-960EFE61FA89}',{$ENDIF}GDBPointer(etd),sizeof(GDBPointerDescriptor));
+     Getmem(Pointer(etd),sizeof(GDBPointerDescriptor));
      etd^.init(td.RefType^.Name,ti^.Name,@self);
      etd^.TypeOf:=RegisterType(td.RefType);
      InterfaceTypes.AddTypeByPP(@etd);
@@ -502,7 +552,7 @@ var
 
 begin
      td:=GetTypeData(ti);
-     gdbgetmem({$IFDEF DEBUGBUILD}'{EB691608-9520-4E6F-9042-960EFE61FA89}',{$ENDIF}GDBPointer(etd),sizeof(EnumDescriptor));
+     Getmem(Pointer(etd),sizeof(EnumDescriptor));
      case td.OrdType of
         otSByte:bytessize:=1;
         otUByte:bytessize:=1;
@@ -576,67 +626,67 @@ begin
      //self.InterfaceVariables.vardescarray.Clear;
      self.InterfaceVariables.vararray.Clear;
 end;
-function TSimpleUnit.SaveToMem(var membuf:GDBOpenArrayOfByte):PUserTypeDescriptor;
+function TSimpleUnit.SaveToMem(var membuf:TZctnrVectorBytes):PUserTypeDescriptor;
 var
    pu:PTUnit;
    pv:pvardesk;
    ir:itrec;
    value:TInternalScriptString;
 begin
-     membuf.TXTAddGDBStringEOL('unit '+Name+';');
-     membuf.TXTAddGDBStringEOL('interface');
+     membuf.TXTAddStringEOL('unit '+Name+';');
+     membuf.TXTAddStringEOL('interface');
      if InterfaceUses.Count<>0 then
         begin
              pu:=InterfaceUses.beginiterate(ir);
              if pu<>nil then
                             begin
-                                 membuf.TXTAddGDBString('uses '+pu^.Name);
+                                 membuf.TXTAddString('uses '+pu^.Name);
                             end;
              pu:=InterfaceUses.iterate(ir);
                           if pu<>nil then
                             repeat
-                                 membuf.TXTAddGDBString(','+pu^.Name);
+                                 membuf.TXTAddString(','+pu^.Name);
                                  pu:=InterfaceUses.iterate(ir);
                             until pu=nil;
-            membuf.TXTAddGDBStringEOL(';');
+            membuf.TXTAddStringEOL(';');
         end;
      if InterfaceVariables.vardescarray.Count<>0 then
         begin
-              membuf.TXTAddGDBStringEOL('var');
+              membuf.TXTAddStringEOL('var');
               pv:=InterfaceVariables.vardescarray.beginiterate(ir);
                           if pv<>nil then
                             repeat
-                                 membuf.TXTAddGDBString('  '+pv^.name+':');
-                                 membuf.TXTAddGDBString(pv.data.PTD.TypeName+';');
-                                 if pv^.username<>'' then membuf.TXTAddGDBString('(*'''+pv^.username+'''*)');
-                                 membuf.TXTAddGDBStringEOL('');
+                                 membuf.TXTAddString('  '+pv^.name+':');
+                                 membuf.TXTAddString(pv.data.PTD.TypeName+';');
+                                 if pv^.username<>'' then membuf.TXTAddString('(*'''+pv^.username+'''*)');
+                                 membuf.TXTAddStringEOL('');
                                  pv:=InterfaceVariables.vardescarray.iterate(ir);
                             until pv=nil;
         end;
         begin
-              membuf.TXTAddGDBStringEOL('implementation');
-              membuf.TXTAddGDBStringEOL('begin');
+              membuf.TXTAddStringEOL('implementation');
+              membuf.TXTAddStringEOL('begin');
               pv:=InterfaceVariables.vardescarray.beginiterate(ir);
                           if pv<>nil then
                             repeat
-                                 //membuf.TXTAddGDBString('  '+pv^.name+':=');
-                                 pv.data.PTD.SavePasToMem(membuf,pv.data.Instance,'  '+pv^.name);
-                                 {value:=pv.data.PTD.GetValueAsString(pv.data.Instance);
+                                 //membuf.TXTAddString('  '+pv^.name+':=');
+                                 pv.data.PTD.SavePasToMem(membuf,pv.data.Addr.Instance,'  '+pv^.name);
+                                 {value:=pv.data.PTD.GetValueAsString(pv.Instance);
                                  if pv.data.PTD=@FundamentalStringDescriptorObj then
                                              value:=''''+value+'''';
 
-                                 membuf.TXTAddGDBString(value+';');}
-                                 //membuf.TXTAddGDBStringEOL('');
+                                 membuf.TXTAddString(value+';');}
+                                 //membuf.TXTAddStringEOL('');
                                  pv:=InterfaceVariables.vardescarray.iterate(ir);
                             until pv=nil;
-            membuf.TXTAddGDBString('end.');
+            membuf.TXTAddString('end.');
         end;
 end;
-{function getpsysvar: GDBPointer; export;
+{function getpsysvar: Pointer; export;
 begin
   result := @sysvar;
 end;}
-function GetPVarMan: GDBPointer; export;
+function GetPVarMan: Pointer; export;
 begin
   result := @SysUnit.InterfaceVariables;
 end;
@@ -644,8 +694,7 @@ procedure vardeskclear(const p:pvardesk);
 //var
    //s:string;
 begin
-     if VerboseLog^ then
-       DebugLn(format('{T}[ZSCRIPT]vardeskclear: "%s"',[pvardesk(p)^.name]));
+     zTraceLn(format('{T}[ZSCRIPT]vardeskclear: "%s"',[pvardesk(p)^.name]));
      //programlog.LogOutFormatStr('vardeskclear: "%s"',[pvardesk(p)^.name],lp_OldPos,LM_Trace);
      if pvardesk(p)^.name='_EQ_C2000_KPB' then
      pvardesk(p)^.name:=pvardesk(p)^.name;
@@ -655,12 +704,12 @@ begin
      pvardesk(p)^.name:='';
      pvardesk(p)^.username:='';
 
-     pvardesk(p)^.data.ptd^.MagicFreeInstance(pvardesk(p)^.data.Instance);
+     pvardesk(p)^.data.ptd^.MagicFreeInstance(pvardesk(p)^.data.Addr.Instance);
 
      //if pvardesk(p)^.data.ptd=@FundamentalStringDescriptorObj then
-       //                                                   pgdbstring(pvardesk(p)^.data.Instance)^:='';
+       //                                                   pString(pvardesk(p)^.Instance)^:='';
      pvardesk(p)^.data.ptd:=nil;
-     //gdbfreemem(pvardesk(p)^.pvalue);
+     //Freemem(pvardesk(p)^.pvalue);
 end;
 procedure varmanager.free;
 begin
@@ -668,26 +717,22 @@ begin
 end;
 destructor typemanager.done;
 begin
-     if VerboseLog^ then
-       DebugLn('{T+}[ZSCRIPT]TypeManager.done');
+     zTraceLn('{T+}[ZSCRIPT]TypeManager.done');
      //programlog.LogOutStr('TypeManager.done',lp_IncPos,LM_Trace);
      exttype.free;
      exttype.done;
      n2i.destroy;
-     if VerboseLog^ then
-       DebugLn('{T-}[ZSCRIPT]TypeManager.done;//end');
+     zTraceLn('{T-}[ZSCRIPT]TypeManager.done;//end');
      //programlog.LogOutStr('end;',lp_DecPos,LM_Trace);
 end;
 destructor typemanager.systemdone;
 begin
-     if VerboseLog^ then
-       DebugLn('{T+}[ZSCRIPT]TypeManager.systemdone;');
+     zTraceLn('{T+}[ZSCRIPT]TypeManager.systemdone;');
      //programlog.LogOutStr('TypeManager.systemdone',lp_IncPos,LM_Trace);
      exttype.cleareraseobjfrom(BaseTypesEndIndex-1);
      exttype.done;
      n2i.destroy;
-     if VerboseLog^ then
-       DebugLn('{T-}[ZSCRIPT]TypeManager.systemdone;//end');
+     zTraceLn('{T-}[ZSCRIPT]TypeManager.systemdone;//end');
      //programlog.LogOutStr('end;',lp_DecPos,LM_Trace);
 end;
 
@@ -699,7 +744,7 @@ function typemanager._TypeIndex2PTD;
 begin
   result:=PUserTypeDescriptor(exttype.getDataMutable(ind));
 end;
-function typemanager.getDataMutable(index:TArrayIndex):GDBPointer;
+function typemanager.getDataMutable(index:TArrayIndex):Pointer;
 begin
      result:=exttype.getDataMutable(index);
 end;
@@ -707,7 +752,7 @@ function typemanager.getcount:TArrayIndex;
 begin
      result:=exttype.count;
 end;
-function typemanager.AddTypeByPP(p:GDBPointer):TArrayIndex;
+function typemanager.AddTypeByPP(p:Pointer):TArrayIndex;
 var
   pt:PUserTypeDescriptor;
 begin
@@ -759,7 +804,7 @@ begin
 end;
 constructor typemanager.init;
 begin
-     exttype.init({$IFDEF DEBUGBUILD}'{5C8C5991-F908-4A85-B47E-56EA0ED03084}',{$ENDIF}1000{,sizeof(typedesk)});
+     exttype.init(1000);
      n2i:=TNameToIndex.create;
      //CreateBaseTypes;
 end;
@@ -785,6 +830,7 @@ begin
      AddTypeByRef(AliasDWordDescriptorOdj);
      AddTypeByRef(AliasPtrUIntDescriptorOdj);
      AddTypeByRef(AliasUInt64DescriptorOdj);
+
      BaseTypesEndIndex:=exttype.Count;
 end;
 
@@ -799,53 +845,52 @@ begin
   varname := readspace(varname);
   vd.name := varname;
   vd.username := username;
-  vd.data.Instance := _pinstance;
+  vd.SetInstance(_pinstance);
+  //vd.Instance := _pinstance;
   vd.data.ptd:={SysUnit.}TypeName2PTD(typename);
 
   if vd.data.ptd=nil then
                          begin
-                              if VerboseLog^ then
-                                DebugLn(sysutils.format('{E}Type "%S" not defined in unit "%S"',[typename,self.Name]));
+                              zTraceLn(sysutils.format('{E}Type "%S" not defined in unit "%S"',[typename,self.Name]));
 
                               //programlog.LogOutStr(sysutils.format('Type "%S" not defined in unit "%S"',[typename,self.Name]),lp_OldPos,LM_Error);
                          end;
 end;
 constructor varmanager.init;
 begin
-  vardescarray.init({$IFDEF DEBUGBUILD}'{7216CFFF-47FA-4F4E-BE07-B12E967EEF91} - описания переменных',{$ENDIF}50{,sizeof(vardesk)});
-  vararray.init({$IFDEF DEBUGBUILD}'{834B86B5-4581-4C93-8446-8CEE664A66A2} - содержимое переменных',{$ENDIF}10024); { TODO: из описания переменной пужно относительную ссылку на значение. рушится при реаллокации }
+  vardescarray.init(64);
+  vararray.init(1024);
 end;
 destructor varmanager.done;
 begin
-     if VerboseLog^ then
-       DebugLn('{T+}[ZSCRIPT]varmanager.done;');
+     zTraceLn('{T+}[ZSCRIPT]varmanager.done;');
 
      //programlog.LogOutStr('varmanager.done',lp_IncPos,LM_Trace);
      vardescarray.freewithproc(vardeskclear);
      vardescarray.done;
      vararray.done;//TODO:проверить чистятся ли стринги внутри
      //exttype.freewithproc(basetypedescclear);
-     if VerboseLog^ then
-       DebugLn('{T-}[ZSCRIPT]varmanager.done;//end');
+     zTraceLn('{T-}[ZSCRIPT]varmanager.done;//end');
 
 
      //programlog.LogOutStr('end;',lp_DecPos,LM_Trace);
 end;
 function varmanager.createvariable(varname: TInternalScriptString; var vd: vardesk;attr:TVariableAttributes=0):pvardesk;
 var
-  size: GDBLongword;
+  size: LongWord;
   i:TArrayIndex;
 begin
        if vd.data.ptd<>nil then
-                          size:=vd.data.ptd^.SizeInGDBBytes
+                          size:=vd.data.ptd^.SizeInBytes
                       else
                           begin
                                size:=1;
                           end;
-       if vd.data.Instance=nil then
+       if vd.data.Addr.Instance=nil then
        begin
-         vd.data.Instance:=vararray.getDataMutable(vararray.AllocData(size));
-         vd.data.PTD.InitInstance(vd.data.Instance);
+         vd.SetInstance(@vararray,vararray.AllocData(size));
+         //vd.Instance:=vararray.getDataMutable(vararray.AllocData(size));
+         vd.data.PTD.InitInstance(vd.data.Addr.Instance);
        end;
        vd.attrib:=attr;
        i:=vardescarray.PushBackData(vd);
@@ -853,10 +898,50 @@ begin
        //KillString(vd.name);
        //KillString(vd.username);
 end;
-function getpattern(ptd:ptdarray; max:GDBInteger;var line:TInternalScriptString; out typ:GDBInteger):PTZctnrVectorGDBString;
-var i:GDBInteger;
-    parseresult:PTZctnrVectorGDBString;
-    parseerror:GDBBoolean;
+function varmanager.createvariable2(varname:TInternalScriptString; var vd:vardesk;attr:TVariableAttributes=0):TInVectorAddr;
+var
+  size: LongWord;
+  i:TArrayIndex;
+begin
+       if vd.data.ptd<>nil then
+                          size:=vd.data.ptd^.SizeInBytes
+                      else
+                          begin
+                               size:=1;
+                          end;
+       if vd.data.Addr.Instance=nil then
+       begin
+         vd.SetInstance(@vararray,vararray.AllocData(size));
+         vd.data.PTD.InitInstance(vd.data.Addr.Instance);
+       end;
+       vd.attrib:=attr;
+       Result.SetInstance(@vardescarray,vardescarray.PushBackData(vd));
+end;
+function varmanager.findvardesc2(varname: TInternalScriptString):TInVectorAddr;
+var
+  //pblock: pdblock;
+  pdesc: pvardesk;
+  offset: Integer;
+  temp: pvardesk;
+  bc:PUserTypeDescriptor;
+      ir:itrec;
+begin
+   pdesc:=self.vardescarray.beginiterate(ir);
+   if pdesc<>nil then
+     repeat
+       if pdesc^.name=varname then begin
+         result.SetInstance(@vardescarray,ir.itc);
+         exit;
+       end;
+    pdesc:=self.vardescarray.iterate(ir);
+    until pdesc=nil;
+   result.SetInstance(nil,0);
+end;
+
+function getpattern(ptd:ptdarray; max:Integer;var line:TInternalScriptString; out typ:Integer):PTZctnrVectorStrings;
+var i:Integer;
+    parseresult:PTZctnrVectorStrings;
+    parseerror:Boolean;
 begin
      typ:=0;
      i:=1;
@@ -875,22 +960,22 @@ begin
                         if parseresult<>nil then
                                                 begin
                                                 parseresult.Done;
-                                                GDBFreeMem(Gdbpointer(parseresult));
+                                                Freemem(Pointer(parseresult));
                                                 end;
                    end;
 end;
-function ObjOrRecordRead(TranslateFunc:TTranslateFunction;var f: GDBOpenArrayOfByte; var line,GDBStringtypearray:TInternalScriptString; var fieldoffset: GDBSmallint; ptd:PRecordDescriptor):GDBBoolean;
+function ObjOrRecordRead(TranslateFunc:TTranslateFunction;var f: TZctnrVectorBytes; var line,Stringtypearray:TInternalScriptString; var fieldoffset: SmallInt; ptd:PRecordDescriptor):Boolean;
 type
     trrstate=(fields,metods);
-var parseerror{,parsesuberror}:GDBBoolean;
-    parseresult{,parsesubresult}:PTZctnrVectorGDBString;
-    count,typ:GDBInteger;
+var parseerror{,parsesuberror}:Boolean;
+    parseresult{,parsesubresult}:PTZctnrVectorStrings;
+    count,typ:Integer;
     {typename,}oldline, fieldname, {fieldvalue,} fieldtype, {sub, indmins, indmaxs, arrind1,}rname,wname,functionname,functionoperands: TInternalScriptString;
     fieldgdbtype:PUserTypeDescriptor;
-    i: GDBInteger;
-//  indmin, indcount, size: GDBLongword;
+    i: Integer;
+//  indmin, indcount, size: LongWord;
 //  etd:PUserTypeDescriptor;
-//  addtype:GDBBoolean;
+//  addtype:Boolean;
   state:trrstate;
   fieldsmode:(primary,calced);
   fd:FieldDescriptor;
@@ -956,14 +1041,14 @@ begin
                                                   end
                                               else
                                                   begin
-                                                    {$IFDEF LOUDERRORS}
+                                                    {IFDEF LOUDERRORS}
                                                        Raise Exception.Create('Something wrong');
-                                                    {$ENDIF}
+                                                    {ENDIF}
                                                   end;
                                if uppercase(functionname)='FORMAT' then
                                                                    functionname:=functionname;
 
-                               if parseresult<>nil then begin parseresult^.Done;GDBfreeMem(gdbpointer(parseresult));end;
+                               if parseresult<>nil then begin parseresult^.Done;Freemem(Pointer(parseresult));end;
                                repeat
                                line := f.readtoparser(';');
                                parseresult:=getpattern(@parsefuncmodss,maxmod,line,typ); // длдл
@@ -975,7 +1060,7 @@ begin
                                                  mattr:=mattr;
                                             end;
                                end;
-                               if parseresult<>nil then begin parseresult^.Done;GDBfreeMem(gdbpointer(parseresult));end;
+                               if parseresult<>nil then begin parseresult^.Done;Freemem(Pointer(parseresult));end;
                                until typ=0;
                                PObjectDescriptor(ptd)^.addmetod(ptd^.TypeName,functionname,functionoperands,nil,mattr);
                                //line:=oldline;
@@ -1006,8 +1091,8 @@ begin
                       if assigned(TranslateFunc)then
                         fieldtype:=TranslateFunc(ptd.TypeName+'~'+getlastfirld.ProgramName,fieldtype);
                       {$ENDIF}
-                      getlastfirld.username:={parseresult^.getGDBString(0)}fieldtype;
-                      //fieldtype:=parseresult^.getGDBString(0);
+                      getlastfirld.username:={parseresult^.getString(0)}fieldtype;
+                      //fieldtype:=parseresult^.getString(0);
                     end;
            membermodifier:
                           begin
@@ -1042,11 +1127,11 @@ begin
                                   end
                               else
                                   begin
-                                       {$IFDEF LOUDERRORS}
+                                       {IFDEF LOUDERRORS}
                                          Raise Exception.Create('Something wrong');
-                                      {$ENDIF}
+                                      {ENDIF}
                                   end;
-              //if parseresult<>nil then begin parseresult^.FreeAndDone;GDBfreeMem(gdbpointer(parseresult));end;
+              //if parseresult<>nil then begin parseresult^.FreeAndDone;Freemem(Pointer(parseresult));end;
           end;
                     field:
                           begin
@@ -1064,23 +1149,23 @@ begin
                                                              begin
                                                                   inc(count);
                                                              end;
-                                                        parsesubresult:=runparser('_softspace'#0'=(=*_GDBString'#0'=*=)',line,parsesuberror);}
+                                                        parsesubresult:=runparser('_softspace'#0'=(=*_String'#0'=*=)',line,parsesuberror);}
                                                         fieldtype:=parseresult^.getData(parseresult.Count-1);
-                                                        //pGDBString(parseresult^.getDataMutable(parseresult.Count-1))^;
+                                                        //pString(parseresult^.getDataMutable(parseresult.Count-1))^;
                                                         fieldgdbtype:=PTUnit(PRecordDescriptor(ptd)^.punit).TypeName2PTD(fieldtype);
                                                         for i:=0 to parseresult.Count-2 do
                                                         begin
                                                              fieldname:=parseresult^.getData(i);
                                                              if fieldname='PInOCS' then
                                                                                            fieldname:=fieldname;
-                                                             GDBStringtypearray := GDBStringtypearray + fieldname + #0;
-                                                             if fieldsmode=primary then GDBStringtypearray := GDBStringtypearray+'P'
-                                                                                   else GDBStringtypearray := GDBStringtypearray+'C';
-                                                             //GDBStringtypearray := GDBStringtypearray + char(fieldsmode);
-                                                             //GDBStringtypearray := GDBStringtypearray + pac_GDBWord_to_GDBString(fieldgdbtype.gdbtypecustom) + pac_lGDBWord_to_GDBString(fieldgdbtype.sizeinmem);
+                                                             Stringtypearray := Stringtypearray + fieldname + #0;
+                                                             if fieldsmode=primary then Stringtypearray := Stringtypearray+'P'
+                                                                                   else Stringtypearray := Stringtypearray+'C';
+                                                             //Stringtypearray := Stringtypearray + char(fieldsmode);
+                                                             //Stringtypearray := Stringtypearray + pac_GDBWord_to_String(fieldgdbtype.gdbtypecustom) + pac_lGDBWord_to_String(fieldgdbtype.sizeinmem);
                                                              fd.base.ProgramName:=fieldname;
                                                              fd.base.PFT:=fieldgdbtype;
-                                                             //GDBPointer(fd.base.UserName):=nil;
+                                                             //Pointer(fd.base.UserName):=nil;
                                                              //fd.UserName:='sdfsdf';
                                                              fd.base.Attributes:=0;
                                                              fd.base.Saved:=0;
@@ -1088,7 +1173,7 @@ begin
                                                              //if fieldsmode<>primary then fd.Attributes:=fd.Attributes or FA_CALCULATED;
                                                              fd.Offset:=fieldoffset;
                                                              if fd.base.PFT<>nil then
-                                                                                fd.Size:=fd.base.PFT^.SizeInGDBBytes
+                                                                                fd.Size:=fd.base.PFT^.SizeInBytes
                                                                             else
                                                                                 fd.Size:=1;
                                                              //if PFieldDescriptor(PRecordDescriptor(ptd)^.Fields.getDataMutable(PRecordDescriptor(ptd)^.Fields.Count))^.username=''
@@ -1102,7 +1187,7 @@ begin
                                                    end;
                           end;
            end;{case}
-           if parseresult<>nil then begin parseresult^.Done;GDBfreeMem(gdbpointer(parseresult));end;
+           if parseresult<>nil then begin parseresult^.Done;Freemem(Pointer(parseresult));end;
            if (line='')or(count=300) then
                                          begin
                                               line := f.readtoparser(';');
@@ -1114,14 +1199,19 @@ begin
                                                              end;
      until typ=objend;
 end;
+function varmanager.getDS:Pointer;
+begin
+  result:=vararray.PArray;
+end;
+
 function varmanager.findfieldcustom;
 var
-  path,{sp,} {typeGDBString,} sub, {field,} inds: TInternalScriptString;
+  path,{sp,} {typeString,} sub, {field,} inds: TInternalScriptString;
   oper: ansichar;
-  i, oldi, j, indexcount: GDBInteger;
+  i, oldi, j, indexcount: Integer;
   pind: parrayindex;
-  ind, sum: GDBInteger;
-  //sizeinmem: GDBLongword;
+  ind, sum: Integer;
+  //sizeinmem: LongWord;
   //deb1,deb2:shortString;
   pt:PTUserTypeDescriptor;
 begin
@@ -1154,15 +1244,15 @@ begin
   begin
     path := '';
   end;
-  //typeGDBString := ptypedesk(Types.exttype.getDataMutable(pvardesk(pdesc)^.vartypecustom))^.tdesk;
+  //typeString := ptypedesk(Types.exttype.getDataMutable(pvardesk(pdesc)^.vartypecustom))^.tdesk;
   pt:=pointer(pvardesk(pdesc)^.data.ptd);// pointer(PUserTypeDescriptor(Types.exttype.getDataMutable(pvardesk(pdesc)^.vartypecustom)^));
      {result:=true;}
   repeat
     case oper of
       '.':
         begin
-          //typeGDBString := exttypearrayptr^.typearray[pvardesk(pdesc)^.vartypecustom].tdesk;
-          //typeGDBString := copy(typeGDBString, 2, length(typeGDBString));
+          //typeString := exttypearrayptr^.typearray[pvardesk(pdesc)^.vartypecustom].tdesk;
+          //typeString := copy(typeString, 2, length(typeString));
           i := 1;
           while not (path[i] in ['.', '[', '^']) do
           begin
@@ -1190,7 +1280,7 @@ begin
           if tc<>nil then
                                   begin
                                        result := true;
-                                       //typeGDBString := ptypedesk(Types.exttype.getDataMutable(tc))^.tdesk;
+                                       //typeString := ptypedesk(Types.exttype.getDataMutable(tc))^.tdesk;
                                        //pt:=pointer(PUserTypeDescriptor(Types.exttype.getDataMutable(tc)^));
                                        pt:=pointer(tc);
                                   end
@@ -1202,7 +1292,7 @@ begin
         end;
       '[':
         begin
-          //typeGDBString := copy(typeGDBString, 2, length(typeGDBString));
+          //typeString := copy(typeString, 2, length(typeString));
           i := 1;
           while not (path[i] in [']']) do
           begin
@@ -1223,16 +1313,16 @@ begin
           end;
           i := 1;
           sum:=0;
-          {bt := GDBByte(typeGDBString[i]);
+          {bt := Byte(typeString[i]);
           inc(i);}
-//----------------------------------          tc := unpac_GDBString_to_GDBWord(copy(typeGDBString, i, 2));
+//----------------------------------          tc := unpac_String_to_GDBWord(copy(typeString, i, 2));
           inc(i, 2);
-          {sizeinmem :=} //unpac_GDBString_to_lGDBWord(copy(typeGDBString, i, 4));
+          {sizeinmem :=} //unpac_String_to_lGDBWord(copy(typeString, i, 4));
              //offset:=offset+sizeinmem;
           inc(i, 4);
-          indexcount :=-100;// unpac_GDBString_to_GDBWord(copy(typeGDBString, i, 2));
+          indexcount :=-100;// unpac_String_to_GDBWord(copy(typeString, i, 2));
           inc(i, 2);
-          //pind := @typeGDBString[i];
+          //pind := @typeString[i];
           i := 1;
              //offset:=0;
           for oldi := 1 to indexcount - 1 do
@@ -1286,11 +1376,11 @@ end;
 
 
 
-function varmanager.findvardescbyinst(varinst:GDBPointer):pvardesk;
+function varmanager.findvardescbyinst(varinst:Pointer):pvardesk;
 var
   //pblock: pdblock;
   pdesc: pvardesk;
-  //offset: GDBLongword;
+  //offset: LongWord;
   //temp: pvardesk;
   //bc:PUserTypeDescriptor;
       ir:itrec;
@@ -1300,7 +1390,7 @@ begin
   pdesc:=self.vardescarray.beginiterate(ir);
   if pdesc<>nil then
   repeat
-        if pdesc.data.Instance=varinst then
+        if pdesc.data.Addr.Instance=varinst then
         begin
              result:=pdesc;
              exit;
@@ -1311,7 +1401,7 @@ end;
 function varmanager.findvardescbytype(pt:PUserTypeDescriptor):pvardesk;
 var
   pdesc: pvardesk;
-  //offset: GDBLongword;
+  //offset: LongWord;
   //temp: pvardesk;
   //bc:PUserTypeDescriptor;
       ir:itrec;
@@ -1333,7 +1423,7 @@ function varmanager.findvardesc(varname: TInternalScriptString): pvardesk;
 var
   //pblock: pdblock;
   pdesc: pvardesk;
-  offset: GDBInteger;
+  offset: Integer;
   temp: pvardesk;
   bc:PUserTypeDescriptor;
       ir:itrec;
@@ -1351,37 +1441,41 @@ begin
           if pdesc^.name='RD_BackGroundColor' then
                                        varname:=varname;
 
-          if findfieldcustom(pGDBByte(pdesc), offset, bc, varname) then
+          if findfieldcustom(PByte(pdesc), offset, bc, varname) then
       begin
         if offset = 0 then
         begin
           if (bc = nil) then
           begin
-            result := GDBPointer(pdesc);
+            result := Pointer(pdesc);
             exit;
           end
           else
           begin
-            gdbgetmem({$IFDEF DEBUGBUILD}'{9A28C83C-C227-41B1-A334-365942DC17CB}',{$ENDIF}GDBPointer(temp),sizeof(vardesk));
+            Getmem(Pointer(temp),sizeof(vardesk));
             fillchar(temp^,sizeof(vardesk),0);
             //new(temp);
-            temp^.data.Instance := pvardesk(pdesc)^.data.Instance;
+            temp^.data:=pvardesk(pdesc)^.data;
+            //temp^.Instance := pvardesk(pdesc)^.Instance;
             temp^.name := invar;
             temp^.data.ptd := bc;
-            inc(pGDBByte(temp^.data.Instance), offset);
+            temp^.data.Addr.Instt.offs:=temp^.data.Addr.Instt.offs+offset;
+            //inc(PByte(temp^.Instance), offset);
             result := temp;
             exit;
           end;
         end
         else
         begin
-          gdbgetmem({$IFDEF DEBUGBUILD}'{8E7E4D67-1D25-4D95-BB32-04D2F00BC201}',{$ENDIF}GDBPointer(temp),sizeof(vardesk));
+          Getmem(Pointer(temp),sizeof(vardesk));
           fillchar(temp^,sizeof(vardesk),0);
           //new(temp);
-          temp^.data.Instance := pvardesk(pdesc)^.data.Instance;
+          temp^.data:=pvardesk(pdesc)^.data;
+          //temp^.Instance := pvardesk(pdesc)^.Instance;
           temp^.name := invar;
           temp^.data.ptd := bc;
-          inc(pGDBByte(temp^.data.Instance), offset);
+          temp^.data.Addr.Instt.offs:=temp^.data.Addr.Instt.offs+offset;
+          //inc(PByte(temp^.Instance), offset);
           result := temp;
           exit;
         end
@@ -1390,7 +1484,7 @@ begin
     until pdesc=nil;
     result:=nil;
     {sizeused := pblock^.sizeused;
-    GDBPointer(pdesc) := GDBPointer(pblock);
+    Pointer(pdesc) := Pointer(pblock);
     inc(pdesc, sizeof(dblock));
     while sizeused > 0 do
     begin
@@ -1403,7 +1497,7 @@ begin
         begin
           if (bt = 0) and (bc = 0) then
           begin
-            result := GDBPointer(pdesc);
+            result := Pointer(pdesc);
             exit;
           end
           else
@@ -1413,7 +1507,7 @@ begin
             temp^.name := invar;
             temp^.vartype := bt;
             temp^.vartypecustom := bc;
-            inc(pGDBByte(temp^.pvalue), offset);
+            inc(PByte(temp^.pvalue), offset);
             result := temp;
             exit;
           end;
@@ -1425,7 +1519,7 @@ begin
           temp^.name := invar;
           temp^.vartype := bt;
           temp^.vartypecustom := bc;
-          inc(pGDBByte(temp^.pvalue), offset);
+          inc(PByte(temp^.pvalue), offset);
           result := temp;
           exit;
         end
@@ -1449,11 +1543,11 @@ begin
 end;
 constructor tsimpleunit.init;
 begin
-  GDBPointer(name):=nil;
+  Pointer(name):=nil;
   name := nam;
 
   InterfaceVariables.init;
-  InterfaceUses.init({$IFDEF DEBUGBUILD}'{BDC39F0D-79B7-4F89-89D7-C530D3542F36} - tsimpleunit (uses секция)',{$ENDIF}10);
+  InterfaceUses.init(10);
 end;
 destructor tsimpleunit.done;
 begin
@@ -1461,24 +1555,31 @@ begin
      InterfaceUses.done;
      name:='';
 end;
-function tsimpleunit.FindValue(varname:TInternalScriptString):GDBPointer;
+function tsimpleunit.FindValue(varname:TInternalScriptString):pvardesk;
 var
   temp:pvardesk;
 begin
      temp:=findvariable(varname);
      if assigned(temp)then
-                          result:=temp^.data.Instance
+                          result:=temp{^.Instance}
                       else
                           result:=nil;
 end;
-function tsimpleunit.FindOrCreateValue(varname,vartype:TInternalScriptString):GDBPointer;
+function tsimpleunit.FindOrCreateValue(varname,vartype:TInternalScriptString):vardesk;
+var
+  temp:pvardesk;
 begin
-  result:=FindValue(varname);
+  temp:=FindValue(varname);
+  if temp=nil then
+    result:=CreateVariable(varname,vartype)
+  else
+    result:=temp^;
+  {result:=FindValue(varname);
   if result=nil then
-    result:=CreateVariable(varname,vartype);
+    result:=CreateVariable(varname,vartype);}
 end;
 
-function tsimpleunit.FindVariableByInstance(_Instance:GDBPointer):pvardesk;
+function tsimpleunit.FindVariableByInstance(_Instance:Pointer):pvardesk;
 begin
      result:=InterfaceVariables.findvardescbyinst(_Instance)
 end;
@@ -1514,21 +1615,42 @@ begin
                             until p=nil;
      end;
 end;
-function tsimpleunit.createvariable(varname,vartype:TInternalScriptString;_pinstance:pointer=nil):GDBPointer;
-var //t:PUserTypeDescriptor;
-    //pvd:pvardesk;
-    vd:vardesk;
-begin
-     {t:=TypeName2PTD(vartype);
-     pvd:=findvariable(varname);
 
-     vd.name:=varname;
-     vd.pvalue:=nil;
-     vd.ptd:=t;}
-     setvardesc(vd, varname,'', vartype,_pinstance);
-     InterfaceVariables.createvariable(varname,vd);
-     result:=vd.data.Instance;
+function tsimpleunit.FindVarDesc(varname:TInternalScriptString):TInVectorAddr;
+var p:ptunit;
+    ir:itrec;
+    i:integer;
+begin
+     result:=self.InterfaceVariables.findvardesc2(varname);
+     if result.IsNil then begin
+       p:=InterfaceUses.beginiterate(ir);
+       if p<>nil then
+         repeat
+           result:=p^.FindVarDesc(varname);
+           if not result.IsNil then
+             exit;
+           p:=InterfaceUses.iterate(ir);
+         until p=nil;
+     end;
 end;
+
+function tsimpleunit.CreateFixedVariable(varname,vartype:TInternalScriptString;_pinstance:pointer):Pointer;
+var
+  vd:vardesk;
+begin
+  setvardesc(vd, varname,'', vartype,_pinstance);
+  InterfaceVariables.createvariable(varname,vd);
+  result:=vd.data.Addr.Instance;
+end;
+function tsimpleunit.CreateVariable(varname,vartype:TInternalScriptString):vardesk;
+var
+  vd:vardesk;
+begin
+  setvardesc(vd, varname,'', vartype);
+  InterfaceVariables.createvariable(varname,vd);
+  result:=vd;
+end;
+
 constructor tunit.init(nam: TInternalScriptString);
 begin
   inherited init(nam);
@@ -1539,65 +1661,85 @@ begin
   if uppercase(name)='SYSTEM' then
   begin
     InterfaceTypes.CreateBaseTypes;
+
+    FundamentalPStringDescriptorObj.init('String','PString',@self);
+
+    FundamentalPAnsiStringDescriptorObj.init('AnsiString','PAnsiString',@self);
+    FundamentalPAnsiStringDescriptorObj.Format;
+    FundamentalPBooleanDescriptorObj.init('Boolean','PBoolean',@self);
+    FundamentalPBooleanDescriptorObj.Format;
+    FundamentalPIntegerDescriptorObj.init('Integer','PInteger',@self);
+    FundamentalPIntegerDescriptorObj.Format;
+    FundamentalPDoubleDescriptorObj.init('Double','PDouble',@self);
+    FundamentalPDoubleDescriptorObj.Format;
+
+    InterfaceTypes.AddTypeByRef(FundamentalPStringDescriptorObj);
+    InterfaceTypes.AddTypeByRef(FundamentalPAnsiStringDescriptorObj);
+    InterfaceTypes.AddTypeByRef(FundamentalPBooleanDescriptorObj);
+    InterfaceTypes.AddTypeByRef(FundamentalPIntegerDescriptorObj);
+    InterfaceTypes.AddTypeByRef(FundamentalPDoubleDescriptorObj);
+
+    BaseTypesEndIndex:=InterfaceTypes.exttype.Count;
+
     if assigned(OnCreateSystemUnit) then
                                         OnCreateSystemUnit(@self);
   end;
 end;
-function tunit.SavePasToMem(var membuf:GDBOpenArrayOfByte):PUserTypeDescriptor;
+function tunit.SavePasToMem(var membuf:TZctnrVectorBytes):PUserTypeDescriptor;
 var
    pu:PTUnit;
    pv:pvardesk;
    ir:itrec;
 //   value:TInternalScriptString;
 begin
-     membuf.TXTAddGDBString('unit ');
-     membuf.TXTAddGDBStringEOL(self.Name+';');
-     membuf.TXTAddGDBStringEOL('interface');
+     membuf.TXTAddString('unit ');
+     membuf.TXTAddStringEOL(self.Name+';');
+     membuf.TXTAddStringEOL('interface');
      if InterfaceUses.Count<>0 then
         begin
              pu:=InterfaceUses.beginiterate(ir);
              if pu<>nil then
                             begin
-                                 membuf.TXTAddGDBString('uses '+pu^.Name);
+                                 membuf.TXTAddString('uses '+pu^.Name);
                             end;
              pu:=InterfaceUses.iterate(ir);
                           if pu<>nil then
                             repeat
-                                 membuf.TXTAddGDBString(','+pu^.Name);
+                                 membuf.TXTAddString(','+pu^.Name);
                                  pu:=InterfaceUses.iterate(ir);
                             until pu=nil;
-            membuf.TXTAddGDBStringEOL(';');
+            membuf.TXTAddStringEOL(';');
         end;
      if InterfaceVariables.vardescarray.Count<>0 then
         begin
-              membuf.TXTAddGDBStringEOL('var');
+              membuf.TXTAddStringEOL('var');
               pv:=InterfaceVariables.vardescarray.beginiterate(ir);
                           if pv<>nil then
                             repeat
-                                 membuf.TXTAddGDBString('  '+pv^.name+':');
-                                 membuf.TXTAddGDBString(pv.data.PTD.TypeName+';');
-                                 if pv^.username<>'' then membuf.TXTAddGDBString('(*'''+pv^.username+'''*)');
-                                 membuf.TXTAddGDBStringEOL('');
+                                 membuf.TXTAddString('  '+pv^.name+':');
+                                 membuf.TXTAddString(pv.data.PTD.TypeName+';');
+                                 if pv^.username<>'' then membuf.TXTAddString('(*'''+pv^.username+'''*)');
+                                 membuf.TXTAddStringEOL('');
                                  pv:=InterfaceVariables.vardescarray.iterate(ir);
                             until pv=nil;
         end;
         begin
-              membuf.TXTAddGDBStringEOL('implementation');
-              membuf.TXTAddGDBStringEOL('begin');
+              membuf.TXTAddStringEOL('implementation');
+              membuf.TXTAddStringEOL('begin');
               pv:=InterfaceVariables.vardescarray.beginiterate(ir);
                           if pv<>nil then
                             repeat
-                                 pv.data.PTD.SavePasToMem(membuf,pv.data.Instance,'  '+pv^.name);
-                                 {membuf.TXTAddGDBString('  '+pv^.name+':=');
-                                 value:=pv.data.PTD.GetValueAsString(pv.data.Instance);
+                                 pv.data.PTD.SavePasToMem(membuf,pv.data.Addr.Instance,'  '+pv^.name);
+                                 {membuf.TXTAddString('  '+pv^.name+':=');
+                                 value:=pv.data.PTD.GetValueAsString(pv.Instance);
                                  if pv.data.PTD=@FundamentalStringDescriptorObj then
                                              value:=''''+value+'''';
 
-                                 membuf.TXTAddGDBString(value+';');
-                                 membuf.TXTAddGDBStringEOL('');}
+                                 membuf.TXTAddString(value+';');
+                                 membuf.TXTAddStringEOL('');}
                                  pv:=InterfaceVariables.vardescarray.iterate(ir);
                             until pv=nil;
-            membuf.TXTAddGDBString('end.');
+            membuf.TXTAddString('end.');
         end;
 end;
 destructor tunit.done;
@@ -1649,9 +1791,9 @@ begin
                                                      end;
                                   p:=InterfaceUses.iterate(ir);
                             until p=nil;
-  {$IFDEF LOUDERRORS}
+  {IFDEF LOUDERRORS}
     //Raise Exception.Create('Something wrong');
-  {$ENDIF}
+  {ENDIF}
                        end;
 
 end;
@@ -1662,9 +1804,8 @@ begin
      if result<>nil then
                         exit;
      result:=InterfaceTypes._TypeName2PTD(n);
-     if VerboseLog^ then
-       if result=nil then
-         DebugLn('{W}In unit "%s" not found type "%s"',[name,n]);
+     if result=nil then
+       zTraceLn('{W}In unit "%s" not found type "%s"',[name,n]);
 
       //programlog.LogOutStr(sysutils.format('In unit "%s" not found type "%s"',[name,n]),0,LM_Warning);
 end;
@@ -1682,11 +1823,11 @@ var
 begin
      vd:=InterfaceVariables.findvardesc(symbolname);
      if vd<>nil then
-     pointer(psymbol):=vd^.data.Instance;
+     pointer(psymbol):=vd^.data.Addr.Instance;
 end;
 function FindCategory(category:TInternalScriptString;var catname:TInternalScriptString):Pointer;
 var
-   ps:pgdbstring;
+   ps:pString;
    ir:itrec;
 begin
      result:=CategoryCollapsed.parray;
@@ -1707,10 +1848,10 @@ begin
      result:=@CategoryUnknownCOllapsed;
      catname:=category;
 end;
-procedure SetCategoryCollapsed(category:TInternalScriptString;value:GDBBoolean);
+procedure SetCategoryCollapsed(category:TInternalScriptString;value:Boolean);
 var
   cn:TInternalScriptString;
-  pc:PGDBBoolean;
+  pc:PBoolean;
 begin
      pc:=FindCategory(category,cn);
      if pc<>@CategoryUnknownCOllapsed then
@@ -1719,19 +1860,17 @@ end;
 
 initialization;
 begin
-  if VerboseLog^ then
-    DebugLn('{D+}[ZSCRIPT]Varman.startup');
+  zTraceLn('{D+}[ZSCRIPT]Varman.startup');
   //programlog.logoutstr('Varman.startup',lp_IncPos,LM_Debug);
   //DecimalSeparator := '.';
   ShortDateFormat:='MM.yy';
   VarCategory.init(100);
   //VarCategory.loadfromfile(expandpath('*rtl/VarCategory.cat'));
-  CategoryCollapsed.init({$IFDEF DEBUGBUILD}'{716C3EDB-32A3-416D-A599-B04B1B45D6E4}',{$ENDIF}VarCategory.Max);
+  CategoryCollapsed.init(VarCategory.Max);
   CategoryCollapsed.CreateArray;
   fillchar(CategoryCollapsed.parray^,CategoryCollapsed.max,byte(true));
   CategoryUnknownCOllapsed:=true;
-  if VerboseLog^ then
-    DebugLn('{D-}[ZSCRIPT]end; {Varman.startup}');
+  zTraceLn('{D-}[ZSCRIPT]end; {Varman.startup}');
   //programlog.logoutstr('end; {Varman.startup}',lp_DecPos,LM_Debug);
 end;
 finalization;

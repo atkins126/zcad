@@ -15,12 +15,12 @@
 {
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
-{$MODE OBJFPC}
+{$MODE OBJFPC}{$H+}
 unit uzerasterizer;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
-  uzbtypesbase,uzbgeomtypes,
+  uzegeometrytypes,
   uzedrawingsimple,uzgldrawcontext,uzgldrawergeneral2d,uzgldrawerabstract,
   uzegeometry,uzeconsts,
   uzeiopalette,uzepalette,uzcutils,
@@ -30,16 +30,16 @@ type
   TRasterizeColor=(PC_Color,PC_Grayscale,PC_Monochrome);
   PTRasterizeParams=^TRasterizeParams;
   TRasterizeParams=record
-    FitToPage:GDBBoolean;
-    Center:GDBBoolean;
-    Scale:GDBDouble;
+    FitToPage:Boolean;
+    Center:Boolean;
+    Scale:Double;
     Palette:TRasterizeColor;
   end;
 procedure rasterize(cdwg:PTSimpleDrawing;pw,ph:integer;point1,point2:GDBVertex;PrintParam:TRasterizeParams;Canvas: TCanvas;PrinterDrawer:TZGLGeneral2DDrawer);
 implementation
 procedure rasterize(cdwg:PTSimpleDrawing;pw,ph:integer;point1,point2:GDBVertex;PrintParam:TRasterizeParams;Canvas: TCanvas;PrinterDrawer:TZGLGeneral2DDrawer);
  var
-  dx,dy,sx,sy,scale:gdbdouble;
+  dx,dy,sx,sy,scale:Double;
   tmatrix,_clip:DMatrix4D;
   _frustum:ClipArray;
   DC:TDrawContext;
@@ -120,10 +120,11 @@ begin
   if PrintParam.Palette<>PC_Color then
   case PrintParam.Palette of
     PC_Monochrome:PushAndSetNewPalette(MonochromePalette);
-    PC_Grayscale:begin
-                   DebugLn('{WH}Print: Grayscale palette not yet implemented, use monochrome palette');
-                   PushAndSetNewPalette(grayscalepalette);
+    PC_Grayscale: begin
+                    DebugLn('{WH}Print: Grayscale palette not yet implemented, use monochrome palette');
+                    PushAndSetNewPalette(grayscalepalette);
                   end;
+    PC_Color:     ;//заглушка
   end;
 
   //----Printer.Title := 'zcadprint';

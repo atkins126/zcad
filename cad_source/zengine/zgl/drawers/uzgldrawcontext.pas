@@ -16,35 +16,35 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>)
 }
 unit uzgldrawcontext;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses uzepalette,uzbtypesbase,uzbtypes,uzgldrawerabstract,uzeconsts,uzegeometry;
+uses uzepalette,uzbtypes,uzgldrawerabstract,uzeconsts,uzegeometry,uzegeometrytypes;
 type
 TDrawHeplGeometry=procedure  of object;
 TDrawingContext=record
                    VisibleActualy:TActulity;
                    InfrustumActualy:TActulity;
                    DRAWCOUNT:TActulity;
-                   SysLayer:GDBPointer;
-                   Zoom:GDBDouble;
+                   SysLayer:Pointer;
+                   Zoom:Double;
                    matrixs:tmatrixs;
                    pcamera:PGDBBaseCamera;
-                   GlobalLTScale:GDBDouble;
+                   GlobalLTScale:Double;
                    DrawHeplGeometryProc:TDrawHeplGeometry;
-                   ForeGroundColorIndex:GDBInteger;
+                   ForeGroundColorIndex:Integer;
 end;
 TDrawContext=record
                    DrawingContext:TDrawingContext;
-                   Subrender:GDBInteger;
-                   Selected:GDBBoolean;
-                   MaxDetail:GDBBoolean;
-                   DrawMode:GDBBoolean;
-                   LWDisplayScale:GDBInteger{=2};
-                   DefaultLW:GDBInteger{=25};
-                   OwnerLineWeight:GDBSmallInt;
-                   OwnerColor:GDBInteger;
-                   MaxWidth:GDBInteger;
-                   ScrollMode:GDBBoolean;
+                   Subrender:Integer;
+                   Selected:Boolean;
+                   MaxDetail:Boolean;
+                   DrawMode:Boolean;
+                   LWDisplayScale:Integer{=2};
+                   DefaultLW:Integer{=25};
+                   OwnerLineWeight:SmallInt;
+                   OwnerColor:Integer;
+                   MaxWidth:Integer;
+                   ScrollMode:Boolean;
                    drawer:TZGLAbstractDrawer;
                    SystmGeometryDraw:boolean;
                    SystmGeometryColor:TGDBPaletteColor;

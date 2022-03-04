@@ -17,50 +17,48 @@
 }
 
 unit UObjectDescriptor;
-{$INCLUDE def.inc}
+
 {$MODE DELPHI}
 interface
-uses LCLProc,gzctnrvectorobjects,URecordDescriptor,UGDBOpenArrayOfByte,sysutils,
+uses LCLProc,gzctnrVectorObjects,URecordDescriptor,uzctnrVectorBytes,sysutils,
      gzctnrvectortypes,uzedimensionaltypes,UBaseTypeDescriptor,TypeDescriptors,
-     strmy,uzctnrvectorgdbstring,objects,gzctnrvectordata,uzbtypesbase,
-     varmandef,uzbtypes,uzbmemman,uzbstrproc,TypInfo;
+     strmy,uzctnrvectorstrings,objects,gzctnrVector,
+     varmandef,uzbtypes,uzbstrproc,TypInfo,uzbLogIntf;
 type
-GDBTOperandStoreMode=GDBByte;
+GDBTOperandStoreMode=Byte;
 GDBOperandDesc=record
                      PTD:PUserTypeDescriptor;
                      StoreMode:GDBTOperandStoreMode;
                end;
-GDBMetodModifier=GDBWord;
-TOperandsVector=GZVectorData<GDBOperandDesc>;
+GDBMetodModifier=Word;
+TOperandsVector=GZVector<GDBOperandDesc>;
 PMetodDescriptor=^MetodDescriptor;
 MetodDescriptor=object(GDBaseObject)
-                      objname:GDBString;
-                      MetodName:GDBString;
-                      OperandsName:GDBString;
+                      objname:String;
+                      MetodName:String;
+                      OperandsName:String;
                       Operands:{GDBOpenArrayOfdata}TOperandsVector; {DATA}
                       ResultPTD:PUserTypeDescriptor;
-                      MetodAddr:GDBPointer;
+                      MetodAddr:Pointer;
                       Attributes:GDBMetodModifier;
                       punit:pointer;
-                      NameHash:GDBLongword;
-                      constructor init(objn,mn,dt:GDBString;ma:GDBPointer;attr:GDBMetodModifier;pu:pointer);
+                      NameHash:LongWord;
+                      constructor init(objn,mn,dt:String;ma:Pointer;attr:GDBMetodModifier;pu:pointer);
                       destructor Done;virtual;
                 end;
 simpleproc=procedure of object;
-//SimpleMenods.init({$IFDEF DEBUGBUILD}'{E4674594-B99F-4A72-8766-E2B49DF50FCE}',{$ENDIF}20,sizeof(MetodDescriptor));
-//Properties.init({$IFDEF DEBUGBUILD}'{CFC9264A-23FA-4FE4-AE71-30495AD54ECE}',{$ENDIF}20,sizeof(PropertyDescriptor));
 TSimpleMenodsVector=GZVectorObjects<MetodDescriptor>;
-TPropertiesVector=GZVectorData<PropertyDescriptor>;
+TPropertiesVector=GZVector<PropertyDescriptor>;
 
 PObjectDescriptor=^ObjectDescriptor;
 ObjectDescriptor=object(RecordDescriptor)
-                       PVMT:GDBPointer;
-                       VMTCurrentOffset:GDBInteger;
-                       PDefaultConstructor:GDBPointer;
+                       PVMT:Pointer;
+                       VMTCurrentOffset:Integer;
+                       PDefaultConstructor:Pointer;
                        SimpleMenods:{GDBOpenArrayOfObjects}TSimpleMenodsVector;
-                       LincedData:GDBString;
-                       LincedObjects:GDBboolean;
-                       ColArray:GDBOpenArrayOfByte;
+                       LincedData:String;
+                       LincedObjects:Boolean;
+                       ColArray:TZctnrVectorBytes;
                        Properties:TPropertiesVector;
 
 
@@ -77,18 +75,18 @@ ObjectDescriptor=object(RecordDescriptor)
                        procedure RunMetod(mn:TInternalScriptString;obj:Pointer);
                        procedure SimpleRunMetodWithArg(mn:TInternalScriptString;obj,arg:Pointer);
                        procedure RunDefaultConstructor(PInstance:Pointer);
-                       //function Serialize(PInstance:Pointer;SaveFlag:GDBWord;var membuf:PGDBOpenArrayOfByte;var  linkbuf:PGDBOpenArrayOfTObjLinkRecord;var sub:integer):integer;virtual;
-                       //function DeSerialize(PInstance:Pointer;SaveFlag:GDBWord;var membuf:GDBOpenArrayOfByte;linkbuf:PGDBOpenArrayOfTObjLinkRecord):integer;virtual;
+                       //function Serialize(PInstance:Pointer;SaveFlag:Word;var membuf:PTZctnrVectorBytes;var  linkbuf:PGDBOpenArrayOfTObjLinkRecord;var sub:integer):integer;virtual;
+                       //function DeSerialize(PInstance:Pointer;SaveFlag:Word;var membuf:TZctnrVectorBytes;linkbuf:PGDBOpenArrayOfTObjLinkRecord):integer;virtual;
                        destructor Done;virtual;
                        function GetTypeAttributes:TTypeAttr;virtual;
-                       procedure SavePasToMem(var membuf:GDBOpenArrayOfByte;PInstance:Pointer;prefix:TInternalScriptString);virtual;
+                       procedure SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;prefix:TInternalScriptString);virtual;
                        procedure MagicFreeInstance(PInstance:Pointer);virtual;
                        procedure RegisterTypeinfo(ti:PTypeInfo);virtual;
                        procedure CorrectFieldsOffset(ti: PTypeInfo);
                        procedure CorrectCurrentFieldsOffset(td:PTypeData;var i:integer);
                  end;
 PTGenericVectorData=^TGenericVectorData;
-TGenericVectorData=GZVectorData<byte>;
+TGenericVectorData=GZVector<byte>;
 implementation
 uses varman;
 destructor MetodDescriptor.Done;
@@ -104,8 +102,8 @@ begin
 end;
 constructor MetodDescriptor.init;
 var
-  parseerror:GDBBoolean;
-  parseresult{,subparseresult}:PTZctnrVectorGDBString;
+  parseerror:Boolean;
+  parseresult{,subparseresult}:PTZctnrVectorStrings;
   od:GDBOperandDesc;
   i:integer;
 begin
@@ -118,12 +116,12 @@ begin
      MetodName:=mn;
      NameHash:=makehash(uppercase(MetodName));
      OperandsName:=dt;
-     if dt='(var obj):GDBInteger;' then
+     if dt='(var obj):Integer;' then
                                         dt:=dt;
 
      MetodAddr:=ma;
      Attributes:=attr;
-     Operands.init({$IFDEF DEBUGBUILD}'{CC044792-AE73-48C9-B10A-346BFE9E46C9}',{$ENDIF}10{,sizeof(GDBOperandDesc)});
+     Operands.init(10);
      parseresult:=runparser('_softspace'#0'=(_softspace'#0,dt,parseerror);
      if parseerror then
                        begin
@@ -149,7 +147,7 @@ begin
                                                                                      Operands.PushBackData(od);
                                               end
                                  end;
-                            if parseresult<>nil then begin parseresult^.Done;GDBfreeMem(Pointer(parseresult));end;
+                            if parseresult<>nil then begin parseresult^.Done;Freemem(Pointer(parseresult));end;
                             parseresult:=runparser('=;_softspace'#0,dt,parseerror);
                             until not parseerror;
                             parseresult:=runparser('=)_softspace'#0,dt,parseerror);
@@ -159,9 +157,9 @@ begin
                        begin
                             self.ResultPTD:=ptunit(punit).TypeName2PTD(parseresult^.getData(0));
                        end;
-     if parseresult<>nil then begin parseresult^.Done;GDBfreeMem(Pointer(parseresult));end;
+     if parseresult<>nil then begin parseresult^.Done;Freemem(Pointer(parseresult));end;
      parseresult:=runparser('=:_softspace'#0'_identifier'#0'_softspace'#0,dt,parseerror);
-     if parseresult<>nil then begin parseresult^.Done;GDBfreeMem(Pointer(parseresult));end;
+     if parseresult<>nil then begin parseresult^.Done;Freemem(Pointer(parseresult));end;
      //parseresult:=runparser('_softspace'#0'=(_softspace'#0'_identifier'#0'_softspace'#0'=)',line,parseerror);
 
 end;
@@ -218,7 +216,7 @@ var
    pfd:pFieldDescriptor;
 begin
      td:=GetTypeData(ti);
-     self.SizeInGDBBytes:=td.RecSize;
+     self.SizeInBytes:=td.RecSize;
      //exit;
      i:=0;
      CorrectCurrentFieldsOffset(td,i);
@@ -233,14 +231,14 @@ begin
      //Pointer(pd.w):=nil;
 end;
 
-procedure ObjectDescriptor.SavePasToMem(var membuf:GDBOpenArrayOfByte;PInstance:Pointer;prefix:TInternalScriptString);
+procedure ObjectDescriptor.SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;prefix:TInternalScriptString);
 //var pd:PFieldDescriptor;
 //    d:FieldDescriptor;
 //    ir:itrec;
 begin
-        membuf.TXTAddGDBStringEOL(prefix+'.initnul;');
+        membuf.TXTAddStringEOL(prefix+'.initnul;');
         inherited;
-         membuf.TXTAddGDBStringEOL('');
+         membuf.TXTAddStringEOL('');
 end;
 (*function ObjectDescriptor.Serialize;
 var
@@ -317,7 +315,7 @@ begin
              begin
                   p:=PGDBOpenArrayOfData(PInstance)^.getDataMutable(i);
                   pld:=pointer(PUserTypeDescriptor(SysUnit.InterfaceTypes.{exttype.}getDataMutable(SysUnit.InterfaceTypes._TypeName2Index(objtypename))^));
-                  gdbgetmem({$IFDEF DEBUGBUILD}'{lsdfgqweqweqwe}',{$ENDIF}pointer(p^),pld^.SizeInGDBBytes);
+                  Getmem(pointer(p^),pld^.SizeInBytes);
                   pld^.deSerialize(p^,saveflag,membuf,linkbuf);
 
                   objtypename:='';
@@ -333,7 +331,7 @@ begin
                    begin
                         if objtypename=ObjN_ArrayEnd then system.Break;
                         pld:=pointer(PUserTypeDescriptor(Types.exttype.getDataMutable(Types.TypeName2Index(objtypename))^));
-                        gdbgetmem({$IFDEF DEBUGBUILD}'{lsdfgqweqweqwe}',{$ENDIF}pointer(p^),pld^.SizeInGDBBytes);
+                        Getmem(pointer(p^),pld^.SizeInBytes);
                         pld^.deSerialize(p^,saveflag,membuf);
                    end;
                    objtypename:='';
@@ -394,8 +392,8 @@ VMT=RECORD
 END;}
 begin
      inherited init(tname,pu);
-     SimpleMenods.init({$IFDEF DEBUGBUILD}'{E4674594-B99F-4A72-8766-E2B49DF50FCE}',{$ENDIF}20{,sizeof(MetodDescriptor)});
-     Properties.init({$IFDEF DEBUGBUILD}'{CFC9264A-23FA-4FE4-AE71-30495AD54ECE}',{$ENDIF}20{,sizeof(PropertyDescriptor)});
+     SimpleMenods.init(20);
+     Properties.init(20);
      pvmt:=nil;
      {$IFDEF FPC}VMTCurrentOffset:=12;{$ENDIF}
      {$IFDEF CPU64}VMTCurrentOffset:=24{sizeof(VMT)};{$ENDIF}
@@ -403,7 +401,7 @@ begin
      PDefaultConstructor:=nil;
      pointer(LincedData):=nil;
      LincedObjects:=false;
-     ColArray.init({$IFDEF DEBUGBUILD}'{83ABED34-4E72-42A7-BF3F-B697D75B3568}',{$ENDIF}200);
+     ColArray.init(200);
 end;
 procedure ObjectDescriptor.AddMetod;
 var pcmd:pMetodDescriptor;
@@ -463,7 +461,6 @@ begin
           end;
           {$ENDIF}
           SimpleProcOfObj(tm);
-          {$IFDEF DEBUGBUILD}{programlog.logoutstr('Run default constructor for '+self.TypeName)}{$ENDIF}
      end
      else ;//------------------------------------ShowError('Cant run default constructor for '+self.TypeName);
       //programlog.logoutstr('ERROR: cant run default constructor for '+self.TypeName,0)
@@ -474,7 +471,7 @@ var pmd:pMetodDescriptor;
     //f,s:shortstring;
     //l:longint;
     //tm:tmethod;
-    h:gdblongword;
+    h:LongWord;
     umn:TInternalScriptString;
 begin
      result:=nil;
@@ -488,8 +485,8 @@ begin
                  if (pmd^.Attributes and m_virtual)<>0 then
                                              begin
                                                   tm.Code:=
-                                                  ppointer(GDBPlatformint(self.PVMT)+
-                                                  GDBPlatformint(pmd^.MetodAddr))^;
+                                                  ppointer(PtrInt(self.PVMT)+
+                                                  PtrInt(pmd^.MetodAddr))^;
                                              end
                                          else
                                              begin
@@ -518,8 +515,8 @@ begin
      if (pmd^.Attributes and m_virtual)<>0 then
                                             begin
                                                  result.Code:=
-                                                 ppointer(GDBPlatformUInt(self.PVMT)+
-                                                 GDBPlatformUInt(pmd^.MetodAddr){+12})^;
+                                                 ppointer(PtrUInt(self.PVMT)+
+                                                 PtrUInt(pmd^.MetodAddr){+12})^;
                                             end
                                         else
                                             begin
@@ -541,9 +538,9 @@ begin
      case (pmd^.Attributes)and(not m_virtual) of
      m_procedure:
                  begin
-                      SimpleProcOfObjDouble(tm)(PGDBDouble(arg)^);
+                      SimpleProcOfObjDouble(tm)(PDouble(arg)^);
                  end;
-     m_function:PGDBDouble(arg)^:=SimpleFuncOfObjDouble(tm);
+     m_function:PDouble(arg)^:=SimpleFuncOfObjDouble(tm);
      end;
 end;
 
@@ -566,8 +563,8 @@ begin
       if (pmd^.Attributes and m_virtual)<>0 then
                                              begin
                                                   tm.Code:=
-                                                  ppointer(GDBPlatformint(self.PVMT)+
-                                                  GDBPlatformint(pmd^.MetodAddr))^;
+                                                  ppointer(PtrInt(self.PVMT)+
+                                                  PtrInt(pmd^.MetodAddr))^;
                                              end
                                          else
                                              begin
@@ -578,8 +575,8 @@ begin
       m_procedure,m_destructor:
                   begin
                        {$ifdef WIN64}
-                       //tm.Code:=ppointer(GDBPlatformint(self.PVMT)+
-                       //         GDBPlatformint(pmd^.MetodAddr)+12)^;
+                       //tm.Code:=ppointer(PtrInt(self.PVMT)+
+                       //         PtrInt(pmd^.MetodAddr)+12)^;
                        {$endif WIN64}
                   SimpleProcOfObj(tm);
                        //pgdbaseobject(obj)^.Format;
@@ -664,8 +661,7 @@ var pcmd:PMetodDescriptor;
     pmd:PMetodDescriptor;
         ir:itrec;
 begin
-     if VerboseLog^ then
-       DebugLn('{T+}[ZSCRIPT]ObjectDescriptor.CopyTo(@%s)',[RD.TypeName]);
+     zTraceLn('{T+}[ZSCRIPT]ObjectDescriptor.CopyTo(@%s)',[RD.TypeName]);
      //programlog.LogOutFormatStr('ObjectDescriptor.CopyTo(@%s)',[RD.TypeName],lp_IncPos,LM_Debug);
      if self.TypeName='DeviceDbBaseObject' then
                                                TypeName:=TypeName;
@@ -684,7 +680,7 @@ begin
            pcmd.ResultPTD:=pmd^.ResultPTD;
            pcmd.MetodAddr:=pmd^.MetodAddr;
            pcmd.Attributes:=pmd^.Attributes;
-           pcmd.Operands.init({$IFDEF DEBUGBUILD}'{AD13B409-3869-418B-A314-DF70AB5C1601}',{$ENDIF}10{,sizeof(GDBOperandDesc)});
+           pcmd.Operands.init(10);
            //PObjectDescriptor(rd)^.SimpleMenods.AddByPointer(@pcmd);
            //pointer(pcmd.MetodName):=nil;
            //pointer(pcmd.OperandsName):=nil;
@@ -692,8 +688,7 @@ begin
      until pmd=nil;
      PObjectDescriptor(rd)^.VMTCurrentOffset:=self.VMTCurrentOffset;
      PObjectDescriptor(rd)^.PVMT:=pvmt;
-     if VerboseLog^ then
-       DebugLn('{T-}[ZSCRIPT]end;{ObjectDescriptor.CopyTo}');
+     zTraceLn('{T-}[ZSCRIPT]end;{ObjectDescriptor.CopyTo}');
      //programlog.logoutstr('end;{ObjectDescriptor.CopyTo}',lp_DecPos,LM_Debug);
 end;
 function ObjectDescriptor.GetTypeAttributes;
@@ -707,7 +702,7 @@ begin
      //ppd^.PTypeManager:=pp^.PFT;
      //if ppd^.valueAddres=nil then
                                  begin
-                                      GDBGetmem({$IFDEF DEBUGBUILD}'{4ADDC0E7-C264-4A97-A3E4-AA08E702E3AC}',{$ENDIF}{ppd^.valueAddres}result,pp^.base.PFT.SizeInGDBBytes);
+                                      Getmem(result,pp^.base.PFT.SizeInBytes);
                                  end;
 end;
 function ObjectDescriptor.CreateProperties;
@@ -720,9 +715,9 @@ var
    baddr{,b2addr,eaddr}:Pointer;
 //   ppd:PPropertyDeskriptor;
 //   PDA:PTPropertyDeskriptorArray;
-//   bmodesave:GDBInteger;
+//   bmodesave:Integer;
    ts:PTPropertyDeskriptorArray;
-   sca,sa:GDBINTEGER;
+   sca,sa:Integer;
    pcol:pboolean;
    ppd:PPropertyDeskriptor;
 begin
@@ -744,7 +739,7 @@ begin
                                    else
                                        begin
                                             ppd:=pointer(ppda^.getDataMutable(abs(bmode)-1));
-                                            ppd:=pGDBPointer(ppd)^;
+                                            ppd:=PPointer(ppd)^;
                                             ppd.r:=pp.r;
                                             ppd.w:=pp.w;
                                             p:=ppd^.valueAddres;
@@ -796,8 +791,8 @@ begin
            ppd^.Collapsed:=PCollapsed;
            if bmode=property_build then
            begin
-                gdbgetmem({$IFDEF DEBUGBUILD}'{6F9EBE33-15A8-4FF5-87D7-BF01A40F6789}',{$ENDIF}Pointer(pda),sizeof(TPropertyDeskriptorArray));
-                pda^.init({$IFDEF DEBUGBUILD}'{EDA18239-9432-453B-BA54-0381DA1BB665}',{$ENDIF}100);;
+                Getmem(Pointer(pda),sizeof(TPropertyDeskriptorArray));
+                pda^.init(100);;
                 ppd^.SubProperty:=Pointer(pda);
                 ppda:=pda;
            end else
@@ -837,7 +832,7 @@ begin
              pcol:=colarray.beginiterate(ir2);
              if p<>nil then
              repeat
-                   objtypename:=PGDBaseObject(P)^.GetObjName{ObjToGDBString('','')};
+                   objtypename:=PGDBaseObject(P)^.GetObjName{ObjToString('','')};
                    pld:=pointer(SysUnit.TypeName2PTD(PGDBaseObject(P)^.GetObjTypeName));
                    if bmode=property_build then
                                                pld^.CreateProperties(f,PDM_Field,{PPDA}ts,objtypename,pcol{PCollapsed}{field_no_attrib},ownerattrib,bmode,p,'','');

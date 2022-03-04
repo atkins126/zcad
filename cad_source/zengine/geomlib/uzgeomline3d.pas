@@ -17,23 +17,22 @@
 }
 
 unit uzgeomline3d;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
-     sysutils,uzbtypes,uzbtypesbase,uzbmemman,uzegeometry,
-     {uzgeomentity,}uzgeomentity3d,uzbgeomtypes;
+     sysutils,uzbtypes,uzegeometry,uzgeomentity3d,uzegeometrytypes;
 type
 {Export+}
 {REGISTEROBJECTTYPE TGeomLine3D}
 TGeomLine3D= object(TGeomEntity3D)
                                            LineData:GDBLineProp;
-                                           StartParam:GDBDouble;
-                                           constructor init(const p1,p2:GDBvertex;const sp:GDBDouble);
+                                           StartParam:Double;
+                                           constructor init(const p1,p2:GDBvertex;const sp:Double);
                                            function GetBB:TBoundingBox;virtual;
                                            end;
 {Export-}
 implementation
-constructor TGeomLine3D.init(const p1,p2:GDBvertex;const sp:GDBDouble);
+constructor TGeomLine3D.init(const p1,p2:GDBvertex;const sp:Double);
 begin
   LineData.lBegin:=p1;
   LineData.lEnd:=p2;

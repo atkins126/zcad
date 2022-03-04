@@ -17,12 +17,12 @@
 }
 
 unit uzeentplainwithox;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
-uses uzbgeomtypes,uzeentplain,uzbtypes,uzegeometry,sysutils,uzbmemman;
+uses uzegeometrytypes,uzeentplain,uzegeometry,sysutils;
 type
-//pprojoutbound:{-}PGDBOOutbound2DIArray{/GDBPointer/};
+//pprojoutbound:{-}PGDBOOutbound2DIArray{/Pointer/};
 {EXPORT+}
 PGDBObjPlainWithOX=^GDBObjPlainWithOX;
 {REGISTEROBJECTTYPE GDBObjPlainWithOX}

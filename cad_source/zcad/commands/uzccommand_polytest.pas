@@ -18,15 +18,15 @@
 {$mode delphi}
 unit uzccommand_polytest;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
   LazLogger,
   uzccommandsimpl,
-  uzbtypesbase,
+  
   uzglviewareadata,
-  uzbgeomtypes,
+  uzegeometrytypes,
   uzeentlwpolyline,
   uzcdrawings,
   uzeconsts,
@@ -51,7 +51,7 @@ begin
        commandmanager.executecommandend;
   end;
 end;
-function polytest_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
+function polytest_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
 //var tb:PGDBObjSubordinated;
 begin
   result:=mclick+1;

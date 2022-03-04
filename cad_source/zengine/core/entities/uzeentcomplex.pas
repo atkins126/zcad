@@ -17,41 +17,41 @@
 }
 
 unit uzeentcomplex;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
-uses uzepalette,uzgldrawcontext,uzedrawingdef,uzecamera,gzctnrvectorpobjects,
-     uzestyleslayers,uzbtypesbase,sysutils,UGDBSelectedObjArray,UGDBVisibleOpenArray,
+uses uzepalette,uzgldrawcontext,uzedrawingdef,uzecamera,
+     uzestyleslayers,sysutils,UGDBSelectedObjArray,UGDBVisibleOpenArray,
      uzeentity,UGDBVisibleTreeArray,uzeentitiestree,uzbtypes,uzeentwithlocalcs,
-     gzctnrvectortypes,uzbgeomtypes,uzeconsts,uzegeometry,uzbmemman;
+     gzctnrvectortypes,uzegeometrytypes,uzeconsts,uzegeometry,uzctnrvectorpgdbaseobjects;
 type
 {EXPORT+}
 PGDBObjComplex=^GDBObjComplex;
 {REGISTEROBJECTTYPE GDBObjComplex}
 GDBObjComplex= object(GDBObjWithLocalCS)
                     ConstObjArray:{GDBObjEntityOpenArray;}GDBObjEntityTreeArray;(*oi_readonly*)(*hidden_in_objinsp*)
-                    procedure DrawGeometry(lw:GDBInteger;var DC:TDrawContext{infrustumactualy:TActulity;subrender:GDBInteger});virtual;
-                    procedure DrawOnlyGeometry(lw:GDBInteger;var DC:TDrawContext{infrustumactualy:TActulity;subrender:GDBInteger});virtual;
+                    procedure DrawGeometry(lw:Integer;var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
+                    procedure DrawOnlyGeometry(lw:Integer;var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
                     procedure getoutbound(var DC:TDrawContext);virtual;
                     procedure getonlyoutbound(var DC:TDrawContext);virtual;
                     function getonlyvisibleoutbound(var DC:TDrawContext):TBoundingBox;virtual;
                     destructor done;virtual;
                     constructor initnul;
-                    constructor init(own:GDBPointer;layeraddres:PGDBLayerProp;LW:GDBSmallint);
-                    function CalcInFrustum(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:GDBInteger; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:GDBDouble):GDBBoolean;virtual;
+                    constructor init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt);
+                    function CalcInFrustum(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
                     function CalcTrueInFrustum(frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
-                    function onmouse(var popa:TZctnrVectorPGDBaseObjects;const MF:ClipArray;InSubEntry:GDBBoolean):GDBBoolean;virtual;
+                    function onmouse(var popa:TZctnrVectorPGDBaseObjects;const MF:ClipArray;InSubEntry:Boolean):Boolean;virtual;
                     procedure renderfeedbac(infrustumactualy:TActulity;pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;
-                    procedure addcontrolpoints(tdesc:GDBPointer);virtual;
+                    procedure addcontrolpoints(tdesc:Pointer);virtual;
                     procedure remaponecontrolpoint(pdesc:pcontrolpointdesc);virtual;
-                    procedure rtedit(refp:GDBPointer;mode:GDBFloat;dist,wc:gdbvertex);virtual;
+                    procedure rtedit(refp:Pointer;mode:Single;dist,wc:gdbvertex);virtual;
                     procedure rtmodifyonepoint(const rtmod:TRTModifyData);virtual;
                     procedure FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
                     //procedure feedbackinrect;virtual;
                     //function InRect:TInRect;virtual;
-                    //procedure Draw(lw:GDBInteger);virtual;
-                    procedure SetInFrustumFromTree(const frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:GDBInteger; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:GDBDouble);virtual;
-                    function onpoint(var objects:TZctnrVectorPGDBaseObjects;const point:GDBVertex):GDBBoolean;virtual;
+                    //procedure Draw(lw:Integer);virtual;
+                    procedure SetInFrustumFromTree(const frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double);virtual;
+                    function onpoint(var objects:TZctnrVectorPGDBaseObjects;const point:GDBVertex):Boolean;virtual;
                     procedure BuildGeometry(var drawing:TDrawingDef);virtual;
                     procedure FormatAfterDXFLoad(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
               end;
@@ -74,7 +74,7 @@ begin
      //ConstObjArray.ObjTree:=createtree(ConstObjArray,vp.BoundingBox,@ConstObjArray.ObjTree,IninialNodeDepth,nil,TND_Root)^;
 end;
 
-function GDBObjComplex.onpoint(var objects:TZctnrVectorPGDBaseObjects;const point:GDBVertex):GDBBoolean;
+function GDBObjComplex.onpoint(var objects:TZctnrVectorPGDBaseObjects;const point:GDBVertex):Boolean;
 begin
      result:=ConstObjArray.onpoint(objects,point);
 end;
@@ -140,10 +140,10 @@ begin
                              end;
                     end;
 end;
-procedure GDBObjComplex.addcontrolpoints(tdesc:GDBPointer);
+procedure GDBObjComplex.addcontrolpoints(tdesc:Pointer);
 var pdesc:controlpointdesc;
 begin
-          PSelectedObjDesc(tdesc)^.pcontrolpoint^.init({$IFDEF DEBUGBUILD}'{E8AC77BE-9C28-4A6E-BB1A-D5F8729BDDAD}',{$ENDIF}1);
+          PSelectedObjDesc(tdesc)^.pcontrolpoint^.init(1);
           pdesc.selected:=false;
           pdesc.pobject:=nil;
           pdesc.pointtype:=os_point;
@@ -162,7 +162,7 @@ begin
 end;
 procedure GDBObjComplex.DrawGeometry;
 var
-   oldlw:gdbsmallint;
+   oldlw:SmallInt;
    oldColor:TGDBPaletteColor;
 begin
   oldlw:=dc.OwnerLineWeight;
@@ -201,12 +201,12 @@ end;
 constructor GDBObjComplex.initnul;
 begin
   inherited initnul(nil);
-  ConstObjArray.init({$IFDEF DEBUGBUILD}'{9DC0AF69-6DBD-479E-91FE-A61F4AC3BE56}',{$ENDIF}100);
+  ConstObjArray.init(100);
 end;
 constructor GDBObjComplex.init;
 begin
   inherited init(own,layeraddres,LW);
-  ConstObjArray.init({$IFDEF DEBUGBUILD}'{9DC0AF69-6DBD-479E-91FE-A61F4AC3BE56}',{$ENDIF}100);
+  ConstObjArray.init(100);
 end;
 destructor GDBObjComplex.done;
 begin
@@ -214,7 +214,7 @@ begin
      ConstObjArray.done;
      inherited done;
 end;
-function GDBObjComplex.CalcInFrustum(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:GDBInteger; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:GDBDouble):GDBBoolean;
+function GDBObjComplex.CalcInFrustum(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;
 begin
      result:=ConstObjArray.calcvisible(frustum,infrustumactualy,visibleactualy,totalobj,infrustumobj, ProjectProc,zoom,currentdegradationfactor);
      ProcessTree(frustum,infrustumactualy,visibleactualy,ConstObjArray.ObjTree,IRPartially,TDTFulDraw,totalobj,infrustumobj,ProjectProc,zoom,currentdegradationfactor);
@@ -239,10 +239,10 @@ begin
 end;
 
 function GDBObjComplex.onmouse;
-var //t,xx,yy:GDBDouble;
-    //i:GDBInteger;
+var //t,xx,yy:Double;
+    //i:Integer;
     p:pgdbobjEntity;
-    ot:GDBBoolean;
+    ot:Boolean;
         ir:itrec;
 begin
   result:=false;
@@ -297,7 +297,7 @@ end;}
 procedure GDBObjComplex.renderfeedbac(infrustumactualy:TActulity;pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);
 //var pblockdef:PGDBObjBlockdef;
     //pvisible:PGDBObjEntity;
-    //i:GDBInteger;
+    //i:Integer;
 begin
   //if POGLWnd=nil then exit;
   {gdb.GetCurrentDWG^.myGluProject2}ProjectProc(P_insert_in_WCS,ProjP_insert);
@@ -308,7 +308,7 @@ end;
 procedure GDBObjComplex.FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext);
 {var pblockdef:PGDBObjBlockdef;
     pvisible,pvisible2:PGDBObjEntity;
-    i:GDBInteger;
+    i:Integer;
     m4:DMatrix4D;
     TempNet:PGDBObjElWire;
     TempDevice:PGDBObjDevice;

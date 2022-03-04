@@ -17,15 +17,15 @@
 }
 
 unit uzcregelectrotechfeatures;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses uzbpaths,UUnitManager,uzcsysvars,{$IFNDEF DELPHI}uzctranslations,{$ENDIF}
-     uzbstrproc,Varman,languade,SysUtils,
-     UBaseTypeDescriptor,uzbtypes,UGDBOpenArrayOfByte, strmy, varmandef,
+     uzbstrproc,Varman,SysUtils,
+     UBaseTypeDescriptor,uzbtypes,uzctnrVectorBytes, strmy, varmandef,
      uzcsysparams,uzcsysinfo,TypeDescriptors,URecordDescriptor,
-     uzclog,uzbmemman,LazLogger,uzceltechtreeprop,uzcefstringstreeselector,
+     uzclog,LazLogger,uzceltechtreeprop,uzcefstringstreeselector,
      uzccommandsimpl,uzccommandsabstract,uzctypesdecorations,zcobjectinspectorui,
-     uzcoidecorations,uzbtypesbase,
+     uzcoidecorations,
      Forms,Controls,
      uzcinterface,uzcuitypes;
 var
@@ -50,7 +50,7 @@ begin
   result:=cmd_ok;
 end;
 
-procedure RunEentityRepresentationEditor(PInstance:GDBPointer);
+procedure RunEentityRepresentationEditor(PInstance:Pointer);
 var
    modalresult:integer;
 begin
@@ -69,7 +69,7 @@ begin
        PStringTreeType(PInstance)^:=StringsTreeSelector.TreeResult;
 end;
 
-procedure RunEentityFunctionEditor(PInstance:GDBPointer);
+procedure RunEentityFunctionEditor(PInstance:Pointer);
 var
    modalresult:integer;
 begin

@@ -15,24 +15,21 @@
 {
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
-{$MODE OBJFPC}
+{$MODE OBJFPC}{$H+}
 unit uzccommand_print;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
-  uzgldrawerabstract,
   uzgldrawercanvas,uzgldrawergdi,uzgldrawergeneral2d,
   uzcoimultiobjects,uzepalette,
-  uzgldrawcontext,
   uzeentpoint,uzeentityfactory,
   uzedrawingsimple,uzcsysvars,uzcstrconsts,
   PrintersDlgs,printers,graphics,uzeentdevice,
   LazUTF8,Clipbrd,LCLType,classes,uzeenttext,
   uzccommandsabstract,uzbstrproc,
-  uzbtypesbase,uzccommandsmanager,
+  uzccommandsmanager,
   uzccommandsimpl,
-  uzbtypes,
   uzcdrawings,
   uzeutils,uzcutils,
   sysutils,
@@ -41,26 +38,26 @@ uses
   uzeffdxf,
   uzcinterface,
   uzegeometry,
-  uzbmemman,
-  uzbgeomtypes,uzeentity,uzeentcircle,uzeentline,uzeentgenericsubentry,uzeentmtext,
+
+  uzegeometrytypes,uzeentity,uzeentcircle,uzeentline,uzeentmtext,
   uzeentblockinsert,uzeentpolyline,uzclog,
   math,
-  uzeentlwpolyline,UBaseTypeDescriptor,uzeblockdef,Varman,URecordDescriptor,TypeDescriptors,UGDBVisibleTreeArray
-  ,uzelongprocesssupport,LazLogger,uzeiopalette,uzeconsts,uzerasterizer;
+  uzeentlwpolyline,UBaseTypeDescriptor,uzeblockdef,Varman,URecordDescriptor,
+  TypeDescriptors,uzelongprocesssupport,LazLogger,uzeiopalette,uzerasterizer;
 const
-     modelspacename:GDBSTring='**Модель**';
+     modelspacename:String='**Модель**';
 type
   {REGISTEROBJECTTYPE Print_com}
   Print_com= object(CommandRTEdObject)
-    VS:GDBInteger;
+    VS:Integer;
     p1,p2:GDBVertex;
     procedure CommandContinue; virtual;
     procedure CommandStart(Operands:TCommandOperands); virtual;
     procedure ShowMenu;virtual;
-    procedure Print(pdata:GDBPlatformint); virtual;
-    procedure SetWindow(pdata:GDBPlatformint); virtual;
-    procedure SelectPrinter(pdata:GDBPlatformint); virtual;
-    procedure SelectPaper(pdata:GDBPlatformint); virtual;
+    procedure Print(pdata:PtrInt); virtual;
+    procedure SetWindow(pdata:PtrInt); virtual;
+    procedure SelectPrinter(pdata:PtrInt); virtual;
+    procedure SelectPaper(pdata:PtrInt); virtual;
   end;
 var
   PrintParam:TRasterizeParams;
@@ -79,8 +76,8 @@ begin
      v2:=commandmanager.PopValue;
      v1:=commandmanager.PopValue;
      vs:=commandmanager.GetValueHeap;
-     tp1:=Pgdbvertex(v1.data.Instance)^;
-     tp2:=Pgdbvertex(v2.data.Instance)^;
+     tp1:=Pgdbvertex(v1.data.Addr.Instance)^;
+     tp2:=Pgdbvertex(v2.data.Addr.Instance)^;
 
      p1.x:=min(tp1.x,tp2.x);
      p1.y:=min(tp1.y,tp2.y);
@@ -111,19 +108,19 @@ begin
   commandmanager.DMAddMethod('Print','Print',@print);
   commandmanager.DMShow;
 end;
-procedure Print_com.SelectPrinter(pdata:GDBPlatformint);
+procedure Print_com.SelectPrinter(pdata:PtrInt);
 begin
   ZCMsgCallBackInterface.TextMessage(rsNotYetImplemented,TMWOHistoryOut);
   ZCMsgCallBackInterface.Do_BeforeShowModal(nil);
   if PSD.Execute then;
   ZCMsgCallBackInterface.Do_AfterShowModal(nil);
 end;
-procedure Print_com.SetWindow(pdata:GDBPlatformint);
+procedure Print_com.SetWindow(pdata:PtrInt);
 begin
   commandmanager.executecommandsilent('GetRect',drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
 end;
 
-procedure Print_com.SelectPaper(pdata:GDBPlatformint);
+procedure Print_com.SelectPaper(pdata:PtrInt);
 
 begin
   ZCMsgCallBackInterface.TextMessage(rsNotYetImplemented,TMWOHistoryOut);
@@ -138,7 +135,7 @@ begin
   else
     result := Round(AValue*Printer.XDPI);
 end;
-procedure Print_com.Print(pdata:GDBPlatformint);
+procedure Print_com.Print(pdata:PtrInt);
  var
   cdwg:PTSimpleDrawing;
   PrinterDrawer:TZGLGeneral2DDrawer;

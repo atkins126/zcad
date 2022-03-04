@@ -8,8 +8,8 @@ uses
   LCLType,Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs,
   ExtCtrls, StdCtrls, Spin,
   {From ZCAD}
-  uzbmemman,                                                                       //zcad memorymanager
-  uzbtypes, uzbtypesbase,uzbgeomtypes,                                              //zcad basetypes
+                                                                         //zcad memorymanager
+  uzbtypes, uzegeometrytypes,                                              //zcad basetypes
   uzegeometry,                                                                     //some mathematical and geometrical support
   uzefontmanager,uzeffshx,                                                        //fonts manager and SHX fileformat support
   uzglviewareaabstract,uzglviewareageneral,uzgldrawcontext,                          //generic view areas support
@@ -203,11 +203,11 @@ begin
      pdrawing2^.HardReDraw;//redraw drawing on view area
 end;
 
-function CreateRandomDouble(len:GDBDouble):GDBDouble;inline;//create random double in [0..len] interval
+function CreateRandomDouble(len:Double):Double;inline;//create random double in [0..len] interval
 begin
      result:=random*len;
 end;
-function CreateRandomVertex(len,hanflen:GDBDouble;_3d:boolean):GDBVertex;//create random 3DVertex in [-hanflen..hanflen] interval
+function CreateRandomVertex(len,hanflen:Double;_3d:boolean):GDBVertex;//create random 3DVertex in [-hanflen..hanflen] interval
 begin
      result.x:=CreateRandomDouble(len)-hanflen;
      result.y:=CreateRandomDouble(len)-hanflen;
@@ -220,7 +220,7 @@ procedure SetEntityLayer(pobj:PGDBObjEntity;CurrentDrawing:PTSimpleDrawing);//se
 begin
      pobj^.vp.Layer:=CurrentDrawing^.LayerTable.getDataMutable(random(CurrentDrawing^.LayerTable.Count));
 end;
-function CreateRandomVertex2D(len,hanflen:GDBDouble):GDBVertex2D;//create random 2DVertex in [-hanflen..hanflen] interval
+function CreateRandomVertex2D(len,hanflen:Double):GDBVertex2D;//create random 2DVertex in [-hanflen..hanflen] interval
 begin
      result.x:=CreateRandomDouble(len)-hanflen;
      result.y:=CreateRandomDouble(len)-hanflen;
@@ -603,7 +603,7 @@ begin
 end;
 
 procedure TForm1.BtnSelectAllClick(Sender: TObject);
-var //i: GDBInteger;
+var //i: Integer;
     pv:pGDBObjEntity;
     ir:itrec;
     count:integer;
@@ -684,9 +684,9 @@ end;
 procedure TForm1._DestroyApp(Sender: TObject);
 begin
  {pdrawing1^.done;
- gdbfreemem(pdrawing1);}
+ Freemem(pdrawing1);}
  pdrawing2^.done;
- gdbfreemem(pdrawing2);
+ Freemem(pdrawing2);
 end;
 
 

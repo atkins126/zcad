@@ -17,12 +17,13 @@
 }
 
 unit uzestrconsts;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 resourcestring
 
   fontnotfoundandreplace='For text style "%s" not found font "%s" ("%s" fontfamily), is replaced by an alternative';
+  fontnotfound='For text style "%s" not found font "%s" ("%s" fontfamily)';
 
   {files}
   rsAlternateFontNotFoundIn='Alternate font "%s" is not found in "%s"';
@@ -30,7 +31,7 @@ resourcestring
   rsReserveFontNotFound='Reserve font is not found in the resources';
 
   {messages}
-  rsGridTooDensity='Grid too density';
+  rsGridTooDensity='Grid too dense';
   rsBlockIgnored='Ignored block "%s"';
   rsDoubleBlockIgnored='Ignored double definition block "%s"';
   rsWrongBlockDefIndex='Wrong blockdef index';

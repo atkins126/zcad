@@ -16,9 +16,9 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
 unit uzcinterface;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses controls,uzcstrconsts,uzedimensionaltypes,gzctnrstl,zeundostack,varmandef,
+uses controls,uzcstrconsts,uzedimensionaltypes,gzctnrSTL,zeundostack,varmandef,
      uzcuilcl2zc,uzcuitypes,forms,classes,uzbtypes,LCLType,SysUtils;
 
 const

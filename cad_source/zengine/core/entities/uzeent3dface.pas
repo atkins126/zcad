@@ -16,13 +16,13 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 } 
 unit uzeent3dface;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
-    uzeentityfactory,uzgldrawcontext,uzedrawingdef,uzecamera,gzctnrvectorpobjects,
-    uzegeometry,uzeffdxfsupport,uzestyleslayers,uzbtypesbase,UGDBSelectedObjArray,uzeentsubordinated,
-    uzbgeomtypes,uzeent3d,uzeentity,sysutils,UGDBOpenArrayOfByte,uzbtypes,uzeconsts,uzbmemman;
+    uzeentityfactory,uzgldrawcontext,uzedrawingdef,uzecamera,
+    uzegeometry,uzeffdxfsupport,uzestyleslayers,UGDBSelectedObjArray,uzeentsubordinated,
+    uzegeometrytypes,uzeent3d,uzeentity,sysutils,uzctnrVectorBytes,uzbtypes,uzeconsts,uzctnrvectorpgdbaseobjects;
 type
 {Export+}
 {REGISTEROBJECTTYPE GDBObj3DFace}
@@ -32,27 +32,27 @@ GDBObj3DFace= object(GDBObj3d)
                  PInWCS:OutBound4V;(*'Coordinates WCS'*)(*hidden_in_objinsp*)
                  PInDCS:OutBound4V;(*'Coordinates DCS'*)(*hidden_in_objinsp*)
                  normal:GDBVertex;
-                 triangle:GDBBoolean;
+                 triangle:Boolean;
                  n,p1,p2,p3:GDBVertex3S;
                  //ProjPoint:GDBvertex;
-                 constructor init(own:GDBPointer;layeraddres:PGDBLayerProp;LW:GDBSmallint;p:GDBvertex);
+                 constructor init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt;p:GDBvertex);
                  constructor initnul(owner:PGDBObjGenericWithSubordinated);
-                 procedure LoadFromDXF(var f:GDBOpenArrayOfByte;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
-                 procedure SaveToDXF(var outhandle:{GDBInteger}GDBOpenArrayOfByte;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
+                 procedure LoadFromDXF(var f:TZctnrVectorBytes;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
+                 procedure SaveToDXF(var outhandle:{Integer}TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
                  procedure FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
 
-                 procedure DrawGeometry(lw:GDBInteger;var DC:TDrawContext{infrustumactualy:TActulity;subrender:GDBInteger});virtual;
-                 function calcinfrustum(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:GDBInteger; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:GDBDouble):GDBBoolean;virtual;
+                 procedure DrawGeometry(lw:Integer;var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
+                 function calcinfrustum(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
                  procedure RenderFeedback(pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;
-                 //function getsnap(var osp:os_record):GDBBoolean;virtual;
-                 function onmouse(var popa:TZctnrVectorPGDBaseObjects;const MF:ClipArray;InSubEntry:GDBBoolean):GDBBoolean;virtual;
+                 //function getsnap(var osp:os_record):Boolean;virtual;
+                 function onmouse(var popa:TZctnrVectorPGDBaseObjects;const MF:ClipArray;InSubEntry:Boolean):Boolean;virtual;
                  function CalcTrueInFrustum(frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
-                 procedure addcontrolpoints(tdesc:GDBPointer);virtual;
+                 procedure addcontrolpoints(tdesc:Pointer);virtual;
                  procedure remaponecontrolpoint(pdesc:pcontrolpointdesc);virtual;
                  procedure rtmodifyonepoint(const rtmod:TRTModifyData);virtual;
-                 function Clone(own:GDBPointer):PGDBObjEntity;virtual;
-                 procedure rtsave(refp:GDBPointer);virtual;
-                 function GetObjTypeName:GDBString;virtual;
+                 function Clone(own:Pointer):PGDBObjEntity;virtual;
+                 procedure rtsave(refp:Pointer);virtual;
+                 function GetObjTypeName:String;virtual;
                  procedure getoutbound(var DC:TDrawContext);virtual;
 
                  procedure TransformAt(p:PGDBObjEntity;t_matrix:PDMatrix4D);virtual;
@@ -66,7 +66,7 @@ GDBObj3DFace= object(GDBObj3d)
 implementation
 //uses log;
 procedure GDBObj3DFace.TransformAt;
-var i:GDBInteger;
+var i:Integer;
 begin
       for i:=0 to 3 do
       begin
@@ -74,7 +74,7 @@ begin
       end;
 end;
 procedure GDBObj3DFace.transform(const t_matrix:DMatrix4D);
-var i:GDBInteger;
+var i:Integer;
 begin
       for i:=0 to 3 do
       begin
@@ -82,7 +82,7 @@ begin
       end;
 end;
 procedure GDBObj3DFace.getoutbound;
-var i:GDBInteger;
+var i:Integer;
 begin
      vp.BoundingBox.LBN:=PInWCS[0];
      vp.BoundingBox.RTF:=PInWCS[0];
@@ -92,7 +92,7 @@ begin
       end;
 end;
 procedure GDBObj3DFace.FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext);
-var i:GDBInteger;
+var i:Integer;
     v:GDBVertex;
 begin
     if assigned(EntExtensions)then
@@ -166,8 +166,8 @@ begin
      result:=GDB3DfaceID;
 end;
 procedure GDBObj3DFace.LoadFromDXF;
-var //s: GDBString;
-  byt: GDBInteger;
+var //s: String;
+  byt: Integer;
 begin
   byt:=readmystrtoint(f);
   while byt <> 0 do
@@ -177,7 +177,7 @@ begin
           if not dxfvertexload(f,11,byt,PInOCS[1]) then
           if not dxfvertexload(f,12,byt,PInOCS[2]) then
           if not dxfvertexload(f,13,byt,PInOCS[3]) then
-          {s := }f.readGDBSTRING;
+          {s := }f.readString;
     byt:=readmystrtoint(f);
   end;
 end;
@@ -252,7 +252,7 @@ oglsm.myglEnable(GL_COLOR_MATERIAL);
 
 end;
 function GDBObj3DFace.CalcInFrustum;
-var i:GDBInteger;
+var i:Integer;
 begin
       result:=true;
       for i:=0 to 4 do
@@ -434,18 +434,18 @@ begin
 
 end;
 procedure GDBObj3DFace.remaponecontrolpoint(pdesc:pcontrolpointdesc);
-var vertexnumber:GDBInteger;
+var vertexnumber:Integer;
 begin
      vertexnumber:=abs(pdesc^.pointtype-os_polymin);
      pdesc.worldcoord:=PInWCS[vertexnumber];
      pdesc.dispcoord.x:=round(PInDCS[vertexnumber].x);
      pdesc.dispcoord.y:=round(PInDCS[vertexnumber].y);
 end;
-procedure GDBObj3DFace.addcontrolpoints(tdesc:GDBPointer);
+procedure GDBObj3DFace.addcontrolpoints(tdesc:Pointer);
 var pdesc:controlpointdesc;
-    i:GDBInteger;
+    i:Integer;
 begin
-          PSelectedObjDesc(tdesc)^.pcontrolpoint^.init({$IFDEF DEBUGBUILD}'{92DDADAD-909D-4938-A1F9-3BD78FBB2B70}',{$ENDIF}1);
+          PSelectedObjDesc(tdesc)^.pcontrolpoint^.init(1);
           pdesc.pobject:=nil;
           for i := 0 to 3 do
           begin
@@ -458,7 +458,7 @@ begin
 end;
 
 procedure GDBObj3DFace.rtmodifyonepoint(const rtmod:TRTModifyData);
-var vertexnumber:GDBInteger;
+var vertexnumber:Integer;
 begin
      vertexnumber:=abs(rtmod.point.pointtype-os_polymin);
      PInOCS[vertexnumber]:=VertexAdd(rtmod.point.worldcoord, rtmod.dist);
@@ -467,7 +467,7 @@ end;
 function GDBObj3DFace.Clone;
 var tvo: PGDBObj3DFace;
 begin
-  GDBGetMem({$IFDEF DEBUGBUILD}'{1C6F0445-7339-449A-BDEB-7D38A46FD910}',{$ENDIF}GDBPointer(tvo), sizeof(GDBObj3DFace));
+  Getmem(Pointer(tvo), sizeof(GDBObj3DFace));
   tvo^.init(bp.ListPos.owner,vp.Layer, vp.LineWeight, nulvertex);
   CopyVPto(tvo^);
   CopyExtensionsTo(tvo^);
@@ -483,7 +483,7 @@ begin
 end;
 function Alloc3DFace:PGDBObj3DFace;
 begin
-  GDBGetMem({$IFDEF DEBUGBUILD}'{Alloc3DFace}',{$ENDIF}pointer(result),sizeof(GDBObj3DFace));
+  Getmem(pointer(result),sizeof(GDBObj3DFace));
 end;
 function AllocAndInit3DFace(owner:PGDBObjGenericWithSubordinated):PGDBObj3DFace;
 begin

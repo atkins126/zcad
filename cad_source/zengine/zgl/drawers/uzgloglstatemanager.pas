@@ -17,10 +17,10 @@
 }
 
 unit uzgloglstatemanager;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
-uses uzbgeomtypes,uzepalette,uzbtypesbase,uzbtypes,{$IFNDEF DELPHI}LCLType,{$ENDIF}
+uses uzegeometrytypes,uzepalette,{$IFNDEF DELPHI}LCLType,{$ENDIF}
      {$IFNDEF DELPHI}gl,{glu,}glext,{$ELSE}dglOpenGL,windows,{$ENDIF}
      {$IFDEF SLINUX}glx,{$ENDIF}
      {$IFDEF WINDOWS}windows,{$ENDIF}
@@ -29,7 +29,7 @@ type
     GLenum={$IFNDEF DELPHI}gl.{$ELSE}dglOpenGL.{$ENDIF}GLenum;
     TViewPortArray = array [0..3] of GLint;//ВРЕМЕННО
 const ls = $AAAA;
-      ps:array [0..31] of LONGWORD=(
+      ps:array [0..31] of LongWord=(
                                    $33333333,$33333333,
                                    $CCCCCCCC,$CCCCCCCC,
                                    $33333333,$33333333,
@@ -184,12 +184,12 @@ type
                            procedure myglNormal3dV(const V:PGDBVertex);inline;
                            //procedure myglColor3ub(const red, green, blue: GLubyte);inline;
                            procedure myglVertex3d(const V:GDBVertex);virtual;//inline;
-                           procedure myglVertex2d(const x,y:GDBDouble);virtual;//inline;
+                           procedure myglVertex2d(const x,y:Double);virtual;//inline;
                            procedure myglVertex2f(const x,y:GLFloat);virtual;//inline;
-                           procedure myglvertex2dv(const V:GDBPointer);virtual;//inline;
-                           procedure myglvertex2iv(const V:GDBPointer);virtual;//inline;
+                           procedure myglvertex2dv(const V:Pointer);virtual;//inline;
+                           procedure myglvertex2iv(const V:Pointer);virtual;//inline;
                            procedure myglVertex2i(x, y: GLint);virtual;//inline;
-                           procedure myglVertex(const x,y,z:GDBDouble);virtual;//inline;
+                           procedure myglVertex(const x,y,z:Double);virtual;//inline;
                            procedure myglVertex3dV(const V:PGDBVertex);virtual;//inline;
                            procedure myglVertex3fV(const V:PGDBVertex3S);virtual;//inline;
                            procedure startrender;virtual;//inline;
@@ -197,7 +197,7 @@ type
                            {$IFDEF SINGLEPRECISIONGEOMETRY}
                            procedure glVertex3dv(const v: PGDBVertex);inline;
                            {$ENDIF}
-                           procedure myglViewport(const x,y,width,height:GDBInteger);inline;
+                           procedure myglViewport(const x,y,width,height:Integer);inline;
                            procedure myglGetIntegerv(pname: GLenum; params: PGLint);inline;
                            procedure myglLoadMatrixd(const m: PGLdouble);inline;
                            procedure myglLightfv(light, pname: GLenum; const params: PGLfloat);inline;
@@ -253,7 +253,7 @@ function wglGetProcAddress(ProcName:LPCSTR):PROC;stdcall; external 'opengl32' na
 Procedure DrawAABB(const BoundingBox:TBoundingBox);
 var
    bcount:integer;
-   primcount,pointcount,bathcount:GDBInteger;
+   primcount,pointcount,bathcount:Integer;
    middlepoint:GDBVertex;
 implementation
 procedure MywglCreateContext(var oglc:TOGLContextDesk);
@@ -348,7 +348,7 @@ begin
      glVertex3fv(@t);
 end;
 {$ENDIF}
-procedure TOGLStateManager.myglvertex2iv(const V:GDBPointer);
+procedure TOGLStateManager.myglvertex2iv(const V:Pointer);
 var t:gdbvertex;
 begin
      {$IFDEF DEBUGCOUNTGEOMETRY}
@@ -378,7 +378,7 @@ begin
                            glVertex3dV(@t);
                       end;
 end;
-procedure TOGLStateManager.myglvertex2dv(const V:GDBPointer);
+procedure TOGLStateManager.myglvertex2dv(const V:Pointer);
 var t:gdbvertex;
 begin
      {$IFDEF DEBUGCOUNTGEOMETRY}
@@ -443,7 +443,7 @@ begin
                       end;
 end;
 
-procedure TOGLStateManager.myglVertex2d(const x,y:GDBDouble);
+procedure TOGLStateManager.myglVertex2d(const x,y:Double);
 var t:gdbvertex;
 begin
      {$IFDEF DEBUGCOUNTGEOMETRY}
@@ -568,14 +568,14 @@ begin
 end;
 procedure TOGLStateManager.myglDisable(const cap: GLenum);
 begin
-     mytotalglend;
-     glDisable(cap);
-     case cap of
-                GL_LINE_STIPPLE:begin
-                                     _LineStipplefactor:=-1;
-                                     _LineStipplepattern:=0;
-                                end;
-     end;
+  mytotalglend;
+  glDisable(cap);
+  //case cap of
+  if cap=GL_LINE_STIPPLE then begin
+    _LineStipplefactor:=-1;
+    _LineStipplepattern:=0;
+  end;
+  //end;
 end;
 procedure TOGLStateManager.myglPointSize(const size: GLfloat);
 begin
@@ -678,7 +678,7 @@ procedure TOGLStateManager.myglMultMatrixF(const matrix:DMatrix4F);
 begin
      glmultmatrixf(@matrix);
 end;
-procedure TOGLStateManager.myglViewport(const x,y,width,height:GDBInteger);
+procedure TOGLStateManager.myglViewport(const x,y,width,height:Integer);
 begin
      glViewport(x,y,width,height);
 end;
@@ -844,7 +844,7 @@ end;
 
 procedure SetDCPixelFormat(oglc:TOGLContextDesk);
 {var
-  nPixelFormat: GDBInteger;
+  nPixelFormat: Integer;
   pfd: TPixelFormatDescriptor;
   rez: BOOL;}
 begin

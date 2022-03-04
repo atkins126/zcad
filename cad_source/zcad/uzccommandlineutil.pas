@@ -17,12 +17,12 @@
 }
 
 unit uzccommandlineutil;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses uzbgeomtypes,varmandef,uzbtypesbase,uzctnrvectorgdbstring,uzccommandsmanager,
+uses uzegeometrytypes,varmandef,uzctnrvectorstrings,uzccommandsmanager,
      gzctnrvectortypes,sysutils,uzbstrproc,uzcdrawings,uzegeometry,math,
      UGDBTracePropArray,uzglviewareadata,languade,Varman,uzcinterface,uzcstrconsts,
-     strmy,LCLProc,uzbmemman,uzccommandsabstract,LazUtilities;
+     strmy,LCLProc,uzccommandsabstract,LazUtilities;
 const
      commandsuffix='>';
      commandprefix=' ';
@@ -30,16 +30,16 @@ type
   TCLineMode=(CLCOMMANDREDY,CLCOMMANDRUN);
 var
   INTFCommandLineEnabled:Boolean=true;
-  aliases:TZctnrVectorGDBString;
+  aliases:TZctnrVectorStrings;
   mode:TCLineMode;
 procedure processcommand(var input:string);
 
 implementation
 
-function FindAlias(prefix:GDBString;comment,breacer:GDBString):GDBString;
+function FindAlias(prefix:String;comment,breacer:String):String;
 var
-   ps:pgdbstring;
-   s:gdbstring;
+   ps:pString;
+   s:String;
    ir:itrec;
    c:boolean;
 begin
@@ -80,12 +80,12 @@ var
   len: double;
   temp: gdbvertex;
   v:vardesk;
-  s,divider,preddivider,expr:GDBString;
+  s,divider,preddivider,expr:String;
   tv:gdbvertex;
-  parseresult:PTZctnrVectorGDBString;
+  parseresult:PTZctnrVectorStrings;
   cmd,subexpr,superexpr:string;
-  parsed:gdbboolean;
-  command,operands:GDBString;
+  parsed:Boolean;
+  command,operands:String;
   relativemarker:boolean;
   l,a:double;
 begin
@@ -128,7 +128,7 @@ begin
         begin
              if commandmanager.pcommandrunning<>nil then
              begin
-                  commandmanager.PushValue('','GDBDouble',@len);
+                  commandmanager.PushValue('','Double',@len);
                   commandmanager.pcommandrunning.CommandContinue;
              end;
         end;
@@ -139,9 +139,9 @@ begin
                                               v:=evaluate(expr,SysUnit);
                                               if v.data.ptd<>nil  then
                                               begin
-                                                s:=v.data.ptd^.GetValueAsString(v.data.Instance);
-                                                v.data.ptd^.MagicFreeInstance(v.data.Instance);
-                                                v.data.Instance:=v.data.Instance;
+                                                s:=v.data.ptd^.GetValueAsString(v.data.Addr.Instance);
+                                                v.data.ptd^.MagicFreeInstance(v.data.Addr.Instance);
+                                                //v.Instance:=v.Instance;
                                                 ZCMsgCallBackInterface.TextMessage(Format(rsExprOutText,[expr,s]),TMWOHistoryOut);
                                               end;
                                          end
@@ -167,10 +167,10 @@ begin
            repeat
            subexpr:=GetPredStr(cmd,[',','<'],divider);
            v:=evaluate(subexpr,SysUnit);
-           parsed:=v.data.Instance<>nil;
+           parsed:=v.data.Addr.Instance<>nil;
            if parsed then
            begin
-           s:=v.data.ptd^.GetValueAsString(v.data.Instance);
+           s:=v.data.ptd^.GetValueAsString(v.data.Addr.Instance);
            if superexpr='' then
                                superexpr:=s
                            else
@@ -192,7 +192,7 @@ begin
                    temp:=VertexAdd(temp,drawings.GetCurrentDWG.wa.param.ontrackarray.otrackarray[0].worldcoord);
                  commandmanager.sendcoordtocommandTraceOn(drawings.GetCurrentDWG.wa,temp,MZW_LBUTTON,nil);
                  end;
-                 if parseresult<>nil then begin parseresult^.Done;GDBfreeMem(gdbpointer(parseresult));end;
+                 if parseresult<>nil then begin parseresult^.Done;Freemem(Pointer(parseresult));end;
            end
            else if IsParsed('_realnumber'#0'_softspace'#0'=,_realnumber'#0,superexpr,parseresult)then
            begin
@@ -206,7 +206,7 @@ begin
                    temp:=VertexAdd(temp,drawings.GetCurrentDWG.wa.param.ontrackarray.otrackarray[0].worldcoord);
                  commandmanager.sendcoordtocommandTraceOn(drawings.GetCurrentDWG.wa,temp,MZW_LBUTTON,nil);
                  end;
-                 if parseresult<>nil then begin parseresult^.Done;GDBfreeMem(gdbpointer(parseresult));end;
+                 if parseresult<>nil then begin parseresult^.Done;Freemem(Pointer(parseresult));end;
            end
            else if IsParsed('_realnumber'#0'_softspace'#0'=<_realnumber'#0,superexpr,parseresult)then
            begin
@@ -222,7 +222,7 @@ begin
                    temp:=VertexAdd(temp,drawings.GetCurrentDWG.wa.param.ontrackarray.otrackarray[0].worldcoord);
                  commandmanager.sendcoordtocommandTraceOn(drawings.GetCurrentDWG.wa,temp,MZW_LBUTTON,nil);
                  end;
-                 if parseresult<>nil then begin parseresult^.Done;GDBfreeMem(gdbpointer(parseresult));end;
+                 if parseresult<>nil then begin parseresult^.Done;Freemem(Pointer(parseresult));end;
            end
            else if IsParsed('_realnumber'#0'_softspace'#0,superexpr,parseresult)then
            begin
@@ -239,7 +239,7 @@ begin
                  commandmanager.sendcoordtocommandTraceOn(drawings.GetCurrentDWG.wa,temp,MZW_LBUTTON,nil);
                  end;
 
-                 if parseresult<>nil then begin parseresult^.Done;GDBfreeMem(gdbpointer(parseresult));end;
+                 if parseresult<>nil then begin parseresult^.Done;Freemem(Pointer(parseresult));end;
            end
            end
               else

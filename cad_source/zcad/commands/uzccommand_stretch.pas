@@ -17,11 +17,10 @@
 }
 
 unit uzccommand_stretch;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
- {$IFDEF DEBUGBUILD}strutils,{$ENDIF}
  uzeconsts,zeundostack,uzcoimultiobjects,
  uzgldrawcontext,uzbpaths,uzeffmanager,
  uzestylesdim,uzeenttext,
@@ -36,13 +35,13 @@ uses
   sysutils,
   varmandef,
   uzglviewareadata,
-  UGDBOpenArrayOfByte,
+  uzctnrVectorBytes,
   uzeffdxf,
   uzcinterface,
   uzeentity,
- uzbtypesbase,uzbmemman,uzcdialogsfiles,
+ uzcdialogsfiles,
  UUnitManager,uzclog,Varman,
- uzbgeomtypes,uzcinfoform,
+ uzegeometrytypes,uzcinfoform,
  uzeentpolyline,uzeentlwpolyline,UGDBSelectedObjArray,
  uzegeometry,uzelongprocesssupport,uzccommand_selectframe,uzccommand_ondrawinged;
 
@@ -60,7 +59,7 @@ begin
   FrameEdit_com_CommandStart(Operands);
 end;
 
-function Stretch_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
+function Stretch_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
 begin
   case StretchComMode of
     SM_GetEnts:
@@ -91,32 +90,27 @@ begin
   drawings.GetCurrentDWG.GetSelObjArray.selectcontrolpointinframe(drawings.GetCurrentDWG.wa.param.seldesc.Frame1,drawings.GetCurrentDWG.wa.param.seldesc.Frame2);
 end;
 
-function Stretch_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
+function Stretch_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
 begin
   result:=0;
-  case StretchComMode of
-    SM_GetEnts:begin
-      commandmanager.DisableExecuteCommandEnd;
-        result:=FrameEdit_com_AfterClick(wc,mc,button,osp,mclick);
-      commandmanager.EnableExecuteCommandEnd;
-      //button:=0;
-      drawings.GetCurrentDWG.wa.Clear0Ontrackpoint;//убираем нулевую точку трассировки
-    end;
+  if StretchComMode=SM_GetEnts then begin
+    commandmanager.DisableExecuteCommandEnd;
+    result:=FrameEdit_com_AfterClick(wc,mc,button,osp,mclick);
+    commandmanager.EnableExecuteCommandEnd;
+    //button:=0;
+    drawings.GetCurrentDWG.wa.Clear0Ontrackpoint;//убираем нулевую точку трассировки
   end;
 
   if commandmanager.hasDisabledExecuteCommandEnd then begin
     commandmanager.resetDisabledExecuteCommandEnd;
     if (button and MZW_LBUTTON)<>0 then begin
-      case StretchComMode of
-        SM_GetEnts:begin
-                     drawings.GetCurrentDWG.wa.SetMouseMode(MGet3DPoint or {MGet3DPointWoOP or }MMoveCamera or MRotateCamera);
-                     StretchComMode:=SM_FirstPoint;
-                     selectpoints;
-                     ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIActionRedrawContent);
-                     //drawings.GetCurrentDWG.wa.Clear0Ontrackpoint;
-                     button:=0;//убираем нулевую точку трассировки, которая будет создана после выхода отсюда
-                   end;
-     SM_FirstPoint:begin end;
+      if StretchComMode=SM_GetEnts then begin
+        drawings.GetCurrentDWG.wa.SetMouseMode(MGet3DPoint or {MGet3DPointWoOP or }MMoveCamera or MRotateCamera);
+        StretchComMode:=SM_FirstPoint;
+        selectpoints;
+        ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIActionRedrawContent);
+        //drawings.GetCurrentDWG.wa.Clear0Ontrackpoint;
+        button:=0;//убираем нулевую точку трассировки, которая будет создана после выхода отсюда
       end;
       result:=0;
     end;

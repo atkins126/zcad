@@ -18,13 +18,13 @@
 {$mode delphi}
 unit uzccommand_exampleinsertdevice;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
   LazLogger,
   uzccommandsabstract,uzccommandsimpl,
-  uzeentdevice,uzgldrawcontext,uzbgeomtypes,
+  uzeentdevice,uzgldrawcontext,uzegeometrytypes,
   uzccommandsmanager,uzcdrawings,uzeentityfactory,uzeconsts,uzcutils;
 
 implementation

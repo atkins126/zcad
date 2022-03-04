@@ -17,13 +17,13 @@
 }
 
 unit uzcregnavigatordevices;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses uzcfnavigatordevices,uzcfcommandline,uzbpaths,TypeDescriptors,uzctranslations,Forms,
-     uzbtypes,varmandef,uzeconsts,uzeentdevice,uzcnavigatorsnodedesk,
+     varmandef,uzeentdevice,uzcnavigatorsnodedesk,
      uzeentity,zcobjectinspector,uzcguimanager,uzcenitiesvariablesextender,uzbstrproc,
-     Types,Controls,uzcdrawings,Varman,UUnitManager,uzcsysvars,uzcsysinfo,LazLogger,laz.VirtualTrees,
-     uzcstrconsts,uzcfnavigatordevicescxmenu,uzcmainwindow,MacroDefIntf,sysutils,fgl;
+     Types,Controls,Varman,UUnitManager,uzcsysvars,uzcsysinfo,LazLogger,laz.VirtualTrees,
+     uzcfnavigatordevicescxmenu,uzcmainwindow,MacroDefIntf,sysutils;
 resourcestring
   rsDevices='Devices';
   rsRisers='Risers';
@@ -127,9 +127,9 @@ begin
          pvd1:=pentvarext1^.entityunit.FindVariable('Elevation');
          pvd2:=pentvarext2^.entityunit.FindVariable('Elevation');
          if assigned(pvd1) and assigned(pvd2) then
-           if pdouble(pvd1^.data.Instance)^ > pdouble(pvd2^.data.Instance)^ then
+           if pdouble(pvd1^.Instance)^ > pdouble(pvd2^.Instance)^ then
             result:=-1
-           else if pdouble(pvd1^.data.Instance)^ < pdouble(pvd2^.data.Instance)^ then
+           else if pdouble(pvd1^.Instance)^ < pdouble(pvd2^.Instance)^ then
             result:=1
        end;
      end;
@@ -241,7 +241,7 @@ begin
 end;
 
 initialization
-  units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'DSGN_NavigatorsUseMainFunction','GDBBoolean',@UseMainFunction);
+  units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'DSGN_NavigatorsUseMainFunction','Boolean',@UseMainFunction);
   ZCADGUIManager.RegisterZCADFormInfo('NavigatorDevices',rsDevices,TNavigatorDevices,rect(0,100,200,600),ZCADFormSetupProc,CreateNavigatorDevices,@NavigatorDevices,true);
   ZCADGUIManager.RegisterZCADFormInfo('NavigatorRisers',rsRisers,TNavigatorRisers,rect(0,100,200,600),ZCADFormSetupProc,CreateNavigatorRisers,@NavigatorRisers,true);
   ZCADGUIManager.RegisterZCADFormInfo('NavigatorCables',rsCables,TNavigatorCables,rect(0,100,200,600),ZCADFormSetupProc,CreateNavigatorCables,@NavigatorCables,true);

@@ -16,10 +16,10 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
 
-unit gzctnrvectorp;
-{$INCLUDE def.inc}
+unit gzctnrVectorP;
+
 interface
-uses gzctnrvectortypes,{uzbtypesbase,}sysutils,gzctnrvector,gzctnrvectorsimple;
+uses gzctnrvectortypes,sysutils,gzctnrVector,gzctnrVectorSimple;
 type
 {Export+}
 {---------REGISTEROBJECTTYPE GZVectorP}
@@ -33,7 +33,7 @@ GZVectorP{-}<T>{//}=object
                                        function DeleteElement(index:Integer):Pointer;
                                        function GetRealCount:Integer;
 
-                                       constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:TArrayIndex);
+                                       constructor init(m:TArrayIndex);
                                        constructor initnul;
                                        procedure Clear;virtual;
                                        function GetCount:Integer;
@@ -79,7 +79,7 @@ begin
                     result:=nil
                 else
                     begin
-                          {ir.itp:=pointer(GDBPlatformUInt(parray)-SizeOfData);}
+                          {ir.itp:=pointer(PtrUInt(parray)-SizeOfData);}
                           ir.itp:=pointer(parray);
                           dec(pt(ir.itp));
                           ir.itc:=-1;

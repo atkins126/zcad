@@ -17,7 +17,7 @@
 }
 
 unit uzctranslations;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses uzbpaths,LCLVersion,uzbstrproc{$IFNDEF DELPHI},LazUTF8,gettext,translations,
@@ -202,6 +202,8 @@ const nontranslatedword='InterfaceTranslate: found not translated word: identifi
 var
   Item: TPOFileItem;
 begin
+    //if Identifier='TOSMode~kosm_paralel' then
+    //  Item:=Item;
     if DisableTranslateCount>0 then
                               begin
                                    result:=OriginalValue;

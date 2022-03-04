@@ -6,17 +6,17 @@ usescopy blocktype;
 var
    Device_Type:TDeviceType;(*'Тип устройства'*) 
 
-   DB_link:GDBString;(*'Материал'*)
+   DB_link:String;(*'Материал'*)
    
-   GC_HeadDevice:GDBString;
-   GC_HDShortName:GDBString;
-   GC_HDGroup:GDBInteger;
-   GC_NumberInGroup:GDBInteger;
+   GC_HeadDevice:String;
+   GC_HDShortName:String;
+   GC_HDGroup:Integer;
+   GC_NumberInGroup:Integer;
 
-   SerialConnection:GDBInteger;
+   SerialConnection:Integer;
 
 
-   EL_Cab_AddLength:GDBDouble;(*'Добавлять к длине кабеля'*)
+   EL_Cab_AddLength:Double;(*'Добавлять к длине кабеля'*)
 implementation
 begin
    DB_link:='расширитель 8 ШС';

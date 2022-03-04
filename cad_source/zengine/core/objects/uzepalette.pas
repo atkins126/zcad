@@ -17,27 +17,27 @@
 }
 
 unit uzepalette;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses uzbtypesbase;
+
 type
 {EXPORT+}
   PTRGB=^TRGB;
   {REGISTERRECORDTYPE TRGB}
   TRGB=record
-            r:GDBByte;(*'Red'*)
-            g:GDBByte;(*'Green'*)
-            b:GDBByte;(*'Blue'*)
-            a:GDBByte;(*'Alpha'*)
+            r:Byte;(*'Red'*)
+            g:Byte;(*'Green'*)
+            b:Byte;(*'Blue'*)
+            a:Byte;(*'Alpha'*)
       end;
   PTDXFCOLOR=^TDXFCOLOR;
   {REGISTERRECORDTYPE TDXFCOLOR}
   TDXFCOLOR=record
             RGB:TRGB;(*'Color'*)
-            name:GDBString;(*'Name'*)
+            name:String;(*'Name'*)
       end;
   PTGDBPaletteColor=^TGDBPaletteColor;
-  TGDBPaletteColor=GDBInteger;
+  TGDBPaletteColor=Integer;
   TGDBPalette={$IFNDEF DELPHI}packed {$ENDIF}array[0..255] of TDXFCOLOR;
 {EXPORT-}
 const

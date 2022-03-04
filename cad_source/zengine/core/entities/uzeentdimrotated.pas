@@ -16,27 +16,27 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>)
 }
 unit uzeentdimrotated;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses uzeentityfactory,uzeentdimaligned,uzeentdimension,uzestylesdim,
-     uzestyleslayers,uzedrawingdef,uzbstrproc,UGDBOpenArrayOfByte,
-     uzegeometry,uzbtypesbase,sysutils,uzeentity,uzbtypes,uzeconsts,uzeffdxfsupport,
-     uzbgeomtypes,uzbmemman,uzeentsubordinated;
+     uzestyleslayers,uzedrawingdef,uzbstrproc,uzctnrVectorBytes,
+     uzegeometry,sysutils,uzeentity,uzbtypes,uzeconsts,uzeffdxfsupport,
+     uzegeometrytypes,uzeentsubordinated;
 type
 {EXPORT+}
 PGDBObjRotatedDimension=^GDBObjRotatedDimension;
 {REGISTEROBJECTTYPE GDBObjRotatedDimension}
 GDBObjRotatedDimension= object(GDBObjAlignedDimension)
-                        function GetObjTypeName:GDBString;virtual;
+                        function GetObjTypeName:String;virtual;
                         procedure CalcDNVectors;virtual;
-                        function Clone(own:GDBPointer):PGDBObjEntity;virtual;
+                        function Clone(own:Pointer):PGDBObjEntity;virtual;
                         function P13ChangeTo(tv:GDBVertex):GDBVertex;virtual;
                         function P14ChangeTo(tv:GDBVertex):GDBVertex;virtual;
                         procedure transform(const t_matrix:DMatrix4D);virtual;
                         procedure TransformAt(p:PGDBObjEntity;t_matrix:PDMatrix4D);virtual;
-                        procedure SaveToDXF(var outhandle:{GDBInteger}GDBOpenArrayOfByte;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
-                        constructor init(own:GDBPointer;layeraddres:PGDBLayerProp;LW:GDBSmallint);
+                        procedure SaveToDXF(var outhandle:{Integer}TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
+                        constructor init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt);
                         constructor initnul(owner:PGDBObjGenericWithSubordinated);
                         function GetObjType:TObjID;virtual;
                    end;
@@ -67,15 +67,15 @@ begin
   dxfvertexout(outhandle,10,DimData.P10InWCS);
   dxfvertexout(outhandle,11,DimData.P11InOCS);
   if DimData.TextMoved then
-                           dxfGDBIntegerout(outhandle,70,0+128)
+                           dxfIntegerout(outhandle,70,0+128)
                        else
-                           dxfGDBIntegerout(outhandle,70,0);
-  dxfGDBStringout(outhandle,3,PDimStyle^.Name);
-  dxfGDBStringout(outhandle,100,'AcDbAlignedDimension');
+                           dxfIntegerout(outhandle,70,0);
+  dxfStringout(outhandle,3,PDimStyle^.Name);
+  dxfStringout(outhandle,100,'AcDbAlignedDimension');
   dxfvertexout(outhandle,13,DimData.P13InWCS);
   dxfvertexout(outhandle,14,DimData.P14InWCS);
-  dxfGDBDoubleout(outhandle,50,vertexangle(createvertex2d(0,0),createvertex2d(vectorD.x,vectorD.y))*180/pi);
-  dxfGDBStringout(outhandle,100,'AcDbRotatedDimension');
+  dxfDoubleout(outhandle,50,vertexangle(createvertex2d(0,0),createvertex2d(vectorD.x,vectorD.y))*180/pi);
+  dxfStringout(outhandle,100,'AcDbRotatedDimension');
 end;
 procedure GDBObjRotatedDimension.transform;
 var
@@ -107,7 +107,7 @@ begin
 end;
 function GDBObjRotatedDimension.P14ChangeTo(tv:GDBVertex):GDBVertex;
 var
-    tl:GDBDouble;
+    tl:Double;
 begin
      result:=tv;
      tl:=GetTFromDirNormalizedPoint(DimData.P10InWCS,tv,vectorN);
@@ -115,7 +115,7 @@ begin
 end;
 {
 var
-    t,tl:GDBDouble;
+    t,tl:Double;
     temp:GDBVertex;
 begin
      tl:=scalardot(vertexsub(DimData.P14InWCS,DimData.P13InWCS),vectorD);
@@ -133,7 +133,7 @@ end;
 function GDBObjRotatedDimension.Clone;
 var tvo: PGDBObjRotatedDimension;
 begin
-  GDBGetMem({$IFDEF DEBUGBUILD}'GDBObjRotatedDimension.Clone',{$ENDIF}GDBPointer(tvo), sizeof(GDBObjRotatedDimension));
+  Getmem(Pointer(tvo), sizeof(GDBObjRotatedDimension));
   tvo^.init(bp.ListPos.owner,vp.Layer, vp.LineWeight);
   CopyVPto(tvo^);
   CopyExtensionsTo(tvo^);
@@ -151,7 +151,7 @@ begin
 end;
 function AllocRotatedDimension:PGDBObjRotatedDimension;
 begin
-  GDBGetMem({$IFDEF DEBUGBUILD}'{AllocRotatedDimension}',{$ENDIF}result,sizeof(GDBObjRotatedDimension));
+  Getmem(result,sizeof(GDBObjRotatedDimension));
 end;
 function AllocAndInitRotatedDimension(owner:PGDBObjGenericWithSubordinated):PGDBObjRotatedDimension;
 begin

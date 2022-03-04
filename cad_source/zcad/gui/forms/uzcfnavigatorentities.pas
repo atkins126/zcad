@@ -6,9 +6,9 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, ComCtrls,
-  StdCtrls, ActnList, laz.VirtualTrees,
-  uzbtypes,gzctnrvectortypes,uzbgeomtypes ,uzegeometry, uzccommandsmanager,
-  uzcinterface,uzeentity,uzcimagesmanager,uzcdrawings,uzbtypesbase,
+  ActnList, laz.VirtualTrees,
+  uzbtypes,gzctnrvectortypes,uzegeometrytypes ,uzegeometry, uzccommandsmanager,
+  uzcinterface,uzeentity,uzcimagesmanager,uzcdrawings,
   varmandef,uzbstrproc,uzcnavigatorsnodedesk;
 
 type
@@ -73,7 +73,7 @@ begin
   if assigned(pnd) then
     if pnd^.pent<>nil then
   begin
-   s:='SelectObjectByAddres('+inttostr(GDBPlatformUInt(pnd^.pent))+')';
+   s:='SelectObjectByAddres('+inttostr(PtrUInt(pnd^.pent))+')';
    commandmanager.executecommandsilent(@s[1],drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
   end;
 end;

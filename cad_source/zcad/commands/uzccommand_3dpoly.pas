@@ -15,22 +15,22 @@
 {
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
-{$MODE OBJFPC}
+{$MODE OBJFPC}{$H+}
 unit uzccommand_3dpoly;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
-  gzctnrvector,uzglviewareageneral,zcobjectchangeundocommand2,zcmultiobjectchangeundocommand,
-  gzctnrvectortypes,zcmultiobjectcreateundocommand,uzeentitiesmanager,uzgldrawercanvas,
+  uzglviewareageneral,zcobjectchangeundocommand2,
+  zcmultiobjectcreateundocommand,uzgldrawercanvas,
   uzcoimultiobjects,uzcenitiesvariablesextender,uzcdrawing,uzepalette,
-  uzctextenteditor,uzgldrawcontext,usimplegenerics,UGDBPoint3DArray,
-  uzeentpoint,uzeentitiestree,gmap,gvector,garrayutils,gutil,UGDBSelectedObjArray,uzeentityfactory,
+  uzgldrawcontext,UGDBPoint3DArray,
+  uzeentpoint,uzeentityfactory,
   uzedrawingsimple,uzcsysvars,uzcstrconsts,
-  printers,graphics,uzeentdevice,uzeentwithlocalcs,
-  LazUTF8,Clipbrd,LCLType,classes,uzeenttext,uzeentabstracttext,uzestylestexts,
+  printers,graphics,uzeentdevice,
+  LazUTF8,Clipbrd,LCLType,classes,uzeenttext,
   uzccommandsabstract,uzbstrproc,
-  uzbtypesbase,uzccommandsmanager,
+  uzccommandsmanager,
   uzccommandsimpl,
   uzbtypes,
   uzcdrawings,
@@ -41,13 +41,12 @@ uses
   uzeffdxf,
   uzcinterface,
   uzegeometry,
-  uzbmemman,
+  
   uzeconsts,
-  uzbgeomtypes,uzeentity,uzeentcircle,uzeentline,uzeentgenericsubentry,uzeentmtext,
-  uzeentsubordinated,uzeentblockinsert,uzeentpolyline,uzclog,gzctnrvectordata,
-  math,uzeenttable,uzctnrvectorgdbstring,
-  uzeentcurve,uzeentlwpolyline,UBaseTypeDescriptor,uzeblockdef,Varman,URecordDescriptor,TypeDescriptors,UGDBVisibleTreeArray
-  ,uzelongprocesssupport,LazLogger;
+  uzegeometrytypes,uzeentity,uzeentcircle,uzeentline,uzeentgenericsubentry,uzeentmtext,
+  uzeentblockinsert,uzeentpolyline,uzclog,
+  uzeentcurve,uzeentlwpolyline,UBaseTypeDescriptor,uzeblockdef,Varman,URecordDescriptor,TypeDescriptors,
+  uzelongprocesssupport,LazLogger;
 
 implementation
 var
@@ -91,11 +90,11 @@ begin
                                         drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.Count := 0;
                                         p3dpl:=nil;
                                       end;
-  //gdbfreemem(pointer(p3dpl));
+  //Freemem(pointer(p3dpl));
 end;
 
 
-function _3DPoly_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
+function _3DPoly_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
 var
     dc:TDrawContext;
 begin
@@ -105,7 +104,7 @@ begin
     if p3dpl=nil then
     begin
     dc:=drawings.GetCurrentDWG^.CreateDrawingRC;
-    p3dpl := GDBPointer({drawings.GetCurrentROOT^.ObjArray.CreateInitObj}drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.CreateInitObj(GDBPolylineID,{drawings.GetCurrentROOT}drawings.GetCurrentDWG^.GetConstructObjRoot));
+    p3dpl := Pointer({drawings.GetCurrentROOT^.ObjArray.CreateInitObj}drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.CreateInitObj(GDBPolylineID,{drawings.GetCurrentROOT}drawings.GetCurrentDWG^.GetConstructObjRoot));
     zcSetEntPropFromCurrentDrawingProp(p3dpl);
     p3dpl^.AddVertex(wc);
     p3dpl^.Formatentity(drawings.GetCurrentDWG^,dc);
@@ -120,7 +119,7 @@ begin
   end
 end;
 
-function _3DPoly_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
+function _3DPoly_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
 var
   domethod,undomethod:tmethod;
   polydata:tpolydata;

@@ -16,12 +16,12 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>)
 }
 unit uzeentdimensiongeneric;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses uzeentityfactory,uzeentwithlocalcs,uzeentdimension,uzestylesdim,uzestyleslayers,
-     uzedrawingdef,uzbstrproc,UGDBOpenArrayOfByte,uzegeometry,uzbtypesbase,
-     sysutils,uzeentity,uzbtypes,uzeconsts,uzeffdxfsupport,uzbmemman,uzeentsubordinated,
+     uzedrawingdef,uzbstrproc,uzctnrVectorBytes,uzegeometry,
+     sysutils,uzeentity,uzbtypes,uzeconsts,uzeffdxfsupport,uzeentsubordinated,
      uzeentdimradial,uzeentdimdiametric,uzeentdimrotated,uzeentdimaligned;
 type
 {EXPORT+}
@@ -32,10 +32,10 @@ GDBObjGenericDimension= object(GDBObjWithLocalCS)
                       DimData:TDXFDimData;
                       PDimStyle:PGDBDimStyle;
                       DimType:TDimType;
-                      a50,a52:GDBDouble;
-                      constructor init(own:GDBPointer;layeraddres:PGDBLayerProp;LW:GDBSmallint);
+                      a50,a52:Double;
+                      constructor init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt);
                       constructor initnul(owner:PGDBObjGenericWithSubordinated);
-                      procedure LoadFromDXF(var f: GDBOpenArrayOfByte;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
+                      procedure LoadFromDXF(var f: TZctnrVectorBytes;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
                       function FromDXFPostProcessBeforeAdd(ptu:PExtensionData;const drawing:TDrawingDef):PGDBObjSubordinated;virtual;
                       function GetObjType:TObjID;virtual;
                    end;
@@ -49,7 +49,7 @@ var
 begin
          case DimType of
                                DTRotated:begin
-                                               GDBGetMem({$IFDEF DEBUGBUILD}'{4C837C43-E018-4307-ADC2-DEB5134AF6D8}',{$ENDIF}GDBPointer(ResultDim),sizeof(GDBObjRotatedDimension));
+                                               Getmem(Pointer(ResultDim),sizeof(GDBObjRotatedDimension));
                                                result:=ResultDim;
                                                PGDBObjRotatedDimension(ResultDim)^.initnul(bp.ListPos.Owner);
                                                PGDBObjRotatedDimension(ResultDim)^.vectorD:=CreateRotatedXVector(a50*pi/180);
@@ -63,7 +63,7 @@ begin
                                          end;
                                DTAligned:
                                    begin
-                                     GDBGetMem({$IFDEF DEBUGBUILD}'{4C837C43-E018-4307-ADC2-DEB5134AF6D8}',{$ENDIF}GDBPointer(ResultDim),sizeof(GDBObjAlignedDimension));
+                                     Getmem(Pointer(ResultDim),sizeof(GDBObjAlignedDimension));
                                      result:=ResultDim;
                                      PGDBObjAlignedDimension(ResultDim)^.initnul(bp.ListPos.Owner);
                                      //ResultDim.vp.Layer:=vp.Layer;
@@ -75,7 +75,7 @@ begin
                                    end;
                                DTDiameter:
                                  begin
-                                   GDBGetMem({$IFDEF DEBUGBUILD}'{4C837C43-E018-4307-ADC2-DEB5134AF6D8}',{$ENDIF}GDBPointer(ResultDim),sizeof(GDBObjDiametricDimension));
+                                   Getmem(Pointer(ResultDim),sizeof(GDBObjDiametricDimension));
                                    result:=ResultDim;
                                    PGDBObjDiametricDimension(ResultDim)^.initnul(bp.ListPos.Owner);
                                    //ResultDim.vp.Layer:=vp.Layer;
@@ -87,7 +87,7 @@ begin
                                  end;
                                  else
                                    begin
-                                     GDBGetMem({$IFDEF DEBUGBUILD}'{4C837C43-E018-4307-ADC2-DEB5134AF6D8}',{$ENDIF}GDBPointer(ResultDim),sizeof(GDBObjRadialDimension));
+                                     Getmem(Pointer(ResultDim),sizeof(GDBObjRadialDimension));
                                      result:=ResultDim;
                                      PGDBObjRadialDimension(ResultDim)^.initnul(bp.ListPos.Owner);
                                      //ResultDim.vp.Layer:=vp.Layer;
@@ -104,8 +104,8 @@ end;
 
 procedure GDBObjGenericDimension.LoadFromDXF;
 var
-  byt,dtype:GDBInteger;
-  style:GDBString;
+  byt,dtype:Integer;
+  style:String;
 begin
   byt:=readmystrtoint(f);
   dtype:=-1;
@@ -120,17 +120,17 @@ begin
                    if not dxfvertexload(f,14,byt,DimData.P14InWCS) then
                       if not dxfvertexload(f,15,byt,DimData.P15InWCS) then
                          if not dxfvertexload(f,16,byt,DimData.P16InOCS) then
-                            if not dxfGDBIntegerload(f,70,byt,dtype) then
-                               if not dxfGDBDoubleload(f,50,byt,a50) then
-                                  if not dxfGDBDoubleload(f,52,byt,a52) then
-                            if dxfGDBStringload(f,3,byt,style)then
+                            if not dxfIntegerload(f,70,byt,dtype) then
+                               if not dxfDoubleload(f,50,byt,a50) then
+                                  if not dxfDoubleload(f,52,byt,a52) then
+                            if dxfStringload(f,3,byt,style)then
                                                                   begin
                                                                        PDimStyle:=drawing.GetDimStyleTable^.getAddres(Style);
                                                                        if PDimStyle=nil then
                                                                                             PDimStyle:=pointer(drawing.GetDimStyleTable^.getDataMutable(0));
                                                                   end
                             else
-                                f.readGDBSTRING;
+                                f.readString;
     byt:=readmystrtoint(f);
   end;
   if dtype<>-1 then
@@ -179,7 +179,7 @@ begin
 end;
 function AllocGenericDimension:PGDBObjGenericDimension;
 begin
-  GDBGetMem({$IFDEF DEBUGBUILD}'{AllocGenericDimension}',{$ENDIF}result,sizeof(GDBObjGenericDimension));
+  Getmem(result,sizeof(GDBObjGenericDimension));
 end;
 function AllocAndInitGenericDimension(owner:PGDBObjGenericWithSubordinated):PGDBObjGenericDimension;
 begin

@@ -17,11 +17,11 @@
 }
 
 unit uzeiopalette;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses uzbpaths,uzepalette,uzcstrconsts,{$IFNDEF DELPHI}uzctranslations,{$ENDIF}
      uzbstrproc,{$IFNDEF DELPHI}FileUtil,LCLProc,{$ENDIF}{log,}sysutils,
-     UGDBOpenArrayOfByte,uzbtypesbase,uzbtypes,gstack;
+     uzctnrVectorBytes,gstack;
 type
   TPaletteStack=TStack<TGDBPalette>;
 var
@@ -49,14 +49,14 @@ end;
 
 procedure readpalette;
 var
-  i,code:GDBInteger;
-  line,sub:GDBString;
-  f:GDBOpenArrayOfByte;
+  i,code:Integer;
+  line,sub:String;
+  f:TZctnrVectorBytes;
 begin
   f.InitFromFile(ProgramPath+filename);
   while f.notEOF do
     begin
-      line:=f.readGDBString;
+      line:=f.readString;
       if line<>'' then
       if line[1]<>';' then
         begin

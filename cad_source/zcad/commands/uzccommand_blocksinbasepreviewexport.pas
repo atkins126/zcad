@@ -15,9 +15,9 @@
 {
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
-{$MODE OBJFPC}
+{$MODE OBJFPC}{$H+}
 unit uzccommand_blocksinbasepreviewexport;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -27,7 +27,7 @@ uses
   uzeblockdef,
   uzccommand_blockpreviewexport,
   LazLogger,Masks,
-  StrUtils,SysUtils;
+  SysUtils;
 implementation
 
 
@@ -52,6 +52,7 @@ begin
       end;
     pb:=BlockBaseDWG^.BlockDefArray.iterate(ir);
   until pb=nil;
+  result:=cmd_ok;
 end;
 
 initialization

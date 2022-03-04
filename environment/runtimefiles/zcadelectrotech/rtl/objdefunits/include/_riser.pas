@@ -3,9 +3,9 @@ interface
 uses system;
 usescopy _addtocable;
 var
-   Text:GDBString;(*'Текст'*)
-   Elevation:GDBDouble;(*'Отметка'*)
-   RiserName:GDBString;(*'Имя стояка'*)
+   Text:String;(*'Текст'*)
+   Elevation:Double;(*'Отметка'*)
+   RiserName:String;(*'Имя стояка'*)
 implementation
 begin
    Text:='??';

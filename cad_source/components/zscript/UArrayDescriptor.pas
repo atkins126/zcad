@@ -17,19 +17,20 @@
 }
 
 unit UArrayDescriptor;
-{$INCLUDE def.inc}
+
 {$MODE DELPHI}
 interface
-uses gzctnrvectortypes,uzedimensionaltypes,sysutils,LCLProc,TypeDescriptors,uzbtypesbase,varmandef,uzbtypes,gzctnrvectordata,uzbmemman;
+uses gzctnrvectortypes,uzedimensionaltypes,sysutils,LCLProc,TypeDescriptors,
+     varmandef,uzbtypes,gzctnrVector,uzbLogIntf;
 type
 PArrayIndexDescriptor=^ArrayIndexDescriptor;
 ArrayIndexDescriptor=record
-                           IndexMin,IndexCount:GDBInteger;
+                           IndexMin,IndexCount:Integer;
                      end;
-TArrayIndexDescriptorVector=GZVectorData<ArrayIndexDescriptor>;
+TArrayIndexDescriptorVector=GZVector<ArrayIndexDescriptor>;
 PArrayDescriptor=^ArrayDescriptor;
 ArrayDescriptor=object(TUserTypeDescriptor)
-                     NumOfIndex:GDBInteger;
+                     NumOfIndex:Integer;
                      typeof:PUserTypeDescriptor;
                      Indexs:{GDBOpenArrayOfData}TArrayIndexDescriptorVector;
                      constructor init(var t:PUserTypeDescriptor;tname:string;pu:pointer);
@@ -70,7 +71,7 @@ begin
      inherited init(0,tname,pu);
      NumOfIndex:=0;
      typeof:=t;
-     Indexs.init({$IFDEF DEBUGBUILD}'{1A33FBB9-F27B-4CF2-8C08-852A22572791}',{$ENDIF}20{,sizeof(ArrayIndexDescriptor)});
+     Indexs.init(20);
 end;
 destructor ArrayDescriptor.done;
 begin
@@ -81,13 +82,12 @@ procedure ArrayDescriptor.AddIndex;
 begin
      indexs.PushBackData(Index);
      inc(NumOfIndex);
-     SizeInGDBBytes:=SizeInGDBBytes+typeof^.SizeInGDBBytes*Index.IndexCount
+     SizeInBytes:=SizeInBytes+typeof^.SizeInBytes*Index.IndexCount
 end;
 function ArrayDescriptor.CreateProperties;
 var ppd:PPropertyDeskriptor;
 begin
-     if VerboseLog^ then
-       debugln(sysutils.Format('{T}[ZSCRIPT]ArrayDescriptor.CreateProperties(%s)',[name]));
+     zTraceLn(sysutils.Format('{T}[ZSCRIPT]ArrayDescriptor.CreateProperties(%s)',[name]));
      //programlog.LogOutFormatStr('ArrayDescriptor.CreateProperties(%s)',[name],lp_OldPos,LM_Trace);
      ppd:=GetPPD(ppda,bmode);
      ppd^.Name:=name;
@@ -100,7 +100,7 @@ begin
            if ppd<>nil then
                            begin
                                 //IncAddr(addr);
-                                //inc(pGDBByte(addr),SizeInGDBBytes);
+                                //inc(PByte(addr),SizeInBytes);
                                 //if bmode=property_build then PPDA^.add(@ppd);
                            end;
      //IncAddr(addr);

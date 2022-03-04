@@ -15,9 +15,9 @@
 {
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
-{$MODE OBJFPC}
+{$MODE OBJFPC}{$H+}
 unit uzccommand_insertlayersfrombase;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -27,7 +27,7 @@ uses
   uzestyleslayers,
   uzccommand_blockpreviewexport,
   LazLogger,Masks,
-  StrUtils,SysUtils;
+  SysUtils;
 implementation
 
 
@@ -52,6 +52,7 @@ begin
       pl:=BlockBaseDWG^.LayerTable.iterate(ir);
     until pl=nil;
   end;
+  result:=cmd_ok;
 end;
 
 initialization

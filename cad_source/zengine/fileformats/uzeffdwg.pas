@@ -17,14 +17,14 @@
 }
 
 unit uzeffdwg;
-{$INCLUDE def.inc}
-{$MODE OBJFPC}
+{$INCLUDE zcadconfig.inc}
+{$MODE OBJFPC}{$H+}
 interface
 uses LCLIntf,gdbentityfactory,zcadinterface,GDBLine,gdbobjectsconstdef,typinfo,
      zcadstrconsts,iodxf,fileutil,varman,uzegeometry,gdbasetypes,
      GDBGenericSubEntry,SysInfo,gdbase, GDBManager, sysutils, memman,UGDBDescriptor,
-     UGDBOpenArrayOfByte,GDBEntity,TypeDescriptors,ugdbsimpledrawing;
-procedure addfromdwg(name: GDBString;owner:PGDBObjGenericSubEntry;LoadMode:TLoadOpt;var drawing:TSimpleDrawing);
+     uzctnrVectorBytes,GDBEntity,TypeDescriptors,ugdbsimpledrawing;
+procedure addfromdwg(name: String;owner:PGDBObjGenericSubEntry;LoadMode:TLoadOpt;var drawing:TSimpleDrawing);
 implementation
 uses {GDBBlockDef,}UGDBLayerArray,fileformatsmanager;
 
@@ -178,17 +178,17 @@ type
 #define BITCODE_4BITS BITCODE_RC
 #define FORMAT_4BITS "%1x"
 }
-    BITCODE_RL=Longword;
+    BITCODE_RL=LongWord;
     BITCODE_RS=word;
     BITCODE_RC=byte;
-    BITCODE_MS=Longword{word};
+    BITCODE_MS=LongWord{word};
     BITCODE_BS=word;
     BITCODE_H=DWGLong;
     BITCODE_B=Boolean;
     BITCODE_DD=double;
     BITCODE_RD=double;
     BITCODE_BD=double;
-    BITCODE_BL=Longword{word};
+    BITCODE_BL=LongWord{word};
 
     BITCODE_CMC=byte;//error--------------------------------------------
     BITCODE_TV=string;
@@ -553,13 +553,13 @@ begin
            w[i]:=BitRead_rs;
            if not((w[i] and $8000)>0) then
              begin
-               result :=result or (Longword(w[i]) shl j);
+               result :=result or (LongWord(w[i]) shl j);
                exit;
              end
            else
              begin
              w[i] := w[i] and $7fff;
-             result := result or (Longword(w[i]) shl j);
+             result := result or (LongWord(w[i]) shl j);
              end;
              j:=j+15;
          end;
@@ -1039,7 +1039,7 @@ begin
      decompsize:=-1;
      if pdecompdata=nil then
                             begin
-                            GDBGetMem({$IFDEF DEBUGBUILD}'{87747A59-156F-4B1B-AD65-AEEB46995B6A}',{$ENDIF}result,usize);
+                            Getmem(result,usize);
                             pdecompdata:=result;
                             end
                          else
@@ -1085,7 +1085,7 @@ begin
      result:=nil;
 end;
 
-procedure addfromdwg2004(var f:GDBOpenArrayOfByte; exitGDBString: GDBString;owner:PGDBObjGenericSubEntry;LoadMode:TLoadOpt);
+procedure addfromdwg2004(var f:TZctnrVectorBytes; exitString: String;owner:PGDBObjGenericSubEntry;LoadMode:TLoadOpt);
 var fh:pdwg2004header;
     fdh:dwg2004headerdecrypteddata;
     syssec,SectionMap,SectionInfo:pdwg2004systemsection;
@@ -1209,11 +1209,11 @@ begin
                PtrUInt(pi):=PtrUInt(pi)+{sizeof(dwg2004pageinfo)}16;
           end;
           sd:=pointer(pi);
-          //inc(longword(sd),sizeof({sd^}dwg2004sectiondesc));
+          //inc(LongWord(sd),sizeof({sd^}dwg2004sectiondesc));
      end;
      HistoryOutStr('Prepare AcDb:AcDbObjects section');
      objinfo:=FindInfoByType(siarray,SECTION_DBOBJECTS);
-     GDBGetMem({$IFDEF DEBUGBUILD}'{A87A6634-F384-4414-8C8E-AD03866EE4E8}',{$ENDIF}objsection,objinfo^.MaxDecompressedSize*objinfo^.NumberOfSectionsThisType);
+     Getmem(objsection,objinfo^.MaxDecompressedSize*objinfo^.NumberOfSectionsThisType);
       bc.setto(f.PArray,f.size);
      for i:=0 to objinfo^.NumberOfSectionsThisType-1 do
        begin
@@ -1395,10 +1395,10 @@ begin
          end;
 end;
 
-procedure addfromdwg(name: GDBString;owner:PGDBObjGenericSubEntry;LoadMode:TLoadOpt;var drawing:TSimpleDrawing);
+procedure addfromdwg(name: String;owner:PGDBObjGenericSubEntry;LoadMode:TLoadOpt;var drawing:TSimpleDrawing);
 var
-  f: GDBOpenArrayOfByte;
-  s: GDBString;
+  f: TZctnrVectorBytes;
+  s: String;
 begin
   DebugLn('{D+}AddFromDWG');
   //programlog.logoutstr('AddFromDWG',lp_IncPos);

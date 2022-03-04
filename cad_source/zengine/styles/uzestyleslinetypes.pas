@@ -17,10 +17,10 @@
 }
 
 unit uzestyleslinetypes;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses LCLProc,LazUTF8,Classes,gzctnrvectordata,uzbtypesbase,sysutils,uzbtypes,
-     uzegeometry,uzestylestexts,gzctnrvectorobjects,UGDBNamedObjectsArray,
+uses LCLProc,LazUTF8,Classes,gzctnrVector,sysutils,uzbtypes,
+     uzegeometry,uzestylestexts,gzctnrVectorObjects,UGDBNamedObjectsArray,
      gzctnrvectortypes,uzbstrproc;
 const
      DefaultSHXHeight=1;
@@ -36,10 +36,10 @@ TOuterDashInfo=(TODIUnknown,TODIShape,TODIPoint,TODILine,TODIBlank);
 TAngleDir=(TACAbs,TACRel,TACUpRight);
 {REGISTERRECORDTYPE shxprop}
 shxprop=record
-                Height,Angle,X,Y:GDBDouble;
+                Height,Angle,X,Y:Double;
                 AD:TAngleDir;
                 PStyle:PGDBTextStyle;
-                PstyleIsHandle:GDBBoolean;
+                PstyleIsHandle:Boolean;
         end;
 {REGISTEROBJECTTYPE BasicSHXDashProp}
 BasicSHXDashProp= object(GDBaseObject)
@@ -49,8 +49,8 @@ BasicSHXDashProp= object(GDBaseObject)
 PTextProp=^TextProp;
 {REGISTEROBJECTTYPE TextProp}
 TextProp= object(BasicSHXDashProp)
-                Text,Style:GDBString;
-                txtL,txtH:GDBDouble;
+                Text,Style:String;
+                txtL,txtH:Double;
                 //PFont:PGDBfont;
                 constructor initnul;
                 destructor done;virtual;
@@ -58,65 +58,66 @@ TextProp= object(BasicSHXDashProp)
 PShapeProp=^ShapeProp;
 {REGISTEROBJECTTYPE ShapeProp}
 ShapeProp= object(BasicSHXDashProp)
-                SymbolName,FontName:GDBString;
+                SymbolName,FontName:String;
+                ShapeNum:Integer;
                 Psymbol:PGDBsymdolinfo;
                 constructor initnul;
                 destructor done;virtual;
           end;
 {REGISTEROBJECTTYPE GDBDashInfoArray}
-GDBDashInfoArray= object(GZVectorData{-}<TDashInfo>{//})(*OpenArrayOfData=TDashInfo*)
+GDBDashInfoArray= object(GZVector{-}<TDashInfo>{//})(*OpenArrayOfData=TDashInfo*)
                end;
-{REGISTEROBJECTTYPE GDBDoubleArray}
-GDBDoubleArray= object(GZVectorData{-}<GDBDouble>{//})(*OpenArrayOfData=GDBDouble*)
-                constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger);
+{REGISTEROBJECTTYPE DoubleArray}
+DoubleArray= object(GZVector{-}<Double>{//})(*OpenArrayOfData=Double*)
+                constructor init(m:Integer);
                end;
 {REGISTEROBJECTTYPE GDBShapePropArray}
 GDBShapePropArray= object(GZVectorObjects{-}<ShapeProp>{//})(*OpenArrayOfObject=ShapeProp*)
-                constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger);
+                constructor init(m:Integer);
                end;
 {REGISTEROBJECTTYPE GDBTextPropArray}
 GDBTextPropArray= object(GZVectorObjects{-}<TextProp>{//})(*OpenArrayOfObject=TextProp*)
-                constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger);
+                constructor init(m:Integer);
                end;
 PPGDBLtypePropObjInsp=^PGDBLtypePropObjInsp;
-PGDBLtypePropObjInsp=GDBPointer;
+PGDBLtypePropObjInsp=Pointer;
 PGDBLtypeProp=^GDBLtypeProp;
 {REGISTEROBJECTTYPE GDBLtypeProp}
 GDBLtypeProp= object(GDBNamedObject)
-               LengthDXF,LengthFact:GDBDouble;(*'Length'*)
-               h:GDBDouble;(*'Height'*)
+               LengthDXF,LengthFact:Double;(*'Length'*)
+               h:Double;(*'Height'*)
                Mode:TLTMode;
                FirstStroke,LastStroke:TOuterDashInfo;
-               WithoutLines:GDBBoolean;
+               WithoutLines:Boolean;
                dasharray:GDBDashInfoArray;(*'DashInfo array'*)
-               strokesarray:GDBDoubleArray;(*'Strokes array'*)
+               strokesarray:DoubleArray;(*'Strokes array'*)
                shapearray:GDBShapePropArray;(*'Shape array'*)
                Textarray:GDBTextPropArray;(*'Text array'*)
-               desk:GDBAnsiString;(*'Description'*)
-               constructor init(n:GDBString);
+               desk:AnsiString;(*'Description'*)
+               constructor init(n:String);
                destructor done;virtual;
                procedure Format;virtual;
-               function GetAsText:GDBString;
-               function GetLTString:GDBString;
-               procedure CreateLineTypeFrom(var LT:GDBString);
+               function GetAsText:String;
+               function GetLTString:String;
+               procedure CreateLineTypeFrom(var LT:String);
              end;
 PGDBLtypePropArray=^GDBLtypePropArray;
 GDBLtypePropArray=packed array [0..0] of GDBLtypeProp;
 PGDBLtypeArray=^GDBLtypeArray;
 {REGISTEROBJECTTYPE GDBLtypeArray}
 GDBLtypeArray= object(GDBNamedObjectsArray{-}<PGDBLtypeProp,GDBLtypeProp>{//})(*OpenArrayOfData=GDBLtypeProp*)
-                    constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger);
+                    constructor init(m:Integer);
                     constructor initnul;
-                    procedure LoadFromFile(fname:GDBString;lm:TLoadOpt);
-                    procedure ParseStrings(const ltd:tstrings; var CurrentLine:integer;out LTName,LTDesk,LTImpl:GDBString);
+                    procedure LoadFromFile(fname:String;lm:TLoadOpt);
+                    procedure ParseStrings(const ltd:tstrings; var CurrentLine:integer;out LTName,LTDesk,LTImpl:String);
                     function createltypeifneed(_source:PGDBLtypeProp;var _DestTextStyleTable:GDBTextStyleArray):PGDBLtypeProp;
                     function GetSystemLT(neededtype:TLTMode):PGDBLtypeProp;
                     procedure format;virtual;
-                    {function addlayer(name:GDBString;color:GDBInteger;lw:GDBInteger;oo,ll,pp:GDBBoolean;d:GDBString;lm:TLoadOpt):PGDBLayerProp;virtual;
+                    {function addlayer(name:String;color:Integer;lw:Integer;oo,ll,pp:Boolean;d:String;lm:TLoadOpt):PGDBLayerProp;virtual;
                     function GetSystemLayer:PGDBLayerProp;
                     function GetCurrentLayer:PGDBLayerProp;
                     function createlayerifneed(_source:PGDBLayerProp):PGDBLayerProp;
-                    function createlayerifneedbyname(lname:GDBString;_source:PGDBLayerProp):PGDBLayerProp;}
+                    function createlayerifneedbyname(lname:String;_source:PGDBLayerProp):PGDBLayerProp;}
               end;
 {EXPORT-}
 implementation
@@ -149,7 +150,7 @@ begin
     result:=iterate(ir);
   until result=nil;
 end;
-function getshapestring(PSP:PShapeProp):gdbstring;
+function getshapestring(PSP:PShapeProp):String;
 begin
      result:='['+psp^.SymbolName+','+psp^.FontName;
      case psp^.param.AD of
@@ -162,7 +163,7 @@ begin
      result:=result+',Y='+floattostr(psp^.param.Y);
      result:=result+']'
 end;
-function gettextstring(PTP:PTextProp):gdbstring;
+function gettextstring(PTP:PTextProp):String;
 begin
   result:='["'+PTP^.Text+'",'+PTP^.Style;
   case ptp^.param.AD of
@@ -176,10 +177,10 @@ begin
   result:=result+']'
 end;
 
-function GDBLtypeProp.GetLTString:GDBString;
+function GDBLtypeProp.GetLTString:String;
 var
     TDI:PTDashInfo;
-    PStroke:PGDBDouble;
+    PStroke:PDouble;
     PSP:PShapeProp;
     PTP:PTextProp;
     ir2,ir3,ir4,ir5:itrec;
@@ -210,7 +211,7 @@ begin
     until TDI=nil;
 end;
 end;
-function GDBLtypeProp.GetAsText:GDBString;
+function GDBLtypeProp.GetAsText:String;
 begin
      if mode<>TLTLineType then
                                    result:='This is system layer!!!'
@@ -294,7 +295,7 @@ begin
                                       until PTP=nil;
 
 end;
-function N2TLTMode(n:GDBString):TLTMode;
+function N2TLTMode(n:String):TLTMode;
 begin
      n:=lowercase(n);
      if n='continuous' then
@@ -307,7 +308,7 @@ else
     result:=TLTMode.TLTLineType;
 end;
 
-constructor GDBLtypeProp.init(n:GDBString);
+constructor GDBLtypeProp.init(n:String);
 begin
      inherited;
      FirstStroke:=TODIUnknown;
@@ -316,11 +317,12 @@ begin
      Mode:=N2TLTMode(n);
      LengthDXF:=0;
      LengthFact:=0;
+     h:=0;
      pointer(desk):=nil;
-     dasharray.init({$IFDEF DEBUGBUILD}'{9DA63ECC-B244-4EBD-A9AE-AB24F008B526}',{$ENDIF}10{,sizeof(TDashInfo)});
-     strokesarray.init({$IFDEF DEBUGBUILD}'{70B68C69-C222-4BE5-BB48-B88F08BA7605}',{$ENDIF}10);
-     shapearray.init({$IFDEF DEBUGBUILD}'{9174ED86-C17E-4683-9BD1-E1927A9F9B3E}',{$ENDIF}10);
-     Textarray.init({$IFDEF DEBUGBUILD}'{0A026EC4-B78B-4973-9016-A02E4919B1C8}',{$ENDIF}10);
+     dasharray.init(10);
+     strokesarray.init(10);
+     shapearray.init(10);
+     Textarray.init(10);
 end;
 destructor GDBLtypeProp.done;
 begin
@@ -336,13 +338,27 @@ constructor GDBLtypeArray.init;
 var
    plp:PGDBLtypeProp;
 begin
-  inherited init({$IFDEF DEBUGBUILD}ErrGuid,{$ENDIF}m);
+  inherited init(m);
   if AddItem('Continuous',pointer(plp))=IsCreated then
             begin
                  plp.init('Continuous');
                  plp.LengthDXF:=0;
                  plp.LengthFact:=0;
                  plp.Mode:=TLTContinous;
+            end;
+  if AddItem('ByLayer',pointer(plp))=IsCreated then
+            begin
+                 plp.init('ByLayer');
+                 plp.LengthDXF:=0;
+                 plp.LengthFact:=0;
+                 plp.Mode:=TLTByLayer;
+            end;
+  if AddItem('ByBlock',pointer(plp))=IsCreated then
+            begin
+                 plp.init('ByBlock');
+                 plp.LengthDXF:=0;
+                 plp.LengthFact:=0;
+                 plp.Mode:=TLTByBlock;
             end;
 end;
 constructor GDBLtypeArray.initnul;
@@ -389,7 +405,7 @@ begin
      Psymbol:=nil;
 end;
 function GDBLtypeArray.createltypeifneed(_source:PGDBLtypeProp;var _DestTextStyleTable:GDBTextStyleArray):PGDBLtypeProp;
-var //p:GDBPointer;
+var //p:Pointer;
     ir:itrec;
     psp:PShapeProp;
     sp:ShapeProp;
@@ -447,9 +463,9 @@ begin
              end;
              end;
 end;
-procedure GDBLtypeArray.ParseStrings(const ltd:tstrings; var CurrentLine:integer;out LTName,LTDesk,LTImpl:GDBString);
+procedure GDBLtypeArray.ParseStrings(const ltd:tstrings; var CurrentLine:integer;out LTName,LTDesk,LTImpl:String);
 var
-   line:GDBString;
+   line:String;
    i:integer;
    WhatNeed:TSeek;
 begin
@@ -484,16 +500,16 @@ begin
           end;
      end;
 end;
-procedure GDBLtypeProp.CreateLineTypeFrom(var LT:GDBString);
+procedure GDBLtypeProp.CreateLineTypeFrom(var LT:String);
 var
-   element,subelement,{text_shape,font_style,}paramname:GDBString;
+   element,subelement,{text_shape,font_style,}paramname:String;
    j:integer;
-   stroke:GDBDouble;
+   stroke:Double;
    dinfo:TDashInfo;
    SP:ShapeProp;
    TP:TextProp;
 
-   function GetStr(var s: GDBString; out dinfo:TDashInfo): String;
+   function GetStr(var s: String; out dinfo:TDashInfo): String;
    var j:integer;
    begin
         if length(s)>0 then
@@ -614,19 +630,20 @@ begin
                                                     SP.done;
                                                end;
                                end;
+                       TDIShape:;//заглушка на варнинг
 
           end;
           dasharray.PushBackData(dinfo);
           element:=GetStr(LT,dinfo);
      end;
 end;
-procedure GDBLtypeArray.LoadFromFile(fname:GDBString;lm:TLoadOpt);
+procedure GDBLtypeArray.LoadFromFile(fname:String;lm:TLoadOpt);
 var
    strings:TStringList{=nil};
-   line:GDBString;
+   line:String;
    i:integer;
    WhatNeed:TSeek;
-   LTName{,LTDesk,LTClass}:GDBString;
+   LTName{,LTDesk,LTClass}:String;
    p:PGDBLtypeProp;
 begin
      //Переделать используя ParseStrings или выкинуть нахуй
@@ -688,17 +705,17 @@ begin
      strings.Destroy;
 end;
 
-constructor GDBDoubleArray.init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger);
+constructor DoubleArray.init(m:Integer);
 begin
-  inherited init({$IFDEF DEBUGBUILD}ErrGuid,{$ENDIF}m{,sizeof(gdbdouble)});
+  inherited init(m);
 end;
-constructor GDBShapePropArray.init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger);
+constructor GDBShapePropArray.init(m:Integer);
 begin
-  inherited init({$IFDEF DEBUGBUILD}ErrGuid,{$ENDIF}m{,sizeof(ShapeProp)});
+  inherited init(m);
 end;
-constructor GDBTextPropArray.init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger);
+constructor GDBTextPropArray.init(m:Integer);
 begin
-  inherited init({$IFDEF DEBUGBUILD}ErrGuid,{$ENDIF}m{,sizeof(TextProp)});
+  inherited init(m);
 end;
 
 begin

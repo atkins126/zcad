@@ -17,31 +17,31 @@
 }
 
 unit uzeffttf;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses uzefontmanager,EasyLazFreeType,uzefontttf,uzegeometry,
     uzefont,uzbstrproc,{$IFNDEF DELPHI}FileUtil,LCLProc,{$ENDIF}sysutils,
-    UGDBOpenArrayOfByte,uzbtypesbase,uzbtypes,uzbmemman;
+    uzctnrVectorBytes;
 type ptsyminfo=^tsyminfo;
      tsyminfo=record
                            number,size:word;
                      end;
-function createnewfontfromttf(name:GDBString;var pf:PGDBfont):GDBBoolean;
+function createnewfontfromttf(name:String;var pf:PGDBfont):Boolean;
 
 implementation
 
 function CreateTTFFontInstance:PTTFFont;
 begin
-     GDBGetMem({$IFDEF DEBUGBUILD}'{638B5484-83D8-4FEA-AE47-918B8B0CBC08}',{$ENDIF}result,sizeof(TTFFont));
+     Getmem(result,sizeof(TTFFont));
      result^.init;
 end;
-function createnewfontfromttf(name:GDBString;var pf:PGDBfont):GDBBoolean;
+function createnewfontfromttf(name:String;var pf:PGDBfont):Boolean;
 var
    i:integer;
    chcode:integer;
    pttf:PTTFFont;
    si:TTTFSymInfo;
-   Iterator:TMapChar.TIterator;
+   //Iterator:TMapChar.TIterator;
 begin
     initfont(pf,extractfilename(name));
     pf^.fontfile:=name;

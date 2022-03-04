@@ -17,31 +17,32 @@
 }
 
 unit uzefontbase;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses uzgprimitives,uzglvectorobject,uzbmemman,uzbstrproc,UGDBOpenArrayOfByte,
-     gzctnrvectortypes,uzbtypesbase,gzctnrvectordata,sysutils,uzbtypes,uzbgeomtypes,uzegeometry;
+uses uzgprimitives,uzglvectorobject,uzbstrproc,uzctnrVectorBytes,
+     gzctnrvectortypes,gzctnrVector,sysutils,uzbtypes,uzegeometrytypes,uzegeometry;
 type
 {EXPORT+}
-TGDBUNISymbolInfoVector=GZVectorData{-}<GDBUNISymbolInfo>{//};
+TSymbolInfoArray=packed array [0..255] of GDBsymdolinfo;
+TGDBUNISymbolInfoVector=GZVector{-}<GDBUNISymbolInfo>{//};
 PBASEFont=^BASEFont;
 {REGISTEROBJECTTYPE BASEFont}
 BASEFont= object(GDBaseObject)
-              unicode:GDBBoolean;
+              unicode:Boolean;
               symbolinfo:TSymbolInfoArray;
               unisymbolinfo:{GDBOpenArrayOfData}TGDBUNISymbolInfoVector;
-              //----//SHXdata:GDBOpenArrayOfByte;
+              //----//SHXdata:TZctnrVectorBytes;
               FontData:ZGLVectorObject;
               constructor init;
               destructor done;virtual;
               //----//function GetSymbolDataAddr(offset:integer):pointer;virtual;
               //function GetTriangleDataAddr(offset:integer):PGDBFontVertex2D;virtual;
 
-              function GetOrCreateSymbolInfo(symbol:GDBInteger):PGDBsymdolinfo;virtual;
-              function GetOrReplaceSymbolInfo(symbol:GDBInteger{//-ttf-//; var TrianglesDataInfo:TTrianglesDataInfo}):PGDBsymdolinfo;virtual;
-              function findunisymbolinfo(symbol:GDBInteger):PGDBsymdolinfo;
-              function findunisymbolinfos(symbolname:GDBString):PGDBsymdolinfo;
-              function IsCanSystemDraw:GDBBoolean;virtual;
+              function GetOrCreateSymbolInfo(symbol:Integer):PGDBsymdolinfo;virtual;
+              function GetOrReplaceSymbolInfo(symbol:Integer{//-ttf-//; var TrianglesDataInfo:TTrianglesDataInfo}):PGDBsymdolinfo;virtual;
+              function findunisymbolinfo(symbol:Integer):PGDBsymdolinfo;
+              function findunisymbolinfos(symbolname:String):PGDBsymdolinfo;
+              function IsCanSystemDraw:Boolean;virtual;
               procedure SetupSymbolLineParams(const matr:DMatrix4D; var SymsParam:TSymbolSParam);virtual;
         end;
 {EXPORT-}
@@ -50,7 +51,7 @@ implementation
 procedure BASEFont.SetupSymbolLineParams(const matr:DMatrix4D; var SymsParam:TSymbolSParam);
 begin
 end;
-function BASEFont.IsCanSystemDraw:GDBBoolean;
+function BASEFont.IsCanSystemDraw:Boolean;
 begin
      result:=false;
 end;
@@ -67,9 +68,9 @@ begin
       symbolinfo[i].LatestCreate:=false;
      end;
      unicode:=false;
-     unisymbolinfo.init({$IFDEF DEBUGBUILD}'{700B6312-B792-4FFE-B514-2F2CD4B47CC2}',{$ENDIF}1000{,sizeof(GDBUNISymbolInfo)});
-     //----//SHXdata.init({$IFDEF DEBUGBUILD}'{700B6312-B792-4FFE-B514-2F2CD4B47CC2}',{$ENDIF}1024);
-     FontData.init({$IFDEF DEBUGBUILD}'BASEFont.init'{$ENDIF});
+     unisymbolinfo.init(1000);
+     //----//SHXdata.init(1024);
+     FontData.init();
 end;
 destructor BASEFont.done;
 var i:integer;
@@ -92,7 +93,7 @@ begin
      //----//SHXdata.done;
      FontData.done;
 end;
-function BASEFont.GetOrReplaceSymbolInfo(symbol:GDBInteger{//-ttf-//; var TrianglesDataInfo:TTrianglesDataInfo}):PGDBsymdolinfo;
+function BASEFont.GetOrReplaceSymbolInfo(symbol:Integer{//-ttf-//; var TrianglesDataInfo:TTrianglesDataInfo}):PGDBsymdolinfo;
 //var
    //usi:GDBUNISymbolInfo;
 begin
@@ -130,7 +131,7 @@ end;}
 //----//begin
 //----//     result:=SHXdata.getelement(offset);
 //----//end;
-function BASEFont.GetOrCreateSymbolInfo(symbol:GDBInteger):PGDBsymdolinfo;
+function BASEFont.GetOrCreateSymbolInfo(symbol:Integer):PGDBsymdolinfo;
 var
    usi:GDBUNISymbolInfo;
 begin
@@ -158,11 +159,11 @@ begin
                             end;
                        end;
 end;
-function BASEFont.findunisymbolinfo(symbol:GDBInteger):PGDBsymdolinfo;
+function BASEFont.findunisymbolinfo(symbol:Integer):PGDBsymdolinfo;
 var
    pobj:PGDBUNISymbolInfo;
    ir:itrec;
-   //debug:GDBInteger;
+   //debug:Integer;
 begin
      pobj:=unisymbolinfo.beginiterate(ir);
      if pobj<>nil then
@@ -178,12 +179,12 @@ begin
      until pobj=nil;
      result:=nil;
 end;
-function BASEFont.findunisymbolinfos(symbolname:GDBString):PGDBsymdolinfo;
+function BASEFont.findunisymbolinfos(symbolname:String):PGDBsymdolinfo;
 var
    pobj:PGDBUNISymbolInfo;
    ir:itrec;
    i:integer;
-   //debug:GDBInteger;
+   //debug:Integer;
 begin
      symbolname:=uppercase(symbolname);
 

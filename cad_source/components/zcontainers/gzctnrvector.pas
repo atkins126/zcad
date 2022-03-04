@@ -16,10 +16,11 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>)
 }
 {**Модуль описания базового генерика обьекта-массива}
-unit gzctnrvector;
-{$INCLUDE def.inc}
+unit gzctnrVector;
+
+{DEFINE FILL0ALLOCATEDMEMORY}
 interface
-uses uzbtypes,gzctnrvectortypes,uzbmemman,sysutils,typinfo;
+uses gzctnrvectortypes,sysutils,typinfo;
 const
   {**типы нуждающиеся в инициализации}
   TypesNeedToFinalize=[tkUnknown{$IFNDEF DELPHI},tkSString{$ENDIF},tkLString{$IFNDEF DELPHI},tkAString{$ENDIF},
@@ -35,7 +36,7 @@ type
 {Export+}
 {**Генерик объекта-массива}
 {----REGISTEROBJECTTYPE GZVector}
-GZVector{-}<T>{//}=object(GDBaseObject)
+GZVector{-}<T>{//}=object(TZAbsVector)
     {-}type{//}
         {-}PT=^T;{//}                                     //**< Тип указатель на тип данных T
         {-}TArr=array[0..0] of T;{//}                     //**< Тип массив данных T
@@ -43,8 +44,7 @@ GZVector{-}<T>{//}=object(GDBaseObject)
         {-}TEqualFunc=function(const a, b: T):Boolean;{//}//**< Тип функция идентичности T
         {-}TProcessProc=procedure(const p: PT);{//}       //**< Тип процедура принимающая указатель на T
     {-}var{//}
-        PArray:{-}PTArr{/GDBPointer/};(*hidden_in_objinsp*)   //**< Указатель на массив данных
-        GUID:String;(*hidden_in_objinsp*)                  //**< Шняга для подсчета куда уходит память. используется только с DEBUGBUILD. Надо чтото ч ней делать
+        PArray:{-}PTArr{/Pointer/};(*hidden_in_objinsp*)   //**< Указатель на массив данных
         Count:TArrayIndex;(*hidden_in_objinsp*)               //**< Количество занятых элементов массива
         Max:TArrayIndex;(*hidden_in_objinsp*)                 //**< Размер массива (под сколько элементов выделено памяти)
 
@@ -53,7 +53,7 @@ GZVector{-}<T>{//}=object(GDBaseObject)
         {**Деструктор}
         procedure destroy;virtual;
         {**Конструктор}
-        constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:TArrayIndex);
+        constructor init(m:TArrayIndex);
         {**Конструктор}
         constructor initnul;
 
@@ -107,6 +107,8 @@ GZVector{-}<T>{//}=object(GDBaseObject)
         {**Устанавливает длину массива}
         procedure SetSize(nsize:TArrayIndex);
         {**Возвращает указатель на значение по индексу}
+        function getPData(index:TArrayIndex):Pointer;virtual;
+        {**Возвращает указатель на значение по индексу}
         function getDataMutable(index:TArrayIndex):PT;
         {**Возвращает значение по индексу}
         function getData(index:TArrayIndex):T;
@@ -126,6 +128,8 @@ GZVector{-}<T>{//}=object(GDBaseObject)
         {**Возвращает размер элемента массива}
         function SizeOfData:TArrayIndex;
         {**Возвращает указатель на массив}
+        function GetParray:pointer;virtual;
+        {**Возвращает указатель на массив}
         function GetParrayAsPointer:pointer;
         {**Очищает массив не убивая элементы, просто count:=0}
         procedure Clear;virtual;
@@ -135,14 +139,44 @@ GZVector{-}<T>{//}=object(GDBaseObject)
         function GetCount:Integer;
         {**Подрезать выделенную память по count}
         procedure Shrink;virtual;
+
+        procedure freewithproc(freeproc:TProcessProc);virtual;
   end;
 {Export-}
+function remapmememblock(pblock:Pointer;sizeblock:Integer):Pointer;
+function enlargememblock(pblock:Pointer;oldsize,nevsize:Integer):Pointer;
+
 implementation
+
+function remapmememblock(pblock:Pointer;sizeblock:Integer):Pointer;
+var
+  newblock:Pointer;
+begin
+  newblock:=nil;
+  GetMem(newblock, sizeblock);
+  Move(pblock^, newblock^, sizeblock);
+  result := newblock;
+  FreeMem(pblock);
+end;
+function enlargememblock(pblock:Pointer;oldsize,nevsize:Integer):Pointer;
+var
+  newblock:Pointer;
+begin
+  newblock:=nil;
+  GetMem(newblock, nevsize);
+  Move(pblock^, newblock^, oldsize);
+  result := newblock;
+  FreeMem(pblock);
+end;
+
 function GZVector<T>.GetSpecializedTypeInfo:PTypeInfo;
 begin
   result:=TypeInfo(T);
 end;
-
+function GZVector<T>.getPData(index:TArrayIndex):Pointer;
+begin
+  result:=getDataMutable(index);
+end;
 function GZVector<T>.getDataMutable;
 begin
      if (index>=max)
@@ -176,6 +210,10 @@ begin
        result:=count;
        inc(count);
   end;
+end;
+function GZVector<T>.GetParray:pointer;
+begin
+  result:=GetParrayAsPointer;
 end;
 function GZVector<T>.GetParrayAsPointer;
 begin
@@ -241,7 +279,7 @@ begin
   if count+sdata>max then
                          Grow((count+sdata)*2);
   result:={@parray^[}count{]};
-  //result:=pointer(GDBPlatformUInt(parray)+count*SizeOfData);
+  //result:=pointer(PtrUInt(parray)+count*SizeOfData);
   {$IFDEF FILL0ALLOCATEDMEMORY}
   fillchar(result^,sdata,0);
   {$ENDIF}
@@ -265,7 +303,7 @@ begin
                           max:=2*max;
                      end;}
   begin
-       //GDBPointer(addr) := parray;
+       //Pointer(addr) := parray;
        //addr := addr + count;
        { TODO : Надо копировать  с учетом compiler magic а не тупо мовить }
        addr:=@parray^[count];
@@ -275,7 +313,7 @@ begin
   end;
 end;
 function GZVector<T>.GetRealCount:Integer;
-{var p:GDBPointer;
+{var p:Pointer;
     ir:itrec;}
 begin
   result:=GetCount;
@@ -306,24 +344,24 @@ begin
   result:=count;
 end;}
 procedure GZVector<T>.Invert;
-(*var p,pl,tp:GDBPointer;
+(*var p,pl,tp:Pointer;
     ir:itrec;
 begin
   p:=beginiterate(ir);
   p:=getDataMutable(0);
   pl:=getDataMutable(count-1);
-  GDBGetMem({$IFDEF DEBUGBUILD}'{D9D91D43-BD6A-450A-B07E-E964425E7C99}',{$ENDIF}tp,SizeOfData);
+  Getmem(tp,SizeOfData);
   if p<>nil then
   repeat
-        if GDBPlatformUInt(pl)<=GDBPlatformUInt(p) then
+        if PtrUInt(pl)<=PtrUInt(p) then
                                          break;
         Move(p^,tp^,SizeOfData);
         Move(pl^,p^,SizeOfData);
         Move(tp^,pl^,SizeOfData);
-        dec(GDBPlatformUInt(pl),SizeOfData);
-        inc(GDBPlatformUInt(p),SizeOfData);
+        dec(PtrUInt(pl),SizeOfData);
+        inc(PtrUInt(p),SizeOfData);
   until false;
-  GDBFreeMem(tp);
+  Freemem(tp);
 end;*)
 var i,j:integer;
     tdata:t;
@@ -356,11 +394,11 @@ procedure GZVector<T>.SetSize;
 begin
      if nsize>max then
                       begin
-                           parray := enlargememblock({$IFDEF DEBUGBUILD}@Guid[1],{$ENDIF}parray, SizeOfData*max, SizeOfData*nsize);
+                           parray := enlargememblock(parray, SizeOfData*max, SizeOfData*nsize);
                       end
 else if nsize<max then
                       begin
-                           parray := enlargememblock({$IFDEF DEBUGBUILD}@Guid[1],{$ENDIF}parray, SizeOfData*max, SizeOfData*nsize);
+                           parray := enlargememblock(parray, SizeOfData*max, SizeOfData*nsize);
                            if count>nsize then count:=nsize;
                       end;
      max:=nsize;
@@ -371,7 +409,7 @@ begin
                     result:=nil
                 else
                     begin
-                          {ir.itp:=pointer(GDBPlatformUInt(parray)-SizeOfData);}
+                          {ir.itp:=pointer(PtrUInt(parray)-SizeOfData);}
                           ir.itp:=pointer(parray);
                           dec(pt(ir.itp));
                           ir.itc:=-1;
@@ -393,17 +431,14 @@ end;
 constructor GZVector<T>.initnul;
 begin
   PArray:=nil;
-  pointer(GUID):=nil;
   Count:=0;
   Max:=0;
 end;
 constructor GZVector<T>.init;
 begin
   PArray:=nil;
-  pointer(GUID):=nil;
   Count:=0;
   Max:=m;
-  {$IFDEF DEBUGBUILD}Guid:=ErrGuid;{$ENDIF}
 end;
 destructor GZVector<T>.done;
 begin
@@ -413,9 +448,8 @@ end;
 procedure GZVector<T>.destroy;
 begin
   if PArray<>nil then
-                     GDBFreeMem(PArray);
+    Freemem(PArray);
   PArray:=nil;
-  {$IFDEF DEBUGBUILD}Guid:='';{$ENDIF}
 end;
 procedure GZVector<T>.free;
 var i:integer;
@@ -437,21 +471,21 @@ begin
 end;
 function GZVector<T>.CreateArray;
 begin
-  GDBGetMem({$IFDEF DEBUGBUILD}@Guid[1],{$ENDIF}PArray,SizeOfData*max);
+  Getmem(PArray,SizeOfData*max);
   result:=parray;
 end;
 procedure GZVector<T>.Grow;
 begin
      if newmax<=0 then
                      newmax:=2*max;
-     parray := enlargememblock({$IFDEF DEBUGBUILD}@Guid[1],{$ENDIF}parray, SizeOfData * max, SizeOfData * newmax);
+     parray := enlargememblock(parray, SizeOfData * max, SizeOfData * newmax);
      max:=newmax;
 end;
 procedure GZVector<T>.Shrink;
 begin
   if (count<>0)and(count<max) then
   begin
-       parray := remapmememblock({$IFDEF DEBUGBUILD}@Guid[1],{$ENDIF}parray, SizeOfData * count);
+       parray := remapmememblock(parray, SizeOfData * count);
        max := count;
   end;
 end;
@@ -518,6 +552,15 @@ begin
     deleteelement(s);
   end;
   result:=parray;}
+end;
+procedure GZVector<T>.freewithproc;
+var i:integer;
+begin
+     for i:=0 to self.count-1 do
+     begin
+       freeproc(@parray[i]);
+     end;
+     self.count:=0;
 end;
 begin
 end.

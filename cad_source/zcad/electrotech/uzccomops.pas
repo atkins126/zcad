@@ -6,20 +6,20 @@
 }
 
 unit uzccomops;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
 
   uzctranslations,uzeentitiesmanager,uzeentity,uzglviewareaabstract,uzgldrawcontext,
-  uzeenttext,uzctnrvectorgdbstring,uzeentityfactory,uzcsysvars,uzbstrproc,
-  uzcinterface,uzbtypesbase,uzccommandsmanager,uzclog,gzctnrvectorpobjects,
+  uzeentabstracttext,uzeenttext,uzctnrvectorstrings,uzeentityfactory,uzcsysvars,uzbstrproc,
+  uzcinterface,uzccommandsmanager,uzclog,
   uzccommandsabstract,uzccommandsimpl,uzbtypes,uzcdrawings,uzeutils,uzcutils,sysutils,
-  varmandef,UGDBOpenArrayOfByte,uzeffdxf,uzegeometry,uzbmemman,uzeconsts,
+  varmandef,uzctnrVectorBytes,uzeffdxf,uzegeometry,uzeconsts,
   uzccomdraw,UGDBVisibleOpenArray,uzeentline,uzbpaths,uzeentblockinsert,
-  uzbgeomtypes,varman,uzccablemanager,uzeentdevice,uzeentmtext,math,
+  uzegeometrytypes,varman,uzccablemanager,uzeentdevice,uzeentmtext,math,
   uzcenitiesvariablesextender,uzeroot,uzglviewareadata,uzcentcable,UUnitManager,
   gzctnrvectortypes,uzccomelectrical,URecordDescriptor,TypeDescriptors,LazLogger,
-  uzcstrconsts,uzccmdfloatinsert;
+  uzcstrconsts,uzccmdfloatinsert,uzctnrvectorpgdbaseobjects;
 
 type
   TPlaceParam=record
@@ -63,38 +63,38 @@ type
   {REGISTERRECORDTYPE TOPSPlaceSmokeDetectorOrtoParam}
   TOPSPlaceSmokeDetectorOrtoParam=record
                                         InsertType:TInsertType;(*'Insert'*)
-                                        Scale:GDBDouble;(*'Plan scale'*)
-                                        ScaleBlock:GDBDouble;(*'Blocks scale'*)
-                                        StartAuto:GDBBoolean;(*'"Start" signal'*)
+                                        Scale:Double;(*'Plan scale'*)
+                                        ScaleBlock:Double;(*'Blocks scale'*)
+                                        StartAuto:Boolean;(*'"Start" signal'*)
                                         SensorSensorDistance:TAxisReduceDistanceMode;(*'Sensor-sensor distance reduction'*)
                                         SensorWallDistance:TAxisReduceDistanceMode;(*'Sensor-wall distance reduction'*)
                                         DatType:TOPSDatType;(*'Sensor type'*)
                                         DMC:TOPSMinDatCount;(*'Min. number of sensors'*)
                                         Height:TEnumData;(*'Height of installation'*)
-                                        ReductionFactor:GDBDouble;(*'Reduction factor'*)
-                                        NDD:GDBDouble;(*'Sensor-Sensor(standard)'*)
-                                        NDW:GDBDouble;(*'Sensor-Wall(standard)'*)
+                                        ReductionFactor:Double;(*'Reduction factor'*)
+                                        NDD:Double;(*'Sensor-Sensor(standard)'*)
+                                        NDW:Double;(*'Sensor-Wall(standard)'*)
                                         PlaceStrategy:TPlaceSensorsStrategy;
-                                        FDD:GDBDouble;(*'Sensor-Sensor(fact)'*)(*oi_readonly*)
-                                        FDW:GDBDouble;(*'Sensor-Wall(fact)'*)(*oi_readonly*)
-                                        NormalizePoint:GDBBoolean;(*'Normalize to grid (if enabled)'*)
+                                        FDD:Double;(*'Sensor-Sensor(fact)'*)(*oi_readonly*)
+                                        FDW:Double;(*'Sensor-Wall(fact)'*)(*oi_readonly*)
+                                        NormalizePoint:Boolean;(*'Normalize to grid (if enabled)'*)
 
-                                        oldth:GDBInteger;(*hidden_in_objinsp*)
-                                        oldsh:GDBInteger;(*hidden_in_objinsp*)
+                                        oldth:Integer;(*hidden_in_objinsp*)
+                                        oldsh:Integer;(*hidden_in_objinsp*)
                                         olddt:TOPSDatType;(*hidden_in_objinsp*)
                                   end;
   PTOrtoDevPlaceParam=^TOrtoDevPlaceParam;
   {REGISTERRECORDTYPE TOrtoDevPlaceParam}
   TOrtoDevPlaceParam=record
-                                        Name:GDBString;(*'Block'*)(*oi_readonly*)
-                                        ScaleBlock:GDBDouble;(*'Blocks scale'*)
+                                        Name:String;(*'Block'*)(*oi_readonly*)
+                                        ScaleBlock:Double;(*'Blocks scale'*)
                                         CountType:TODPCountType;(*'Type of placement'*)
-                                        Count:GDBInteger;(*'Total number'*)
-                                        NX:GDBInteger;(*'Number of length'*)
-                                        NY:GDBInteger;(*'Number of width'*)
-                                        Angle:GDBDouble;(*'Rotation'*)
-                                        AutoAngle:GDBBoolean;(*'Auto rotation'*)
-                                        NormalizePoint:GDBBoolean;(*'Normalize to grid (if enabled)'*)
+                                        Count:Integer;(*'Total number'*)
+                                        NX:Integer;(*'Number of length'*)
+                                        NY:Integer;(*'Number of width'*)
+                                        Angle:Double;(*'Rotation'*)
+                                        AutoAngle:Boolean;(*'Auto rotation'*)
+                                        NormalizePoint:Boolean;(*'Normalize to grid (if enabled)'*)
 
                      end;
   {REGISTERRECORDTYPE GDBLineOps}
@@ -113,16 +113,16 @@ var
    //pgdbinplugin: PTZCADDrawingsManager;
    //psysvarinplugin: pgdbsysvariable;
    pvarman:pvarmanagerdef;
-   pdw,pdd,pdtw,pdtd:PGDBDouble;
+   pdw,pdd,pdtw,pdtd:PDouble;
    pdt:pinteger;
-   sdname:GDBstring;
+   sdname:String;
 
    OPSPlaceSmokeDetectorOrtoParam:TOPSPlaceSmokeDetectorOrtoParam;
    OrtoDevPlaceParam:TOrtoDevPlaceParam;
 
    OPS_SPBuild_com:OPS_SPBuild;
-//procedure GDBGetMem({$IFDEF DEBUGBUILD}ErrGuid:pchar;{$ENDIF}var p:pointer; const size: longword); external 'cad.exe';
-//procedure GDBFreeMem(var p: pointer); external 'cad.exe';
+//procedure Getmem(var p:pointer; const size: LongWord); external 'cad.exe';
+//procedure Freemem(var p: pointer); external 'cad.exe';
 
 //procedure HistoryOut(s: pchar); external 'cad.exe';
 //function getprogramlog:pointer; external 'cad.exe';
@@ -152,9 +152,9 @@ var
 procedure finalize;}
 
 implementation
-function docorrecttogrid(point:GDBVertex;need:GDBBoolean):GDBVertex;
+function docorrecttogrid(point:GDBVertex;need:Boolean):GDBVertex;
 var
-   gr:GDBBoolean;
+   gr:Boolean;
 begin
      gr:=false;
      if SysVar.DWG.DWG_SnapGrid<>nil then
@@ -170,7 +170,7 @@ begin
                       else
                           result:=point;
 end;
-function GetPlaceParam(count:integer;length,sd,dd:GDBDouble;DMC:TOPSMinDatCount;ps:TPlaceSensorsStrategy):TPlaceParam;
+function GetPlaceParam(count:integer;length,sd,dd:Double;DMC:TOPSMinDatCount;ps:TPlaceSensorsStrategy):TPlaceParam;
 begin
      if count=2 then
      case ps of
@@ -180,12 +180,14 @@ begin
  TPSS_FixDW:
             if length<2*sd then
                              ps:=TPSS_Proportional;
+ TPSS_Proportional,TPSS_ByNum:;//заглушка на варнинг
      end;
      case count of
           1:begin
               case dmc of
                TOPSMDC_1_4:result.PlaceFirstOffset:=1/4;
                TOPSMDC_1_2:result.PlaceFirstOffset:=1/2;
+               TOPSMDC_2,TOPSMDC_3,TOPSMDC_4:;//заглушка на варнинг
               end;
               result.PlaceFirst:=true;
               result.PlaceLast:=false;
@@ -213,7 +215,7 @@ begin
             end;
      end;
 end;
-procedure place2(pva:PGDBObjEntityOpenArray;basepoint, dir: gdbvertex; count: integer; length,sd,dd: GDBDouble; name: pansichar;angle:GDBDouble;norm:GDBBoolean;scaleblock:GDBDouble;ps:TPlaceSensorsStrategy);
+procedure place2(pva:PGDBObjEntityOpenArray;basepoint, dir: gdbvertex; count: integer; length,sd,dd: Double; name: pansichar;angle:Double;norm:Boolean;scaleblock:Double;ps:TPlaceSensorsStrategy);
 var //line2: GDBLineOps;
     i: integer;
     d: TPlaceParam;
@@ -244,16 +246,16 @@ begin
          end;
      end;
 end;
-procedure placedatcic(pva:PGDBObjEntityOpenArray;p1, p2: gdbvertex; InitialSD, InitialDD: GDBDouble; name: pansichar;norm:GDBBoolean;scaleblock: GDBDouble;ps:TPlaceSensorsStrategy);
-var dx, dy: GDBDouble;
+procedure placedatcic(pva:PGDBObjEntityOpenArray;p1, p2: gdbvertex; InitialSD, InitialDD: Double; name: pansichar;norm:Boolean;scaleblock: Double;ps:TPlaceSensorsStrategy);
+var dx, dy: Double;
   FirstLine, SecondLine: GDBLineOps;
   FirstCount, SecondCount, i: integer;
   dir: gdbvertex;
   mincount:integer;
   FirstLineLength,SecondLineLength:double;
   d: TPlaceParam;
-  LongSD,LongDD: GDBDouble;
-  ShortSD,ShortDD: GDBDouble;
+  LongSD,LongDD: Double;
+  ShortSD,ShortDD: Double;
 begin
   dx := p2.x - p1.x;
   dy := p2.y - p1.y;
@@ -296,6 +298,7 @@ begin
                                                             LongDD:=LongDD/2;
                                                             ShortDD:=ShortDD/2;
                                                            end;
+                                             TARDM_Nothing:;//заглушка на варнинг
   end;
   case OPSPlaceSmokeDetectorOrtoParam.SensorWallDistance of
                                             TARDM_LongAxis:LongSD:=LongSD/2;
@@ -304,6 +307,7 @@ begin
                                                             LongSD:=LongSD/2;
                                                             ShortSD:=ShortSD/2;
                                                            end;
+                                             TARDM_Nothing:;//заглушка на варнинг
   end;
   end;
   if (Vertexlength(FirstLine.lbegin, FirstLine.lend) - 2 * ShortSD)>0 then FirstCount := round(abs(Vertexlength(FirstLine.lbegin, FirstLine.lend) - 2 * ShortSD) / ShortDD- eps + 1.5)
@@ -314,6 +318,7 @@ begin
   case OPSPlaceSmokeDetectorOrtoParam.DMC of
                                             TOPSMDC_1_4:mincount:=1;
                                             TOPSMDC_1_2:mincount:=1;
+                                            TOPSMDC_2:;//заглушка на варнинг
                                             TOPSMDC_3:mincount:=3;
                                             TOPSMDC_4:mincount:=4;
                                           end;
@@ -329,6 +334,7 @@ begin
                                               SecondCount:=2;
                                               FirstCount:=2;
                                          end;
+                               TOPSMDC_1_4,TOPSMDC_1_2:;//заглушка на варнинг
                              end;
                          end;
   SecondLineLength:=oneVertexlength(dir);
@@ -380,7 +386,7 @@ begin
        end
   end;}
 end;
-function CommandStart(operands:pansichar):GDBInteger;
+function CommandStart(operands:pansichar):Integer;
 begin
   drawings.AddBlockFromDBIfNeed(drawings.GetCurrentDWG,'DEVICE_PS_DAT_SMOKE');
   drawings.AddBlockFromDBIfNeed(drawings.GetCurrentDWG,'DEVICE_PS_DAT_TERMO');
@@ -389,7 +395,7 @@ begin
   zcShowCommandParams(SysUnit.TypeName2PTD('CommandRTEdObject'),pco);
   result:=cmd_ok;
 end;
-function BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): integer;
+function BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): integer;
 begin
   result:=mclick;
   if (button and MZW_LBUTTON)<>0 then
@@ -399,11 +405,11 @@ begin
       t3dp:=wc;
     end;
 end;
-function AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger):GDBInteger;
+function AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer):Integer;
 var
 pl:pgdbobjline;
 //debug:string;
-dw,dd:gdbdouble;
+dw,dd:Double;
 DC:TDrawContext;
 begin
 
@@ -457,7 +463,7 @@ begin
 //  end;
 end;
 procedure commformat;
-var s:GDBString;
+var s:String;
     pcfd:PRecordDescriptor;
     pf:PfieldDescriptor;
 begin
@@ -568,13 +574,13 @@ begin
     if OPSPlaceSmokeDetectorOrtoParam.InsertType=TIT_Device then
                                                                 sdname:=DevicePrefix+sdname;
 end;
-{function OPS_Sensor_Mark_com(Operands:pansichar):GDBInteger;
-var i: GDBInteger;
+{function OPS_Sensor_Mark_com(Operands:pansichar):Integer;
+var i: Integer;
     pcable:pGDBObjCable;
     ir,ir_inNodeArray:itrec;
     pvd:pvardesk;
     currentunit:TUnit;
-    ucount:gdbinteger;
+    ucount:Integer;
     ptn:PTNodeProp;
     p:pointer;
     cman:TCableManager;
@@ -592,9 +598,9 @@ begin
         if pcable^.GetObjType=GDBCableID then
         begin
              pvd:=currentunit.FindVariable('CDC_temp');
-             pgdbinteger(pvd.data.Instance)^:=0;
+             PInteger(pvd.Instance)^:=0;
              pvd:=currentunit.FindVariable('CDSC_temp');
-             pgdbinteger(pvd.data.Instance)^:=0;
+             PInteger(pvd.Instance)^:=0;
              p:=@pcable.ou;
              currentunit.InterfaceUses.addnodouble(@p);
              ucount:=currentunit.InterfaceUses.Count;
@@ -634,26 +640,26 @@ begin
   result:=cmd_ok;
 end;}
 function OPS_Sensor_Mark_com(operands:TCommandOperands):TCommandResult;
-var //i: GDBInteger;
+var //i: Integer;
     pcabledesk:PTCableDesctiptor;
     ir,ir2,ir_inNodeArray:itrec;
     pvd:pvardesk;
     defaultunit:TUnit;
     currentunit:PTUnit;
     UManager:TUnitManager;
-    ucount:gdbinteger;
+    ucount:Integer;
     ptn:PGDBObjDevice;
     p:pointer;
     cman:TCableManager;
-    SaveEntUName,SaveCabUName:gdbstring;
-    cablemetric,devicemetric,numingroupmetric:GDBString;
+    SaveEntUName,SaveCabUName:String;
+    cablemetric,devicemetric,numingroupmetric:String;
     ProcessedDevices:TZctnrVectorPGDBaseObjects;
-    name:gdbstring;
+    name:String;
     DC:TDrawContext;
     pcablestartsegmentvarext,pptnownervarext:TVariablesExtender;
 const
       DefNumMetric='default_num_in_group';
-function GetNumUnit(uname:gdbstring):PTUnit;
+function GetNumUnit(uname:String):PTUnit;
 begin
      //result:=nil;
      result:=UManager.internalfindunit(uname);
@@ -668,7 +674,7 @@ end;
 begin
   dc:=drawings.GetCurrentDWG^.CreateDrawingRC;
   if drawings.GetCurrentROOT.ObjArray.Count = 0 then exit;
-  ProcessedDevices.init({$IFDEF DEBUGBUILD}'{518968B6-90DE-4895-A27C-B28234A6DC17}',{$ENDIF}100);
+  ProcessedDevices.init(100);
   cman.init;
   cman.build;
   UManager.init;
@@ -684,7 +690,7 @@ begin
             pvd:=pcablestartsegmentvarext.entityunit.FindVariable('GC_Metric');
             if pvd<>nil then
                             begin
-                                 cablemetric:=pvd.data.PTD.GetValueAsString(pvd.data.Instance);
+                                 cablemetric:=pvd.data.PTD.GetValueAsString(pvd.data.Addr.Instance);
                             end
                         else
                             begin
@@ -695,9 +701,9 @@ begin
              if currentunit<>nil then
              repeat
              pvd:=currentunit.FindVariable('CDC_temp');
-             pgdbinteger(pvd.data.Instance)^:=0;
+             PInteger(pvd.data.Addr.Instance)^:=0;
              pvd:=currentunit.FindVariable('CDSC_temp');
-             pgdbinteger(pvd.data.Instance)^:=1;
+             PInteger(pvd.data.Addr.Instance)^:=1;
              currentunit:=Umanager.iterate(ir2);
              until currentunit=nil;
              currentunit:=nil;
@@ -715,7 +721,7 @@ begin
                         pvd:=pptnownervarext.entityunit.FindVariable('GC_Metric');
                         if pvd<>nil then
                                         begin
-                                             devicemetric:=pvd.data.PTD.GetValueAsString(pvd.data.Instance);
+                                             devicemetric:=pvd.data.PTD.GetValueAsString(pvd.data.Addr.Instance);
                                         end
                                     else
                                         begin
@@ -725,7 +731,7 @@ begin
                         pvd:=pptnownervarext.entityunit.FindVariable('GC_InGroup_Metric');
                                         if pvd<>nil then
                                                         begin
-                                                             numingroupmetric:=pvd.data.PTD.GetValueAsString(pvd.data.Instance);
+                                                             numingroupmetric:=pvd.data.PTD.GetValueAsString(pvd.data.Addr.Instance);
                                                              if numingroupmetric='' then
                                                                                         numingroupmetric:=DefNumMetric;
 
@@ -767,7 +773,7 @@ begin
                             pvd:=pptnownervarext.entityunit.FindVariable('NMO_Name');
                             if pvd<>nil then
                                         begin
-                                             name:='"'+pvd.data.PTD.GetValueAsString(pvd.data.Instance)+'"';
+                                             name:='"'+pvd.data.PTD.GetValueAsString(pvd.data.Addr.Instance)+'"';
                                         end
                                     else
                                         begin
@@ -799,11 +805,11 @@ begin
   zcRedrawCurrentDrawing;
   result:=cmd_ok;
 end;
-procedure InsertDat2(datname,name:GDBString;var currentcoord:GDBVertex; var root:GDBObjRoot);
+procedure InsertDat2(datname,name:String;var currentcoord:GDBVertex; var root:GDBObjRoot);
 var
    pv:pGDBObjDevice;
    pt:pGDBObjMText;
-   lx,{rx,}uy,dy:GDBDouble;
+   lx,{rx,}uy,dy:Double;
    tv:gdbvertex;
    DC:TDrawContext;
 begin
@@ -843,10 +849,10 @@ begin
 
      currentcoord.y:=currentcoord.y+dy+uy;
 end;
-function InsertDat(datname,sname,ename:GDBString;datcount:GDBInteger;var currentcoord:GDBVertex; var root:GDBObjRoot):pgdbobjline;
+function InsertDat(datname,sname,ename:String;datcount:Integer;var currentcoord:GDBVertex; var root:GDBObjRoot):pgdbobjline;
 var
 //   pv:pGDBObjDevice;
-//   lx,rx,uy,dy:GDBDouble;
+//   lx,rx,uy,dy:Double;
    pl:pgdbobjline;
    oldcoord,oldcoord2:gdbvertex;
    DC:TDrawContext;
@@ -899,14 +905,14 @@ else if datcount>2 then
      result:=pl;
 end;
 procedure OPS_SPBuild.Command(Operands:TCommandOperands);
-//function OPS_SPBuild_com(Operands:pansichar):GDBInteger;
-var count: GDBInteger;
+//function OPS_SPBuild_com(Operands:pansichar):Integer;
+var count: Integer;
     pcabledesk:PTCableDesctiptor;
     PCableSS:PGDBObjCable;
     ir,ir_inNodeArray:itrec;
     pvd:pvardesk;
 //    currentunit:TUnit;
-//    ucount:gdbinteger;
+//    ucount:Integer;
 //    ptn:PGDBObjDevice;
 //    p:pointer;
     cman:TCableManager;
@@ -918,11 +924,11 @@ var count: GDBInteger;
 
     nodeend,nodestart:PGDBObjDevice;
     isfirst:boolean;
-    startmat,endmat,startname,endname,prevname:gdbstring;
+    startmat,endmat,startname,endname,prevname:String;
 
-    //cmlx,cmrx,cmuy,cmdy:gdbdouble;
-    {lx,rx,}uy,dy:gdbdouble;
-    lsave:{integer}PGDBPointer;
+    //cmlx,cmrx,cmuy,cmdy:Double;
+    {lx,rx,}uy,dy:Double;
+    lsave:{integer}PPointer;
     DC:TDrawContext;
     pCableSSvarext,ppvvarext,pnodeendvarext:TVariablesExtender;
 begin
@@ -947,13 +953,13 @@ begin
 
         if pvd<>nil then
         begin
-             //if PTCableType(pvd^.data.Instance)^=TCT_ShleifOPS then
+             //if PTCableType(pvd^.Instance)^=TCT_ShleifOPS then
              if (pcabledesk.StartDevice<>nil){and(pcabledesk.EndDevice<>nil)} then
              begin
                   ZCMsgCallBackInterface.TextMessage(pcabledesk.Name,TMWOHistoryOut);
                   //programlog.logoutstr(pcabledesk.Name,0);
                   currentcoord:=coord;
-                  PTCableType(pvd^.data.Instance)^:=TCT_ShleifOPS;
+                  PTCableType(pvd^.data.Addr.Instance)^:=TCT_ShleifOPS;
                   lsave:=SysVar.dwg.DWG_CLayer^;
                   SysVar.dwg.DWG_CLayer^:=drawings.GetCurrentDWG.LayerTable.GetSystemLayer;
 
@@ -969,7 +975,7 @@ begin
                   pvmc:=ppvvarext.entityunit.FindVariable('CableName');
                   if pvmc<>nil then
                   begin
-                      pstring(pvmc^.data.Instance)^:=pcabledesk.Name;
+                      pstring(pvmc^.data.Addr.Instance)^:=pcabledesk.Name;
                   end;
                   Cable2CableMark(pcabledesk,pv);
                   pv^.formatentity(drawings.GetCurrentDWG^,dc);
@@ -999,16 +1005,16 @@ begin
                         pvd:=pnodeendvarext.entityunit.FindVariable('NMO_Name');
                         if pvd<>nil then
                         begin
-                             //endname:=pstring(pvd^.data.Instance)^;
-                             endname:=pvd^.data.PTD.GetValueAsString(pvd^.data.Instance);
+                             //endname:=pstring(pvd^.Instance)^;
+                             endname:=pvd^.data.PTD.GetValueAsString(pvd^.data.Addr.Instance);
                         end
                            else endname:='';
                         //pvd:=PTObjectUnit(nodeend^.ou.Instance)^.FindVariable('DB_link');
                         pvd:=pnodeendvarext.entityunit.FindVariable('DB_link');
                         if pvd<>nil then
                         begin
-                            //endmat:=pstring(pvd^.data.Instance)^;
-                            endmat:=pvd^.data.PTD.GetValueAsString(pvd^.data.Instance);
+                            //endmat:=pstring(pvd^.Instance)^;
+                            endmat:=pvd^.data.PTD.GetValueAsString(pvd^.data.Addr.Instance);
                             if isfirst then
                                            begin
                                                 isfirst:=false;
@@ -1041,8 +1047,8 @@ begin
                                  coord.x:=coord.x+12
                              else
                                  begin
-                                      if pgdbinteger(pvd^.data.Instance)^<>0 then
-                                                                                  coord.x:=coord.x+6*pgdbinteger(pvd^.data.Instance)^
+                                      if PInteger(pvd^.data.Addr.Instance)^<>0 then
+                                                                                  coord.x:=coord.x+6*PInteger(pvd^.data.Addr.Instance)^
                                                                               else
                                                                                   coord.x:=coord.x+12;
                                  end;
@@ -1093,8 +1099,8 @@ begin
                        end;
      end;
 end;
-function PlCommandStart(operands:pansichar):GDBInteger;
-var //i: GDBInteger;
+function PlCommandStart(operands:pansichar):Integer;
+var //i: Integer;
     sd:TSelEntsDesk;
 begin
   OrtoDevPlaceParam.Name:='';
@@ -1123,7 +1129,7 @@ else if (sd.PFirstSelectedEnt^.GetObjType=GDBDeviceID) then
   zcShowCommandParams(SysUnit.TypeName2PTD('CommandRTEdObject'),pco2);
   OPSPlaceSmokeDetectorOrtoParam.DMC:=TOPSMDC_1_2;
 end;
-function PlBeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): integer;
+function PlBeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): integer;
 begin
   result:=mclick;
   if (button and MZW_LBUTTON)<>0 then
@@ -1132,8 +1138,8 @@ begin
       t3dp:=wc;
     end
 end;
-procedure placedev(pva:PGDBObjEntityOpenArray;p1, p2: gdbvertex; nmax, nmin: GDBInteger; name: pansichar;a:gdbdouble;aa:gdbboolean;Norm:GDBBoolean);
-var dx, dy: GDBDouble;
+procedure placedev(pva:PGDBObjEntityOpenArray;p1, p2: gdbvertex; nmax, nmin: Integer; name: pansichar;a:Double;aa:Boolean;Norm:Boolean);
+var dx, dy: Double;
   line1, line2: GDBLineOps;
   l1, l2, i: integer;
   dir: gdbvertex;
@@ -1211,14 +1217,14 @@ begin
        end
   end;
 end;
-function PlAfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): integer;
+function PlAfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): integer;
 var
 pl:pgdbobjline;
 //debug:string;
-//dw,dd:gdbdouble;
-nx,ny:GDBInteger;
-//t:GDBInteger;
-tt,tx,ty,ttx,tty:gdbdouble;
+//dw,dd:Double;
+nx,ny:Integer;
+//t:Integer;
+tt,tx,ty,ttx,tty:Double;
 DC:TDrawContext;
 begin
   //nx:=OrtoDevPlaceParam.NX;

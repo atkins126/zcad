@@ -8,9 +8,9 @@ usescopy objname;
 
 var
 
-T1:GDBString;(*'Обозначение'*)
-T13:GDBString;(*'P установленная'*)
-T14:GDBString;(*'U падение напряжения'*)
+T1:String;(*'Обозначение'*)
+T11:String;(*'P установленная'*)
+T12:String;(*'U падение напряжения'*)
 
 implementation
 
@@ -25,7 +25,7 @@ NMO_BaseName:='ФД';
 NMO_Suffix:='??';
 
 T1:='??';
-T13:='??';
-T14:='??';
+T11:='??';
+T12:='??';
 
 end.

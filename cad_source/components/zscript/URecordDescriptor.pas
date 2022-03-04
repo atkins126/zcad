@@ -17,14 +17,14 @@
 }
 
 unit URecordDescriptor;
-{$INCLUDE def.inc}
+
 {$MODE DELPHI}
 interface
-uses LCLProc,UPointerDescriptor,uzbstrproc,{log,}UGDBOpenArrayOfByte,sysutils,UBaseTypeDescriptor,
-  gzctnrvectortypes,uzedimensionaltypes,TypeDescriptors,gzctnrvectordata,uzbtypesbase,
-  TypInfo,varmandef,uzbtypes,uzbmemman;
+uses LCLProc,UPointerDescriptor,uzbstrproc,uzctnrVectorBytes,sysutils,UBaseTypeDescriptor,
+  gzctnrvectortypes,uzedimensionaltypes,TypeDescriptors,gzctnrVector,
+  TypInfo,varmandef,uzbtypes,uzbLogIntf;
 type
-TFieldDescriptor=GZVectorData<FieldDescriptor>;
+TFieldDescriptor=GZVector<FieldDescriptor>;
 PRecordDescriptor=^RecordDescriptor;
 RecordDescriptor=object(TUserTypeDescriptor)
                        Fields:{GDBOpenArrayOfData}TFieldDescriptor;
@@ -33,16 +33,16 @@ RecordDescriptor=object(TUserTypeDescriptor)
                        function CreateProperties(const f:TzeUnitsFormat;mode:PDMode;PPDA:PTPropertyDeskriptorArray;Name:TInternalScriptString;PCollapsed:Pointer;ownerattrib:Word;var bmode:Integer;const addr:Pointer;ValKey,ValType:TInternalScriptString):PTPropertyDeskriptorArray;virtual;
                        procedure AddField(var fd:FieldDescriptor);
                        function FindField(fn:TInternalScriptString):PFieldDescriptor;virtual; //**< Найти требуемое поля. Пример : sampleRTTITypeDesk^.FindField('PolyWidth')
-                       function SetAttrib(fn:TInternalScriptString;SetA,UnSetA:GDBWord):PFieldDescriptor;
-                       procedure ApplyOperator(oper,path:TInternalScriptString;var offset:GDBInteger;out tc:PUserTypeDescriptor);virtual;
+                       function SetAttrib(fn:TInternalScriptString;SetA,UnSetA:Word):PFieldDescriptor;
+                       procedure ApplyOperator(oper,path:TInternalScriptString;var offset:Integer;out tc:PUserTypeDescriptor);virtual;
                        procedure AddConstField(const fd:FieldDescriptor);
                        procedure CopyTo(RD:PTUserTypeDescriptor);
-                       //function Serialize(PInstance:Pointer;SaveFlag:GDBWord;var membuf:PGDBOpenArrayOfByte;var  linkbuf:PGDBOpenArrayOfTObjLinkRecord;var sub:integer):integer;virtual;
-                       //function DeSerialize(PInstance:Pointer;SaveFlag:GDBWord;var membuf:GDBOpenArrayOfByte;linkbuf:PGDBOpenArrayOfTObjLinkRecord):integer;virtual;
+                       //function Serialize(PInstance:Pointer;SaveFlag:Word;var membuf:PTZctnrVectorBytes;var  linkbuf:PGDBOpenArrayOfTObjLinkRecord;var sub:integer):integer;virtual;
+                       //function DeSerialize(PInstance:Pointer;SaveFlag:Word;var membuf:TZctnrVectorBytes;linkbuf:PGDBOpenArrayOfTObjLinkRecord):integer;virtual;
                        function GetTypeAttributes:TTypeAttr;virtual;
                        procedure MagicFreeInstance(PInstance:Pointer);virtual;
                        destructor Done;virtual;
-                       procedure SavePasToMem(var membuf:GDBOpenArrayOfByte;PInstance:Pointer;prefix:TInternalScriptString);virtual;
+                       procedure SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;prefix:TInternalScriptString);virtual;
                        procedure MagicAfterCopyInstance(PInstance:Pointer);virtual;
                        function GetValueAsString(pinstance:Pointer):TInternalScriptString;virtual;
                        procedure RegisterTypeinfo(ti:PTypeInfo);virtual;
@@ -54,10 +54,10 @@ var
 implementation
 uses varman;
 function typeformat(s:TInternalScriptString;PInstance,PTypeDescriptor:Pointer):TInternalScriptString;
-var i,i2:GDBInteger;
+var i,i2:Integer;
     ps,fieldname:TInternalScriptString;
 //    pv:pvardesk;
-    offset:GDBInteger;
+    offset:Integer;
     tc:PUserTypeDescriptor;
     pf:Pointer;
 begin
@@ -78,7 +78,7 @@ begin
                           if offset>0 then
                                          begin
                                               pf:=pointer(offset+ptruint(PInstance));
-                                              //ps:=copy(ps,1,i-1)+ varman.valuetoGDBString(pv^.pvalue,pv.ptd) +copy(ps,i2+1,length(ps)-i2)
+                                              //ps:=copy(ps,1,i-1)+ varman.valuetoString(pv^.pvalue,pv.ptd) +copy(ps,i2+1,length(ps)-i2)
                                               ps:=copy(ps,1,i-1)+tc^.GetUserValueAsString(pf)+copy(ps,i2+1,length(ps)-i2)
                                          end
                                      else
@@ -105,7 +105,7 @@ var
    pfd:pFieldDescriptor;
 begin
      td:=GetTypeData(ti);
-     self.SizeInGDBBytes:=td.RecSize;
+     self.SizeInBytes:=td.RecSize;
      mf:=@td.ManagedFldCount;
      inc(pointer(mf),sizeof(td.ManagedFldCount));
      for i:=0 to td.ManagedFldCount-1 do
@@ -136,7 +136,7 @@ begin
         if pd<>nil then
         repeat
               begin
-                   GDBPlatformUInt(p):=GDBPlatformUInt(PInstance)+pd^.Offset;
+                   PtrUInt(p):=PtrUInt(PInstance)+pd^.Offset;
                    if assigned(pd^.base.PFT) then
                                                  pd^.base.PFT^.MagicFreeInstance(p)
                                              else
@@ -172,7 +172,7 @@ end;
 constructor RecordDescriptor.init;
 begin
      inherited init(0,tname,pu);
-     fields.init({$IFDEF DEBUGBUILD}'{693E7B49-A224-4778-9FD6-49E131AEBD54}',{$ENDIF}20{,sizeof(FieldDescriptor)});
+     fields.init(20);
      parent:=nil;
 end;
 procedure FREEFIELD(const p:PFieldDescriptor);
@@ -190,7 +190,7 @@ end;
 procedure RecordDescriptor.AddConstField;
 begin
      fields.PushBackData(fd);
-     SizeInGDBBytes:=SizeInGDBBytes+fd.Size;
+     SizeInBytes:=SizeInBytes+fd.Size;
 end;
 procedure RecordDescriptor.AddField;
 begin
@@ -215,7 +215,7 @@ begin
         until pd=nil;
         result:=nil;
 end;
-function RecordDescriptor.SetAttrib(fn:TInternalScriptString;SetA,UnSetA:GDBWord):PFieldDescriptor;
+function RecordDescriptor.SetAttrib(fn:TInternalScriptString;SetA,UnSetA:Word):PFieldDescriptor;
 begin
      result:=FindField(fn);
      if result<>nil then
@@ -247,7 +247,7 @@ begin
               pd:=Fields.iterate(ir);
         until pd=nil;
 end;
-procedure RecordDescriptor.SavePasToMem(var membuf:GDBOpenArrayOfByte;PInstance:Pointer;prefix:TInternalScriptString);
+procedure RecordDescriptor.SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;prefix:TInternalScriptString);
 var pd:PFieldDescriptor;
 //    d:FieldDescriptor;
     ir:itrec;
@@ -256,7 +256,7 @@ begin
         if pd<>nil then
         repeat
               if pd^.base.ProgramName<>'#' then
-                                        pd.base.PFT.SavePasToMem(membuf,pointer(GDBPlatformUInt(PInstance)+pd^.Offset),prefix+'.'+pd^.base.ProgramName);
+                                        pd.base.PFT.SavePasToMem(membuf,pointer(PtrUInt(PInstance)+pd^.Offset),prefix+'.'+pd^.base.ProgramName);
               pd:=Fields.iterate(ir);
         until pd=nil;
 end;
@@ -267,7 +267,7 @@ end;
 function RecordDescriptor.CreateProperties;
 var PFD:PFieldDescriptor;
     ppd:PPropertyDeskriptor;
-    bmodesave,bmodesave2,bmodetemp:GDBInteger;
+    bmodesave,bmodesave2,bmodetemp:Integer;
     tname:TInternalScriptString;
     ta,tb,taa:Pointer;
     pobj:PGDBaseObject;
@@ -286,8 +286,7 @@ begin
              if TypeName='trenderdeb' then
                        TypeName:=TypeName;
         end;
-     if VerboseLog^ then
-       DebugLn('{T+}[ZSCRIPT]RecordDescriptor.CreateProperties "%s"',[name]);
+     zTraceLn('{T+}[ZSCRIPT]RecordDescriptor.CreateProperties "%s"',[name]);
      //programlog.LogOutFormatStr('RecordDescriptor.CreateProperties "%s"',[name],lp_IncPos,LM_Trace);
 
      pobj:=addr;
@@ -309,8 +308,8 @@ begin
            ppd^.PTypeManager:=@self;
            if bmode=property_build then
            begin
-                gdbgetmem({$IFDEF DEBUGBUILD}'{6F9EBE33-15A8-4FF5-87D7-BF01A40F6789}',{$ENDIF}Pointer(ppd^.SubNode),sizeof(TPropertyDeskriptorArray));
-                PTPropertyDeskriptorArray(ppd^.SubNode)^.init({$IFDEF DEBUGBUILD}'{EDA18239-9432-453B-BA54-0381DA1BB665}',{$ENDIF}100);;
+                Getmem(Pointer(ppd^.SubNode),sizeof(TPropertyDeskriptorArray));
+                PTPropertyDeskriptorArray(ppd^.SubNode)^.init(100);
                 ppda:=PTPropertyDeskriptorArray(ppd^.SubNode);
            end else
            begin
@@ -344,14 +343,13 @@ begin
                                              repeat
                                                   if pvd^.name='BTY_TreeCoord' then
                                                                                    pvd^.name:=pvd^.name;
-                                                  if VerboseLog^ then
-                                                    DebugLn('{T}[ZSCRIPT]process prop: "%s"',[pvd^.name]);
+                                                  zTraceLn('{T}[ZSCRIPT]process prop: "%s"',[pvd^.name]);
                                                   //programlog.LogOutFormatStr('process prop: "%s"',[pvd^.name],lp_OldPos,LM_Trace);
                                                   i:=pos('_',pvd^.name);
                                                   tname:=pvd^.username;
                                                   if tname='' then
                                                                   tname:=pvd^.name;
-                                                  taa:=pvd^.data.Instance;
+                                                  taa:=pvd^.data.Addr.Instance;
                                                   if (pvd^.attrib and vda_different)>0 then
                                                                                            tw:=FA_DIFFERENT
                                                                                        else
@@ -375,8 +373,8 @@ begin
                                                                            ppd^.Collapsed:=FindCategory(category,ppd^.Name);
                                                                            ppd^.category:=category;
                                                                            ppd^.Attr:=ownerattrib;
-                                                                           gdbgetmem({$IFDEF DEBUGBUILD}'{6F9EBE33-15A8-4FF5-87D7-BF01A40F6789}',{$ENDIF}Pointer(ppd^.SubNode),sizeof(TPropertyDeskriptorArray));
-                                                                           PTPropertyDeskriptorArray(ppd^.SubNode)^.init({$IFDEF DEBUGBUILD}'{EDA18239-9432-453B-BA54-0381DA1BB665}',{$ENDIF}100);;
+                                                                           Getmem(Pointer(ppd^.SubNode),sizeof(TPropertyDeskriptorArray));
+                                                                           PTPropertyDeskriptorArray(ppd^.SubNode)^.init(100);
                                                                       end;
                                                       ppda:=PTPropertyDeskriptorArray(ppd^.SubNode);
                                                   end;
@@ -426,7 +424,7 @@ begin
                                         end;
                                         if recreateunitvars then
                                                                 bmode:=property_correct;
-                                        //inc(GDBPlatformint(addr),sizeof(TObjectUnit));
+                                        //inc(PtrInt(addr),sizeof(TObjectUnit));
                                         end
                                         else
 
@@ -463,7 +461,7 @@ begin
                             GDBEnumDataDescriptorObj.CreateProperties(f,PDM_Field,PPDA,tname,@pfd^.collapsed,pfd^.base.Attributes or ownerattrib,bmode,ta,'','');
                             GDBEnumDataDescriptorObj.Decorators:=SaveDecorators;
                             GDBEnumDataDescriptorObj.FastEditors:=SaveFastEditors;
-                            //Inc(GDBPlatformint(startaddr),sizeof(Pointer));
+                            //Inc(PtrInt(startaddr),sizeof(Pointer));
                        end
                    else
            (*if (pfd^.PFT^.TypeName='TObjectUnit') then
@@ -478,14 +476,13 @@ begin
                             ppd^.value:='Empty';
 
                             //pvd:=PTObjectUnit(startaddr)^.InterfaceVariables.vardescarray.beginiterate(ir2);
-                            //taa:=pvd^.data.Instance;
+                            //taa:=pvd^.Instance;
                             //PTUserTypeDescriptor(pvd^.data.PTD).CreateProperties(PPDA,{ppd^.Name}tname,@pfd^.collapsed,{ppd^.Attr}pfd^.Attributes or ownerattrib,bmode,taa);
                             inc(integer(startaddr),sizeof(TObjectUnit));
                        end
                    else*)
            if pfd^.base.ProgramName='#' then begin
-                                                if VerboseLog^ then
-                                                  DebugLn('{T}[ZSCRIPT]Found ##PVMT');
+                                                zTraceLn('{T}[ZSCRIPT]Found ##PVMT');
                                                 //programlog.LogOutStr('Found ##PVMT',lp_OldPos,LM_Trace);
                                                 ppd:=GetPPD(ppda,bmode);
                                                 if ppd^._bmode=property_build then
@@ -499,9 +496,9 @@ begin
                                                                             begin
                                                                                  if (ppd^._ppda<>ppda)
                                                                                                       then
-                                                                                                      {$IFDEF LOUDERRORS}
+                                                                                                      {IFDEF LOUDERRORS}
                                                                                                         Raise Exception.Create('Something wrong');
-                                                                                                      {$ENDIF}
+                                                                                                      {ENDIF}
 
 
                                                                             end;
@@ -514,22 +511,21 @@ begin
                                                                                 if assigned(pobj) then
                                                                                                       if assigned(ppointer(pobj)^) then
                                                                                                                                        begin
-                                                                                                                                       if VerboseLog^ then
-                                                                                                                                         DebugLn('{T}[ZSCRIPT]%p',[pobj]);
+                                                                                                                                       zTraceLn('{T}[ZSCRIPT]%p',[pobj]);
                                                                                                                                        //programlog.LogOutFormatStr('%p',[pobj],lp_OldPos,LM_Trace);
                                                                                                                                        ppd^.value:=pobj^.GetObjTypeName;
                                                                                                                                        //pobj^.whoisit;
                                                                                                                                        //pobj^.GetObjTypeName;
                                                                                                                                        end;
-                                                                                //Inc(GDBPlatformint(startaddr),sizeof(Pointer));
+                                                                                //Inc(PtrInt(startaddr),sizeof(Pointer));
                                            end
                    else
                    begin
-                   if (pfd^.base.PFT^.GetFactTypedef^.TypeName='TTypedData') or
+                   if (pfd^.base.PFT^.GetFactTypedef^.TypeName='THardTypedData') or
                       (pfd^.base.PFT^.TypeName='TFaceTypedData') then
                                                           Begin
                                                                tb:={PTTypedData(startaddr)^.Instance}startaddr;
-                                                               ta:=PTTypedData(startaddr)^.ptd;
+                                                               ta:=PTHardTypedData(startaddr)^.ptd;
                                                                if ta<>nil then
                                                                PTUserTypeDescriptor(ta)^.CreateProperties(f,PDM_Field,PPDA,{PTTypedData(startaddr)^.ptd^.TypeName}tname,@pfd^.collapsed,{ppd^.Attr}pfd^.base.Attributes or ownerattrib,bmode,tb,'','')
                                                                else
@@ -537,10 +533,12 @@ begin
                                                                     //tb:=@EmptyTypedData;
                                                                     defaultptypehandler.CreateProperties(f,PDM_Field,PPDA,{PTTypedData(startaddr)^.ptd^.TypeName}tname,@pfd^.collapsed,{ppd^.Attr}pfd^.base.Attributes or ownerattrib or FA_READONLY,bmode,tb,'','');
                                                                end;
-                                                               //inc(GDBPlatformint(startaddr),sizeof(TTypedData));
+                                                               //inc(PtrInt(startaddr),sizeof(TTypedData));
                                                           end
                                                        else
                                                            begin
+                                                           if pfd^.base.UserName='Renderer' then
+                                                                pfd^.base.UserName:=pfd^.base.UserName+'1';
                                                                 PTUserTypeDescriptor(pfd^.base.PFT)^.CreateProperties(f,PDM_Field,PPDA,{ppd^.Name}tname,@pfd^.collapsed,{ppd^.Attr}pfd^.base.Attributes or ownerattrib,bmode,startaddr,'','')
                                                            end;
                    end;
@@ -553,8 +551,7 @@ begin
      end;
                if bmodesave<>property_build then
                                       bmode:=bmodesave;
-     if VerboseLog^ then
-       DebugLn('{T-}[ZSCRIPT]end;{RecordDescriptor.CreateProperties "%s"}',[name]);
+     zTraceLn('{T-}[ZSCRIPT]end;{RecordDescriptor.CreateProperties "%s"}',[name]);
      //programlog.LogOutFormatStr('end;{RecordDescriptor.CreateProperties "%s"}',[name],lp_DecPos,LM_Trace);
 end;
 
@@ -562,7 +559,7 @@ end;
 function RecordDescriptor.GetValueAsString(pinstance:Pointer):TInternalScriptString;
 var pd:PFieldDescriptor;
     ir:itrec;
-    notfirst:gdbboolean;
+    notfirst:Boolean;
 begin
      result:='(';
      notfirst:=false;
@@ -573,7 +570,7 @@ begin
               begin
                    if notfirst then
                                    result:=result+'; ';
-                   result:=result+pd.base.ProgramName+'='+pd.base.PFT.GetValueAsString(pointer(GDBPlatformint(PInstance)+pd^.Offset));
+                   result:=result+pd.base.ProgramName+'='+pd.base.PFT.GetValueAsString(pointer(PtrInt(PInstance)+pd^.Offset));
                    notfirst:=true;
               end;
               pd:=Fields.iterate(ir);
@@ -589,7 +586,7 @@ begin
         if pd<>nil then
         repeat
               if pd^.base.ProgramName<>'#' then
-                                        pd.base.PFT.MagicAfterCopyInstance(pointer(GDBPlatformUInt(PInstance)+pd^.Offset));
+                                        pd.base.PFT.MagicAfterCopyInstance(pointer(PtrUInt(PInstance)+pd^.Offset));
               pd:=Fields.iterate(ir);
         until pd=nil;
 end;

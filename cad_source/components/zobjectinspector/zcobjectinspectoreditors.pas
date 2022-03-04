@@ -17,27 +17,27 @@
 }
 
 unit zcobjectinspectoreditors;
-{$INCLUDE def.inc}
+
 {$MODE DELPHI}
 
 interface
 
 uses
   UEnumDescriptor,zcobjectinspector,Forms,sysutils,
-  Graphics,LCLType,Themes,uzctnrvectorgdbstring,
-  varmandef,Varman,uzbtypesbase,uzbtypes,usupportgui,
+  Graphics,LCLType,Themes,uzctnrvectorstrings,
+  varmandef,Varman,uzbtypes,usupportgui,
   gzctnrvectortypes,StdCtrls,Controls,Classes,uzbstrproc;
 type
     TBaseTypesEditors=class
-                             class function BaseCreateEditor           (TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorGDBString;FreeOnLostFocus:boolean;InitialValue:GDBString;ptdesc:PUserTypeDescriptor;preferedHeight:integer):TEditorDesc;
-                             class function GDBBooleanCreateEditor     (TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorGDBString;FreeOnLostFocus:boolean;InitialValue:GDBString;ptdesc:PUserTypeDescriptor;preferedHeight:integer):TEditorDesc;
-                             class function TEnumDataCreateEditor      (TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorGDBString;FreeOnLostFocus:boolean;InitialValue:GDBString;ptdesc:PUserTypeDescriptor;preferedHeight:integer):TEditorDesc;
-                             class function EnumDescriptorCreateEditor (TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorGDBString;FreeOnLostFocus:boolean;InitialValue:GDBString;ptdesc:PUserTypeDescriptor;preferedHeight:integer):TEditorDesc;
+                             class function BaseCreateEditor           (TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;InitialValue:String;ptdesc:PUserTypeDescriptor;preferedHeight:integer):TEditorDesc;
+                             class function BooleanCreateEditor     (TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;InitialValue:String;ptdesc:PUserTypeDescriptor;preferedHeight:integer):TEditorDesc;
+                             class function TEnumDataCreateEditor      (TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;InitialValue:String;ptdesc:PUserTypeDescriptor;preferedHeight:integer):TEditorDesc;
+                             class function EnumDescriptorCreateEditor (TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;InitialValue:String;ptdesc:PUserTypeDescriptor;preferedHeight:integer):TEditorDesc;
     end;
 implementation
 class function TBaseTypesEditors.BaseCreateEditor;
    var
-      ps:pgdbstring;
+      ps:pString;
       ir:itrec;
       propeditor:TPropEditor;
       edit:TEdit;
@@ -96,7 +96,7 @@ class function TBaseTypesEditors.BaseCreateEditor;
                                   cbedit.AutoComplete:=true;
                             end;
    end;
-class function TBaseTypesEditors.GDBBooleanCreateEditor;
+class function TBaseTypesEditors.BooleanCreateEditor;
 var
     cbedit:TComboBox;
     propeditor:TPropEditor;
@@ -112,7 +112,7 @@ begin
 
      cbedit.Items.Add('True');
      cbedit.Items.Add('False');
-     if pgdbboolean(pinstance)^ then
+     if pBoolean(pinstance)^ then
                                     cbedit.ItemIndex:=0
                                 else
                                     cbedit.ItemIndex:=1;
@@ -125,7 +125,7 @@ var
     cbedit:TComboBox;
     propeditor:TPropEditor;
     ir:itrec;
-    p:pgdbstring;
+    p:pString;
 begin
      propeditor:=TPropEditor.Create(theowner,PInstance,ptdesc^,FreeOnLostFocus);
      cbedit:=TComboBox.Create(propeditor);
@@ -154,8 +154,8 @@ var
     cbedit:TComboBox;
     propeditor:TPropEditor;
     ir:itrec;
-    number:longword;
-    p:pgdbstring;
+    number:LongWord;
+    p:pString;
 begin
      propeditor:=TPropEditor.Create(theowner,PInstance,ptdesc^,FreeOnLostFocus);
      cbedit:=TComboBox.Create(propeditor);

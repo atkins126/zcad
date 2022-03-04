@@ -17,18 +17,18 @@
 }
 
 unit uzctextenteditor;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
-     uzcsysparams,uzcutils,uzcsysvars,uzbtypesbase,uzbtypes,uzcsysinfo,
+     uzcsysparams,uzcutils,uzcsysvars,uzcsysinfo,
      uzcinfoform,Varman,uzcinterface,
      uzedrawingdef,uzbstrproc,uzeenttext,uzeconsts,uzcstrconsts,uzcfsinglelinetexteditor,
      Controls,Classes,Forms,uzccommandsmanager,uzcuitypes;
 var
     InfoForm:TInfoForm=nil;
-procedure RunTextEditor(Pobj:GDBPointer;var drawing:TDrawingDef);
+procedure RunTextEditor(Pobj:Pointer;var drawing:TDrawingDef);
 implementation
-procedure RunTextEditor(Pobj:GDBPointer;var drawing:TDrawingDef);
+procedure RunTextEditor(Pobj:Pointer;var drawing:TDrawingDef);
 var
    modalresult:integer;
    astring:ansistring;

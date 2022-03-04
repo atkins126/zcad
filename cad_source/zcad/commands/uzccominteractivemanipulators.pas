@@ -15,7 +15,7 @@
 {
 @author(Andrey Zubarev <zamtmn@yandex.ru>)
 }
-{$mode objfpc}
+{$mode objfpc}{$H+}
 
 {**Модуль реализации чертежных команд (линия, круг, размеры и т.д.)}
 unit uzccominteractivemanipulators;
@@ -26,7 +26,7 @@ unit uzccominteractivemanipulators;
 { файл def.inc необходимо включать в начале каждого модуля zcad
   он содержит в себе централизованные настройки параметров компиляции  }
   
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -43,7 +43,7 @@ uses
   Forms,
 
   uzeutils,
-  uzbgeomtypes,
+  uzegeometrytypes,
 
   uzeentblockinsert,      //unit describes blockinsert entity
                        //модуль описывающий примитив вставка блока
@@ -78,7 +78,7 @@ uses
                       //системные переменные
   uzgldrawcontext,
 
-  uzbtypesbase,uzbtypes, //base types
+   //base types
                       //описания базовых типов
                       //описания базовых констант
   uzccommandsmanager,
@@ -105,46 +105,46 @@ type
     T3PointCircleModePEntity=record
                                    p1,p2,p3:gdbvertex;
                                    cdm:TCircleDrawMode;
-                                   npoint:GDBInteger;
+                                   npoint:Integer;
                                    pentity:PGDBObjEntity;
                              end;
     PTPointPolygonDrawModePentity=^TPointPolygonDrawModePentity;
     TPointPolygonDrawModePentity=record
                                    p1:gdbvertex;
                                    cdm:TPolygonDrawMode;
-                                   typeLWPoly:gdbboolean;
-                                   npoint:GDBInteger;
+                                   typeLWPoly:Boolean;
+                                   npoint:Integer;
                                    pentity:PGDBObjPolyline;
                                    plwentity:PGDBObjLWPolyline;
                              end;
 
 procedure InteractiveLineEndManipulator( const PInteractiveData : PGDBObjLine {pointer to the line entity};
                                                           Point : GDBVertex  {new end coord};
-                                                          Click : GDBBoolean {true if lmb presseed});
+                                                          Click : Boolean {true if lmb presseed});
 procedure InteractiveADimManipulator( const PInteractiveData : PGDBObjAlignedDimension;
                                                          Point : GDBVertex;
-                                                         Click : GDBBoolean );
+                                                         Click : Boolean );
 procedure InteractiveRDimManipulator( const PInteractiveData : PGDBObjRotatedDimension;
                                                        Point : GDBVertex;
-                                                       Click : GDBBoolean );
+                                                       Click : Boolean );
 procedure InteractiveDDimManipulator( const PInteractiveData:pgdbObjDiametricDimension;
                                                        Point:GDBVertex;
-                                                       Click:GDBBoolean);
+                                                       Click:Boolean);
 procedure InteractiveArcManipulator( const PInteractiveData : PT3PointPentity;
                                                       Point : GDBVertex;
-                                                      Click : GDBBoolean);
+                                                      Click : Boolean);
 procedure InteractiveSmartCircleManipulator( const PInteractiveData:PT3PointCircleModePentity;
                                              Point:GDBVertex;
-                                             Click:GDBBoolean );
+                                             Click:Boolean );
 procedure InteractiveLWRectangleManipulator( const PInteractiveData : PGDBObjLWPolyline {pointer to the line entity};
                                                           Point : GDBVertex  {new end coord};
-                                                          Click : GDBBoolean {true if lmb presseed});
+                                                          Click : Boolean {true if lmb presseed});
 procedure InteractiveRectangleManipulator( const PInteractiveData : PGDBObjPolyline {pointer to the line entity};
                                                           Point : GDBVertex  {new end coord};
-                                                          Click : GDBBoolean {true if lmb presseed});
+                                                          Click : Boolean {true if lmb presseed});
 procedure InteractivePolygonManipulator( const PInteractiveData : TPointPolygonDrawModePentity {pointer to the line entity};
                                                           Point : GDBVertex  {new end coord};
-                                                          Click : GDBBoolean {true if lmb presseed});
+                                                          Click : Boolean {true if lmb presseed});
 implementation
 { Интерактивные процедуры используются совместно с Get3DPointInteractive,
   впоследствии будут вынесены в отдельный модуль }
@@ -155,7 +155,7 @@ implementation
 {Процедура интерактивного изменения конца линии}
 procedure InteractiveLineEndManipulator( const PInteractiveData : PGDBObjLine {pointer to the line entity};
                                                           Point : GDBVertex  {new end coord};
-                                                          Click : GDBBoolean {true if lmb presseed});
+                                                          Click : Boolean {true if lmb presseed});
 var
   ln : PGDBObjLine absolute PInteractiveData;
   dc:TDrawContext;
@@ -179,7 +179,7 @@ end;
 {Процедура интерактивного изменения третьей точки выровненного размера}
 procedure InteractiveADimManipulator( const PInteractiveData : PGDBObjAlignedDimension;
                                                        Point : GDBVertex;
-                                                       Click : GDBBoolean );
+                                                       Click : Boolean );
 var
   ad : PGDBObjAlignedDimension absolute PInteractiveData;
   dc:TDrawContext;
@@ -220,7 +220,7 @@ end;
 
 function isRDIMHorisontal(p1,p2,p3,nevp3:gdbvertex):integer;
 var
-   minx,maxx,miny,maxy:GDBDouble;
+   minx,maxx,miny,maxy:Double;
 begin
   minx:=min(p1.x,p2.x);
   maxx:=max(p1.x,p2.x);
@@ -246,7 +246,7 @@ end;
 {Процедура}
 procedure InteractiveRDimManipulator( const PInteractiveData : PGDBObjRotatedDimension;
                                                        Point : GDBVertex;
-                                                       Click : GDBBoolean );
+                                                       Click : Boolean );
 var
   rd : PGDBObjRotatedDimension absolute PInteractiveData;
   dc:TDrawContext;
@@ -279,7 +279,7 @@ end;
 
 procedure InteractiveDDimManipulator( const PInteractiveData:pgdbObjDiametricDimension;
                                                        Point:GDBVertex;
-                                                       Click:GDBBoolean);
+                                                       Click:Boolean);
 var
     dd : pgdbObjDiametricDimension absolute PInteractiveData;
     dc:TDrawContext;
@@ -297,7 +297,7 @@ end;
 
 procedure InteractiveArcManipulator( const PInteractiveData : PT3PointPentity;
                                                       Point : GDBVertex;
-                                                      Click : GDBBoolean);
+                                                      Click : Boolean);
 var
     PointData:TArcrtModify;
     ad:TArcData;
@@ -330,7 +330,7 @@ end;
 
 procedure InteractiveSmartCircleManipulator( const PInteractiveData:PT3PointCircleModePentity;
                                              Point:GDBVertex;
-                                             Click:GDBBoolean );
+                                             Click:Boolean );
 var
     PointData:tarcrtmodify;
     ad:TArcData;
@@ -360,24 +360,18 @@ begin
 
          end;
        end;
-     2:begin
-         case
-             PT3PointCircleModePentity(PInteractiveData)^.cdm of
-             TCDM_3P:begin
-                 PointData.p1.x:=PT3PointCircleModePentity(PInteractiveData)^.p1.x;
-                 PointData.p1.y:=PT3PointCircleModePentity(PInteractiveData)^.p1.y;
-                 PointData.p2.x:=PT3PointCircleModePentity(PInteractiveData)^.p2.x;
-                 PointData.p2.y:=PT3PointCircleModePentity(PInteractiveData)^.p2.y;
-                 PointData.p3.x:=Point.x;
-                 PointData.p3.y:=Point.y;
-                 if GetArcParamFrom3Point2D(PointData,ad) then
-                 begin
-                   PGDBObjCircle(PT3PointCircleModePentity(PInteractiveData)^.pentity)^.Local.p_insert.x:=ad.p.x;
-                   PGDBObjCircle(PT3PointCircleModePentity(PInteractiveData)^.pentity)^.Local.p_insert.y:=ad.p.y;
-                   PGDBObjCircle(PT3PointCircleModePentity(PInteractiveData)^.pentity)^.Local.p_insert.z:=0;
-                   PGDBObjCircle(PT3PointCircleModePentity(PInteractiveData)^.pentity)^.Radius:=ad.r;
-                 end;
-                     end;
+     2:if PT3PointCircleModePentity(PInteractiveData)^.cdm=TCDM_3P then begin
+         PointData.p1.x:=PT3PointCircleModePentity(PInteractiveData)^.p1.x;
+         PointData.p1.y:=PT3PointCircleModePentity(PInteractiveData)^.p1.y;
+         PointData.p2.x:=PT3PointCircleModePentity(PInteractiveData)^.p2.x;
+         PointData.p2.y:=PT3PointCircleModePentity(PInteractiveData)^.p2.y;
+         PointData.p3.x:=Point.x;
+         PointData.p3.y:=Point.y;
+         if GetArcParamFrom3Point2D(PointData,ad) then begin
+           PGDBObjCircle(PT3PointCircleModePentity(PInteractiveData)^.pentity)^.Local.p_insert.x:=ad.p.x;
+           PGDBObjCircle(PT3PointCircleModePentity(PInteractiveData)^.pentity)^.Local.p_insert.y:=ad.p.y;
+           PGDBObjCircle(PT3PointCircleModePentity(PInteractiveData)^.pentity)^.Local.p_insert.z:=0;
+           PGDBObjCircle(PT3PointCircleModePentity(PInteractiveData)^.pentity)^.Radius:=ad.r;
          end;
        end;
   end;
@@ -386,7 +380,7 @@ end;
 
 procedure InteractiveLWRectangleManipulator( const PInteractiveData : PGDBObjLWPolyline {pointer to the line entity};
                                                           Point : GDBVertex  {new end coord};
-                                                          Click : GDBBoolean {true if lmb presseed});
+                                                          Click : Boolean {true if lmb presseed});
 var
   polyLWObj : PGDBObjLWPolyline absolute PInteractiveData;
   stPoint: GDBvertex2D;
@@ -415,7 +409,7 @@ end;
 
 procedure InteractiveRectangleManipulator( const PInteractiveData : PGDBObjPolyline {pointer to the line entity};
                                                           Point : GDBVertex  {new end coord};
-                                                          Click : GDBBoolean {true if lmb presseed});
+                                                          Click : Boolean {true if lmb presseed});
 var
   polyObj : PGDBObjPolyline absolute PInteractiveData;
   stPoint: GDBvertex;
@@ -443,7 +437,7 @@ end;
 
 procedure InteractivePolygonManipulator( const PInteractiveData : TPointPolygonDrawModePentity {pointer to the line entity};
                                                           Point : GDBVertex  {new end coord};
-                                                          Click : GDBBoolean {true if lmb presseed});
+                                                          Click : Boolean {true if lmb presseed});
 var
   obj : TPointPolygonDrawModePentity absolute PInteractiveData;
   stPoint: GDBvertex;
@@ -460,13 +454,10 @@ begin
    radius := Vertexlength(stPoint,Point);
    stalpha:=0;
 
-    case
-     obj.cdm of
-     TPDM_CC:begin
-               stalpha := pi/countVert;
-               radius := radius/(cos(pi/countVert));
-             end;
-    end;
+   if obj.cdm=TPDM_CC then begin
+     stalpha := pi/countVert;
+     radius := radius/(cos(pi/countVert));
+   end;
 
      alpha:=stalpha + arccos(xline/xyline)-pi;
 

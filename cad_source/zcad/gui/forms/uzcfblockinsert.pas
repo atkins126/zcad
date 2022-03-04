@@ -1,6 +1,6 @@
 unit uzcfblockinsert;
 
-{$mode objfpc}
+{$mode objfpc}{$H+}
 
 interface
 
@@ -11,7 +11,7 @@ uses
   UGDBObjBlockdefArray, //описание таблицы блоков
   uzeblockdef,          //описания блоков
   uzbtypes,          //базовые типы
-  uzbgeomtypes,uzbtypesbase,          //базовые типы
+  uzegeometrytypes,          //базовые типы
   uzbstrproc,               //билеберда для работы со стрингами
   gzctnrvectortypes
   ;
@@ -20,8 +20,8 @@ type
 
   TZEBlockInsertParams=record            //объявление записи для сбора данных из формы
       PInsert,Scale:GDBVertex;
-      Rotate:GDBDouble;
-      BlockName:GDBString;
+      Rotate:Double;
+      BlockName:String;
   end;
 
   { TBlockInsertForm }
@@ -70,7 +70,7 @@ type
   private
     { private declarations }
   public
-    function Run(PBlockDefs:PGDBObjBlockdefArray;LastInsertedBlockName:GDBString;out InsertParams:TZEBlockInsertParams):Integer;
+    function Run(PBlockDefs:PGDBObjBlockdefArray;LastInsertedBlockName:String;out InsertParams:TZEBlockInsertParams):Integer;
     { public declarations }
   end;
 
@@ -172,7 +172,7 @@ end;
 
 function TBlockInsertForm.Run(
                              PBlockDefs:PGDBObjBlockdefArray;     //указатель на таблицу описаний блоков
-                             LastInsertedBlockName:GDBString;     //имя последнего (например в предидущем сеансе команды) вставленного блока, чтобы его выбрать "по умолчанию"
+                             LastInsertedBlockName:String;     //имя последнего (например в предидущем сеансе команды) вставленного блока, чтобы его выбрать "по умолчанию"
                                                                   //его нужно сохранять гденить в чертеже
                              out InsertParams:TZEBlockInsertParams//сюда возвращаем значения
                              ):Integer;                           //модальнвй результат

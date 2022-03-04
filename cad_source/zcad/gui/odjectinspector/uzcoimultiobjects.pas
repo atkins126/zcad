@@ -17,17 +17,17 @@
 }
 
 unit uzcoimultiobjects;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
-  uzeenttext,uzctnrvectorgdbpointer,uzeentblockinsert,uzeconsts,uzcinterface,
+  uzeenttext,uzctnrVectorPointers,uzeentblockinsert,uzeconsts,uzcinterface,
   LazLoggerBase,uzcoimultiproperties,uzcoiwrapper,uzctranslations,uzepalette,
-  uzbmemman,uzedimensionaltypes,uzcstrconsts,sysutils,uzeentityfactory,
-  uzcenitiesvariablesextender,uzgldrawcontext,usimplegenerics,gzctnrstl,
-  gzctnrvectortypes,uzbtypes,uzcdrawings,varmandef,uzeentity,uzbtypesbase,
-  Varman,uzctnrvectorgdbstring,UGDBSelectedObjArray,uzcoimultipropertiesutil,
-  uzeentityextender,uzelongprocesssupport,uzcutils;
+  uzedimensionaltypes,uzcstrconsts,sysutils,uzeentityfactory,
+  uzcenitiesvariablesextender,uzgldrawcontext,usimplegenerics,gzctnrSTL,
+  gzctnrvectortypes,uzbtypes,uzcdrawings,varmandef,uzeentity,
+  Varman,uzctnrvectorstrings,UGDBSelectedObjArray,uzcoimultipropertiesutil,
+  uzeentityextender,uzelongprocesssupport,uzbLogIntf;
 type
   TObjIDWithExtender2Counter=TMyMapCounter<TObjIDWithExtender>;
 {Export+}
@@ -41,10 +41,15 @@ type
            VPS_OnlyRelatedEnts(*'Only related ents'*),
            VPS_AllEnts(*'All ents'*)
           );
+  {REGISTERRECORDTYPE TMSPrimitiveDetector}
   TMSPrimitiveDetector=TEnumData;
+  {REGISTERRECORDTYPE TMSBlockNamesDetector}
   TMSBlockNamesDetector=TEnumDataWithOtherData;
+  {REGISTERRECORDTYPE TMSTextsStylesDetector}
   TMSTextsStylesDetector=TEnumDataWithOtherData;
+  {REGISTERRECORDTYPE TMSEntsLayersDetector}
   TMSEntsLayersDetector=TEnumDataWithOtherData;
+  {REGISTERRECORDTYPE TMSEntsLinetypesDetector}
   TMSEntsLinetypesDetector=TEnumDataWithOtherData;
   {REGISTEROBJECTTYPE TMSEditor}
   TMSEditor= object(TWrapper2ObjInsp)
@@ -56,11 +61,11 @@ type
                 GeometryUnit:TObjectUnit;(*'Geometry'*)
                 MiscUnit:TObjectUnit;(*'Misc'*)
                 SummaryUnit:TObjectUnit;(*'Summary'*)
-                ObjIDVector:{-}TObjIDVector{/GDBPointer/};(*hidden_in_objinsp*)
-                ObjID2Counter:{-}TObjID2Counter{/GDBPointer/};(*hidden_in_objinsp*)
-                ObjIDWithExtenderCounter:{-}TObjIDWithExtender2Counter{/GDBPointer/};(*hidden_in_objinsp*)
+                ObjIDVector:{-}TObjIDVector{/Pointer/};(*hidden_in_objinsp*)
+                ObjID2Counter:{-}TObjID2Counter{/Pointer/};(*hidden_in_objinsp*)
+                ObjIDWithExtenderCounter:{-}TObjIDWithExtender2Counter{/Pointer/};(*hidden_in_objinsp*)
                 SavezeUnitsFormat:TzeUnitsFormat;(*hidden_in_objinsp*)
-                procedure FormatAfterFielfmod(PField,PTypeDescriptor:GDBPointer);virtual;
+                procedure FormatAfterFielfmod(PField,PTypeDescriptor:Pointer);virtual;
                 procedure CreateUnit(const f:TzeUnitsFormat;_GetEntsTypes:boolean=true);virtual;
                 procedure GetEntsTypes;virtual;
                 function GetObjType:TObjID;virtual;
@@ -78,16 +83,16 @@ type
             end;
   PMSEditor=^TMSEditor;
 {Export-}
-procedure DeselectEnts(PInstance:GDBPointer);
-procedure SelectOnlyThisEnts(PInstance:GDBPointer);
-procedure DeselectBlocsByName(PInstance:GDBPointer);
-procedure DeselectTextsByStyle(PInstance:GDBPointer);
-procedure DeselectEntsByLayer(PInstance:GDBPointer);
-procedure DeselectEntsByLinetype(PInstance:GDBPointer);
-procedure SelectOnlyThisBlocsByName(PInstance:GDBPointer);
-procedure SelectOnlyThisTextsByStyle(PInstance:GDBPointer);
-procedure SelectOnlyThisEntsByLayer(PInstance:GDBPointer);
-procedure SelectOnlyThisEntsByLinetype(PInstance:GDBPointer);
+procedure DeselectEnts(PInstance:Pointer);
+procedure SelectOnlyThisEnts(PInstance:Pointer);
+procedure DeselectBlocsByName(PInstance:Pointer);
+procedure DeselectTextsByStyle(PInstance:Pointer);
+procedure DeselectEntsByLayer(PInstance:Pointer);
+procedure DeselectEntsByLinetype(PInstance:Pointer);
+procedure SelectOnlyThisBlocsByName(PInstance:Pointer);
+procedure SelectOnlyThisTextsByStyle(PInstance:Pointer);
+procedure SelectOnlyThisEntsByLayer(PInstance:Pointer);
+procedure SelectOnlyThisEntsByLinetype(PInstance:Pointer);
 var
    MSEditor:TMSEditor;
    i:integer;
@@ -133,12 +138,12 @@ begin
          if PDestVD<>nil then
            if PSourceVD^.data.PTD=PDestVD^.data.PTD then
            begin
-                PDestVD.data.PTD.CopyInstanceTo(PSourceVD.data.Instance,PDestVD.data.Instance);
+                PDestVD.data.PTD.CopyInstanceTo(PSourceVD.data.Addr.Instance,PDestVD.data.Addr.Instance);
 
                 pentity^.YouChanged(drawings.GetCurrentDWG^);
                 result:=true;
 
-                if PSourceVD^.data.PTD.GetValueAsString(PSourceVD^.data.Instance)<>PDestVD^.data.PTD.GetValueAsString(PDestVD^.data.Instance) then
+                if PSourceVD^.data.PTD.GetValueAsString(PSourceVD^.data.Addr.Instance)<>PDestVD^.data.PTD.GetValueAsString(PDestVD^.data.Addr.Instance) then
                 PSourceVD.attrib:=PSourceVD.attrib or vda_different;
            end;
     end;
@@ -175,7 +180,7 @@ begin
     pentity:=drawings.GetCurrentROOT.ObjArray.iterate(EntIterator);
   until pentity=nil;
 end;
-function ComparePropAndVarNames(pname,vname:GDBString):boolean;
+function ComparePropAndVarNames(pname,vname:String):boolean;
 begin
      if pname=vname then
                         result:=true
@@ -209,7 +214,7 @@ procedure TMSEditor.processProperty(const ID:TObjID; const pdata: pointer; const
 var
    ChangedData:TChangedData;
    CanChangeValue:Boolean;
-   msg,entname:gdbstring;
+   msg,entname:String;
    entinfo:TEntInfoData;
 begin
      begin
@@ -306,7 +311,7 @@ begin
 end;
 
 procedure  TMSEditor.FormatAfterFielfmod;
-var //i: GDBInteger;
+var //i: Integer;
     //pu:pointer;
     pvd:pvardesk;
     //vd:vardesk;
@@ -376,7 +381,7 @@ var
     pv:pGDBObjEntity;
     psd:PSelectedObjDesc;
     pair:TObjID2Counter.TDictionaryPair;
-    s:GDBString;
+    s:String;
     entinfo:TEntInfoData;
     ObjIDWithExtender:TObjIDWithExtender;
     counter:integer;
@@ -653,11 +658,12 @@ begin
                               begin
                               vd:=pvd^;
                               //vd.attrib:=vda_different;
-                              vd.data.Instance:=nil;
+                              vd.SetInstance(nil);
+                              //vd.Instance:=nil;
                               if linkedunit then
                                 vd.attrib:=vd.attrib or vda_colored1;
                               VariablesUnit.InterfaceVariables.createvariable(pvd^.name,vd,vd.attrib);
-                              pvd^.data.PTD.CopyInstanceTo(pvd.data.Instance,vd.data.Instance);
+                              pvd^.data.PTD.CopyInstanceTo(pvd.data.Addr.Instance,vd.data.Addr.Instance);
                               end
                               {   else
                               begin
@@ -666,7 +672,7 @@ begin
                          end
                      else
                          begin
-                              if pvd^.data.PTD.GetValueAsString(pvd^.data.Instance)<>pvdmy^.data.PTD.GetValueAsString(pvdmy^.data.Instance) then
+                              if pvd^.data.PTD.GetValueAsString(pvd^.data.Addr.Instance)<>pvdmy^.data.PTD.GetValueAsString(pvdmy^.data.Addr.Instance) then
                                 pvdmy.attrib:=vda_different;
                               if linkedunit then
                                 pvdmy.attrib:=pvdmy.attrib or vda_colored1;
@@ -677,12 +683,12 @@ begin
 end;
 
 procedure  TMSEditor.createunit;
-var //i: GDBInteger;
+var //i: Integer;
     pv:pGDBObjEntity;
     psd:PSelectedObjDesc;
     pu:pointer;
-    pvd,pvdmy:pvardesk;
-    vd:vardesk;
+    //pvd,pvdmy:pvardesk;
+    //vd:vardesk;
     ir,ir2:itrec;
     pentvarext:TVariablesExtender;
 begin
@@ -690,47 +696,35 @@ begin
      SavezeUnitsFormat:=f;
      if _GetEntsTypes then
                           GetEntsTypes;
-     if VerboseLog^ then
-                       debugln('{T+}VariablesUnit.free start');
+     zTraceLn('{T+}VariablesUnit.free start');
      VariablesUnit.free;
-     if VerboseLog^ then
-                       debugln('{T-}end');
+     zTraceLn('{T-}end');
 
-     if VerboseLog^ then
-                       debugln('{T+}ExtendersUnit.free start');
+     zTraceLn('{T+}ExtendersUnit.free start');
      ExtendersUnit.free;
      ExtendersUnit.InterfaceUses.PushBackIfNotPresent(sysunit);
-     if VerboseLog^ then
-                       debugln('{T-}end');
+     zTraceLn('{T-}end');
 
 
-     if VerboseLog^ then
-                       debugln('{T+}GeneralUnit.free start');
+     zTraceLn('{T+}GeneralUnit.free start');
      GeneralUnit.free;
      GeneralUnit.InterfaceUses.PushBackIfNotPresent(sysunit);
-     if VerboseLog^ then
-                       debugln('{T-}end');
+     zTraceLn('{T-}end');
 
-     if VerboseLog^ then
-                       debugln('{T+}GeometryUnit.free start');
+     zTraceLn('{T+}GeometryUnit.free start');
      GeometryUnit.free;
      GeometryUnit.InterfaceUses.PushBackIfNotPresent(sysunit);
-     if VerboseLog^ then
-                       debugln('{T-}end');
+     zTraceLn('{T-}end');
 
-     if VerboseLog^ then
-                  debugln('{T+}MiscUnit.free start');
+     zTraceLn('{T+}MiscUnit.free start');
      MiscUnit.free;
      MiscUnit.InterfaceUses.PushBackIfNotPresent(sysunit);
-     if VerboseLog^ then
-                       debugln('{T-}end');
+     zTraceLn('{T-}end');
 
-     if VerboseLog^ then
-                  debugln('{T+}SummaryUnit.free start');
+     zTraceLn('{T+}SummaryUnit.free start');
      SummaryUnit.free;
      SummaryUnit.InterfaceUses.PushBackIfNotPresent(sysunit);
-     if VerboseLog^ then
-                       debugln('{T-}end');
+     zTraceLn('{T-}end');
 
      CheckMultiPropertyUse;
      CreateMultiPropertys(f);
@@ -766,7 +760,7 @@ begin
      until psd=nil;
      debugln('{D+}TMSEditor.createunit end');
 end;
-procedure DeselectEnts(PInstance:GDBPointer);
+procedure DeselectEnts(PInstance:Pointer);
 var
     NeededObjType:TObjID;
     pv:pGDBObjEntity;
@@ -813,7 +807,7 @@ begin
     pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
     until pv=nil;}
 end;
-procedure DeselectBlocsByName(PInstance:GDBPointer);
+procedure DeselectBlocsByName(PInstance:Pointer);
 var
     pv:pGDBObjEntity;
     ir:itrec;
@@ -821,7 +815,7 @@ var
     blockname:AnsiString;
 begin
     selected:=PTEnumDataWithOtherData(PInstance)^.Selected;
-    blockname:=PTZctnrVectorGDBString(PTEnumDataWithOtherData(PInstance)^.PData).getData(selected);
+    blockname:=PTZctnrVectorStrings(PTEnumDataWithOtherData(PInstance)^.PData).getData(selected);
     count:=0;
     pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
     if pv<>nil then
@@ -839,7 +833,7 @@ begin
     if count>0 then
       ZCMsgCallBackInterface.Do_GUIaction(drawings.GetCurrentDWG.wa,ZMsgID_GUIActionSelectionChanged);
 end;
-procedure DeselectTextsByStyle(PInstance:GDBPointer);
+procedure DeselectTextsByStyle(PInstance:Pointer);
 var
     pv:pGDBObjEntity;
     ir:itrec;
@@ -866,7 +860,7 @@ begin
       ZCMsgCallBackInterface.Do_GUIaction(drawings.GetCurrentDWG.wa,ZMsgID_GUIActionSelectionChanged);
 end;
 
-procedure DeselectEntsByLayer(PInstance:GDBPointer);
+procedure DeselectEntsByLayer(PInstance:Pointer);
 var
     pv:pGDBObjEntity;
     ir:itrec;
@@ -892,7 +886,7 @@ begin
       ZCMsgCallBackInterface.Do_GUIaction(drawings.GetCurrentDWG.wa,ZMsgID_GUIActionSelectionChanged);
 end;
 
-procedure DeselectEntsByLinetype(PInstance:GDBPointer);
+procedure DeselectEntsByLinetype(PInstance:Pointer);
 var
     pv:pGDBObjEntity;
     ir:itrec;
@@ -920,7 +914,7 @@ end;
 
 
 
-procedure SelectOnlyThisBlocsByName(PInstance:GDBPointer);
+procedure SelectOnlyThisBlocsByName(PInstance:Pointer);
 var
     pv:pGDBObjEntity;
     ir:itrec;
@@ -928,7 +922,7 @@ var
     blockname:AnsiString;
 begin
     selected:=PTEnumDataWithOtherData(PInstance)^.Selected;
-    blockname:=PTZctnrVectorGDBString(PTEnumDataWithOtherData(PInstance)^.PData).getData(selected);
+    blockname:=PTZctnrVectorStrings(PTEnumDataWithOtherData(PInstance)^.PData).getData(selected);
     //if NeededObjType<>0 then
     begin
       count:=0;
@@ -955,7 +949,7 @@ begin
     end;
 end;
 
-procedure SelectOnlyThisTextsByStyle(PInstance:GDBPointer);
+procedure SelectOnlyThisTextsByStyle(PInstance:Pointer);
 var
     pv:pGDBObjEntity;
     ir:itrec;
@@ -990,7 +984,7 @@ begin
     end;
 end;
 
-procedure SelectOnlyThisEntsByLayer(PInstance:GDBPointer);
+procedure SelectOnlyThisEntsByLayer(PInstance:Pointer);
 var
     pv:pGDBObjEntity;
     ir:itrec;
@@ -1025,7 +1019,7 @@ begin
     end;
 end;
 
-procedure SelectOnlyThisEntsByLinetype(PInstance:GDBPointer);
+procedure SelectOnlyThisEntsByLinetype(PInstance:Pointer);
 var
     pv:pGDBObjEntity;
     ir:itrec;
@@ -1063,7 +1057,7 @@ end;
 
 
 
-procedure SelectOnlyThisEnts(PInstance:GDBPointer);
+procedure SelectOnlyThisEnts(PInstance:Pointer);
 var
     NeededObjType:TObjID;
     pv:pGDBObjEntity;

@@ -15,9 +15,9 @@
 {
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
-{$MODE OBJFPC}
+{$MODE OBJFPC}{$H+}
 unit uzccommand_exporttexttocsv;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -28,7 +28,7 @@ uses
   uzbpaths,
   math,
   uzccommandsabstract,uzccommandsimpl,
-  uzbgeomtypes,
+  uzegeometrytypes,
   uzccommandsmanager,
   uzeentlwpolyline,uzeentpolyline,uzeentityfactory,
   uzcdrawings,
@@ -55,12 +55,12 @@ var
 function Getcolumn(x:double;Widths:TWidths):integer;
 var
    i:integer;
-   l:double;
+   //l:double;
 begin
   //result:=Floor((x)/ExportTextToCSVParam.W);
   //l:=0;
   for i:=0 to Widths.Size-1 do begin
-    l:=Widths[i];
+    //l:=Widths[i];
     if x<Widths[i] then
        exit(i);
   end;
@@ -145,7 +145,7 @@ begin
         if (pv^.Selected)and isTextEnt(pv^.GetObjType) then begin
           x:=Getcolumn(pv^.P_insert_in_WCS.x-minx,Widths);//Floor((pv^.P_insert_in_WCS.x-minx)/ExportTextToCSVParam.W);
           y:=Floor((maxy-pv^.P_insert_in_WCS.y)/ExportTextToCSVParam.H);
-          FDoc.Cells[x,y]:=StringReplace(pv^.Content,#10#13,' ',[rfReplaceAll]);
+          FDoc.Cells[x,y]:=StringReplace(string(pv^.Content),#10#13,' ',[rfReplaceAll]);
           //FDoc.InsertCell(x,y,StringReplace(pv^.Content,#10#13,' ',[rfReplaceAll]));
         end;
       pv:=drawings.GetCurrentROOT^.ObjArray.iterate(ir);
@@ -157,6 +157,7 @@ begin
   finally
     Widths.Free;
     LPS.EndLongProcess(lpsh);
+    result:=cmd_ok;
   end;
 end;
 

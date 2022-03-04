@@ -15,11 +15,11 @@
 {
 @author(Andrey Zubarev <zamtmn@yandex.ru>)
 }
-{$MODE OBJFPC}
+{$MODE OBJFPC}{$H+}
 unit zcobjectchangeundocommand;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses uzbmemman,zeundostack,zebaseundocommands,uzbtypes,uzeentity;
+uses zeundostack,zebaseundocommands,uzbtypes,uzeentity;
 
 type
 
@@ -83,7 +83,7 @@ end;
 
 function {GDBObjOpenArrayOfUCommands.}CreateTGObjectChangeCommand(var data:TRTModifyData;_method:tmethod):PTGDBRTModifyChangeCommand;overload;
 begin
-     gdbgetmem({$IFDEF DEBUGBUILD}'{9FE25B12-DEE0-410A-BDCD-7E69A41E4389}',{$ENDIF}result,sizeof(TGDBRTModifyChangeCommand));
+     Getmem(result,sizeof(TGDBRTModifyChangeCommand));
      result^.Assign(data,_method);
 end;
 function {GDBObjOpenArrayOfUCommands.}PushCreateTGObjectChangeCommand(var us:TZctnrVectorUndoCommands; var data:TRTModifyData;_method:tmethod):PTGDBRTModifyChangeCommand;overload;

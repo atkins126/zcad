@@ -17,22 +17,22 @@
 }
 
 unit uzestylestexts;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses LCLProc,uzbpaths,uzefontmanager,uzbtypesbase,sysutils,uzbtypes,uzegeometry,
-     uzbstrproc,uzefont,uzestrconsts,UGDBNamedObjectsArray,uzbmemman;
+uses LCLProc,uzbpaths,uzefontmanager,sysutils,uzbtypes,uzegeometry,
+     uzbstrproc,uzefont,uzestrconsts,UGDBNamedObjectsArray;
 type
   //ptextstyle = ^textstyle;
 {EXPORT+}
 PGDBTextStyleProp=^GDBTextStyleProp;
 {REGISTERRECORDTYPE GDBTextStyleProp}
   GDBTextStyleProp=record
-                    size:GDBDouble;(*saved_to_shd*)
-                    oblique:GDBDouble;(*saved_to_shd*)
-                    wfactor:GDBDouble;(*saved_to_shd*)
+                    size:Double;(*saved_to_shd*)
+                    oblique:Double;(*saved_to_shd*)
+                    wfactor:Double;(*saved_to_shd*)
               end;
   PPGDBTextStyleObjInsp=^PGDBTextStyleObjInsp;
-  PGDBTextStyleObjInsp=GDBPointer;
+  PGDBTextStyleObjInsp=Pointer;
   PGDBTextStyle=^GDBTextStyle;
   {REGISTEROBJECTTYPE GDBTextStyle}
   GDBTextStyle = object(GDBNamedObject)
@@ -40,19 +40,19 @@ PGDBTextStyleProp=^GDBTextStyleProp;
     FontFamily:String;(*saved_to_shd*)
     pfont: PGDBfont;
     prop:GDBTextStyleProp;(*saved_to_shd*)
-    UsedInLTYPE:GDBBoolean;
+    UsedInLTYPE:Boolean;
     destructor Done;virtual;
   end;
 PGDBTextStyleArray=^GDBTextStyleArray;
 {REGISTEROBJECTTYPE GDBTextStyleArray}
 GDBTextStyleArray= object(GDBNamedObjectsArray{-}<PGDBTextStyle,GDBTextStyle>{//})(*OpenArrayOfData=GDBTextStyle*)
-                    constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger);
+                    constructor init(m:Integer);
                     constructor initnul;
 
-                    function addstyle(StyleName,AFontFile,AFontFamily:GDBString;tp:GDBTextStyleProp;USedInLT:GDBBoolean):PGDBTextStyle;
-                    function setstyle(StyleName,AFontFile,AFontFamily:GDBString;tp:GDBTextStyleProp;USedInLT:GDBBoolean):PGDBTextStyle;
-                    procedure internalsetstyle(var style:GDBTextStyle;AFontFile,AFontFamily:GDBString;tp:GDBTextStyleProp;USedInLT:GDBBoolean);
-                    function FindStyle(StyleName:GDBString;ult:GDBBoolean):PGDBTextStyle;
+                    function addstyle(StyleName,AFontFile,AFontFamily:String;tp:GDBTextStyleProp;USedInLT:Boolean):PGDBTextStyle;
+                    function setstyle(StyleName,AFontFile,AFontFamily:String;tp:GDBTextStyleProp;USedInLT:Boolean):PGDBTextStyle;
+                    procedure internalsetstyle(var style:GDBTextStyle;AFontFile,AFontFamily:String;tp:GDBTextStyleProp;USedInLT:Boolean);
+                    function FindStyle(StyleName:String;ult:Boolean):PGDBTextStyle;
                     procedure freeelement(PItem:PT);virtual;
               end;
 {EXPORT-}
@@ -76,12 +76,12 @@ end;
 constructor GDBTextStyleArray.init;
 begin
   //Size := sizeof(GDBTextStyle);
-  inherited init({$IFDEF DEBUGBUILD}ErrGuid,{$ENDIF}m{,sizeof(GDBTextStyle)});
+  inherited init(m);
   //addlayer('0',cgdbwhile,lwgdbdefault);
 end;
 
 {procedure GDBLayerArray.clear;
-var i:GDBInteger;
+var i:Integer;
     tlp:PGDBLayerProp;
 begin
      if count>0 then
@@ -95,9 +95,9 @@ begin
      end;
   count:=0;
 end;}
-{function GDBLayerArray.getLayerIndex(name: GDBString): GDBInteger;
+{function GDBLayerArray.getLayerIndex(name: String): Integer;
 var
-  i: GDBInteger;
+  i: Integer;
 begin
   result := 0;
   for i := 0 to count - 1 do
@@ -107,7 +107,7 @@ begin
       exit;
     end;
 end;}
-procedure GDBTextStyleArray.internalsetstyle(var style:GDBTextStyle;AFontFile,AFontFamily:GDBString;tp:GDBTextStyleProp;USedInLT:GDBBoolean);
+procedure GDBTextStyleArray.internalsetstyle(var style:GDBTextStyle;AFontFile,AFontFamily:String;tp:GDBTextStyleProp;USedInLT:Boolean);
 begin
   style.FontFile:=AFontFile;
   style.FontFamily:=AFontFamily;
@@ -118,15 +118,16 @@ begin
 
   style.pfont:=FontManager.addFont(AFontFile,AFontFamily);
   if not assigned(style.pfont) then
-                                begin
-                                     debugln('{WHM}'+fontnotfoundandreplace,[Tria_AnsiToUtf8(style.Name),AFontFile,AFontFamily]);
-                                     style.pfont:=pbasefont;
-                                end;
-
+    if USedInLT then
+      debugln('{WHM}'+fontnotfound,[Tria_AnsiToUtf8(style.Name),AFontFile,AFontFamily])
+    else begin
+      debugln('{WHM}'+fontnotfoundandreplace,[Tria_AnsiToUtf8(style.Name),AFontFile,AFontFamily]);
+      style.pfont:=pbasefont;
+    end;
   style.prop:=tp;
 end;
 
-function GDBTextStyleArray.setstyle(StyleName,AFontFile,AFontFamily:GDBString;tp:GDBTextStyleProp;USedInLT:GDBBoolean):PGDBTextStyle;
+function GDBTextStyleArray.setstyle(StyleName,AFontFile,AFontFamily:String;tp:GDBTextStyleProp;USedInLT:Boolean):PGDBTextStyle;
 var
    ps:PGDBTextStyle;
 begin
@@ -135,10 +136,10 @@ begin
   if ps<>nil then
     internalsetstyle(ps^,AFontFile,AFontFamily,tp,USedInLT);
 end;
-function GDBTextStyleArray.addstyle(StyleName,AFontFile,AFontFamily:GDBString;tp:GDBTextStyleProp;USedInLT:GDBBoolean):{GDBInteger}PGDBTextStyle;
+function GDBTextStyleArray.addstyle(StyleName,AFontFile,AFontFamily:String;tp:GDBTextStyleProp;USedInLT:Boolean):{Integer}PGDBTextStyle;
 var ts:PGDBTextStyle;
 begin
-  GDBGetmem({$IFDEF DEBUGBUILD}'{ED59B789-33EF-487E-9E1D-711F5988A194}',{$ENDIF}pointer(ts),sizeof(GDBTextStyle));
+  Getmem(pointer(ts),sizeof(GDBTextStyle));
   ts.init(stylename);
   internalsetstyle(ts^,AFontFile,AFontFamily,tp,USedInLT);
   result:=pointer(getDataMutable(PushBackData(ts)));
@@ -165,7 +166,7 @@ begin
 end;
 
 {function GDBLayerArray.CalcCopactMemSize2;
-var i:GDBInteger;
+var i:Integer;
     tlp:PGDBLayerProp;
 begin
      result:=0;
@@ -175,12 +176,12 @@ begin
      tlp:=parray;
      for i:=0 to count-1 do
      begin
-          result:=result+sizeof(GDBByte)+sizeof(GDBSmallint)+sizeof(GDBWord)+length(tlp^.name);
+          result:=result+sizeof(Byte)+sizeof(SmallInt)+sizeof(Word)+length(tlp^.name);
           inc(tlp);
      end;
 end;
 function GDBLayerArray.SaveToCompactMemSize2;
-var i:GDBInteger;
+var i:Integer;
     tlp:PGDBLayerProp;
 begin
      result:=0;
@@ -188,14 +189,14 @@ begin
      tlp:=parray;
      for i:=0 to count-1 do
      begin
-          PGDBByte(pmem)^:=tlp^.color;
-          inc(PGDBByte(pmem));
+          PByte(pmem)^:=tlp^.color;
+          inc(PByte(pmem));
           PGDBSmallint(pmem)^:=tlp^.lineweight;
           inc(PGDBSmallint(pmem));
           PGDBWord(pmem)^:=length(tlp^.name);
           inc(PGDBWord(pmem));
-          Move(GDBPointer(tlp.name)^, pmem^,length(tlp.name));
-          inc(PGDBByte(pmem),length(tlp.name));
+          Move(Pointer(tlp.name)^, pmem^,length(tlp.name));
+          inc(PByte(pmem),length(tlp.name));
           inc(tlp);
      end;
 end;

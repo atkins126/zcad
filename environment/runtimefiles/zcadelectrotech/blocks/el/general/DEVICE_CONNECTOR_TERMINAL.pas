@@ -5,8 +5,8 @@ var
    SYS_Border:TShapeBorder;
    SYS_Class:TShapeClass;
    SYS_Group:TShapeGroup;
-   TNAME_TERMName:GDBString;
-   TNAME_Number:GDBInteger;
+   TNAME_TERMName:String;
+   TNAME_Number:Integer;
 implementation
 begin
    SYS_Border:=SB_Empty;

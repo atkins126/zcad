@@ -18,11 +18,11 @@
 
 {**Модуль утилит движка}
 unit uzeutils;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
-  uzepalette,uzestyleslinetypes,uzestyleslayers,uzedrawingsimple,uzbtypesbase,
-  gzctnrvectortypes,uzbtypes,uzeentity,uzegeometry,uzeentgenericsubentry,gzctnrstl
+  uzepalette,uzestyleslinetypes,uzestyleslayers,uzedrawingsimple,
+  gzctnrvectortypes,uzbtypes,uzeentity,uzegeometry,uzeentgenericsubentry,gzctnrSTL
   ,LazLogger;
 type
   TEntPropSetterFromDrawing=procedure(const PEnt: PGDBObjEntity; var Drawing:TSimpleDrawing);
@@ -32,7 +32,7 @@ type
     @member(SelectedEntsCount Общее количество выбраных примитивов в чертеже)}
   TSelEntsDesk=record
                  PFirstSelectedEnt:PGDBObjEntity;
-                 SelectedEntsCount:GDBInteger;
+                 SelectedEntsCount:Integer;
                end;
   procedure zeRegisterEntPropSetter(proc:TEntPropSetterFromDrawing);
 
@@ -69,11 +69,11 @@ type
 
   {**Процедура счетчик, если слой примитива PInstance равен PCounted, то Counter инкрементируется.
      используется для подсчета количества ссылок на слой в примитивах}
-  procedure LayerCounter(const PInstance,PCounted:GDBPointer;var Counter:GDBInteger);
+  procedure LayerCounter(const PInstance,PCounted:Pointer;var Counter:Integer);
 
   {**Процедура счетчик, если тип линии примитива PInstance равен PCounted, то Counter инкрементируется.
      используется для подсчета количества ссылок на тип линии в примитивах}
-  procedure LTypeCounter(const PInstance,PCounted:GDBPointer;var Counter:GDBInteger);
+  procedure LTypeCounter(const PInstance,PCounted:Pointer;var Counter:Integer);
 implementation
 var
    EntPropSetters:TEntPropSetters;
@@ -127,12 +127,12 @@ begin
      PEnt^.vp.LineWeight:=LW;
      PEnt^.vp.color:=Color;
 end;
-procedure LayerCounter(const PInstance,PCounted:GDBPointer;var Counter:GDBInteger);
+procedure LayerCounter(const PInstance,PCounted:Pointer;var Counter:Integer);
 begin
      if PCounted=PGDBObjEntity(PInstance)^.vp.Layer then
                                   inc(Counter);
 end;
-procedure LTypeCounter(const PInstance,PCounted:GDBPointer;var Counter:GDBInteger);
+procedure LTypeCounter(const PInstance,PCounted:Pointer;var Counter:Integer);
 begin
      if PCounted=PGDBObjEntity(PInstance)^.vp.LineType then
                                   inc(Counter);

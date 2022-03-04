@@ -16,13 +16,13 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>)
 }
 unit uzeentdimension;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses uzemathutils,uzgldrawcontext,uzeentabstracttext,uzestylestexts,UGDBXYZWStringArray,
      uzestylesdim,uzeentmtext,uzestyleslayers,uzedrawingdef,uzecamera,
-     uzbstrproc,UGDBOpenArrayOfByte,uzeenttext,uzegeometry,uzeentline,uzbtypesbase,uzeentcomplex,
-     uzbgeomtypes,sysutils,uzeentity,uzbtypes,uzeconsts,uzbmemman,
+     uzbstrproc,uzctnrVectorBytes,uzeenttext,uzegeometry,uzeentline,uzeentcomplex,
+     uzegeometrytypes,sysutils,uzeentity,uzbtypes,uzeconsts,
      uzedimensionaltypes,uzeentitiesmanager,UGDBOpenArrayOfPV,uzeentblockinsert;
 type
 {EXPORT+}
@@ -47,7 +47,7 @@ TDXFDimData=record
   P14InWCS:GDBVertex;
   P15InWCS:GDBVertex;
   P16InOCS:GDBVertex;
-  TextMoved:GDBBoolean;
+  TextMoved:Boolean;
 end;
 PGDBObjDimension=^GDBObjDimension;
 {REGISTEROBJECTTYPE GDBObjDimension}
@@ -56,20 +56,20 @@ GDBObjDimension= object(GDBObjComplex)
                       PDimStyle:{-}PGDBDimStyle{/PGDBDimStyleObjInsp/};
                       PProjPoint:PTDXFDimData2D;
                       vectorD,vectorN,vectorT:GDBVertex;
-                      TextTParam,TextAngle,DimAngle:GDBDouble;
-                      TextInside:GDBBoolean;
+                      TextTParam,TextAngle,DimAngle:Double;
+                      TextInside:Boolean;
                       TextOffset:GDBVertex;
-                      dimtextw,dimtexth:GDBDouble;
-                      dimtext:GDBString;
+                      dimtextw,dimtexth:Double;
+                      dimtext:TDXFEntsInternalStringType;
 
 
                 function DrawDimensionLineLinePart(p1,p2:GDBVertex;var drawing:TDrawingDef):pgdbobjline;
                 function DrawExtensionLineLinePart(p1,p2:GDBVertex;var drawing:TDrawingDef; part:integer):pgdbobjline;
                 procedure remaponecontrolpoint(pdesc:pcontrolpointdesc);virtual;
                 procedure RenderFeedback(pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;
-                function LinearFloatToStr(l:GDBDouble;var drawing:TDrawingDef):GDBString;
-                function GetLinearDimStr(l:GDBDouble;var drawing:TDrawingDef):GDBString;
-                function GetDimStr(var drawing:TDrawingDef):GDBString;virtual;
+                function LinearFloatToStr(l:Double;var drawing:TDrawingDef):TDXFEntsInternalStringType;
+                function GetLinearDimStr(l:Double;var drawing:TDrawingDef):TDXFEntsInternalStringType;
+                function GetDimStr(var drawing:TDrawingDef):TDXFEntsInternalStringType;virtual;
                 procedure rtmodifyonepoint(const rtmod:TRTModifyData);virtual;
                 function P10ChangeTo(tv:GDBVertex):GDBVertex;virtual;
                 function P11ChangeTo(tv:GDBVertex):GDBVertex;virtual;
@@ -83,29 +83,38 @@ GDBObjDimension= object(GDBObjComplex)
 
                 procedure DrawDimensionText(p:GDBVertex;var drawing:TDrawingDef;var DC:TDrawContext);virtual;
                 function GetTextOffset(var drawing:TDrawingDef):GDBVertex;virtual;
-                function TextNeedOffset(dimdir:gdbvertex):GDBBoolean;virtual;
-                function TextAlwaysMoved:GDBBoolean;virtual;
-                function GetPSize:GDBDouble;virtual;
+                function TextNeedOffset(dimdir:gdbvertex):Boolean;virtual;
+                function TextAlwaysMoved:Boolean;virtual;
+                function GetPSize:Double;virtual;
 
                 procedure CalcTextAngle;virtual;
                 procedure CalcTextParam(dlStart,dlEnd:Gdbvertex);virtual;
                 procedure CalcTextInside;virtual;
-                procedure DrawDimensionLine(p1,p2:GDBVertex;supress1,supress2,drawlinetotext:GDBBoolean;var drawing:TDrawingDef;var DC:TDrawContext);
+                procedure DrawDimensionLine(p1,p2:GDBVertex;supress1,supress2,drawlinetotext:Boolean;var drawing:TDrawingDef;var DC:TDrawContext);
                 function GetDIMTMOVE:TDimTextMove;virtual;
+                function GetDIMSCALE:double;virtual;
                 destructor done;virtual;
                 //function GetObjType:TObjID;virtual;
                 end;
 {EXPORT-}
 implementation
-procedure GDBObjDimension.DrawDimensionLine(p1,p2:GDBVertex;supress1,supress2,drawlinetotext:GDBBoolean;var drawing:TDrawingDef;var DC:TDrawContext);
+function GDBObjDimension.GetDIMSCALE:double;
+begin
+  if PDimStyle.Units.DIMSCALE>0 then
+    result:=PDimStyle.Units.DIMSCALE
+  else
+    result:=1;
+end;
+
+procedure GDBObjDimension.DrawDimensionLine(p1,p2:GDBVertex;supress1,supress2,drawlinetotext:Boolean;var drawing:TDrawingDef;var DC:TDrawContext);
 var
-   l:GDBDouble;
+   l:Double;
    pl:pgdbobjline;
    tbp0,tbp1:TDimArrowBlockParam;
    pv:pGDBObjBlockInsert;
-   p0inside,p1inside:GDBBoolean;
+   p0inside,p1inside:Boolean;
    pp1,pp2:GDBVertex;
-   zangle:gdbdouble;
+   zangle:Double;
 begin
   l:=uzegeometry.Vertexlength(p1,p2);
   tbp0:=PDimStyle.GetDimBlockParam(0);
@@ -113,18 +122,18 @@ begin
   if supress1 then
                   tbp0.width:=0
               else
-                  tbp0.width:=tbp0.width*PDimStyle.Arrows.DIMASZ;
+                  tbp0.width:=tbp0.width*PDimStyle.Arrows.DIMASZ*GetDIMSCALE;
   if supress2 then
                   tbp1.width:=0
               else
-                  tbp1.width:=tbp1.width*PDimStyle.Arrows.DIMASZ;
+                  tbp1.width:=tbp1.width*PDimStyle.Arrows.DIMASZ*GetDIMSCALE;
   drawing.CreateBlockDef(tbp0.name);
   drawing.CreateBlockDef(tbp1.name);
   if tbp0.width=0 then
                       p0inside:=true
                   else
                       begin
-                           if l-PDimStyle.Arrows.DIMASZ/2>(tbp0.width+tbp1.width) then
+                           if l-PDimStyle.Arrows.DIMASZ*GetDIMSCALE/2>(tbp0.width+tbp1.width) then
                                                             p0inside:=true
                                                         else
                                                             p0inside:=false;
@@ -133,7 +142,7 @@ begin
                       p1inside:=true
                   else
                       begin
-                           if l-PDimStyle.Arrows.DIMASZ/2>(tbp0.width+tbp1.width) then
+                           if l-PDimStyle.Arrows.DIMASZ*GetDIMSCALE/2>(tbp0.width+tbp1.width) then
                                                             p1inside:=true
                                                         else
                                                             p1inside:=false;
@@ -144,11 +153,11 @@ begin
   if p0inside then
                   pointer(pv):=ENTF_CreateBlockInsert(@self,@self.ConstObjArray,
                                                       vp.Layer,vp.LineType,PDimStyle.Lines.DIMCLRD,PDimStyle.Lines.DIMLWD,
-                                                      p1,PDimStyle.Arrows.DIMASZ,ZAngle{*180/pi}-pi,@tbp0.name[1])
+                                                      p1,PDimStyle.Arrows.DIMASZ*GetDIMSCALE,ZAngle{*180/pi}-pi,@tbp0.name[1])
               else
                   pointer(pv):=ENTF_CreateBlockInsert(@self,@self.ConstObjArray,
                                                       vp.Layer,vp.LineType,PDimStyle.Lines.DIMCLRD,PDimStyle.Lines.DIMLWD,
-                                                      p1,PDimStyle.Arrows.DIMASZ,ZAngle{*180/pi},@tbp0.name[1]);
+                                                      p1,PDimStyle.Arrows.DIMASZ*GetDIMSCALE,ZAngle{*180/pi},@tbp0.name[1]);
   //pv^.vp.LineWeight:=PDimStyle.Lines.DIMLWD;
   //pv^.vp.Color:=PDimStyle.Lines.DIMCLRD;
   pv^.BuildGeometry(drawing);
@@ -159,11 +168,11 @@ begin
   if p1inside then
                   pointer(pv):=ENTF_CreateBlockInsert(@self,@self.ConstObjArray,
                                                       vp.Layer,vp.LineType,PDimStyle.Lines.DIMCLRD,PDimStyle.Lines.DIMLWD,
-                                                      p2,PDimStyle.Arrows.DIMASZ,ZAngle{*180/pi},@tbp1.name[1])
+                                                      p2,PDimStyle.Arrows.DIMASZ*GetDIMSCALE,ZAngle{*180/pi},@tbp1.name[1])
               else
                   pointer(pv):=ENTF_CreateBlockInsert(@self,@self.ConstObjArray,
                                                       vp.Layer,vp.LineType,PDimStyle.Lines.DIMCLRD,PDimStyle.Lines.DIMLWD,
-                                                      p2,PDimStyle.Arrows.DIMASZ,ZAngle{*180/pi}-pi,@tbp1.name[1]);
+                                                      p2,PDimStyle.Arrows.DIMASZ*GetDIMSCALE,ZAngle{*180/pi}-pi,@tbp1.name[1]);
   //pv^.vp.LineWeight:=PDimStyle.Lines.DIMLWD;
   //pv^.vp.Color:=PDimStyle.Lines.DIMCLRD;
   pv^.BuildGeometry(drawing);
@@ -174,7 +183,7 @@ begin
                   else
                       begin
                       if p0inside then
-                                      pp1:=Vertexmorphabs(p2,p1,-PDimStyle.Arrows.DIMASZ)
+                                      pp1:=Vertexmorphabs(p2,p1,-PDimStyle.Arrows.DIMASZ*GetDIMSCALE)
                                   else
                                       pp1:=p1;
                       end;
@@ -183,7 +192,7 @@ begin
                   else
                       begin
                       if p0inside then
-                                      pp2:=Vertexmorphabs(p1,p2,-PDimStyle.Arrows.DIMASZ)
+                                      pp2:=Vertexmorphabs(p1,p2,-PDimStyle.Arrows.DIMASZ*GetDIMSCALE)
                                   else
                                       pp2:=p2;
                       end;
@@ -218,6 +227,7 @@ begin
              pl.FormatEntity(drawing,dc);
              end;
         end;
+  DTMnothung:;//заглушка для варнинг
   end;{case}
 end;
 procedure GDBObjDimension.CalcTextInside;
@@ -259,11 +269,11 @@ begin
    TextAngle:=CorrectAngleIfNotReadable(DimAngle);
 end;
 
-function GDBObjDimension.GetDimStr(var drawing:TDrawingDef):GDBString;
+function GDBObjDimension.GetDimStr(var drawing:TDrawingDef):TDXFEntsInternalStringType;
 begin
      result:='need GDBObjDimension.GetDimStr override';
 end;
-function GDBObjDimension.GetPSize: GDBDouble;
+function GDBObjDimension.GetPSize: Double;
 begin
   if TextTParam>0.5 then
                         Result:=dimtextw
@@ -272,21 +282,21 @@ begin
   if vectorN.y<0 then
                      Result:=-Result;
 end;
-function GDBObjDimension.TextNeedOffset(dimdir:gdbvertex):GDBBoolean;
+function GDBObjDimension.TextNeedOffset(dimdir:gdbvertex):Boolean;
 begin
      result:=(((textangle<>0)or(PDimStyle.Text.DIMTAD=DTVPCenters))and(TextInside and not PDimStyle.Text.DIMTIH))or(abs(dimdir.x)<eps)or(DimData.TextMoved);
 end;
-function GDBObjDimension.TextAlwaysMoved:GDBBoolean;
+function GDBObjDimension.TextAlwaysMoved:Boolean;
 begin
      result:=false;
 end;
 
 function GDBObjDimension.GetTextOffset(var drawing:TDrawingDef):GDBVertex;
 var
-   l:GDBDouble;
+   l:Double;
    dimdir:gdbvertex;
    dimtxtstyle:PGDBTextStyle;
-   txtlines:XYZWGDBGDBStringArray;
+   txtlines:XYZWStringArray;
 begin
    dimtext:={GetLinearDimStr(abs(scalardot(vertexsub(DimData.P14InWCS,DimData.P13InWCS),vectorD)))}GetDimStr(drawing);
    dimtxtstyle:=PDimStyle.Text.DIMTXSTY;//drawing.GetTextStyleTable^.getDataMutable(0);
@@ -330,11 +340,13 @@ begin
                                                  if dimdir.y>eps then
                                                                       dimdir:=uzegeometry.VertexMulOnSc(dimdir,-1);
                                             end;
+                                  DTVPOutside:;//заглушка
      end;
      result:=uzegeometry.VertexMulOnSc(dimdir,l);
      end
         else
             result:=nulvertex;
+     result:=uzegeometry.VertexMulOnSc(Result,GetDIMSCALE);
 end;
 function GDBObjDimension.GetDIMTMOVE:TDimTextMove;
 begin
@@ -381,7 +393,7 @@ begin
   ptext.Local.basis.ox.x:=cos(TextAngle);
   ptext.Local.basis.ox.y:=sin(TextAngle);
   ptext.TXTStyleIndex:=dimtxtstyle;
-  ptext.textprop.size:=PDimStyle.Text.DIMTXT;
+  ptext.textprop.size:=PDimStyle.Text.DIMTXT*GetDIMSCALE;
   ptext.vp.Color:=PDimStyle.Text.DIMCLRT;
   ptext.FormatEntity(drawing,dc);
 
@@ -481,7 +493,7 @@ begin
           end;
 
 end;
-function GDBObjDimension.LinearFloatToStr(l:GDBDouble;var drawing:TDrawingDef):GDBString;
+function GDBObjDimension.LinearFloatToStr(l:Double;var drawing:TDrawingDef):TDXFEntsInternalStringType;
 var
    ff:TzeUnitsFormat;
 begin
@@ -492,13 +504,13 @@ begin
                                                ff.uformat:=TLUnits(PDimStyle.Units.DIMLUNIT);
      ff.umode:=UMWithSpaces;
      ff.uprec:=TUPrec(PDimStyle.Units.DIMDEC);
-     result:={floattostr}zeDimensionToString(l,{WorkingFormatSettings}ff);
+     result:=zeDimensionToUnicodeString(l,ff);
 end;
-function GDBObjDimension.GetLinearDimStr(l:GDBDouble;var drawing:TDrawingDef):GDBString;
+function GDBObjDimension.GetLinearDimStr(l:Double;var drawing:TDrawingDef):TDXFEntsInternalStringType;
 var
    n:double;
    i:integer;
-   str:gdbstring;
+   str:TDXFEntsInternalStringType;
 begin
      l:=l*PDimStyle.Units.DIMLFAC;
      if PDimStyle.Units.DIMRND<>0 then
@@ -512,7 +524,7 @@ begin
                                        result:=str
                                    else
                                        begin
-                                            result:=PDimStyle.Units.DIMPOST;
+                                            result:=TDXFEntsInternalStringType(PDimStyle.Units.DIMPOST);
                                                  i:=pos('<>',uppercase(result));
                                                  if i>0 then
                                                             begin
@@ -524,14 +536,14 @@ begin
 end;
 destructor GDBObjDimension.done;
 begin
-  if PProjPoint<>nil then GDBFreeMem(pprojpoint);
+  if PProjPoint<>nil then Freemem(pprojpoint);
   dimtext:='';
   inherited;
 end;
 procedure GDBObjDimension.RenderFeedback;
 var tv:GDBvertex;
 begin
-  if PProjPoint=nil then GDBGetMem({$IFDEF DEBUGBUILD}'{D5FC6893-3498-45B9-B2F4-732DF9DE81C3}',{$ENDIF}GDBPointer(pprojpoint),sizeof(TDXFDimData2D));
+  if PProjPoint=nil then Getmem(Pointer(pprojpoint),sizeof(TDXFDimData2D));
 
   ProjectProc(DimData.P10InWCS,tv);
   pprojpoint.P10:=pGDBvertex2D(@tv)^;

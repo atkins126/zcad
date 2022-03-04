@@ -16,7 +16,7 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>)
 }
 unit uzcfdimstyles;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 {$mode objfpc}{$H+}
 
 interface
@@ -27,13 +27,13 @@ uses
   FileUtil, LResources, Forms, Controls, Graphics, GraphType,
   Buttons, ExtCtrls, StdCtrls, ComCtrls,LCLIntf,lcltype, ActnList,
 
-  uzeconsts,uzestylestexts,uzcdrawings,uzbtypesbase,uzbtypes,varmandef,
+  uzeconsts,uzestylestexts,uzcdrawings,uzbtypes,varmandef,
   uzcsuptypededitors,
 
   uzestylesdim, uzeentdimension,
 
   uzbpaths,uzcinterface, uzcstrconsts, uzcsysinfo,uzbstrproc,UBaseTypeDescriptor,
-  uzcimagesmanager, usupportgui, ZListView,uzefontmanager,varman,uzctnrvectorgdbstring,
+  uzcimagesmanager, usupportgui, ZListView,uzefontmanager,varman,uzctnrvectorstrings,
   gzctnrvectortypes,uzeentity,uzeenttext;
 
 const
@@ -90,7 +90,7 @@ type
     procedure MaceItemCurrent(ListItem:TListItem);
     procedure FillTextStyleSelector(currentitem:string;currentitempstyle:PGDBTextStyle);
     procedure onrsz(Sender: TObject);
-    procedure countstyle(pdimstyle:PGDBDimStyle;out e,b,inDimStyles:GDBInteger);
+    procedure countstyle(pdimstyle:PGDBDimStyle;out e,b,inDimStyles:Integer);
   private
     changedstamp:boolean;
     //EditedItem:TListItem;
@@ -195,7 +195,7 @@ begin
 end;
 function TDimStylesForm.CreateNameEditor(Item: TListItem;r: TRect):boolean;
 begin
-  result:=SupportTypedEditors.createeditor(ListView1,Item,r,PGDBDimStyle(Item.Data)^.Name,'GDBAnsiString',@CreateUndoStartMarkerNeeded,r.Bottom-r.Top)
+  result:=SupportTypedEditors.createeditor(ListView1,Item,r,PGDBDimStyle(Item.Data)^.Name,'AnsiString',@CreateUndoStartMarkerNeeded,r.Bottom-r.Top)
 end;
 {Font name handle procedures}
 function TDimStylesForm.GetTextStyleName(Item: TListItem):string;
@@ -222,7 +222,7 @@ begin
 end;
 function TDimStylesForm.CreateLinearScaleEditor(Item: TListItem;r: TRect):boolean;
 begin
-  result:=SupportTypedEditors.createeditor(ListView1,Item,r,PGDBDimStyle(Item.Data)^.Units.DIMLFAC,'GDBDouble',@CreateUndoStartMarkerNeeded,r.Bottom-r.Top)
+  result:=SupportTypedEditors.createeditor(ListView1,Item,r,PGDBDimStyle(Item.Data)^.Units.DIMLFAC,'Double',@CreateUndoStartMarkerNeeded,r.Bottom-r.Top)
 end;
 {Text Height handle procedures}
 function TDimStylesForm.GetTextHeight(Item: TListItem):string;
@@ -231,7 +231,7 @@ begin
 end;
 function TDimStylesForm.CreateTextHeightEditor(Item: TListItem;r: TRect):boolean;
 begin
-  result:=SupportTypedEditors.createeditor(ListView1,Item,r,PGDBDimStyle(Item.Data)^.Text.DIMTXT,'GDBDouble',@CreateUndoStartMarkerNeeded,r.Bottom-r.Top)
+  result:=SupportTypedEditors.createeditor(ListView1,Item,r,PGDBDimStyle(Item.Data)^.Text.DIMTXT,'Double',@CreateUndoStartMarkerNeeded,r.Bottom-r.Top)
 end;
 
 function TDimStylesForm.GetDIMBLK1(Item: TListItem):string;
@@ -285,7 +285,7 @@ begin
 end;
 function TDimStylesForm.CreateDIMASZEditor(Item: TListItem;r: TRect):boolean;
 begin
-  result:=SupportTypedEditors.createeditor(ListView1,Item,r,PGDBDimStyle(Item.Data)^.Arrows.DIMASZ,'GDBDouble',@CreateUndoStartMarkerNeeded,r.Bottom-r.Top)
+  result:=SupportTypedEditors.createeditor(ListView1,Item,r,PGDBDimStyle(Item.Data)^.Arrows.DIMASZ,'Double',@CreateUndoStartMarkerNeeded,r.Bottom-r.Top)
 end;
 
 procedure TDimStylesForm.FillTextStyleSelector(currentitem:string;currentitempstyle:PGDBTextStyle);
@@ -447,18 +447,18 @@ begin
      DescLabel.Caption:=Format(rsCountDimStylesFound,[tscounter]);
 end;
 
-procedure DimStyleCounter(const PInstance,PCounted:GDBPointer;var Counter:GDBInteger);
+procedure DimStyleCounter(const PInstance,PCounted:Pointer;var Counter:Integer);
 begin
      if (PGDBObjEntity(PInstance)^.GetObjType=GDBAlignedDimensionID)or(PGDBObjEntity(PInstance)^.GetObjType=GDBRotatedDimensionID)or(PGDBObjEntity(PInstance)^.GetObjType=GDBDiametricDimensionID)or(PGDBObjEntity(PInstance)^.GetObjType=GDBRadialDimensionID) then
      if PCounted=PGDBObjDimension(PInstance)^.PDimStyle then
           inc(Counter);
 end;
-procedure TextStyleCounterInDimStyles(const PInstance,PCounted:GDBPointer;var Counter:GDBInteger);
+procedure TextStyleCounterInDimStyles(const PInstance,PCounted:Pointer;var Counter:Integer);
 begin
      //if PCounted=PGDBDimStyle(PInstance)^.Text.DIMTXSTY then
      //                                                      inc(Counter);
 end;
-procedure TDimStylesForm.countstyle(pdimstyle:PGDBDimStyle;out e,b,inDimStyles:GDBInteger);
+procedure TDimStylesForm.countstyle(pdimstyle:PGDBDimStyle;out e,b,inDimStyles:Integer);
 var
    pdwg:PTSimpleDrawing;
 begin
@@ -565,7 +565,7 @@ procedure TDimStylesForm.DeleteItem(Sender: TObject);
 var
    pstyle:PGDBDimStyle;
    pdwg:PTSimpleDrawing;
-   inEntities,inBlockTable,indimstyles:GDBInteger;
+   inEntities,inBlockTable,indimstyles:Integer;
    //domethod,undomethod:tmethod;
 begin
   pdwg:=drawings.GetCurrentDWG;
@@ -606,7 +606,7 @@ procedure TDimStylesForm.PurgeTStyles(Sender: TObject);
 var
    i,purgedcounter:integer;
    ProcessedItem:TListItem;
-   inEntities,inBlockTable,indimstyles:GDBInteger;
+   inEntities,inBlockTable,indimstyles:Integer;
    PCurrentStyle:PGDBDimStyle;
 begin
 

@@ -18,12 +18,12 @@
 {$mode objfpc}{$h+}
 
 unit uzvagsl;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
 
-{*uzcenitiesvariablesextender,sysutils,UGDBOpenArrayOfPV,uzbtypesbase,uzbtypes,
+{*uzcenitiesvariablesextender,sysutils,UGDBOpenArrayOfPV,uzbtypes,
      uzeentity,varmandef,uzeentsubordinated,
 
 
@@ -57,7 +57,7 @@ uses
 
   Forms, //gzctnrvectortypes,
   //  uzcfblockinsert, //старое временно
-   uzcfarrayinsert,
+   //uzcfarrayinsert,
 
   uzeentblockinsert,      //unit describes blockinsert entity
                        //модуль описывающий примитив вставка блока
@@ -84,7 +84,7 @@ uses
   uzeentarc,
   uzeentcircle,
   uzeentity,
-  uzbgeomtypes,
+  uzegeometrytypes,
 
 
   gvector,garrayutils, // Подключение Generics и модуля для работы с ним
@@ -94,7 +94,7 @@ uses
   UGDBOpenArrayOfPV,
 
   uzegeometry,
-  uzeentitiesmanager,
+  //uzeentitiesmanager,
 
   //uzcmessagedialogs,
   uzeentityfactory,    //unit describing a "factory" to create primitives
@@ -103,7 +103,7 @@ uses
                       //системные переменные
   uzgldrawcontext,
   uzcinterface,
-  uzbtypesbase,uzbtypes, //base types
+  uzbtypes, //base types
                       //описания базовых типов
   uzeconsts, //base constants
                       //описания базовых констант
@@ -111,7 +111,7 @@ uses
   uzccommandsabstract,
   uzccommandsimpl, //Commands manager and related objects
                       //менеджер команд и объекты связанные с ним
-  uzcdrawing,
+  //uzcdrawing,
   uzedrawingsimple,
   uzcdrawings,     //Drawings manager, all open drawings are processed him
                       //"Менеджер" чертежей
@@ -119,11 +119,11 @@ uses
                       //разные функции упрощающие создание примитивов, пока их там очень мало
   varmandef,
   Varman,
-  {UGDBOpenArrayOfUCommands,}zcchangeundocommand,
+  {UGDBOpenArrayOfUCommands,}//zcchangeundocommand,
 
   uzclog,                //log system
                       //<**система логирования
-  uzcvariablesutils, // для работы с ртти
+  //uzcvariablesutils, // для работы с ртти
 
      gzctnrvectortypes,                  //itrec
   //для работы графа
@@ -137,16 +137,16 @@ uses
    uzbpaths,
    uzctranslations,
 
-   UGDBSelectedObjArray,
-   uzcstrconsts,
+   //UGDBSelectedObjArray,
+   //uzcstrconsts,
   //uzccombase,
-  uzvagslcom,
+  //uzvagslcom,
    uzvsgeom,
 
-    uzbmemman,uzcdialogsfiles,
+    uzcdialogsfiles,
 
 dialogs,uzcinfoform,
- uzelongprocesssupport,usimplegenerics,gzctnrstl,
+ uzelongprocesssupport,//usimplegenerics,gzctnrSTL,
 
   uzvtestdraw, uzccommand_drawsuperline;
 
@@ -159,11 +159,11 @@ type
 //    TuzvagslComParams=packed record       //определяем параметры команды которые будут видны в инспекторе во время выполнения команды
 //                                      //регистрировать их будем паскалевским RTTI
 //                                      //не через экспорт исходников и парсинг файла с определениями типов
-//  InverseX:gdbboolean;
-//  InverseY:gdbboolean;
-//  BaseName:gdbstring;
-//  NumberVar:gdbstring;
-//  option2:gdbboolean;
+//  InverseX:Boolean;
+//  InverseY:Boolean;
+//  BaseName:String;
+//  NumberVar:String;
+//  option2:Boolean;
 //
 //end;
 
@@ -199,7 +199,7 @@ type
                    orient:integer; //0-слева,1-сверху,2-справа,3-снизу
                    public
                    constructor Create;
-                   destructor Destroy;virtual;
+                   destructor Destroy;override;
       end;
   TListColumnDev=specialize TVector<TInfoColumnDev>;
 
@@ -219,11 +219,11 @@ type
       //** Создания списка ребер графа
       PTInfoEdgeGraph=^TInfoEdgeGraph;
       TInfoEdgeGraph=record
-                         VIndex1:GDBInteger; //номер 1-й вершниы по списку
-                         VIndex2:GDBInteger; //номер 2-й вершниы по списку
+                         VIndex1:Integer; //номер 1-й вершниы по списку
+                         VIndex2:Integer; //номер 2-й вершниы по списку
                          VPoint1:GDBVertex;  //координаты 1й вершниы
                          VPoint2:GDBVertex;  //координаты 2й вершниы
-                         edgeLength:GDBDouble; // длина ребра
+                         edgeLength:Double; // длина ребра
       end;
       TListEdgeGraph=specialize TVector<TInfoEdgeGraph>;
 
@@ -235,7 +235,7 @@ type
                          numStart:integer;
                          public
                          constructor Create;
-                         destructor Destroy;virtual;
+                         destructor Destroy;override;
       end;
 
 
@@ -348,10 +348,10 @@ implementation
     //**поиск перпендикуляра к комнате и к внутреннему контуру прокладки
     function getVertexPerpendicularRoom(contour2dRoom:pgdbobjlwpolyline;contourRoomEmbedSL:TListVertex;stPoint:gdbvertex;out perpendListVertex:TListVertex):boolean;
     var
-       pt1,pta,ptb,tempVertex,tempVertex2:gdbvertex;
+       {pt1,pta,ptb,}tempVertex,tempVertex2:gdbvertex;
        vertb2d,verta2d:GDBVertex2d;
        vertb,verta:GDBVertex;
-       i, num:integer;
+       i{, num}:integer;
     begin
        result:=false;
        perpendListVertex:=TListVertex.Create;
@@ -479,12 +479,12 @@ implementation
     var
       stPoint,tempVertex:GDBVertex;
       //perpendListVertex:TListVertex;
-      i:integer;
-      xline,yline,xyline:double;
+      //i:integer;
+      xline,{yline,}xyline:double;
 
-      ir:itrec;
-      pobj: pGDBObjEntity;
-      drawing:PTSimpleDrawing; //для работы с чертежом
+      //ir:itrec;
+      //pobj: pGDBObjEntity;
+      //drawing:PTSimpleDrawing; //для работы с чертежом
     begin
       result:=false;
       if commandmanager.get3dpoint('Start point automatic placement of super lines:',stPoint)= GRNormal then
@@ -773,8 +773,8 @@ implementation
   //**-получение ориентированости стен относительно перпендикуляра, если больше паралельно то true, если больше перпендикулярно то false
   function getWallInfoOrient(contourRoomEmbedSL:TListVertex;perpendListVertex:TListVertex):TListWallOrient;
   var
-    angleper,anglewall,xlineper,xylineper,xlinewall,xylinewall:double;
-    tempVertex,perp1,perp2:gdbvertex;
+    angleper,{anglewall,}xlineper,xylineper{,xlinewall,xylinewall}:double;
+    tempVertex{,perp1,perp2}:gdbvertex;
     i:integer;
     iwall:Twallinfo;
   begin
@@ -899,20 +899,20 @@ implementation
   //**Получения матрицы(списка) устройств по строкам и колоннам, для правильной прокладки кабелей
   function get2DListDevice(listDeviceinRoom:TListVertexDevice;contourRoom:PGDBObjPolyLine;perpendListVertex:TListVertex;anglePerpendCos:double;out hor2DListDevice:TListColumnDev;out vert2DListDevice:TListColumnDev):TListColumnDev;
     var
-        psd:PSelectedObjDesc;
-        ir:itrec;
+        //psd:PSelectedObjDesc;
+        //ir:itrec;
         mpd:devcoordarray;
-        pdev:PGDBObjDevice;
+        //pdev:PGDBObjDevice;
         tempvert:GDBVertex;
         index:integer;
-        pvd:pvardesk;
+        //pvd:pvardesk;
         dcoord:tdevcoord;
-        i,j,count:integer;
-        process:boolean;
+        i,j{,count}:integer;
+        //process:boolean;
         DC:TDrawContext;
-        pdevvarext:TVariablesExtender;
+        //pdevvarext:TVariablesExtender;
         angle:double;
-         infoVertexDevice:TVertexDevice;
+         //infoVertexDevice:TVertexDevice;
          tempforinfo:string;
     begin
          //ZCMsgCallBackInterface.TextMessage('Заработалоssssss');
@@ -1123,7 +1123,7 @@ implementation
 //                pvd:=pdevvarext^.entityunit.FindVariable('NMO_BaseName');
 //                if pvd<>nil then
 //                begin
-//                  if uppercase(pvd^.data.PTD^.GetUserValueAsString(pvd^.data.Instance))=
+//                  if uppercase(pvd^.data.PTD^.GetUserValueAsString(pvd^.Instance))=
 //                     uppercase(comParams.BaseName) then
 //                                                             process:=true
 //                                                         else
@@ -1143,7 +1143,7 @@ implementation
 //                pvd:=pdevvarext^.entityunit.FindVariable(comParams.NumberVar);
 //                if pvd<>nil then
 //                begin
-//                     pvd^.data.PTD^.SetValueFromString(pvd^.data.Instance,inttostr(index));
+//                     pvd^.data.PTD^.SetValueFromString(pvd^.Instance,inttostr(index));
 //                     ZCMsgCallBackInterface.TextMessage('device'+inttostr(index)+'==='+inttostr(i)+'##'+inttostr(j));
 //                     //inc(index,NumberingParams.Increment);
 //                     inc(index);
@@ -1154,7 +1154,7 @@ implementation
 //                   ZCMsgCallBackInterface.TextMessage('In device not found numbering variable');
 //              end
 //              else
-//                  ZCMsgCallBackInterface.TextMessage('Device with basename "'+pvd^.data.PTD^.GetUserValueAsString(pvd^.data.Instance)+'" filtred out');
+//                  ZCMsgCallBackInterface.TextMessage('Device with basename "'+pvd^.data.PTD^.GetUserValueAsString(pvd^.Instance)+'" filtred out');
 //         end;
 //       ZCMsgCallBackInterface.TextMessage(sysutils.format(rscmNEntitiesProcessed,[inttostr(count)]));
 //       //if NumberingParams.SaveStart then
@@ -1241,7 +1241,7 @@ begin
 end;
 
 //Проверка списка на дубликаты, при добавлении новой вершины, с учетом погрешности
-function dublicateVertex(listVertex:TListGraphVertex;addVertex:GDBVertex;inaccuracy:GDBDouble):Boolean;
+function dublicateVertex(listVertex:TListGraphVertex;addVertex:GDBVertex;inaccuracy:Double):Boolean;
 var
     i:integer;
 begin
@@ -1492,11 +1492,11 @@ var
  mathGraph:TGraph;
  T: Float;
  EdgePath,VertexPath:TClassList;
- i,j,k,m,count:integer;
+ i,j,k,{m,}count:integer;
  isClone,isFirst:boolean;
- tempNum,beforeNum:integer;
+ tempNum{,beforeNum}:integer;
  tempLength,beforeLength:double;
- infoVertex:TGraphInfoVertex;
+ //infoVertex:TGraphInfoVertex;
  tempListDevice:TListVertexDevice;
 begin
     // Подключение созданного граффа к библиотеке Аграф
@@ -1628,15 +1628,15 @@ end;
 function getVertexSL(pt,stpt:GDBVertex;listDeviceinRoom:TListVertexDevice;accuracy:double):GDBVertex;
 var
  i:integer;
- pd,pObjDevice,pObjDevice2,currentSubObj,currentSubObj2:PGDBObjDevice;
+ {pd,}pObjDevice,{pObjDevice2,}currentSubObj{,currentSubObj2}:PGDBObjDevice;
 
- ir,ir_inDevice,ir_inDevice2:itrec;  // применяется для обработки списка выделений, но что это понятия не имею :)
+ ir,ir_inDevice{,ir_inDevice2}:itrec;  // применяется для обработки списка выделений, но что это понятия не имею :)
 
  NearObjects:GDBObjOpenArrayOfPV;//список примитивов рядом с точкой
  areaVertex:TBoundingBox;
  pobj: pGDBObjEntity;
  pcdev:PGDBObjLine;
- interceptVertex,firstPoint,pConnect,tempvert:GDBVertex;
+ interceptVertex,{firstPoint,}{pConnect,}tempvert:GDBVertex;
  psldb:Pointer;
 
  listVertex:TListVertex;
@@ -1800,6 +1800,7 @@ var
 
   UndoMarcerIsPlazed:boolean;
 begin
+
   //if commandmanager.get3dpoint('Specify insert point:',stPoint) then
 
      SysUnit^.RegisterType(TypeInfo(TAutogenSuperLine));//регистрируем тип данных в зкадном RTTI
@@ -1867,7 +1868,7 @@ begin
    zcRedrawCurrentDrawing;
 
    Commandmanager.executecommandend;
-
+   result:=cmd_ok;
 end;
 initialization
   autogenSuperLine.nameSL:='??';

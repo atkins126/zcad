@@ -18,14 +18,14 @@
 {$mode delphi}
 unit uzccommand_get3dpoint;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
   LazLogger,
   uzccommandsabstract,uzccommandsimpl,
   uzcdrawings,uzeconsts,uzcinterface,
-  uzcstrconsts,uzbgeomtypes,uzbtypesbase,
+  uzcstrconsts,uzegeometrytypes,
   uzglviewareadata,uzccommandsmanager;
 
 implementation
@@ -39,7 +39,7 @@ begin
                      ZCMsgCallBackInterface.TextMessage(operands,TMWOHistoryOut);
   result:=cmd_ok;
 end;
-function Line_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
+function Line_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
 begin
   if (button and MZW_LBUTTON)<>0 then
   begin

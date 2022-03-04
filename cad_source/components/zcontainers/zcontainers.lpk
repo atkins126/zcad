@@ -18,68 +18,72 @@
         </SyntaxOptions>
       </Parsing>
     </CompilerOptions>
-    <Files Count="14">
+    <Files Count="15">
       <Item1>
         <Filename Value="gzctnrvector.pas"/>
-        <UnitName Value="gzctnrvector"/>
+        <UnitName Value="gzctnrVector"/>
       </Item1>
       <Item2>
         <Filename Value="gzctnrvectorsimple.pas"/>
-        <UnitName Value="gzctnrvectorsimple"/>
+        <UnitName Value="gzctnrVectorSimple"/>
       </Item2>
       <Item3>
-        <Filename Value="gzctnrvectordata.pas"/>
-        <UnitName Value="gzctnrvectordata"/>
+        <Filename Value="gzctnrvectorobjects.pas"/>
+        <UnitName Value="gzctnrVectorObjects"/>
       </Item3>
       <Item4>
-        <Filename Value="gzctnrvectorobjects.pas"/>
-        <UnitName Value="gzctnrvectorobjects"/>
+        <Filename Value="gzctnrvectorp.pas"/>
+        <UnitName Value="gzctnrVectorP"/>
       </Item4>
       <Item5>
-        <Filename Value="gzctnrvectorp.pas"/>
-        <UnitName Value="gzctnrvectorp"/>
+        <Filename Value="gzctnrvectorpdata.pas"/>
+        <UnitName Value="gzctnrVectorPData"/>
       </Item5>
       <Item6>
-        <Filename Value="gzctnrvectorpdata.pas"/>
-        <UnitName Value="gzctnrvectorpdata"/>
+        <Filename Value="gzctnrvectorpobjects.pas"/>
+        <UnitName Value="gzctnrVectorPObjects"/>
       </Item6>
       <Item7>
-        <Filename Value="gzctnrvectorpobjects.pas"/>
-        <UnitName Value="gzctnrvectorpobjects"/>
+        <Filename Value="gzctnrbinaryseparatedtree.pas"/>
+        <UnitName Value="gzctnrBinarySeparatedTree"/>
       </Item7>
       <Item8>
-        <Filename Value="uzctnrvectorgdbstring.pas"/>
-        <UnitName Value="uzctnrvectorgdbstring"/>
+        <Filename Value="gzctnrstl.pas"/>
+        <UnitName Value="gzctnrSTL"/>
       </Item8>
       <Item9>
-        <Filename Value="uzctnrvectorgdbpointer.pas"/>
-        <UnitName Value="uzctnrvectorgdbpointer"/>
+        <Filename Value="uzctnralignedvectorbytes.pas"/>
+        <UnitName Value="uzctnralignedvectorbytes"/>
       </Item9>
       <Item10>
-        <Filename Value="UGDBTree.pas"/>
-        <UnitName Value="UGDBTree"/>
+        <Filename Value="gzctnrvectorstr.pas"/>
+        <UnitName Value="gzctnrVectorStr"/>
       </Item10>
       <Item11>
-        <Filename Value="UGDBOpenArrayOfByte.pas"/>
-        <UnitName Value="UGDBOpenArrayOfByte"/>
+        <Filename Value="uzctnrtree.pas"/>
+        <UnitName Value="uzctnrTree"/>
       </Item11>
       <Item12>
-        <Filename Value="gzctnrtree.pas"/>
-        <UnitName Value="gzctnrtree"/>
+        <Filename Value="uzctnrvectorstrings.pas"/>
+        <UnitName Value="uzctnrVectorStrings"/>
       </Item12>
       <Item13>
-        <Filename Value="gzctnrstl.pas"/>
-        <UnitName Value="gzctnrstl"/>
+        <Filename Value="uzctnrvectorpointers.pas"/>
+        <UnitName Value="uzctnrVectorPointers"/>
       </Item13>
       <Item14>
-        <Filename Value="uzctnrobjectschunk.pas"/>
-        <UnitName Value="uzctnrobjectschunk"/>
+        <Filename Value="uzctnrvectorbytes.pas"/>
+        <UnitName Value="uzctnrVectorBytes"/>
       </Item14>
+      <Item15>
+        <Filename Value="gzctnralignedvectorobjects.pas"/>
+        <UnitName Value="gzctnrAlignedVectorObjects"/>
+      </Item15>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">
       <Item1>
-        <PackageName Value="zebase"/>
+        <PackageName Value="LazUtils"/>
       </Item1>
       <Item2>
         <PackageName Value="FCL"/>

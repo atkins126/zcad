@@ -17,12 +17,12 @@
 }
 
 unit uzccommand_dbgappexplorer;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
  LazLogger,
- uzccommandsimpl,uzccommandsabstract,uzbtypes,AppExploreFrm;
+ uzccommandsimpl,uzccommandsabstract,AppExploreFrm;
 implementation
 function dbgAppExplorer_com(operands:TCommandOperands):TCommandResult;
 begin

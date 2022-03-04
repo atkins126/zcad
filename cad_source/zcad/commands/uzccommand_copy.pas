@@ -15,9 +15,9 @@
 {
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
-{$MODE OBJFPC}
+{$MODE OBJFPC}{$H+}
 unit uzccommand_copy;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -25,26 +25,25 @@ uses
   usimplegenerics,
   uzcdrawing,
   uzgldrawcontext,
-  uzbtypesbase,
-  uzbtypes,
+  
   uzcdrawings,
   uzeutils,uzcutils,
   uzglviewareadata,
   uzccommand_move,
   uzccommandsabstract,
-  uzbgeomtypes,uzeentity,LazLogger;
+  uzegeometrytypes,uzeentity,LazLogger;
 type
 {EXPORT+}
   {REGISTEROBJECTTYPE copy_com}
   copy_com =  object(move_com)
-    function AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger; virtual;
-    function Copy(dispmatr:DMatrix4D;UndoMaker:GDBString): GDBInteger;
+    function AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer; virtual;
+    function Copy(dispmatr:DMatrix4D;UndoMaker:String): Integer;
   end;
 {EXPORT-}
 var
    Copy:copy_com;
 implementation
-function Copy_com.Copy(dispmatr:DMatrix4D;UndoMaker:GDBString): GDBInteger;
+function Copy_com.Copy(dispmatr:DMatrix4D;UndoMaker:String): Integer;
 var
   ir:itrec;
   pcd:PTCopyObjectDesc;
@@ -92,7 +91,7 @@ begin
   PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack.PushEndMarker;
   result:=cmd_ok;
 end;
-function Copy_com.AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger;
+function Copy_com.AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer;
 var
   dispmatr:DMatrix4D;
 begin

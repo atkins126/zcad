@@ -18,7 +18,7 @@
 {$mode delphi}
 unit uzccommand_zoomwindow;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -26,7 +26,7 @@ uses
   sysutils,
   uzccommandsabstract,uzccommandsimpl,
   uzcdrawings,
-  uzbgeomtypes,uzbtypesbase,
+  uzegeometrytypes,
   uzegeometry,
   uzglviewareadata,
   uzccommandsmanager,
@@ -37,7 +37,7 @@ implementation
 var
   zoomwindowcommand:PCommandObjectDef;
 
-function ShowWindow_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
+function ShowWindow_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
 begin
   result:=mclick;
   drawings.GetCurrentDWG.wa.param.seldesc.Frame2 := mc;

@@ -17,10 +17,11 @@
 }
 
 unit UGDBOpenArrayOfPV;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses uzbgeomtypes,uzgldrawcontext,uzedrawingdef,uzeentity,uzecamera,uzbtypesbase,
-     gzctnrvectortypes,gzctnrvectorpobjects,sysutils,uzbtypes,uzegeometry,uzbmemman,uzeentsubordinated,uzeentityfactory;
+uses uzegeometrytypes,uzgldrawcontext,uzedrawingdef,uzeentity,uzecamera,
+     gzctnrvectortypes,sysutils,uzbtypes,uzegeometry,
+     uzeentsubordinated,uzeentityfactory,uzctnrvectorpgdbaseobjects;
 type
 {PGDBObjEntityArray=^GDBObjEntityArray;
 objvizarray = array[0..0] of PGDBObjEntity;
@@ -31,14 +32,14 @@ PGDBObjOpenArrayOfPV=^GDBObjOpenArrayOfPV;
 {REGISTEROBJECTTYPE GDBObjOpenArrayOfPV}
 GDBObjOpenArrayOfPV= object(TZctnrVectorPGDBaseObjects)
                       procedure DrawWithattrib(var DC:TDrawContext);virtual;
-                      procedure DrawGeometry(lw:GDBInteger;var DC:TDrawContext{infrustumactualy:TActulity;subrender:GDBInteger});virtual;
-                      procedure DrawOnlyGeometry(lw:GDBInteger;var DC:TDrawContext{infrustumactualy:TActulity;subrender:GDBInteger});virtual;
+                      procedure DrawGeometry(lw:Integer;var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
+                      procedure DrawOnlyGeometry(lw:Integer;var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
                       procedure renderfeedbac(infrustumactualy:TActulity;pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;
-                      function calcvisible(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:GDBInteger; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:GDBDouble):GDBBoolean;virtual;
+                      function calcvisible(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
                       function CalcTrueInFrustum(frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
-                      procedure DeSelect(var SelectedObjCount:GDBInteger;ds2s:TDeSelect2Stage);virtual;
-                      function CreateObj(t: GDBByte{;owner:GDBPointer}):GDBPointer;virtual;
-                      function CreateInitObj(t: GDBByte;owner:GDBPointer):PGDBObjSubordinated;virtual;
+                      procedure DeSelect(var SelectedObjCount:Integer;ds2s:TDeSelect2Stage);virtual;
+                      function CreateObj(t: Byte{;owner:Pointer}):Pointer;virtual;
+                      function CreateInitObj(t: Byte;owner:Pointer):PGDBObjSubordinated;virtual;
                       function calcbb:TBoundingBox;
                       function calcvisbb(infrustumactualy:TActulity):TBoundingBox;
                       function getoutbound(var DC:TDrawContext):TBoundingBox;
@@ -48,8 +49,8 @@ GDBObjOpenArrayOfPV= object(TZctnrVectorPGDBaseObjects)
                       procedure FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
                       procedure FormatAfterEdit(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
                       //function InRect:TInRect;virtual;
-                      function onpoint(var objects:TZctnrVectorPGDBaseObjects;const point:GDBVertex):GDBBoolean;virtual;
-                      //function FindEntityByVar(objID:GDBWord;vname,vvalue:GDBString):PGDBObjSubordinated;virtual;
+                      function onpoint(var objects:TZctnrVectorPGDBaseObjects;const point:GDBVertex):Boolean;virtual;
+                      //function FindEntityByVar(objID:Word;vname,vvalue:String):PGDBObjSubordinated;virtual;
                 end;
 {Export-}
 function EqualFuncPGDBaseObject(const a, b: PGDBaseObject):Boolean;
@@ -58,7 +59,7 @@ function EqualFuncPGDBaseObject(const a, b: PGDBaseObject):Boolean;
 begin
   result:=(a=b);
 end;
-function GDBObjOpenArrayOfPV.onpoint(var objects:TZctnrVectorPGDBaseObjects;const point:GDBVertex):GDBBoolean;
+function GDBObjOpenArrayOfPV.onpoint(var objects:TZctnrVectorPGDBaseObjects;const point:GDBVertex):Boolean;
 var pobj:pGDBObjEntity;
     ir:itrec;
     //fr:TInRect;
@@ -214,7 +215,7 @@ begin
                        until pobj=nil;
                   end;
 end;
-function GDBObjOpenArrayOfPV.CreateObj(t: GDBByte{;owner:GDBPointer}):GDBPointer;
+function GDBObjOpenArrayOfPV.CreateObj(t: Byte{;owner:Pointer}):Pointer;
 var temp: PGDBObjEntity;
 begin
   temp := nil;
@@ -228,7 +229,7 @@ begin
   end;
   result := temp;
 end;
-function GDBObjOpenArrayOfPV.CreateInitObj(t: GDBByte;owner:GDBPointer):PGDBObjSubordinated;
+function GDBObjOpenArrayOfPV.CreateInitObj(t: Byte;owner:Pointer):PGDBObjSubordinated;
 var temp: PGDBObjEntity;
 begin
   temp := nil;
@@ -350,7 +351,7 @@ end;
 function GDBObjOpenArrayOfPV.calcvisible;
 var
   p:pGDBObjEntity;
-  q:GDBBoolean;
+  q:Boolean;
       ir:itrec;
 begin
   result:=false;

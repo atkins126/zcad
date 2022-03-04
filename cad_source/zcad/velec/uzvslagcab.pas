@@ -17,14 +17,14 @@
 }
 
 unit uzvslagcab;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
      sysutils,
 
      uzccommandsimpl,    //тут реализация объекта CommandRTEdObject
      uzccommandsabstract,//базовые объявления для команд
-     uzbtypesbase,       //базовые типы
+            //базовые типы
      uzccommandsmanager, //менеджер команд
 
      uzvcom,             //
@@ -35,12 +35,12 @@ uses
      uzvtestdraw, // тестовые рисунки
 
      uzcinterface,
-     uzctnrvectorgdbstring,
-     uzbgeomtypes,
+     uzctnrvectorstrings,
+     uzegeometrytypes,
      uzegeometry,
 
      typinfo,
-     gzctnrvector,
+     //gzctnrVector,
      uzvconsts,
      uzcutils,
      Varman;             //Зкадовский RTTI
@@ -51,31 +51,31 @@ Tuzvslagcab_com=object(CommandRTEdObject)//определяем тип - объ�
              //procedure CommandEnd; virtual;//переопределяем метод вызываемый при окончании команды
              //procedure CommandCancel; virtual;//переопределяем метод вызываемый при отмене команды
 
-             procedure visualGlobalGraph(pdata:GDBPlatformint); virtual;//построение графа и его визуализация
+             procedure visualGlobalGraph(pdata:PtrInt); virtual;//построение графа и его визуализация
 
-             procedure visualGraphDevice(pdata:GDBPlatformint); virtual;//построение всех графов и его визуализация
+             procedure visualGraphDevice(pdata:PtrInt); virtual;//построение всех графов и его визуализация
 
-             procedure cablingGraphDevice(pdata:GDBPlatformint); virtual;//построение всех графов и его визуализация
+             procedure cablingGraphDevice(pdata:PtrInt); virtual;//построение всех графов и его визуализация
 
-             procedure cablingNewGraphDevice(pdata:GDBPlatformint); virtual;//построение всех Новых графов и его визуализация
+             procedure cablingNewGraphDevice(pdata:PtrInt); virtual;//построение всех Новых графов и его визуализация
 
             end;
 PTuzvslagcabComParams=^TuzvslagcabComParams;//указатель на тип данных параметров команды. зкад работает с ними через указатель
 
 TsettingVizCab=record
-  sErrors:gdbboolean;
-  vizNumMetric:gdbboolean;
-  vizFullTreeCab:gdbboolean;
-  vizEasyTreeCab:gdbboolean;
+  sErrors:Boolean;
+  vizNumMetric:Boolean;
+  vizFullTreeCab:Boolean;
+  vizEasyTreeCab:Boolean;
 end;
 
 TuzvslagcabComParams=record       //определяем параметры команды которые будут видны в инспекторе во время выполнения команды
                                       //регистрировать их будем паскалевским RTTI
                                       //не через экспорт исходников и парсинг файла с определениями типов
   NamesList:TEnumData;//это тип для отображения списков в инспекторе
-  //nameSL:gdbstring;
-  accuracy:gdbdouble;
-  metricDev:gdbboolean;
+  //nameSL:String;
+  accuracy:Double;
+  metricDev:Boolean;
   settingVizCab:TsettingVizCab;
 
 end;
@@ -126,7 +126,7 @@ begin
   inherited CommandStart('');
 end;
 
-procedure Tuzvslagcab_com.visualGlobalGraph(pdata:GDBPlatformint);
+procedure Tuzvslagcab_com.visualGlobalGraph(pdata:PtrInt);
 var
  i,m,counterColor:integer;
  UndoMarcerIsPlazed:boolean;
@@ -189,9 +189,9 @@ begin
 end;
 
 
-procedure Tuzvslagcab_com.visualGraphDevice(pdata:GDBPlatformint);
+procedure Tuzvslagcab_com.visualGraphDevice(pdata:PtrInt);
 var
- i,j,counterColor:integer;
+ //i,j,counterColor:integer;
  UndoMarcerIsPlazed:boolean;
  nameSL:string;
  listError:TListError;
@@ -285,9 +285,9 @@ begin
   Commandmanager.executecommandend;
 end;
 
-procedure Tuzvslagcab_com.cablingGraphDevice(pdata:GDBPlatformint);
+procedure Tuzvslagcab_com.cablingGraphDevice(pdata:PtrInt);
 var
- i,j,counterColor:integer;
+ //i,j,counterColor:integer;
  UndoMarcerIsPlazed:boolean;
  nameSL:string;
  listError:TListError;
@@ -358,9 +358,9 @@ begin
 end;
 
 
-procedure Tuzvslagcab_com.cablingNewGraphDevice(pdata:GDBPlatformint);
+procedure Tuzvslagcab_com.cablingNewGraphDevice(pdata:PtrInt);
 var
- i,j,counterColor:integer;
+ //i,j,counterColor:integer;
  UndoMarcerIsPlazed:boolean;
  nameSL:string;
  listError:TListError;

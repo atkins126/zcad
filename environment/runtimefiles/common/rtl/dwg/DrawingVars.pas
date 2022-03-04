@@ -7,20 +7,20 @@ var
 
    DWG_CLayer:PGDBLayerProp;
    DWG_CLinew:TGDBLineWeight;
-   DWG_CColor:GDBInteger;
+   DWG_CColor:Integer;
    DWG_CLType:PGDBLtypeProp;
    DWG_CTStyle:PGDBTextStyle;
-   DWG_CLTScale:GDBDouble;
+   DWG_CLTScale:Double;
    DWG_CDimStyle:PGDBDimStyle;
 
-   DWG_DrawGrid:GDBBoolean;{определена в коде}
-   DWG_SnapGrid:GDBBoolean;{определена в коде}
-   DWG_DrawMode:GDBBoolean;{определена в коде}
+   DWG_DrawGrid:Boolean;{определена в коде}
+   DWG_SnapGrid:Boolean;{определена в коде}
+   DWG_DrawMode:Boolean;{определена в коде}
 
    DWG_Snap:GDBSnap2D;
    DWG_GridSpacing:GDBvertex2D;
 
-   DWG_LTScale:GDBDouble;
+   DWG_LTScale:Double;
 
    DWG_LUnits:TLUnits;
    DWG_LUPrec:TUPrec;
@@ -31,10 +31,10 @@ var
    DWG_UnitMode:TUnitMode;
    DWG_InsUnits:TInsUnits;
 
-   DWG_TextSize:GDBDouble;
+   DWG_TextSize:Double;
 
 
-   Developer:GDBString;
+   Developer:String;
 
 implementation
 begin

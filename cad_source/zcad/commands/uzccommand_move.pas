@@ -15,14 +15,14 @@
 {
 @author(Andrey Zubarev <zamtmn@yandex.ru>)
 }
-{$MODE OBJFPC}
+{$MODE OBJFPC}{$H+}
 unit uzccommand_move;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
-  gzctnrvector,zcmultiobjectchangeundocommand,
-  gzctnrvectortypes,zcmultiobjectcreateundocommand,uzgldrawercanvas,
+  gzctnrVector,zcmultiobjectchangeundocommand,
+  gzctnrvectortypes,uzgldrawercanvas,
   uzcoimultiobjects,uzcdrawing,uzepalette,
   uzgldrawcontext,
   uzeentpoint,uzeentityfactory,
@@ -30,21 +30,20 @@ uses
   printers,graphics,uzeentdevice,
   LazUTF8,Clipbrd,LCLType,classes,uzeenttext,
   uzccommandsabstract,uzbstrproc,
-  uzbtypesbase,uzccommandsmanager,
+  uzccommandsmanager,
   uzccommandsimpl,
-  uzbtypes,
   uzcdrawings,
-  uzeutils,uzcutils,
+  uzeutils,
   sysutils,
   varmandef,
   uzglviewareadata,
   uzeffdxf,
   uzcinterface,
   uzegeometry,
-  uzbmemman,
+
   uzeconsts,
-  uzbgeomtypes,uzeentity,uzeentcircle,uzeentline,uzeentgenericsubentry,uzeentmtext,
-  uzeentsubordinated,uzeentblockinsert,uzeentpolyline,uzclog,gzctnrvectordata,
+  uzegeometrytypes,uzeentity,uzeentcircle,uzeentline,uzeentgenericsubentry,uzeentmtext,
+  uzeentblockinsert,uzeentpolyline,uzclog,
   uzeentlwpolyline,UBaseTypeDescriptor,uzeblockdef,Varman,URecordDescriptor,TypeDescriptors,UGDBVisibleTreeArray
   ,uzelongprocesssupport,LazLogger;
 type
@@ -56,7 +55,7 @@ type
                  end;
   ptpcoavector=^tpcoavector;
   tpcoavector={-}specialize{//}
-              GZVectorData{-}<TCopyObjectDesc>{//};
+              GZVector{-}<TCopyObjectDesc>{//};
   {REGISTEROBJECTTYPE move_com}
   move_com =  object(CommandRTEdObject)
     t3dp: gdbvertex;
@@ -64,10 +63,10 @@ type
     //constructor init;
     procedure CommandStart(Operands:TCommandOperands); virtual;
     procedure CommandCancel; virtual;
-    function BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger; virtual;
-    function AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger; virtual;
+    function BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer; virtual;
+    function AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer; virtual;
     function CalcTransformMatrix(p1,p2: GDBvertex):DMatrix4D; virtual;
-    function Move(dispmatr:DMatrix4D;UndoMaker:GDBString): GDBInteger;
+    function Move(dispmatr:DMatrix4D;UndoMaker:String): Integer;
     procedure showprompt(mklick:integer);virtual;
   end;
 {EXPORT-}
@@ -78,7 +77,7 @@ implementation
 begin
   CommandInit;
   CommandName := 'Move';
-  CommandGDBString := '';
+  CommandString := '';
 end;}
 procedure Move_com.showprompt(mklick:integer);
 begin
@@ -89,7 +88,7 @@ begin
 end;
 
 procedure Move_com.CommandStart(Operands:TCommandOperands);
-var //i: GDBInteger;
+var //i: Integer;
   tv,pobj: pGDBObjEntity;
       ir:itrec;
       counter:integer;
@@ -115,8 +114,8 @@ begin
   drawings.GetCurrentDWG^.wa.SetMouseMode((MGet3DPoint) or (MMoveCamera) or (MRotateCamera));
   showprompt(0);
    dc:=drawings.GetCurrentDWG^.CreateDrawingRC;
-   GDBGetMem({$IFDEF DEBUGBUILD}'{7702D93A-064E-4935-BFB5-DFDDBAFF9A93}',{$ENDIF}GDBPointer(pcoa),sizeof(tpcoavector));
-   pcoa^.init({$IFDEF DEBUGBUILD}'{379DC609-F39E-42E5-8E79-6D15F8630061}',{$ENDIF}counter{,sizeof(TCopyObjectDesc)});
+   Getmem(Pointer(pcoa),sizeof(tpcoavector));
+   pcoa^.init(counter);
    pobj:=drawings.GetCurrentROOT^.ObjArray.beginiterate(ir);
    if pobj<>nil then
    repeat
@@ -151,13 +150,13 @@ begin
      begin
           pcoa^.done;
           drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.free;
-          GDBFreemem(pointer(pcoa));
+          Freemem(pointer(pcoa));
      end;
      inherited;
 end;
 
-function Move_com.BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger;
-//var i: GDBInteger;
+function Move_com.BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer;
+//var i: Integer;
 //  tv,pobj: pGDBObjEntity;
  //     ir:itrec;
 begin
@@ -173,7 +172,7 @@ begin
         dist:=uzegeometry.VertexSub(p2,p1);
         result:=uzegeometry.CreateTranslationMatrix(dist);
 end;
-function Move_com.Move(dispmatr:DMatrix4D;UndoMaker:GDBString): GDBInteger;
+function Move_com.Move(dispmatr:DMatrix4D;UndoMaker:String): Integer;
 var
     //dist:gdbvertex;
     im:DMatrix4D;
@@ -206,8 +205,8 @@ begin
    PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack.PushEndMarker;
    result:=cmd_ok;
 end;
-function Move_com.AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger;
-var //i:GDBInteger;
+function Move_com.AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer;
+var //i:Integer;
     //dist:gdbvertex;
     dispmatr{,im}:DMatrix4D;
     //ir:itrec;

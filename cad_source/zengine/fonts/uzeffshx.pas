@@ -17,35 +17,36 @@
 }
 
 unit uzeffshx;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses uzgprimitivescreator,uzglvectorobject,uzefontmanager,uzefontshx,uzegeometry,
-     uzefont,uzbstrproc,{$IFNDEF DELPHI}FileUtil,LCLProc,{$ENDIF}math,{log,}sysutils,
-     gzctnrvectortypes,uzbgeomtypes,UGDBOpenArrayOfByte,uzbtypesbase,uzbtypes,uzbmemman,uzgprimitives;
+     uzefont,uzbstrproc,{$IFNDEF DELPHI}FileUtil,LCLProc,{$ENDIF}math,sysutils,
+     uzegeometrytypes,uzctnrVectorBytes,uzbtypes,uzgprimitives,
+     gzctnrvectortypes,uzbLogIntf;
 const
   arccount=16;
-  fontdirect:array[0..$F,0..1] of GDBDouble=
+  fontdirect:array[0..$F,0..1] of Double=
   ((1,0),(1,0.5),(1,1),(0.5,1),(0,1),(-0.5,1),(-1,1),(-1,0.5),(-1,0),(-1,-0.5),(-1,-1),(-0.5,-1),(0,-1),(0.5,-1),(1,-1),(1,-0.5));
 type ptsyminfo=^tsyminfo;
      tsyminfo=record
                            number,size:word;
                      end;
-function createnewfontfromshx(name:GDBString;var pf:PGDBfont):GDBBoolean;
+function createnewfontfromshx(name:String;var pf:PGDBfont):Boolean;
 
 implementation
 
-function createsymbol(pf:PGDBfont;symbol:GDBInteger;pshxdata:system.pbyte;unicode:boolean;symname:gdbstring):GDBInteger;
+function createsymbol(pf:PGDBfont;symbol:Integer;pshxdata:system.pbyte;unicode:boolean;symname:String):Integer;
 var
-  i,sizeshp,sizeshx,stackheap:GDBInteger;
+  i,sizeshp,sizeshx,stackheap:Integer;
   baselen,ymin,ymax,xmin,xmax,x,y,x1,y1,xb,yb,r,startangle,angle,normal,hordlen,tgl:fontfloat;
   stack:array[0..4,0..1] of fontfloat;
   tr:tarcrtmodify;
-  hi,lo,byt,byt2,startoffset,endoffset:GDBByte;
-  subsymbol:GDBInteger;
-  int:GDBInteger;
-  dx,dy:GDBShortint;
-  draw:GDBBoolean;
-  onlyver:GDBInteger;
+  hi,lo,byt,byt2,startoffset,endoffset:Byte;
+  subsymbol:Integer;
+  int:Integer;
+  dx,dy:Shortint;
+  draw:Boolean;
+  onlyver:Integer;
   psyminfo,psubsyminfo:PGDBsymdolinfo;
   inccounter:integer;
   tbool:boolean;
@@ -168,8 +169,7 @@ begin
             xmax:=NegInfinity;
             while pshxdata^<>0 do
               begin
-                if VerboseLog^ then
-                  debugln('{T}[SHX_CONTENTS]SHX command %x',[integer(pshxdata^)]);
+                zTraceLn('{T}[SHX_CONTENTS]SHX command %x',[integer(pshxdata^)]);
                 case pshxdata^ of
                   001:
                     begin
@@ -191,8 +191,7 @@ begin
                       if onlyver=0 then
                         begin
                           baselen:=baselen/pshxdata^;
-                          if VerboseLog^ then
-                            debugln('{T}[SHX_CONTENTS]%d',[integer(pshxdata^)]);
+                          zTraceLn('{T}[SHX_CONTENTS]%d',[integer(pshxdata^)]);
 
                           //programlog.LogOutFormatStr('%d',[integer(pshxdata^)],lp_OldPos,LM_Trace);
                         end;
@@ -204,8 +203,7 @@ begin
                         begin
                           baselen:=baselen*pshxdata^;
                         end;
-                        if VerboseLog^ then
-                          debugln('{T}[SHX_CONTENTS]%d',[integer(pshxdata^)]);
+                        zTraceLn('{T}[SHX_CONTENTS]%d',[integer(pshxdata^)]);
 
                         //programlog.LogOutFormatStr('%d',[integer(pshxdata^)],lp_OldPos,LM_Trace);
                     end;
@@ -240,8 +238,7 @@ begin
                                      begin
                                           subsymbol:=pshxdata^;
                                      end;
-                      if VerboseLog^ then
-                        debugln('{T}[SHX_CONTENTS](%d)',[integer(subsymbol)]);
+                      zTraceLn('{T}[SHX_CONTENTS](%d)',[integer(subsymbol)]);
 
                       //programlog.LogOutFormatStr('(%d)',[integer(subsymbol)],lp_OldPos,LM_Trace);
                       psubsyminfo:=pf^.GetOrCreateSymbolInfo(subsymbol);
@@ -274,9 +271,9 @@ begin
                       if (psubsymbol<>nil){and(subsymbol<>111)} then
                         for i:=1 to {pf^.symbo linfo[subsymbol]}psubsyminfo.size do
                           begin
-                            PSHXFont(pf^.font).SHXdata.AddByteByVal(pGDBByte(psubsymbol)^);//--------------------- pGDBByte(pdata)^:=pGDBByte(psubsymbol)^;
+                            PSHXFont(pf^.font).SHXdata.AddByteByVal(PByte(psubsymbol)^);//--------------------- PByte(pdata)^:=PByte(psubsymbol)^;
                             //---------------------inc(pdata,sizeof(SHXLine));
-                            case pGDBByte(psubsymbol)^ of
+                            case PByte(psubsymbol)^ of
                               SHXLine:
                                 begin
                                   inc(psubsymbol,sizeof(SHXLine));
@@ -293,7 +290,7 @@ begin
                                          ProcessMinMax(x,y);
                                          ProcessMinMax(x1,y1);
                                     end;
-                                                                                                                                                                                                                //pGDBByte(pdata)^:=SHXLine;
+                                                                                                                                                                                                                //PByte(pdata)^:=SHXLine;
                                                                                                                                                                                                                 //inc(pdata,sizeof(SHXLine));
                                   PSHXFont(pf^.font).SHXdata.AddFontFloat(@x1);
                                   PSHXFont(pf^.font).SHXdata.AddFontFloat(@y1);
@@ -311,8 +308,8 @@ begin
                                   inc(psubsymbol,sizeof(SHXLine));
                                   sizeshp:=pGDBWord(psubsymbol)^;
                                   PSHXFont(pf^.font).SHXdata.AddWord(@sizeshp);//---------------------pGDBWord(pdata)^:=sizeshp;
-                                  inc(psubsymbol,sizeof(GDBWord));
-                                  //---------------------inc(pdata,sizeof(GDBWord));
+                                  inc(psubsymbol,sizeof(Word));
+                                  //---------------------inc(pdata,sizeof(Word));
 
                                   x1:=pfontfloat(psubsymbol)^*baselen*PSHXFont(pf^.font).h+xb;
                                   inc(psubsymbol,sizeof(fontfloat));
@@ -367,8 +364,7 @@ begin
                       dx:=pShortint(pshxdata)^;
                       incpshxdata;
                       dy:=pShortint(pshxdata)^;
-                      if VerboseLog^ then
-                        debugln('{T}[SHX_CONTENTS](%d,%d)',[integer(dx),integer(dy)]);
+                      zTraceLn('{T}[SHX_CONTENTS](%d,%d)',[integer(dx),integer(dy)]);
 
                       //programlog.LogOutFormatStr('(%d,%d)',[integer(dx),integer(dy)],lp_OldPos,LM_Trace);
                       if onlyver=0 then
@@ -429,8 +425,7 @@ begin
                             end;
                       while (dx<>0)or(dy<>0) do
                         begin
-                          if VerboseLog^ then
-                            debugln('{T}[SHX_CONTENTS](%d,%d)',[integer(dx),integer(dy)]);
+                          zTraceLn('{T}[SHX_CONTENTS](%d,%d)',[integer(dx),integer(dy)]);
 
                           //programlog.LogOutFormatStr('(%d,%d)',[integer(dx),integer(dy)],lp_OldPos,LM_Trace);
                           if draw then
@@ -688,15 +683,15 @@ begin
           end;
 function CreateSHXFontInstance:PSHXFont;
 begin
-     GDBGetMem({$IFDEF DEBUGBUILD}'{FB4B76DB-BD4E-449E-A505-9ABF79E7809A}',{$ENDIF}result,sizeof(SHXFont));
+     Getmem(result,sizeof(SHXFont));
      result^.init;
 end;
-function createnewfontfromshx(name:GDBString;var pf:PGDBfont):GDBBoolean;
+function createnewfontfromshx(name:String;var pf:PGDBfont):Boolean;
 var
    //f:filestream;
-   line{,sub}:GDBANSIString;
+   line{,sub}:AnsiString;
    {symmin,}symcount,{symmax,}i,symnum,symlen,datalen,dataread,test:integer;
-   memorybuf:GDBOpenArrayOfByte;
+   memorybuf:TZctnrVectorBytes;
    psinfo:ptsyminfo;
    //pf:PGDBfont;
    pdata:pbyte;
@@ -705,7 +700,7 @@ begin
   result:=true;
   membufcreated:=true;
   memorybuf.InitFromFile(name);
-  line:=memorybuf.ReadString(#10,#13);
+  line:=memorybuf.ReadString3(#10,#13);
   line:=uppercase(line);
   if (line='AUTOCAD-86 SHAPES 1.0')or(line='AUTOCAD-86 SHAPES 1.1') then
   begin
@@ -739,7 +734,7 @@ begin
          if symnum=150 then
                         symnum:=symnum;
 
-         line:=memorybuf.readstring(#0,'');
+         line:=memorybuf.readstring3(#0,'');
          datalen:=symlen-length(line)-2;
 
          if symnum=0 then
@@ -752,15 +747,13 @@ begin
                          end
                      else
                          begin
-                              if VerboseLog^ then
-                                debugln('{T+}[SHX]symbol %d',[integer(symnum)]);
+                              zTraceLn('{T+}[SHX]symbol %d',[integer(symnum)]);
                               if symnum=135 then
                                                 symnum:=symnum;
                               //programlog.LogOutFormatStr('symbol %d',[integer(symnum)],lp_IncPos,LM_Trace);
                               dataread:=createsymbol(pf,symnum,memorybuf.GetCurrentReadAddres,false,line);
                               memorybuf.jump({datalen}dataread);
-                              if VerboseLog^ then
-                                debugln('{T-}[SHX]end');
+                              zTraceLn('{T-}[SHX]end');
                               //programlog.LogOutStr('end',lp_DecPos,LM_Trace);
                          end;
 
@@ -773,7 +766,7 @@ begin
                                               programlog.logoutstr(line,0);}
          inc(psinfo);
     end;
-        line:=memorybuf.readstring('','');
+        line:=memorybuf.readstring3('','');
         if membufcreated then
                              begin
                                memorybuf.done;
@@ -799,7 +792,7 @@ else if line='AUTOCAD-86 UNIFONT 1.0' then
        {symmin:=}memorybuf.readword;
        {symmin:=}memorybuf.readword;
 
-       pf^.internalname:=memorybuf.readstring(#0,'');
+       pf^.internalname:=memorybuf.readstring3(#0,'');
        PSHXFont(pf^.font).h:=memorybuf.readbyte;
        PSHXFont(pf^.font).u:=memorybuf.readbyte;
        memorybuf.readbyte;
@@ -816,7 +809,7 @@ else if line='AUTOCAD-86 UNIFONT 1.0' then
          datalen:=memorybuf.readbyte;
          if datalen<>0 then
                            begin
-                           line:=memorybuf.readstring(#0,'');
+                           line:=memorybuf.readstring3(#0,'');
                            datalen:=symlen-length(line)-2;
                            end
                        else
@@ -837,14 +830,12 @@ else if line='AUTOCAD-86 UNIFONT 1.0' then
          if test=49 then
                          test:=test;
          //if (*pf^.GetOrCreateSymbolInfo(test)^.{ .symbo linfo[test].}addr=0*)symnum<2560000 then
-         if VerboseLog^ then
-           debugln('{T+}[SHX]symbol %d',[integer(symnum)]);
+         zTraceLn('{T+}[SHX]symbol %d',[integer(symnum)]);
          if symnum=135 then
                            symnum:=symnum;
          //programlog.LogOutFormatStr('symbol %d',[integer(symnum)],lp_IncPos,LM_Trace);
          {if symnum<256 then }dataread:=createsymbol(pf,test{symnum},memorybuf.GetCurrentReadAddres,true,line);
-         if VerboseLog^ then
-           debugln('{T-}[SHX]end');
+         zTraceLn('{T-}[SHX]end');
          //programlog.LogOutStr('end',lp_DecPos,LM_Trace);
          //                                                                 else
          //                                                                     pf:=pf;

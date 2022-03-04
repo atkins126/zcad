@@ -15,30 +15,28 @@
 {
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
-{$MODE OBJFPC}
+{$MODE OBJFPC}{$H+}
 unit uzccommand_rotate;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
   gzctnrvectortypes,
-  usimplegenerics,
   uzcdrawing,
   uzgldrawcontext,
-  uzbtypesbase,
-  uzbtypes,
+  
   uzcdrawings,
-  uzeutils,uzcutils,
+  uzeutils,
   uzglviewareadata,
   uzccommand_move,
   uzccommandsabstract,varmandef,uzccommandsmanager,uzcinterface,uzcstrconsts,uzegeometry,zcmultiobjectchangeundocommand,
-  uzbgeomtypes,uzeentity,LazLogger;
+  uzegeometrytypes,uzeentity,LazLogger;
 type
   {REGISTEROBJECTTYPE rotate_com}
   rotate_com =  object(move_com)
-    function AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger; virtual;
+    function AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer; virtual;
     procedure CommandContinue; virtual;
-    procedure rot(a:GDBDouble; button: GDBByte);
+    procedure rot(a:Double; button: Byte);
     procedure showprompt(mklick:integer);virtual;
   end;
 var
@@ -47,12 +45,12 @@ implementation
 
 procedure rotate_com.CommandContinue;
 var v1:vardesk;
-    td:gdbdouble;
+    td:Double;
 begin
    if (commandmanager.GetValueHeap{-vs})>0 then
    begin
    v1:=commandmanager.PopValue;
-   td:=Pgdbdouble(v1.data.Instance)^*pi/180;
+   td:=PDouble(v1.data.Addr.Instance)^*pi/180;
    rot(td,MZW_LBUTTON);
    end;
 end;
@@ -63,7 +61,7 @@ begin
      1:ZCMsgCallBackInterface.TextMessage(rscmPickOrEnterAngle,TMWOHistoryOut);
      end;
 end;
-procedure rotate_com.rot(a:GDBDouble; button: GDBByte);
+procedure rotate_com.rot(a:Double; button: Byte);
 var
     dispmatr,im,rotmatr:DMatrix4D;
     ir:itrec;
@@ -125,7 +123,7 @@ end;
 
 end;
 
-function rotate_com.AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger;
+function rotate_com.AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer;
 var
     //dispmatr,im,rotmatr:DMatrix4D;
     //ir:itrec;

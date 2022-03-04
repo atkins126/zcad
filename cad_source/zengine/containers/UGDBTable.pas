@@ -17,24 +17,24 @@
 }
 
 unit UGDBTable;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses gzctnrvector,gzctnrvectorpobjects,uzbtypesbase,uzbtypes,sysutils,
-     uzctnrvectorgdbstring;
+uses gzctnrVector,gzctnrVectorPObjects,sysutils,
+     uzctnrvectorstrings;
 type
 {EXPORT+}
 PGDBTableArray=^GDBTableArray;
 {REGISTEROBJECTTYPE GDBTableArray}
-GDBTableArray= object(GZVectorPObects{-}<PTZctnrVectorGDBString,TZctnrVectorGDBString>{//})(*OpenArrayOfData=TZctnrVectorGDBString*)
-                    columns,rows:GDBInteger;
-                    constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}c,r:GDBInteger);
-                    //function copyto(var source:GDBOpenArrayOfData{-}<TZctnrVectorGDBString>{//}):GDBInteger;virtual;
+GDBTableArray= object(GZVectorPObects{-}<PTZctnrVectorStrings,TZctnrVectorStrings>{//})(*OpenArrayOfData=TZctnrVectorStrings*)
+                    columns,rows:Integer;
+                    constructor init(c,r:Integer);
+                    //function copyto(var source:GDBOpenArrayOfData{-}<TZctnrVectorStrings>{//}):Integer;virtual;
               end;
 {EXPORT-}
 implementation
 constructor GDBTableArray.init;
 begin
-   inherited init({$IFDEF DEBUGBUILD}ErrGuid,{$ENDIF}r{,sizeof(TZctnrVectorGDBString)});
+   inherited init(r);
 end;
 begin
 end.

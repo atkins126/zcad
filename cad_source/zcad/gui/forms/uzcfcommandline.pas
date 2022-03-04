@@ -17,14 +17,14 @@
 }
 
 unit uzcfcommandline;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
  uzcguimanager,uzbpaths,Themes,buttons,uzcsysvars,uzcstrconsts,uzbstrproc,
  uzcsysinfo,lclproc,LazUTF8,sysutils, StdCtrls,ExtCtrls,Controls,Classes,
- menus,Forms,fileutil,graphics, uzbtypes, uzbmemman,uzcdrawings,uzccommandsmanager,
+ menus,Forms,fileutil,graphics, uzbtypes,uzccommandsmanager,
  varman,varmandef,
- uzegeometry,uzctnrvectorgdbstring,uzcinterface,uzctreenode,uzclog,strmy,
+ uzegeometry,uzctnrvectorstrings,uzcinterface,uzctreenode,uzclog,strmy,
  uzccommandlineutil,uztoolbarsmanager,uzmenusmanager,uzccommandsabstract,gzctnrvectortypes,
  uzcctrlcommandlineprompt,uzeparsercmdprompt;
 
@@ -56,14 +56,14 @@ var
   prompt:TCommandLinePrompt;
   panel:tpanel;
   HistoryLine:TMemo;
+  LastHistoryMsg:string='';
+  LastSuffixMsg:string='';
+  LastHistoryMsgRepeatCounter:integer=0;
 
   HintText:TLabel;
   //historychanged:boolean;
 
 implementation
-
-//var
-//   historychanged:boolean;
 
 procedure TCLine.mypaint(sender:tobject);
 begin
@@ -190,11 +190,11 @@ end;
 procedure TCLine.FormCreate(Sender: TObject);
 var
    //bv:tbevel;
-   //pint:PGDBInteger;
+   //pint:PInteger;
    sbutton:TmySpeedButton;
    p:PCommandObjectDef;
    ir:itrec;
-   clist:TZctnrVectorGDBString;
+   clist:TZctnrVectorStrings;
 begin
     self.Constraints.MinHeight:=36;
     //utfpresent:=false;
@@ -239,6 +239,7 @@ begin
     prompt:=TCommandLinePrompt.create(panel);
     prompt.OnClickNotify:=commandmanager.PromptTagNotufy;
     prompt.Align:=alLeft;
+    prompt.Layout:=tlCenter;
     //prompt.Layout:=tlCenter;
     //prompt.Width:=1;
     //prompt.BorderStyle:=sbsSingle;
@@ -353,30 +354,54 @@ begin
     end;
 end;
 
-procedure HistoryOut(s: pansichar); export;
+procedure HistoryOut(s:string);
 var
-   a:string;
+  needclean:integer;
 begin
-  if assigned(HistoryLine) then
-  begin
-   a:=(s);
-   if HistoryLine.Lines.Count=0 then
-     CLine.utflen:=CLine.utflen+{$IFDEF WINDOWS}UTF8Length(a){$ELSE}Length(a){$ENDIF}
-   else
-     CLine.utflen:=2+CLine.utflen+{$IFDEF WINDOWS}UTF8Length(a){$ELSE}Length(a){$ENDIF};
-   {$IFNDEF DELPHI}
-   HistoryLine.Append(a);
-   {$ENDIF}
-   //{$IFDEF WINDOWS}
-   HistoryLine.SelStart:=CLine.utflen;
-   HistoryLine.SelLength:=2;
-   HistoryLine.ClearSelection;
-   //{$ENDIF}
+  if assigned(HistoryLine) then begin
+    if (s<>LastHistoryMsg)or(rsMsgRepeatCountStr='') then begin
+      LastHistoryMsg:=s;
+      LastHistoryMsgRepeatCounter:=0;
+      LastSuffixMsg:='';
+      if HistoryLine.Lines.Count=0 then
+        CLine.utflen:=CLine.utflen+UTF8Length(s)
+      else
+       CLine.utflen:=CLine.utflen+UTF8Length(s)+UTF8Length(HistoryLine.Lines.LineBreak);
+      {$IFNDEF DELPHI}
+      HistoryLine.Append(s);
+      {$ENDIF}
+
+      {$IFDEF LCLWIN32}
+      HistoryLine.SelStart:=CLine.utflen;
+      HistoryLine.SelLength:=length(HistoryLine.Lines.LineBreak);
+      HistoryLine.ClearSelection;
+      {$ENDIF}
+    end else begin
+      inc(LastHistoryMsgRepeatCounter);
+      needclean:=UTF8Length(LastSuffixMsg);
+      LastSuffixMsg:=format(rsMsgRepeatCountStr,[LastHistoryMsgRepeatCounter+1]);
+
+      if LastHistoryMsgRepeatCounter=1 then begin
+        HistoryLine.Lines[HistoryLine.Lines.Count-1]:=HistoryLine.Lines[HistoryLine.Lines.Count-1]+LastSuffixMsg;
+        CLine.utflen:=CLine.utflen+UTF8Length(LastSuffixMsg);
+
+        HistoryLine.SelStart:=CLine.utflen;
+        HistoryLine.SelLength:=2;
+        HistoryLine.ClearSelection;
+      end else begin
+        HistoryLine.SelStart:=CLine.utflen-needclean;
+        HistoryLine.SelLength:=needclean;
+        HistoryLine.ClearSelection;
+        CLine.utflen:=CLine.utflen-needclean;
+
+        HistoryLine.Lines[HistoryLine.Lines.Count-1]:=HistoryLine.Lines[HistoryLine.Lines.Count-1]+LastSuffixMsg;
+        CLine.utflen:=CLine.utflen+UTF8Length(LastSuffixMsg);
+        HistoryLine.SelStart:=CLine.utflen;
+        HistoryLine.SelLength:=2;
+        HistoryLine.ClearSelection;
+      end;
+    end;
   end;
-end;
-procedure HistoryOutStr(s:String);
-begin
-     HistoryOut(pansichar(s));
 end;
 procedure StatusLineTextOut(s:String);
 begin
@@ -397,7 +422,7 @@ begin
   //historychanged:=false;
   ZCADGUIManager.RegisterZCADFormInfo('CommandLine',rsCommandLineWndName,TCLine,rect(200,100,600,100),nil,nil,@CLine);
 
-  ZCMsgCallBackInterface.RegisterHandler_HistoryOut(HistoryOutStr);
+  ZCMsgCallBackInterface.RegisterHandler_HistoryOut(HistoryOut);
   //uzcinterface.HistoryOutStr:=HistoryOutStr;
 
   ZCMsgCallBackInterface.RegisterHandler_GUIMode(HandleCmdLine);

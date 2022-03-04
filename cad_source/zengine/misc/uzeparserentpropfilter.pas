@@ -8,12 +8,13 @@ uses
   SysUtils,
   uzeentity,uzeparser,Masks,
   uzcoimultiproperties,uzedimensionaltypes,
-  uzbtypes,Varman,uzcoimultipropertiesutil;
+  uzbtypes,Varman,varmandef,uzcoimultipropertiesutil;
 
 type
   TPropFilterData=record
     CurrentEntity:PGDBObjEntity;
     IncludeEntity:TGDB3StateBool;
+    f:TzeUnitsFormat;
   end;
 
   //TParserEntityPropFilterString=AnsiString;
@@ -118,6 +119,7 @@ begin
      {and((ParsedOperands as TEntityFilterParser.TParsedTextWithOneToken).Part.TextInfo.TokenId=StringId)} then begin
        if Data.IncludeEntity<>T3SB_Fale then begin
          op1:=inttostr((ParsedOperands as TParserEntityPropFilter.TParsedText).Parts.size);
+         op2:='';
          ResultParam.P.CodeUnitPos:=OnlyGetLength;
          ResultParam.L.CodeUnits:=0;
          TParserEntityPropFilter.TGeneralParsedText.GetResultWithPart(Source,(ParsedOperands as TParserEntityPropFilter.TParsedText).Parts.Mutable[0]^,data,op1,ResultParam);
@@ -183,6 +185,7 @@ begin
      {and((ParsedOperands as TEntityFilterParser.TParsedTextWithOneToken).Part.TextInfo.TokenId=StringId)} then begin
        if Data.IncludeEntity<>T3SB_Fale then begin
          op1:=inttostr((ParsedOperands as TParserEntityPropFilter.TParsedText).Parts.size);
+         op2:='';
          opResultParam.P.CodeUnitPos:=OnlyGetLength;
          opResultParam.L.CodeUnits:=0;
          TParserEntityPropFilter.TGeneralParsedText.GetResultWithPart(Source,(ParsedOperands as TParserEntityPropFilter.TParsedText).Parts.Mutable[0]^,data,op1,opResultParam);
@@ -230,6 +233,7 @@ begin
      {and((ParsedOperands as TEntityFilterParser.TParsedTextWithOneToken).Part.TextInfo.TokenId=StringId)} then begin
        if Data.IncludeEntity<>T3SB_Fale then begin
          op1:=inttostr((ParsedOperands as TParserEntityPropFilter.TParsedText).Parts.size);
+         op2:='';
          opResultParam.P.CodeUnitPos:=OnlyGetLength;
          opResultParam.L.CodeUnits:=0;
          TParserEntityPropFilter.TGeneralParsedText.GetResultWithPart(Source,(ParsedOperands as TParserEntityPropFilter.TParsedText).Parts.Mutable[0]^,data,op1,opResultParam);
@@ -269,7 +273,7 @@ procedure TGetEntParam.GetResult(const Source:TRawByteStringManipulator.TStringT
 var
   i:integer;
   mpd:TMultiPropertyDataForObjects;
-  f:TzeUnitsFormat;
+  //f:TzeUnitsFormat;
   ChangedData:TChangedData;
 begin
   if ResultParam.P.CodeUnitPos=OnlyGetLength then begin
@@ -278,14 +282,14 @@ begin
         ChangedData:=CreateChangedData(data.CurrentEntity,mpd.GSData);
         if @mpd.EntBeforeIterateProc<>nil then
           mpd.EntBeforeIterateProc({bip}mp.PIiterateData,ChangedData);
-        mpd.EntIterateProc({bip}mp.PIiterateData,ChangedData,mp,true,mpd.EntChangeProc,f);
-        tempresult:=mp.MPType.GetDecoratedValueAsString(PTOneVarData({bip}mp.PIiterateData)^.PVarDesc.data.Instance,f);
+        mpd.EntIterateProc({bip}mp.PIiterateData,ChangedData,mp,true,mpd.EntChangeProc,data.f);
+        tempresult:=mp.MPType.GetDecoratedValueAsString(PVarDesk(PTOneVarData(mp.PIiterateData)^.VDAddr.Instance).data.Addr.Instance,data.f);
       end else if mp.MPObjectsData.MyGetValue(TObjIDWithExtender.Create(PGDBObjEntity(data.CurrentEntity)^.GetObjType,nil),mpd) then begin
         ChangedData:=CreateChangedData(data.CurrentEntity,mpd.GSData);
         if @mpd.EntBeforeIterateProc<>nil then
           mpd.EntBeforeIterateProc({bip}mp.PIiterateData,ChangedData);
-        mpd.EntIterateProc({bip}mp.PIiterateData,ChangedData,mp,true,mpd.EntChangeProc,f);
-        tempresult:=mp.MPType.GetDecoratedValueAsString(PTOneVarData({bip}mp.PIiterateData)^.PVarDesc.data.Instance,f);
+        mpd.EntIterateProc({bip}mp.PIiterateData,ChangedData,mp,true,mpd.EntChangeProc,data.f);
+        tempresult:=mp.MPType.GetDecoratedValueAsString(PVarDesk(PTOneVarData(mp.PIiterateData)^.VDAddr.Instance).data.Addr.Instance,data.f);
       end else
         tempresult:='';
     end else

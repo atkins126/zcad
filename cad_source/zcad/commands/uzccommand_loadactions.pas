@@ -17,12 +17,12 @@
 }
 
 unit uzccommand_loadactions;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
  LCLProc,ComCtrls,Controls,
- uzctreenode,uzbpaths,uzccommandsabstract,uzccommandsimpl,uzbtypes,uztoolbarsmanager;
+ uzctreenode,uzbpaths,uzccommandsabstract,uzccommandsimpl,uztoolbarsmanager;
 
 implementation
 procedure FixButtonCaption(_tb:TToolBar;_control:tcontrol);

@@ -8,9 +8,11 @@ usescopy objname;
 
 var
 
-T1:GDBString;(*'Обозначение'*)
-T2:GDBString;(*'Марка'*)
-T3:GDBString;(*'Параметры'*)
+T1:String;(*'Обозначение'*)
+T2:String;(*'Марка'*)
+T3:String;(*'Параметры'*)
+
+T11:Integer;(*'123'*)
 
 implementation
 
@@ -28,5 +30,7 @@ NMO_Affix:='.1';
 T1:='??';
 T2:='??';
 T3:='??';
+
+T11:=3;
 
 end.

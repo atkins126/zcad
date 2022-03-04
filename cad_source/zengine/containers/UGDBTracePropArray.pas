@@ -17,23 +17,23 @@
 }
 
 unit UGDBTracePropArray;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses uzbgeomtypes,gzctnrvectordata,sysutils,uzbtypesbase,uzbtypes;
+uses uzegeometrytypes,gzctnrVector,sysutils;
 {Export+}
 type
   ptraceprop=^traceprop;
   {REGISTERRECORDTYPE traceprop}
   traceprop=record
-    trace:gdbboolean;
-    tmouse: GDBDouble;
-    dmouse: GDBInteger;
+    trace:Boolean;
+    tmouse: Double;
+    dmouse: Integer;
     dir: GDBVertex;
     dispraycoord: GDBVertex;
     worldraycoord: GDBVertex;
   end;
   {REGISTEROBJECTTYPE GDBtracepropArray}
-GDBtracepropArray= object(GZVectorData{-}<traceprop>{//})
+GDBtracepropArray= object(GZVector{-}<traceprop>{//})
              end;
 {Export-}
 implementation

@@ -17,34 +17,34 @@
 }
 
 unit UGDBXYZWStringArray;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses uzbtypesbase,uzbtypes,gzctnrvectordata,sysutils;
+uses uzbtypes,gzctnrVector,sysutils;
 type
 {EXPORT+}
-PGDBXYZWGDBStringArray=^XYZWGDBGDBStringArray;
-{REGISTEROBJECTTYPE XYZWGDBGDBStringArray}
-XYZWGDBGDBStringArray= object(GZVectorData{-}<GDBStrWithPoint>{//})
-                             constructor init(m:GDBInteger);
+PGDBXYZWStringArray=^XYZWStringArray;
+{REGISTEROBJECTTYPE XYZWStringArray}
+XYZWStringArray= object(GZVector{-}<GDBStrWithPoint>{//})
+                             constructor init(m:Integer);
                              procedure freeelement(PItem:PT);virtual;
-                             //function add(p:GDBPointer):TArrayIndex;virtual;
+                             //function add(p:Pointer):TArrayIndex;virtual;
                        end;
 {EXPORT-}
 implementation
 //uses
 //    log;
-{function XYZWGDBGDBStringArray.add(p:GDBPointer):TArrayIndex;
+{function XYZWStringArray.add(p:Pointer):TArrayIndex;
 begin
      AddByPointer(p);
-     GDBPointer(PGDBStrWithPoint(p)^.str):=nil;
+     Pointer(PGDBStrWithPoint(p)^.str):=nil;
 end;}
-procedure XYZWGDBGDBStringArray.freeelement(PItem:PT);
+procedure XYZWStringArray.freeelement(PItem:PT);
 begin
      PGDBStrWithPoint(PItem)^.str:='';
 end;
-constructor XYZWGDBGDBStringArray.init(m:GDBInteger);
+constructor XYZWStringArray.init(m:Integer);
 begin
-     inherited init({$IFDEF DEBUGBUILD}'{5F615BF3-34BD-4C3E-9019-CE7CB9D2C2E7}',{$ENDIF}m{,sizeof(GDBStrWithPoint)});
+     inherited init(m);
 end;
 begin
 end.

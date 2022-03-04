@@ -17,11 +17,11 @@
 }
 
 unit uzeenrepresentation;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses uzgldrawcontext,uzgldrawerabstract,uzglvectorobject,
-     uzbtypesbase,sysutils,uzbmemman,
-     uzbgeomtypes,uzegeometry,uzglgeometry,uzefont,uzeentitiesprop,UGDBPoint3DArray,
+     sysutils,
+     uzegeometrytypes,uzegeometry,uzglgeometry,uzefont,uzeentitiesprop,UGDBPoint3DArray,
      uzegeomentitiestree,uzbtypes,
      gzctnrvectortypes,uzgeomline3d,uzgeomproxy;
 type
@@ -33,7 +33,7 @@ TZEntityRepresentation= object(GDBaseObject)
                        Graphix:ZGLGraphix;
                        Geometry:TGeomEntTreeNode;
                        {-}public{//}
-                       constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar{$ENDIF});
+                       constructor init();
                        destructor done;virtual;
 
                        function CalcTrueInFrustum(frustum:ClipArray; FullCheck:boolean):TInBoundingVolume;
@@ -45,9 +45,9 @@ TZEntityRepresentation= object(GDBaseObject)
                        function GetGraphix:PZGLGraphix;
 
                        {Команды которыми примитив рисует сам себя}
-                       procedure DrawTextContent(drawer:TZGLAbstractDrawer;content:TDXFEntsInternalStringType;_pfont: PGDBfont;const DrawMatrix,objmatrix:DMatrix4D;const textprop_size:GDBDouble;var Outbound:OutBound4V);
+                       procedure DrawTextContent(drawer:TZGLAbstractDrawer;content:TDXFEntsInternalStringType;_pfont: PGDBfont;const DrawMatrix,objmatrix:DMatrix4D;const textprop_size:Double;var Outbound:OutBound4V);
                        procedure DrawLineWithLT(var rc:TDrawContext;const startpoint,endpoint:GDBVertex; const vp:GDBObjVisualProp);
-                       procedure DrawPolyLineWithLT(var rc:TDrawContext;const points:GDBPoint3dArray; const vp:GDBObjVisualProp; const closed,ltgen:GDBBoolean);virtual;
+                       procedure DrawPolyLineWithLT(var rc:TDrawContext;const points:GDBPoint3dArray; const vp:GDBObjVisualProp; const closed,ltgen:Boolean);virtual;
                        end;
 {Export-}
 implementation
@@ -58,7 +58,7 @@ end;
 constructor TZEntityRepresentation.init;
 begin
   inherited;
-  Graphix.init({$IFDEF DEBUGBUILD}ErrGuid{$ENDIF});
+  Graphix.init();
   Geometry.initnul;
 end;
 destructor TZEntityRepresentation.done;
@@ -89,7 +89,7 @@ begin
   Graphix.Shrink;
   Geometry.Shrink;
 end;
-procedure TZEntityRepresentation.DrawTextContent(drawer:TZGLAbstractDrawer;content:TDXFEntsInternalStringType;_pfont: PGDBfont;const DrawMatrix,objmatrix:DMatrix4D;const textprop_size:GDBDouble;var Outbound:OutBound4V);
+procedure TZEntityRepresentation.DrawTextContent(drawer:TZGLAbstractDrawer;content:TDXFEntsInternalStringType;_pfont: PGDBfont;const DrawMatrix,objmatrix:DMatrix4D;const textprop_size:Double;var Outbound:OutBound4V);
 begin
   Graphix.DrawTextContent(drawer,content,_pfont,DrawMatrix,objmatrix,textprop_size,Outbound);
 end;
@@ -110,7 +110,7 @@ begin
   Geometry.AddObjectToNodeTree(gl);
   Geometry.UnLock;
 end;
-procedure TZEntityRepresentation.DrawPolyLineWithLT(var rc:TDrawContext;const points:GDBPoint3dArray; const vp:GDBObjVisualProp; const closed,ltgen:GDBBoolean);
+procedure TZEntityRepresentation.DrawPolyLineWithLT(var rc:TDrawContext;const points:GDBPoint3dArray; const vp:GDBObjVisualProp; const closed,ltgen:Boolean);
 var
   ptv,ptvprev,ptvfisrt: pgdbvertex;
   ir:itrec;

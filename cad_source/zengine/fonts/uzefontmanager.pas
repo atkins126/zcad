@@ -17,13 +17,13 @@
 }
 
 unit uzefontmanager;
-{$Include def.inc}
+{$INCLUDE zcadconfig.inc}
 {$ModeSwitch advancedrecords}
 interface
 uses
-  UGDBOpenArrayOfByte,{$IFNDEF DELPHI}LResources,{$ENDIF}LCLProc,uzbpaths,
-  uzelclintfex,uzestrconsts,uzbstrproc,uzefont,uzbtypesbase,uzbmemman,
-  sysutils,uzbtypes,uzegeometry,usimplegenerics,gzctnrstl,
+  uzctnrVectorBytes,{$IFNDEF DELPHI}LResources,{$ENDIF}LCLProc,uzbpaths,
+  uzelclintfex,uzestrconsts,uzbstrproc,uzefont,
+  sysutils,uzbtypes,uzegeometry,gzctnrSTL,
   UGDBNamedObjectsArray,classes,uzefontttfpreloader,uzelongprocesssupport;
 type
   TGeneralFontParam=record
@@ -37,28 +37,28 @@ type
     procedure Init(AName:string;AFontFile:string;AParam:TGeneralFontParam);
     constructor Create(AName:string;AFontFile:string;AParam:TGeneralFontParam);
   end;
-  TFontName2FontFileMap=GKey2DataMap<GDBString,TGeneralFontFileDesc(*{$IFNDEF DELPHI},LessGDBString{$ENDIF}*)>;
+  TFontName2FontFileMap=GKey2DataMap<String,TGeneralFontFileDesc(*{$IFNDEF DELPHI},LessString{$ENDIF}*)>;
 
-  TFontLoadProcedure=function(name:GDBString;var pf:PGDBfont):GDBBoolean;
+  TFontLoadProcedure=function(name:String;var pf:PGDBfont):Boolean;
   TFontLoadProcedureData=record
-    FontDesk:GDBString;
+    FontDesk:String;
     FontLoadProcedure:TFontLoadProcedure;
   end;
 
-  TFontExt2LoadProcMap=GKey2DataMap<GDBString,TFontLoadProcedureData(*{$IFNDEF DELPHI},LessGDBString{$ENDIF}*)>;
+  TFontExt2LoadProcMap=GKey2DataMap<String,TFontLoadProcedureData(*{$IFNDEF DELPHI},LessString{$ENDIF}*)>;
 {Export+}
   PGDBFontRecord=^GDBFontRecord;
   {REGISTERRECORDTYPE GDBFontRecord}
   GDBFontRecord = record
-    Name: GDBString;
-    Pfont: GDBPointer;
+    Name: String;
+    Pfont: Pointer;
   end;
   PGDBFontManager=^GDBFontManager;
   {REGISTEROBJECTTYPE GDBFontManager}
   GDBFontManager=object({GDBOpenArrayOfData}GDBNamedObjectsArray{-}<PGDBfont,GDBfont>{//})(*OpenArrayOfData=GDBfont*)
     FontFiles:{-}TFontName2FontFileMap{/pointer/};
     shxfontfiles:TStringList;
-    constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger);
+    constructor init(m:Integer);
     destructor done;virtual;
     procedure CreateBaseFont;
 
@@ -67,16 +67,16 @@ type
     procedure EnumerateFontFiles;
     procedure EnumerateTTFFontFile(filename:String;pdata:pointer);
     procedure EnumerateSHXFontFile(filename:String;pdata:pointer);
-    //function FindFonf(FontName:GDBString):GDBPointer;
-    {procedure freeelement(p:GDBPointer);virtual;}
+    //function FindFonf(FontName:String):Pointer;
+    {procedure freeelement(p:Pointer);virtual;}
   end;
 {Export-}
 var
    FontManager:GDBFontManager;
    FontExt2LoadProc:TFontExt2LoadProcMap;
-   sysvarPATHFontsPath:GDBString;
-   sysvarAlternateFont:GDBString='GEWIND.SHX';
-procedure RegisterFontLoadProcedure(const _FontExt,_FontDesk:GDBString;
+   sysvarPATHFontsPath:String;
+   sysvarAlternateFont:String='GEWIND.SHX';
+procedure RegisterFontLoadProcedure(const _FontExt,_FontDesk:String;
                                     const _FontLoadProcedure:TFontLoadProcedure);
 implementation
 
@@ -103,7 +103,7 @@ begin
   Param:=AParam;
 end;
 
-procedure RegisterFontLoadProcedure(const _FontExt,_FontDesk:GDBString;
+procedure RegisterFontLoadProcedure(const _FontExt,_FontDesk:String;
                                     const _FontLoadProcedure:TFontLoadProcedure);
 var
    EntInfoData:TFontLoadProcedureData;
@@ -159,14 +159,14 @@ end;
 constructor GDBFontManager.init;
 begin
   FontFiles:=TFontName2FontFileMap.Create;
-  inherited init({$IFDEF DEBUGBUILD}ErrGuid,{$ENDIF}m);
+  inherited init(m);
 end;
 procedure GDBFontManager.CreateBaseFont;
 {NEEDFIXFORDELPHI}
 {$IFNDEF DELPHI}
 var
    r: TLResource;
-   f:GDBOpenArrayOfByte;
+   f:TZctnrVectorBytes;
 {$ENDIF}
 const
    resname='GEWIND';
@@ -182,7 +182,7 @@ begin
                       DebugLn('{F}'+rsReserveFontNotFound)
                   else
                       begin
-                           f.init({$IFDEF DEBUGBUILD}'{94091172-3DD7-4038-99B6-90CD8B8E971D}',{$ENDIF}length(r.Value));
+                           f.init(length(r.Value));
                            f.AddData(@r.Value[1],length(r.Value));
                            f.SaveToFile(expandpath(TempPath+filename));
                            pbasefont:=addFonfByFile(TempPath+filename);
@@ -198,9 +198,9 @@ end;
 function GDBFontManager.addFonfByFile(FontPathName:String):PGDBfont;
 var
   p:PGDBfont;
-  FontName,FontExt:GDBString;
-  FontLoaded:GDBBoolean;
-  _key:gdbstring;
+  FontName,FontExt:String;
+  FontLoaded:Boolean;
+  _key:String;
   data:TFontLoadProcedureData;
       //ir:itrec;
 begin
@@ -292,7 +292,7 @@ end;
 {function GDBFontManager.FindFonf;
 var
   pfr:pGDBFontRecord;
-  i:GDBInteger;
+  i:Integer;
 begin
   result:=nil;
   if count=0 then exit;
@@ -308,7 +308,7 @@ begin
 end;}
 
 {function GDBLayerArray.CalcCopactMemSize2;
-var i:GDBInteger;
+var i:Integer;
     tlp:PGDBLayerProp;
 begin
      result:=0;
@@ -318,12 +318,12 @@ begin
      tlp:=parray;
      for i:=0 to count-1 do
      begin
-          result:=result+sizeof(GDBByte)+sizeof(GDBSmallint)+sizeof(GDBWord)+length(tlp^.name);
+          result:=result+sizeof(Byte)+sizeof(SmallInt)+sizeof(Word)+length(tlp^.name);
           inc(tlp);
      end;
 end;
 function GDBLayerArray.SaveToCompactMemSize2;
-var i:GDBInteger;
+var i:Integer;
     tlp:PGDBLayerProp;
 begin
      result:=0;
@@ -331,14 +331,14 @@ begin
      tlp:=parray;
      for i:=0 to count-1 do
      begin
-          PGDBByte(pmem)^:=tlp^.color;
-          inc(PGDBByte(pmem));
+          PByte(pmem)^:=tlp^.color;
+          inc(PByte(pmem));
           PGDBSmallint(pmem)^:=tlp^.lineweight;
           inc(PGDBSmallint(pmem));
           PGDBWord(pmem)^:=length(tlp^.name);
           inc(PGDBWord(pmem));
-          Move(GDBPointer(tlp.name)^, pmem^,length(tlp.name));
-          inc(PGDBByte(pmem),length(tlp.name));
+          Move(Pointer(tlp.name)^, pmem^,length(tlp.name));
+          inc(PByte(pmem),length(tlp.name));
           inc(tlp);
      end;
 end;
@@ -355,7 +355,7 @@ initialization
 {$IFNDEF DELPHI}
   {$I gewind.lrs}
 {$ENDIF}
-  FontManager.init({$IFDEF DEBUGBUILD}'{9D0E081C-796F-4EB1-98A9-8B6EA9BD8640}',{$ENDIF}100);
+  FontManager.init(100);
   FontExt2LoadProc:=TFontExt2LoadProcMap.Create;
   sysvarPATHFontsPath:=ExtractFileDir(ParamStr(0));
 finalization

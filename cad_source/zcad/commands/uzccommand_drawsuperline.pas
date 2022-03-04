@@ -27,7 +27,7 @@ unit uzccommand_drawsuperline;
 { файл def.inc необходимо включать в начале каждого модуля zcad
   он содержит в себе централизованные настройки параметров компиляции  }
   
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -41,7 +41,7 @@ uses
 
   uzccominteractivemanipulators,
 
-  uzbgeomtypes,
+  uzegeometrytypes,
 
   uzcinterface,
 
@@ -51,7 +51,7 @@ uses
 
   uzeentityfactory,    //unit describing a "factory" to create primitives
                       //модуль описывающий "фабрику" для создания примитивов
-  uzbtypesbase,uzbtypes, //base types
+  uzbtypes, //base types
                       //описания базовых типов
   uzeconsts, //base constants
                       //описания базовых констант
@@ -74,8 +74,8 @@ type
 PTDrawSuperlineParams=^TDrawSuperlineParams;
 TDrawSuperlineParams=record
                          pu:PTUnit;                //рантайм юнит с параметрами суперлинии
-                         LayerNamePrefix:GDBString;//префикс
-                         ProcessLayer:GDBBoolean;  //выключатель
+                         LayerNamePrefix:String;//префикс
+                         ProcessLayer:Boolean;  //выключатель
                      end;
 var
    DrawSuperlineParams:TDrawSuperlineParams;
@@ -84,14 +84,14 @@ var
 
 implementation
 
-function GetInteractiveLine(prompt1,prompt2:GDBString;out p1,p2:GDBVertex):GDBBoolean;
+function GetInteractiveLine(prompt1,prompt2:String;out p1,p2:GDBVertex):Boolean;
 var
     pline:PGDBObjLine;
 begin
     result:=false;
     if commandmanager.get3dpoint(prompt1,p1)=GRNormal then
     begin
-         pline := GDBPointer(drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.CreateInitObj(GDBLineID,drawings.GetCurrentROOT));
+         pline := Pointer(drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.CreateInitObj(GDBLineID,drawings.GetCurrentROOT));
          pline^.CoordInOCS.lBegin:=p1;
          InteractiveLineEndManipulator(pline,p1,false);
       if commandmanager.Get3DPointInteractive(prompt2,p2,@InteractiveLineEndManipulator,pline) = GRNormal then
@@ -101,11 +101,11 @@ begin
     end;
     drawings.GetCurrentDWG^.FreeConstructionObjects;
 end;
-function GetInteractiveLineFrom1to2(prompt2:GDBString;const p1:GDBVertex; out p2:GDBVertex):tgetresult;
+function GetInteractiveLineFrom1to2(prompt2:String;const p1:GDBVertex; out p2:GDBVertex):tgetresult;
 var
     pline:PGDBObjLine;
 begin
-    pline := GDBPointer(drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.CreateInitObj(GDBLineID,drawings.GetCurrentROOT));
+    pline := Pointer(drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.CreateInitObj(GDBLineID,drawings.GetCurrentROOT));
     pline^.CoordInOCS.lBegin:=p1;
     InteractiveLineEndManipulator(pline,p1,false);
     result:=commandmanager.Get3DPointInteractive(prompt2,p2,@InteractiveLineEndManipulator,pline);
@@ -117,7 +117,7 @@ var
     pvarext:TVariablesExtender;
     psu:ptunit;
     pvd:pvardesk;        //для нахождения имени суперлинии
-    layername:gdbstring; //имя слоя куда будет помещена супелиния
+    layername:String; //имя слоя куда будет помещена супелиния
     player:PGDBLayerProp;//указатель на слой куда будет помещена супелиния
 begin
     psuperline := AllocEnt(GDBSuperLineID);
@@ -137,13 +137,13 @@ begin
     begin
       //ищем переменную 'NMO_Name'
       pvd:=psu.FindVariable('NMO_Name');
-      pgdbstring(pvd^.data.Instance)^:=nameSL;
+      pString(pvd^.data.Addr.Instance)^:=nameSL;
       //если найдена
       if pvd<>nil then
       begin
         //получаем желаемое имя слоя
         layername:=LayerNamePrefix+nameSL;
-        //pvd.data.PTD^.GetValueAsString(pvd.data.Instance);
+        //pvd.data.PTD^.GetValueAsString(pvd.Instance);
         //ищем описание слоя по имени
 
         player:=drawings.GetCurrentDWG.LayerTable.getAddres(Tria_Utf8ToAnsi(layername));
@@ -157,6 +157,7 @@ begin
     //zcPlaceUndoStartMarkerIfNeed(UndoMarcerIsPlazed,'DrawSuperLine');
     zcAddEntToCurrentDrawingWithUndo(psuperline);
     zcRedrawCurrentDrawing;
+    result:=cmd_ok;
 end;
 
 function DrawSuperLine_com(operands:TCommandOperands):TCommandResult;
@@ -170,7 +171,7 @@ var
 procedure createline;
 var
     pvd:pvardesk;        //для нахождения имени суперлинии
-    layername:gdbstring; //имя слоя куда будет помещена супелиния
+    layername:String; //имя слоя куда будет помещена супелиния
     player:PGDBLayerProp;//указатель на слой куда будет помещена супелиния
 begin
     psuperline := AllocEnt(GDBSuperLineID);
@@ -192,7 +193,7 @@ begin
       if pvd<>nil then
       begin
         //получаем желаемое имя слоя
-        layername:=DrawSuperlineParams.LayerNamePrefix+pvd.data.PTD^.GetValueAsString(pvd.data.Instance);
+        layername:=DrawSuperlineParams.LayerNamePrefix+pvd.data.PTD^.GetValueAsString(pvd.data.Addr.Instance);
         //ищем описание слоя по имени
 
         player:=drawings.GetCurrentDWG.LayerTable.getAddres(Tria_Utf8ToAnsi(layername));

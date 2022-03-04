@@ -17,16 +17,16 @@
 }
 
 unit uzglviewareageneral;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
-     gzctnrvectortypes,uzbgeomtypes,LCLProc,uzbmemman,uzemathutils,uzepalette,
-     uzeentsubordinated,uzegeometry,uzbtypesbase,uzbtypes,UGDBSelectedObjArray,
+     gzctnrvectortypes,uzegeometrytypes,LCLProc,uzemathutils,uzepalette,
+     uzeentsubordinated,uzegeometry,uzbtypes,UGDBSelectedObjArray,
      uzglviewareadata,uzgldrawcontext,uzeentity,uzedrawingabstract,UGDBPoint3DArray,uzeentitiestree,
      uzeconsts,uzestrconsts,UGDBTracePropArray,math,sysutils,uzedrawingdef,uzbstrproc,
      ExtCtrls,Controls,Classes,{$IFDEF DELPHI}Types,{$ENDIF}{$IFNDEF DELPHI}LCLType,{$ENDIF}Forms,
      UGDBOpenArrayOfPV,uzeentgenericsubentry,uzecamera,UGDBVisibleOpenArray,uzgldrawerabstract,
-     uzgldrawergeneral,uzglviewareaabstract,uzeentitiesprop,gzctnrstl;
+     uzgldrawergeneral,uzglviewareaabstract,uzeentitiesprop,gzctnrSTL,uzbLogIntf;
 const
   ontracdist=10;
   ontracignoredist=25;
@@ -53,7 +53,7 @@ type
                            procedure calcgrid;override;
                            procedure Clear0Ontrackpoint;override;
                            procedure ClearOntrackpoint;override;
-                           procedure SetMouseMode(smode:GDBByte);override;
+                           procedure SetMouseMode(smode:Byte);override;
                            procedure reprojectaxis;override;
                            procedure Project0Axis;override;
                            procedure create0axis;override;
@@ -64,7 +64,7 @@ type
                            procedure PanScreen(oldX,oldY,X,Y:Integer);override;
                            procedure RestoreMouse;override;
                            procedure myKeyPress(var Key: Word; Shift: TShiftState);override;
-                           function ProjectPoint(pntx,pnty,pntz:gdbdouble;var wcsLBN,wcsRTF,dcsLBN,dcsRTF: GDBVertex):gdbvertex;override;
+                           function ProjectPoint(pntx,pnty,pntz:Double;var wcsLBN,wcsRTF,dcsLBN,dcsRTF: GDBVertex):gdbvertex;override;
                            procedure mouseunproject(X, Y: integer);override;
                            procedure addaxistootrack(var posr:os_record;const axis:GDBVertex);virtual;
                            procedure projectaxis;override;
@@ -76,28 +76,28 @@ type
                            procedure SetOTrackTimer(Sender: TObject);override;
                            procedure KillOHintTimer(Sender: TObject);override;
                            procedure SetOHintTimer(Sender: TObject);override;
-                           procedure getosnappoint(radius: GDBFloat);override;
-                           procedure getonmouseobject(pva: PGDBObjEntityOpenArray;InSubEntry:GDBBoolean);virtual;
-                           procedure findonmobj(pva: PGDBObjEntityOpenArray; var i: GDBInteger;InSubEntry:GDBBoolean);virtual;
-                           procedure findonmobjTree(var Node:TEntTreeNode; var i: GDBInteger;InSubEntry:GDBBoolean);virtual;
-                           procedure getonmouseobjectbytree(var Node:TEntTreeNode;InSubEntry:GDBBoolean);override;
-                           procedure processmousenode(Node:TEntTreeNode;var i:integer;InSubEntry:GDBBoolean);virtual;
+                           procedure getosnappoint(radius: Single);override;
+                           procedure getonmouseobject(pva: PGDBObjEntityOpenArray;InSubEntry:Boolean);virtual;
+                           procedure findonmobj(pva: PGDBObjEntityOpenArray; var i: Integer;InSubEntry:Boolean);virtual;
+                           procedure findonmobjTree(var Node:TEntTreeNode; var i: Integer;InSubEntry:Boolean);virtual;
+                           procedure getonmouseobjectbytree(var Node:TEntTreeNode;InSubEntry:Boolean);override;
+                           procedure processmousenode(Node:TEntTreeNode;var i:integer;InSubEntry:Boolean);virtual;
                            procedure AddOntrackpoint;override;
                            procedure CorrectMouseAfterOS;override;
-                           function CreateRC(_maxdetail:GDBBoolean=false):TDrawContext;override;
-                           //procedure sendcoordtocommand(coord:GDBVertex;key: GDBByte);virtual;
-                           //procedure sendmousecoordwop(key: GDBByte);override;
-                           //procedure sendmousecoord(key: GDBByte);override;
+                           function CreateRC(_maxdetail:Boolean=false):TDrawContext;override;
+                           //procedure sendcoordtocommand(coord:GDBVertex;key: Byte);virtual;
+                           //procedure sendmousecoordwop(key: Byte);override;
+                           //procedure sendmousecoord(key: Byte);override;
                            procedure asynczoomsel(Data: PtrInt);override;
                            procedure asynczoomall(Data: PtrInt);override;
                            procedure asyncupdatemouse(Data: PtrInt);override;
                            procedure set3dmouse;override;
-                           procedure SetCameraPosZoom(_pos:gdbvertex;_zoom:gdbdouble;finalcalk:gdbboolean);override;
+                           procedure SetCameraPosZoom(_pos:gdbvertex;_zoom:Double;finalcalk:Boolean);override;
                            procedure DISP_ZoomFactor(x: double{; MousePos: TPoint});
                            procedure showmousecursor;override;
                            procedure hidemousecursor;override;
                            Procedure Paint; override;
-                           function treerender(var Node:TEntTreeNode;StartTime:TDateTime;var DC:TDrawContext):GDBBoolean; override;
+                           function treerender(var Node:TEntTreeNode;StartTime:TDateTime;var DC:TDrawContext):Boolean; override;
                            procedure partailtreerender(var Node:TEntTreeNode;const part:TBoundingBox; var DC:TDrawContext); override;
                            procedure render(const Root:GDBObjGenericSubEntry;var DC:TDrawContext); override;
                            procedure finishdraw(var RC:TDrawContext); override;
@@ -143,7 +143,7 @@ type
                                                   Operation: TOperation); override;
 
                       end;
-function MouseButton2ZKey(Shift: TShiftState):GDBByte;
+function MouseButton2ZKey(Shift: TShiftState):Byte;
 procedure RemoveCursorIfNeed(acontrol:TControl;RemoveCursor:boolean);
 var
    sysvarDISPOSSize:double=10;
@@ -160,32 +160,32 @@ var
    sysvarDISPUnSelGripColor:TGDBPaletteColor=4;
    sysvarDWGOSMode:TGDBOSMode=0;
    sysvarDWGOSModeControl:Boolean=True;
-   sysvarDISPGripSize:GDBInteger=5;
+   sysvarDISPGripSize:Integer=5;
    sysvarDISPColorAxis:boolean=true;
    sysvarDISPDrawZAxis:boolean=true;
    sysvarDrawInsidePaintMessage:TGDB3StateBool=T3SB_Default;
-   sysvarDWGPolarMode:GDBBoolean=false;
-   SysVarRDLineSmooth:GDBBoolean=false;
-   sysvarRDUseStencil:GDBBoolean=false;
+   sysvarDWGPolarMode:Boolean=false;
+   SysVarRDLineSmooth:Boolean=false;
+   sysvarRDUseStencil:Boolean=false;
    sysvarRDLastRenderTime:integer=0;
    sysvarRDLastUpdateTime:integer=0;
    sysvarRDEnableAnimation:boolean=true;
    SysVarRDImageDegradationEnabled:boolean=false;
    SysVarRDImageDegradationPrefferedRenderTime:integer=0;
-   SysVarRDImageDegradationCurrentDegradationFactor:GDBDouble=0;
-   SysVarRDImageDegradationMaxDegradationFactor:GDBDouble=0;
-   SysVarRDRemoveSystemCursorFromWorkArea:GDBBoolean=true;
-   sysvarDSGNSelNew:GDBBoolean=false;
-   sysvarDWGEditInSubEntry:gdbboolean=false;
-   sysvarDSGNOTrackTimerInterval:GDBInteger=500;
-   sysvarRDLastCalcVisible:GDBInteger=0;
+   SysVarRDImageDegradationCurrentDegradationFactor:Double=0;
+   SysVarRDImageDegradationMaxDegradationFactor:Double=0;
+   SysVarRDRemoveSystemCursorFromWorkArea:Boolean=true;
+   sysvarDSGNSelNew:Boolean=false;
+   sysvarDWGEditInSubEntry:Boolean=false;
+   sysvarDSGNOTrackTimerInterval:Integer=500;
+   sysvarRDLastCalcVisible:Integer=0;
    sysvarRDLight:boolean=false;
 
    OnActivateProc:TOnActivateProc=nil;
-   ForeGroundColorIndex:GDBInteger;
+   ForeGroundColorIndex:Integer;
 
-   sysvarDISPLWDisplayScale:GDBInteger=10;
-   sysvarDISPmaxLWDisplayScale:GDBInteger=20;
+   sysvarDISPLWDisplayScale:Integer=10;
+   sysvarDISPmaxLWDisplayScale:Integer=20;
    sysvarDISPDefaultLW:TGDBLineWeight=LnWt025;
 
 implementation
@@ -280,11 +280,11 @@ begin
 end;
 procedure TGeneralViewArea.showcursor(var DC:TDrawContext);
 var
-  i, j: GDBInteger;
+  i, j: Integer;
   pt:ptraceprop;
   mvertex,dvertex,tv1,tv2,sv1,d1:gdbvertex;
   Tempplane,plx,ply,plz:DVector4D;
-  a: GDBInteger;
+  a: Integer;
   i2d,i2dresult:intercept2dprop;
   _NotUseLCS:boolean;
 begin
@@ -561,7 +561,7 @@ end;
 end;
 procedure TGeneralViewArea.DrawCSAxis(var DC:TDrawContext);
 var
-  td,td2,td22:gdbdouble;
+  td,td2,td22:Double;
 begin
   dc.drawer.SetDrawMode(TDM_Normal);
   CalcOptimalMatrix;
@@ -626,7 +626,7 @@ function TGeneralViewArea.treerender;
 var
   currtime:TDateTime;
   Hour,Minute,Second,MilliSecond:word;
-  q1,q2:gdbboolean;
+  q1,q2:Boolean;
 begin
   if (sysvarRDMaxRenderTime<>0) then begin
     currtime:=now;
@@ -718,7 +718,7 @@ end;
 
 procedure TGeneralViewArea.draw;
 var
-  scrollmode:GDBBOOlean;
+  scrollmode:Boolean;
   LPTime:Tdatetime;
   DC:TDrawContext;
   dt:integer;
@@ -731,8 +731,7 @@ begin
   if (getviewcontrol.clientwidth=0)or(getviewcontrol.clientheight=0) then exit;
   LPTime:=now;
   needredraw:=param.firstdraw{ or true};
-  if VerboseLog^ then
-  debugln('{T}TOGLWnd.draw');
+  zTraceLn('{T}TOGLWnd.draw');
   //programlog.logoutstr('TOGLWnd.draw',0,LM_Trace);
   //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.draw',lp_IncPos);{$ENDIF}
 
@@ -1179,7 +1178,7 @@ procedure TGeneralViewArea.ZoomToVolume(Volume:TBoundingBox);
   const
        steps=10;
   var
-    tpz,tzoom: GDBDouble;
+    tpz,tzoom: Double;
     {fv1,tp,}wcsLBN,wcsRTF,dcsLBN,dcsRTF: GDBVertex;
     camerapos,target:GDBVertex;
     i:integer;
@@ -1269,7 +1268,7 @@ procedure TGeneralViewArea.ZoomToVolume(Volume:TBoundingBox);
   end;
 procedure TGeneralViewArea.DISP_ZoomFactor;
 var
-  glx1, gly1: GDBDouble;
+  glx1, gly1: Double;
   pucommand:pointer;
 //  fv1: GDBVertex;
 begin
@@ -1312,7 +1311,7 @@ begin
   //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.DISP_ZoomFactor----{end}',lp_decPos);{$ENDIF}
 end;
 
-procedure TGeneralViewArea.SetCameraPosZoom(_pos:gdbvertex;_zoom:gdbdouble;finalcalk:gdbboolean);
+procedure TGeneralViewArea.SetCameraPosZoom(_pos:gdbvertex;_zoom:Double;finalcalk:Boolean);
 var
   fv1: GDBVertex;
 begin
@@ -1401,8 +1400,8 @@ procedure TGeneralViewArea.WaMouseWheel(Sender:TObject;Shift: TShiftState; Wheel
 //procedure TOGLWnd.Pre_MouseWheel;
 var
 //  mpoint: tpoint;
-  smallwheel:gdbdouble;
-//    glx1, gly1: GDBDouble;
+  smallwheel:Double;
+//    glx1, gly1: Double;
   //fv1: GDBVertex;
 
 //  msg : TMsg;
@@ -1467,9 +1466,9 @@ end;
 procedure TGeneralViewArea.WaMouseMove(sender:tobject;Shift: TShiftState; X, Y: Integer);
 var
   //glmcoord1: gdbpiece;
-  ux,uy:GDBDouble;
-  //htext,htext2:gdbstring;
-  key: GDBByte;
+  ux,uy:Double;
+  //htext,htext2:String;
+  key: Byte;
   //f:TzeUnitsFormat;
 begin
   //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.Pre_MouseMove',lp_IncPos);{$ENDIF}
@@ -1720,7 +1719,7 @@ begin
      param.init;
      SetMouseMode((MGetControlpoint) or (MGetSelectObject) or (MMoveCamera) or (MRotateCamera) or (MGetSelectionFrame));
 
-     PolarAxis.init({$IFDEF DEBUGBUILD}'{5AD9927A-0312-4844-8C2D-9498647CCECB}',{$ENDIF}10);
+     PolarAxis.init(10);
 
      for i := 0 to 4 - 1 do
      begin
@@ -1754,7 +1753,7 @@ begin
      WorkArea.onmouseleave:=WaMouseLeave;
      WorkArea.onresize:=WaResize;
 end;
-function MouseButton2ZKey(Shift: TShiftState):GDBByte;
+function MouseButton2ZKey(Shift: TShiftState):Byte;
 begin
   result := 0;
   if (ssLeft in shift) then
@@ -1767,7 +1766,7 @@ begin
      result:=WorkArea;
 end;
 procedure TGeneralViewArea.WaMouseDown(Sender:TObject;Button: TMouseButton; Shift: TShiftState;X, Y: Integer);
-var //key: GDBByte;
+var //key: Byte;
     NeedRedraw:boolean;
     //menu:TmyPopupMenu;
     //FreeClick:boolean;
@@ -1831,7 +1830,7 @@ begin
   if assigned(MainMouseUp) then
                                MainMouseUp;
 end;
-function TGeneralViewArea.CreateRC(_maxdetail:GDBBoolean=false):TDrawContext;
+function TGeneralViewArea.CreateRC(_maxdetail:Boolean=false):TDrawContext;
 begin
   if PDWG<>nil then
                    PDWG^.FillDrawingPartRC(result);
@@ -1864,7 +1863,7 @@ begin
 end;
 procedure TGeneralViewArea.CorrectMouseAfterOS;
 var d,tv1,tv2:GDBVertex;
-    b1,b2:GDBBoolean;
+    b1,b2:Boolean;
 begin
      param.md.mouseraywithoutos:=param.md.mouseray;
      if (param.ospoint.ostype <> os_none)or(currentmousemovesnaptogrid) then
@@ -1920,7 +1919,7 @@ begin
   end;
 end;
 
-procedure TGeneralViewArea.processmousenode(Node:TEntTreeNode;var i:integer;InSubEntry:GDBBoolean);
+procedure TGeneralViewArea.processmousenode(Node:TEntTreeNode;var i:integer;InSubEntry:Boolean);
 //var
   //pp:PGDBObjEntity;
   //ir:itrec;
@@ -1936,9 +1935,9 @@ begin
      end;
 end;
 
-procedure TGeneralViewArea.getonmouseobjectbytree(var Node:TEntTreeNode;InSubEntry:GDBBoolean);
+procedure TGeneralViewArea.getonmouseobjectbytree(var Node:TEntTreeNode;InSubEntry:Boolean);
 var
-  i: GDBInteger;
+  i: Integer;
   pp:PGDBObjEntity;
   ir:itrec;
   //inr:TINRect;
@@ -1975,7 +1974,7 @@ begin
   //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.getonmouseobjectbytree------{end}',lp_DecPos);{$ENDIF}
 end;
 
-procedure TGeneralViewArea.findonmobj(pva: PGDBObjEntityOpenArray; var i: GDBInteger;InSubEntry:GDBBoolean);
+procedure TGeneralViewArea.findonmobj(pva: PGDBObjEntityOpenArray; var i: Integer;InSubEntry:Boolean);
 var
   pp:PGDBObjEntity;
   ir:itrec;
@@ -2011,7 +2010,7 @@ begin
   else ;//{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('wa.param.scrollmode=true. exit',0);{$ENDIF}
   //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.findonmobj-----{end}',lp_DecPos);{$ENDIF}
 end;
-procedure TGeneralViewArea.findonmobjTree(var Node:TEntTreeNode; var i: GDBInteger;InSubEntry:GDBBoolean);
+procedure TGeneralViewArea.findonmobjTree(var Node:TEntTreeNode; var i: Integer;InSubEntry:Boolean);
 var
   pp:PGDBObjEntity;
   ir:itrec;
@@ -2049,7 +2048,7 @@ begin
 end;
 procedure TGeneralViewArea.getonmouseobject;
 var
-  i: GDBInteger;
+  i: Integer;
   pp:PGDBObjEntity;
   ir:itrec;
   DC:TDrawContext;
@@ -2093,15 +2092,15 @@ begin
       result:=on;
   end
 end;
-procedure TGeneralViewArea.getosnappoint({pva: PGDBObjEntityOpenArray; }radius: GDBFloat);
+procedure TGeneralViewArea.getosnappoint({pva: PGDBObjEntityOpenArray; }radius: Single);
 var
   pv,pv2:PGDBObjEntity;
   osp:os_record;
-  dx,dy:GDBDouble;
+  dx,dy:Double;
 //  oldit:itrec;
       ir,ir2:itrec;
-  pdata:GDBPointer;
-  DefaultRadius,DefaultTextRadius:GDBDouble;
+  pdata:Pointer;
+  DefaultRadius,DefaultTextRadius:Double;
 begin
   DefaultRadius:=sysvarDISPCursorSize*sysvarDISPCursorSize+1;
   DefaultTextRadius:=(5*5)*DefaultRadius;
@@ -2289,7 +2288,7 @@ end;
 procedure TGeneralViewArea.CalcMouseFrustum;
 var
   tm: DMatrix4D;
-  td:gdbdouble;
+  td:Double;
 begin
   td:=sysvarDISPCursorSize*2;
   param.mousefrustum   :=CalcDisplaySubFrustum(param.md.glmouse.x,param.md.glmouse.y,td,td,PDWG.Getpcamera.modelMatrix,PDWG.Getpcamera.projMatrix,PDWG.Getpcamera.viewport);
@@ -2324,7 +2323,7 @@ begin
   //--oglsm.myglMatrixMode(GL_MODELVIEW);
 end;
 
-function ProjectPoint2(pntx,pnty,pntz:gdbdouble; var m:DMatrix4D; var ccsLBN,ccsRTF:GDBVertex):gdbvertex;
+function ProjectPoint2(pntx,pnty,pntz:Double; var m:DMatrix4D; var ccsLBN,ccsRTF:GDBVertex):gdbvertex;
 begin
      result.x:=pntx;
      result.y:=pnty;
@@ -2371,7 +2370,7 @@ var ccsLBN,ccsRTF:GDBVertex;
     //wa.pdwg:PTDrawing;
     proot:PGDBObjGenericSubEntry;
     pcamera:PGDBObjCamera;
-    td:GDBDouble;
+    td:Double;
     dc:TDrawContext;
 begin
   //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.CalcOptimalMatrix',lp_IncPos);{$ENDIF}
@@ -2695,9 +2694,9 @@ var
   glmcoord1: gdbpiece;
   tv2:gdbvertex4d;
   ax:gdbvertex;
-  //ux,uy:GDBDouble;
-  //htext,htext2:gdbstring;
-  //key: GDBByte;
+  //ux,uy:Double;
+  //htext,htext2:String;
+  //key: Byte;
   lptime:ttime;
 begin
   mouseunproject(oldX, getviewcontrol.clientheight-oldY);
@@ -2734,7 +2733,7 @@ end;
 
 procedure TGeneralViewArea.projectaxis;
 var
-  i: GDBInteger;
+  i: Integer;
   temp: gdbvertex;
   pv:pgdbvertex;
   tp:traceprop;
@@ -2746,7 +2745,7 @@ begin
   PDWG.myGluProject2(param.ospoint.worldcoord,
              param.ospoint.dispcoord);
   if not sysvarDWGPolarMode then exit;
-  //param.ospoint.arrayworldaxis.init({$IFDEF DEBUGBUILD}'{8BE71BAA-507B-4D6B-BE2C-63693022090C}',{$ENDIF}4);
+  //param.ospoint.arrayworldaxis.init(4);
   param.ospoint.arrayworldaxis.clear;
   pv:=polaraxis.GetParrayAsPointer;
   for i:=0 to polaraxis.Count-1 do
@@ -2756,7 +2755,7 @@ begin
   end;
   //if param.ospoint.PGDBObject<>nil then
   begin
-  objects.init({$IFDEF DEBUGBUILD}'{8BE71BAA-507B-4D6B-BE2C-63693022090C}',{$ENDIF}100);
+  objects.init(100);
   if PDWG.GetCurrentROOT.FindObjectsInPoint(param.ospoint.worldcoord,Objects) then
   begin
                        pobj:=objects.beginiterate(ir);
@@ -2774,7 +2773,7 @@ begin
   objects.Done;
   if param.processObjConstruct then
   begin
-  objects.init({$IFDEF DEBUGBUILD}'{8BE71BAA-507B-4D6B-BE2C-63693022090C}',{$ENDIF}100);
+  objects.init(100);
   if PDWG.GetConstructObjRoot.FindObjectsInPointSlow(param.ospoint.worldcoord,Objects) then
   begin
                        pobj:=objects.beginiterate(ir);
@@ -2789,13 +2788,13 @@ begin
   end;
   end;
   project0axis;
-  {GDBGetMem(param.ospoint.arrayworldaxis, sizeof(GDBWord) + param.ppolaraxis^.count * sizeof(gdbvertex));
-  Move(param.ppolaraxis^, param.ospoint.arrayworldaxis^, sizeof(GDBWord) + param.ppolaraxis^.count * sizeof(gdbvertex));}
+  {Getmem(param.ospoint.arrayworldaxis, sizeof(Word) + param.ppolaraxis^.count * sizeof(gdbvertex));
+  Move(param.ppolaraxis^, param.ospoint.arrayworldaxis^, sizeof(Word) + param.ppolaraxis^.count * sizeof(gdbvertex));}
   PDWG.myGluProject2(param.ospoint.worldcoord,
              param.ospoint.dispcoord);
-  //param.ospoint.arraydispaxis.init({$IFDEF DEBUGBUILD}'{722A886F-5616-4E8F-B94D-3A1C3D7ADBD4}',{$ENDIF}param.ospoint.arrayworldaxis.count);
+  //param.ospoint.arraydispaxis.init(param.ospoint.arrayworldaxis.count);
   param.ospoint.arraydispaxis.clear;
-  //GDBGetMem(param.ospoint.arraydispaxis, sizeof(GDBWord) + param.ospoint.arrayworldaxis.count * sizeof(traceprop));
+  //Getmem(param.ospoint.arraydispaxis, sizeof(Word) + param.ospoint.arrayworldaxis.count * sizeof(traceprop));
   //param.ospoint.arraydispaxis.count := param.ospoint.arrayworldaxis.count;
   pv:=param.ospoint.arrayworldaxis.GetParrayAsPointer;
   for i := 0 to param.ospoint.arrayworldaxis.count - 1 do
@@ -2826,7 +2825,7 @@ end;
 
 procedure TGeneralViewArea.create0axis;
 var
-  i: GDBInteger;
+  i: Integer;
   pv:pgdbvertex;
   Objects:GDBObjOpenArrayOfPV;
   pobj:pGDBObjEntity;
@@ -2836,7 +2835,7 @@ begin
              param.ospoint.dispcoord);
   //if not assigned(sysvar.dwg.DWG_PolarMode) then exit;
   if not sysvarDWGPolarMode then exit;
-  //param.ontrackarray.otrackarray[0].arrayworldaxis.init({$IFDEF DEBUGBUILD}'{8BE71BAA-507B-4D6B-BE2C-63693022090C}',{$ENDIF}4);
+  //param.ontrackarray.otrackarray[0].arrayworldaxis.init(4);
   param.ontrackarray.otrackarray[0].arrayworldaxis.clear;
   pv:=polaraxis.GetParrayAsPointer;
   for i:=0 to polaraxis.Count-1 do
@@ -2847,7 +2846,7 @@ begin
 
   if tocommandmcliccount>0 then
   begin
-  objects.init({$IFDEF DEBUGBUILD}'{8BE71BAA-507B-4D6B-BE2C-63693022090C}',{$ENDIF}100);
+  objects.init(100);
   if PDWG.GetCurrentROOT.FindObjectsInPoint(param.ontrackarray.otrackarray[0].worldcoord,Objects) then
   begin
                        pobj:=objects.beginiterate(ir);
@@ -2861,7 +2860,7 @@ begin
   objects.Done;
                        if param.processObjConstruct then
                        begin
-  objects.init({$IFDEF DEBUGBUILD}'{8BE71BAA-507B-4D6B-BE2C-63693022090C}',{$ENDIF}100);
+  objects.init(100);
   if PDWG.GetConstructObjRoot.FindObjectsInPointSlow(param.ontrackarray.otrackarray[0].worldcoord,Objects) then
   begin
                        pobj:=objects.beginiterate(ir);
@@ -2885,18 +2884,18 @@ var
   tp: traceprop;
   temp: gdbvertex;
   pv: pgdbvertex;
-  i: GDBInteger;
+  i: Integer;
 begin
-  {GDBGetMem(param.ospoint.arrayworldaxis, sizeof(GDBWord) + param.ppolaraxis
+  {Getmem(param.ospoint.arrayworldaxis, sizeof(Word) + param.ppolaraxis
     ^.count * sizeof(gdbvertex));
-  Move(param.ppolaraxis^, param.ospoint.arrayworldaxis^, sizeof(GDBWord) +
+  Move(param.ppolaraxis^, param.ospoint.arrayworldaxis^, sizeof(Word) +
     param.ppolaraxis^.count * sizeof(gdbvertex)); }
   {gdb.GetCurrentDWG^}pdwg.myGluProject2(param.ontrackarray.otrackarray[0
     ].worldcoord,
              param.ontrackarray.otrackarray[0].dispcoord);
-  //param.ontrackarray.otrackarray[0].arraydispaxis.init({$IFDEF DEBUGBUILD}'{722A886F-5616-4E8F-B94D-3A1C3D7ADBD4}', {$ENDIF}    param.ontrackarray.otrackarray[0].arrayworldaxis.count);
+  //param.ontrackarray.otrackarray[0].arraydispaxis.init(param.ontrackarray.otrackarray[0].arrayworldaxis.count);
   param.ontrackarray.otrackarray[0].arraydispaxis.clear;
-  //GDBGetMem(param.ospoint.arraydispaxis, sizeof(GDBWord) +param.ospoint.arrayworldaxis.count * sizeof(traceprop));
+  //Getmem(param.ospoint.arraydispaxis, sizeof(Word) +param.ospoint.arrayworldaxis.count * sizeof(traceprop));
   //param.ospoint.arraydispaxis.count := param.ospoint.arrayworldaxis.count;
   pv:=param.ontrackarray.otrackarray[0].arrayworldaxis.GetParrayAsPointer;
   for i := 0 to param.ontrackarray.otrackarray[0].arrayworldaxis.count - 1 do
@@ -2921,14 +2920,14 @@ end;
 
 procedure TGeneralViewArea.reprojectaxis;
 var
-  i, j, a: GDBInteger;
+  i, j, a: Integer;
   temp: gdbvertex;
   pv:pgdbvertex;
   pt,pt2:ptraceprop;
   ir,ir2:itrec;
   ip:intercept3dprop;
-  lastontracdist,currentontracdist,tx,ty,tz:gdbdouble;
-  test:gdbboolean;
+  lastontracdist,currentontracdist,tx,ty,tz:Double;
+  test:Boolean;
   pobj:pgdbobjentity;
 //  dispraylen:double;
 begin
@@ -3205,7 +3204,7 @@ begin
                           end*)
 end;
 
-function TGeneralViewArea.ProjectPoint(pntx,pnty,pntz:gdbdouble;var wcsLBN,wcsRTF,dcsLBN,dcsRTF: GDBVertex):gdbvertex;
+function TGeneralViewArea.ProjectPoint(pntx,pnty,pntz:Double;var wcsLBN,wcsRTF,dcsLBN,dcsRTF: GDBVertex):gdbvertex;
 begin
      PDWG.myGluProject2(CreateVertex(pntx,pnty,pntz),
      result);
@@ -3243,7 +3242,7 @@ begin
                               end;
 end;
 procedure TGeneralViewArea.mouseunproject(X, Y: integer);
-var ca, cv: extended; ds:GDBString;
+var ca, cv: extended; ds:String;
 begin
   if pdwg=NIL then exit;
 
@@ -3281,7 +3280,7 @@ begin
     str(ca,ds);
   end;
 end;
-procedure TGeneralViewArea.SetMouseMode(smode:GDBByte);
+procedure TGeneralViewArea.SetMouseMode(smode:Byte);
 begin
      param.md.mode := smode;
 end;
@@ -3299,7 +3298,7 @@ end;
 procedure TGeneralViewArea.calcgrid;
 var
     tempv,cav: gdbvertex;
-    l,u,r,b,maxh,maxv,ph,pv:GDBDouble;
+    l,u,r,b,maxh,maxv,ph,pv:Double;
 begin
      if pdwg=NIL then exit;
      if getviewcontrol.ClientWidth=0 then exit;

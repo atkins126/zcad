@@ -18,7 +18,7 @@
 {$mode delphi}
 unit uzccommand_regen;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -36,7 +36,7 @@ function Regen_com(operands:TCommandOperands):TCommandResult;
 implementation
 
 function Regen_com(operands:TCommandOperands):TCommandResult;
-var //i: GDBInteger;
+var //i: Integer;
     pv:pGDBObjEntity;
         ir:itrec;
     drawing:PTSimpleDrawing;

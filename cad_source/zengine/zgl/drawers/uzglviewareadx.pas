@@ -17,7 +17,7 @@
 }
 
 unit uzglviewareadx;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
      Windows, Messages, LCLType, LCLProc, SysUtils, Variants,
@@ -28,7 +28,7 @@ uses
 
      math,
      uzgldrawerdx,
-     uzglbackendmanager,uzbgeomtypes,uzbtypes,uzglviewareaabstract,uzglviewareageneral,uzgldrawcontext,uzbtypesbase;
+     uzglbackendmanager,uzegeometrytypes,uzbtypes,uzglviewareaabstract,uzglviewareageneral,uzgldrawcontext;
 type
   TVertexData = record
     x: _FLOAT;
@@ -130,8 +130,8 @@ type
                       function NeedDrawInsidePaintEvent:boolean; override;
                       procedure setdeicevariable; override;
                       function getParam:pointer; override;
-                      function getParamTypeName:GDBString; override;
-                      function CreateRC(_maxdetail:GDBBoolean=false):TDrawContext;override;
+                      function getParamTypeName:String; override;
+                      function CreateRC(_maxdetail:Boolean=false):TDrawContext;override;
                   end;
 implementation
 
@@ -710,7 +710,7 @@ end;
 
 
 
-function TDX11ViewArea.CreateRC(_maxdetail:GDBBoolean=false):TDrawContext;
+function TDX11ViewArea.CreateRC(_maxdetail:Boolean=false):TDrawContext;
 begin
   result:=inherited CreateRC(_maxdetail);
   result.MaxWidth:={OpenGLParam.RD_MaxWidth}100;
@@ -748,23 +748,23 @@ begin(*
   oglsm.myglGetDoublev(GL_point_size_RANGE,@tarray[0]);
   //if assigned(sysvar.RD.RD_MaxPointSize) then
   OpenGLParam.RD_MaxPointSize:=tarray[1];
-  GDBPointer(p):=oglsm.myglGetString(GL_VENDOR);
+  Pointer(p):=oglsm.myglGetString(GL_VENDOR);
   debugln('{I}RD_Vendor:="%s"',[p]);
   //programlog.LogOutFormatStr('RD_Vendor:="%s"',[p],0,LM_Info);
   //if assigned(OpenglParam.RD_Vendor) then
   OpenglParam.RD_Vendor:=p;
-  GDBPointer(p):=oglsm.myglGetString(GL_RENDERER);
+  Pointer(p):=oglsm.myglGetString(GL_RENDERER);
   debugln('{I}RD_Renderer:="%s"',[p]);
   //programlog.LogOutFormatStr('RD_Renderer:="%s"',[p],0,LM_Info);
   //if assigned(OpenglParam.RD_Renderer) then
   OpenglParam.RD_Renderer:=p;
-  GDBPointer(p):=oglsm.myglGetString(GL_VERSION);
+  Pointer(p):=oglsm.myglGetString(GL_VERSION);
   debugln('{I}RD_Version:="%s"',[p]);
   //programlog.LogOutFormatStr('RD_Version:="%s"',[p],0,LM_Info);
   //if assigned(OpenglParam.RD_Version) then
   OpenglParam.RD_Version:=p;
 
-  GDBPointer(p):=oglsm.myglGetString(GL_EXTENSIONS);
+  Pointer(p):=oglsm.myglGetString(GL_EXTENSIONS);
   debugln('{I}RD_Extensions:="%s"',[p]);
   //programlog.LogOutFormatStr('RD_Extensions:="%s"',[p],0,LM_Info);
   //if assigned(OpenglParam.RD_Extensions) then
@@ -781,11 +781,9 @@ end;
 
 procedure TDX11ViewArea.getareacaps;
 begin
-  if VerboseLog^ then
-    debugln('{D+}TDX11ViewArea.getareacaps');
+  zTraceLn('{D+}TDX11ViewArea.getareacaps');
   setdeicevariable;
-  if VerboseLog^ then
-    debugln('{D-}end;{TDX11ViewArea.getareacaps}');
+  zTraceLn('{D-}end;{TDX11ViewArea.getareacaps}');
 end;
 
 procedure TDX11ViewArea.SwapBuffers(var DC:TDrawContext);

@@ -17,7 +17,7 @@
 }
 
 unit uzglviewareaogl;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
      {$IFDEF LCLGTK2}
@@ -26,11 +26,11 @@ uses
      (*{$IFDEF LCLQT}
      qt4,
      {$ENDIF}*)
-     LCLProc,uzglviewareaabstract,uzgldrawerogl,sysutils,uzbmemman,
-     uzgloglstatemanager,uzbtypesbase,uzbtypes,
+     LCLProc,uzglviewareaabstract,uzgldrawerogl,sysutils,
+     uzgloglstatemanager,uzbtypes,
      uzglviewareadata,uzgldrawcontext,uzegeometry,LCLType,
      ExtCtrls,classes,Controls,Graphics,uzglviewareageneral,math,uzglbackendmanager,
-     uzbgeomtypes,{$IFNDEF DELPHI}OpenGLContext{$ENDIF};
+     uzegeometrytypes,uzbLogIntf,{$IFNDEF DELPHI}OpenGLContext{$ENDIF};
 type
     PTOGLWnd = ^TOGLWnd;
     TOGLWnd = class({TPanel}TOpenGLControl)
@@ -57,8 +57,8 @@ type
                       function NeedDrawInsidePaintEvent:boolean; override;
                       procedure setdeicevariable; override;
                       function getParam:pointer; override;
-                      function getParamTypeName:GDBString; override;
-                      function CreateRC(_maxdetail:GDBBoolean=false):TDrawContext;override;
+                      function getParamTypeName:String; override;
+                      function CreateRC(_maxdetail:Boolean=false):TDrawContext;override;
                   end;
 const
   maxgrid=100;
@@ -66,7 +66,7 @@ var
   gridarray:array [0..maxgrid,0..maxgrid] of GDBvertex2S;
 implementation
 //uses mainwindow;
-function TOpenGLViewArea.CreateRC(_maxdetail:GDBBoolean=false):TDrawContext;
+function TOpenGLViewArea.CreateRC(_maxdetail:Boolean=false):TDrawContext;
 begin
   result:=inherited CreateRC(_maxdetail);
   result.MaxWidth:=OpenGLParam.RD_MaxWidth;
@@ -108,23 +108,23 @@ begin
   oglsm.myglGetDoublev(GL_point_size_RANGE,@tarray[0]);
   //if assigned(sysvar.RD.RD_MaxPointSize) then
   OpenGLParam.RD_MaxPointSize:=tarray[1];
-  GDBPointer(p):=oglsm.myglGetString(GL_VENDOR);
+  Pointer(p):=oglsm.myglGetString(GL_VENDOR);
   debugln('{I}RD_Vendor:="%s"',[p]);
   //programlog.LogOutFormatStr('RD_Vendor:="%s"',[p],0,LM_Info);
   //if assigned(OpenglParam.RD_Vendor) then
   OpenglParam.RD_Vendor:=p;
-  GDBPointer(p):=oglsm.myglGetString(GL_RENDERER);
+  Pointer(p):=oglsm.myglGetString(GL_RENDERER);
   debugln('{I}RD_Renderer:="%s"',[p]);
   //programlog.LogOutFormatStr('RD_Renderer:="%s"',[p],0,LM_Info);
   //if assigned(OpenglParam.RD_Renderer) then
   OpenglParam.RD_Renderer:=p;
-  GDBPointer(p):=oglsm.myglGetString(GL_VERSION);
+  Pointer(p):=oglsm.myglGetString(GL_VERSION);
   debugln('{I}RD_Version:="%s"',[p]);
   //programlog.LogOutFormatStr('RD_Version:="%s"',[p],0,LM_Info);
   //if assigned(OpenglParam.RD_Version) then
   OpenglParam.RD_Version:=p;
 
-  GDBPointer(p):=oglsm.myglGetString(GL_EXTENSIONS);
+  Pointer(p):=oglsm.myglGetString(GL_EXTENSIONS);
   debugln('{I}RD_Extensions:="%s"',[p]);
   //programlog.LogOutFormatStr('RD_Extensions:="%s"',[p],0,LM_Info);
   //if assigned(OpenglParam.RD_Extensions) then
@@ -145,8 +145,7 @@ var
    Widget:PGtkWidget;
 {$ENDIF}
 begin
-  if VerboseLog^ then
-    debugln('{D+}TOpenGLViewArea.getareacaps');
+  zTraceLn('{D+}TOpenGLViewArea.getareacaps');
   {$IFDEF LCLGTK2}
   Widget:=PGtkWidget(PtrUInt(OpenGLWindow.Handle));
   gtk_widget_add_events (Widget,GDK_POINTER_MOTION_HINT_MASK);
@@ -169,14 +168,13 @@ begin
     end;
   end;
   {$ENDIF}
-  if VerboseLog^ then
-    debugln('{D-}end;{TOGLWnd.InitOGL}');
+  zTraceLn('{D-}end;{TOGLWnd.InitOGL}');
   //programlog.logoutstr('end;{TOGLWnd.InitOGL}',lp_DecPos,LM_Debug);
 end;
 procedure TOpenGLViewArea.DrawGrid;
 var
   pg:PGDBvertex2S;
-  i,j: GDBInteger;
+  i,j: Integer;
   v,v1:gdbvertex;
 begin
   //if sysvar.DWG.DWG_DrawGrid<>nil then
@@ -288,8 +286,8 @@ begin
      CalcMouseFrustum;}
 
      //if param.pglscreen <> nil then
-     //GDBFreeMem(param.pglscreen);
-     //GDBGetMem({$IFDEF DEBUGBUILD}'ScreenBuf',{$ENDIF}param.pglscreen, getviewcontrol.clientwidth * getviewcontrol.clientheight * 4);
+     //Freemem(param.pglscreen);
+     //Getmem(param.pglscreen, getviewcontrol.clientwidth * getviewcontrol.clientheight * 4);
 
      param.firstdraw := true;
      //draw;

@@ -18,14 +18,14 @@
 {$mode delphi}
 unit uzccommand_extdrentslist;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
   LazLogger,SysUtils,
   uzccommandsabstract,uzccommandsimpl,
-  uzeentity,gzctnrvectortypes,uzcdrawings,uzcdrawing,uzcstrconsts,uzeentityextender,
-  uzcinterface,uzcutils,gzctnrstl,gutil;
+  uzeentity,gzctnrvectortypes,uzcdrawings,uzcstrconsts,uzeentityextender,
+  uzcinterface,gzctnrSTL;
 
 function extdrEntsList_com(operands:TCommandOperands):TCommandResult;
 

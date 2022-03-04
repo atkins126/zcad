@@ -17,34 +17,34 @@
 }
 
 unit uzcregzscript;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses uzcsysvars,uzbpaths,uzctranslations,UUnitManager,TypeDescriptors,varman,
-     UBaseTypeDescriptor,uzbtypesbase,uzedimensionaltypes,uzemathutils,LazLogger;
+     UBaseTypeDescriptor,uzedimensionaltypes,uzemathutils,LazLogger;
 type
-  GDBNonDimensionDoubleDescriptor=object(GDBDoubleDescriptor)
-                            function GetFormattedValueAsString(PInstance:Pointer; const f:TzeUnitsFormat):GDBString;virtual;
+  GDBNonDimensionDoubleDescriptor=object(DoubleDescriptor)
+                            function GetFormattedValueAsString(PInstance:Pointer; const f:TzeUnitsFormat):String;virtual;
                       end;
-  GDBAngleDegDoubleDescriptor=object(GDBDoubleDescriptor)
-                                         function GetFormattedValueAsString(PInstance:Pointer; const f:TzeUnitsFormat):GDBString;virtual;
+  GDBAngleDegDoubleDescriptor=object(DoubleDescriptor)
+                                         function GetFormattedValueAsString(PInstance:Pointer; const f:TzeUnitsFormat):String;virtual;
                                    end;
-  GDBAngleDoubleDescriptor=object(GDBDoubleDescriptor)
-                                 function GetFormattedValueAsString(PInstance:Pointer; const f:TzeUnitsFormat):GDBString;virtual;
+  GDBAngleDoubleDescriptor=object(DoubleDescriptor)
+                                 function GetFormattedValueAsString(PInstance:Pointer; const f:TzeUnitsFormat):String;virtual;
                            end;
 var
   GDBNonDimensionDoubleDescriptorObj:GDBNonDimensionDoubleDescriptor;
   GDBAngleDegDoubleDescriptorObj:GDBAngleDegDoubleDescriptor;
   GDBAngleDoubleDescriptorObj:GDBAngleDoubleDescriptor;
 implementation
-function GDBNonDimensionDoubleDescriptor.GetFormattedValueAsString(PInstance:Pointer; const f:TzeUnitsFormat):GDBString;
+function GDBNonDimensionDoubleDescriptor.GetFormattedValueAsString(PInstance:Pointer; const f:TzeUnitsFormat):String;
 begin
     result:=zeNonDimensionToString(PGDBNonDimensionDouble(PInstance)^,f);
 end;
-function GDBAngleDegDoubleDescriptor.GetFormattedValueAsString(PInstance:Pointer; const f:TzeUnitsFormat):GDBString;
+function GDBAngleDegDoubleDescriptor.GetFormattedValueAsString(PInstance:Pointer; const f:TzeUnitsFormat):String;
 begin
     result:=zeAngleDegToString(PGDBNonDimensionDouble(PInstance)^,f);
 end;
-function GDBAngleDoubleDescriptor.GetFormattedValueAsString(PInstance:Pointer; const f:TzeUnitsFormat):GDBString;
+function GDBAngleDoubleDescriptor.GetFormattedValueAsString(PInstance:Pointer; const f:TzeUnitsFormat):String;
 begin
     result:=zeAngleToString(PGDBNonDimensionDouble(PInstance)^,f);
 end;
@@ -62,7 +62,7 @@ begin
 end;
 initialization
   OnCreateSystemUnit:=_OnCreateSystemUnit;
-  units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'ShowHiddenFieldInObjInsp','GDBBoolean',@debugShowHiddenFieldInObjInsp);
+  units.CreateExtenalSystemVariable(SupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'ShowHiddenFieldInObjInsp','Boolean',@debugShowHiddenFieldInObjInsp);
 finalization
   debugln('{I}[UnitsFinalization] Unit "',{$INCLUDE %FILE%},'" finalization');
 end.

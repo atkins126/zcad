@@ -17,14 +17,14 @@
 }
 
 unit uzccommand_qsave;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
   LazUTF8,LCLProc,
   uzcdialogsfiles,
   sysutils,
-  uzbtypes,uzbpaths,
+  uzbpaths,
 
   uzeffmanager,
   uzccommand_newdwg,

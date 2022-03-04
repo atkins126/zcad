@@ -17,49 +17,49 @@
 }
 
 unit uzefont;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses math,uzgldrawerabstract,uzgprimitivescreator,uzgprimitives,{uzgprimitivessarray,}uzbmemman,
-     uzbstrproc,UGDBOpenArrayOfByte,uzbtypesbase,sysutils,uzbtypes,
-     gzctnrvectortypes,uzefontbase,uzbgeomtypes,uzegeometry,uzglvectorobject;
+uses math,uzgldrawerabstract,uzgprimitivescreator,uzgprimitives,
+     uzbstrproc,uzctnrVectorBytes,sysutils,uzbtypes,
+     uzefontbase,uzegeometrytypes,uzegeometry,uzglvectorobject,gzctnrvectortypes;
 type
 {EXPORT+}
 PGDBfont=^GDBfont;
 {REGISTEROBJECTTYPE GDBfont}
 GDBfont= object(GDBNamedObject)
-    fontfile:GDBString;
-    Internalname:GDBString; // Международное полное имя с описанием авора
-    family:GDBString;
-    fullname:GDBString;
+    fontfile:String;
+    Internalname:String; // Международное полное имя с описанием авора
+    family:String;
+    fullname:String;
     font:PBASEFont;
     DummyDrawerHandle:{THandle}ptruint;
     constructor initnul;
-    constructor init(n:GDBString);
+    constructor init(n:String);
     //procedure ItSHX;
     //procedure ItFFT;
     destructor done;virtual;
-    function GetOrCreateSymbolInfo(symbol:GDBInteger):PGDBsymdolinfo;
-    function GetOrReplaceSymbolInfo(symbol:GDBInteger{//-ttf-//; var TrianglesDataInfo:TTrianglesDataInfo}):PGDBsymdolinfo;
-    procedure CreateSymbol(drawer:TZGLAbstractDrawer;var geom:ZGLVectorObject;_symbol:GDBInteger;const objmatrix:DMatrix4D;matr:DMatrix4D;var Bound:TBoundingRect;var LLSymbolLineIndex:TArrayIndex);
+    function GetOrCreateSymbolInfo(symbol:Integer):PGDBsymdolinfo;
+    function GetOrReplaceSymbolInfo(symbol:Integer{//-ttf-//; var TrianglesDataInfo:TTrianglesDataInfo}):PGDBsymdolinfo;
+    procedure CreateSymbol(drawer:TZGLAbstractDrawer;var geom:ZGLVectorObject;_symbol:Integer;const objmatrix:DMatrix4D;matr:DMatrix4D;var Bound:TBoundingRect;var LLSymbolLineIndex:TArrayIndex);
   end;
 {EXPORT-}
 var
    pbasefont: PGDBfont;
-procedure initfont(var pf:pgdbfont;name:gdbstring);
+procedure initfont(var pf:pgdbfont;name:String);
 implementation
 //uses {math,}log;
-procedure initfont(var pf:pgdbfont;name:gdbstring);
+procedure initfont(var pf:pgdbfont;name:String);
 //var i:integer;
 begin
-     //GDBGetMem({$IFDEF DEBUGBUILD}'{2D1F6D71-DF5C-46B1-9E3A-9975CC281FAC}',{$ENDIF}GDBPointer(pf),sizeof(gdbfont));
+     //Getmem(Pointer(pf),sizeof(gdbfont));
      pf^.init(name);
      //pf.ItSHX;
 end;
 
-procedure GDBfont.CreateSymbol(drawer:TZGLAbstractDrawer;var geom:ZGLVectorObject;_symbol:GDBInteger;const objmatrix:DMatrix4D;matr:DMatrix4D;var Bound:TBoundingRect;var LLSymbolLineIndex:TArrayIndex);
+procedure GDBfont.CreateSymbol(drawer:TZGLAbstractDrawer;var geom:ZGLVectorObject;_symbol:Integer;const objmatrix:DMatrix4D;matr:DMatrix4D;var Bound:TBoundingRect;var LLSymbolLineIndex:TArrayIndex);
 var
   v,v0,true0Y,fact0y:GDBvertex;
-  sqrsymh{,CapHeight}:GDBDouble;
+  sqrsymh{,CapHeight}:Double;
   psyminfo:PGDBsymdolinfo;
 
   LLSymbolIndex:TArrayIndex;
@@ -150,10 +150,10 @@ begin
     //PrimitivesCount:=0;
     {for j := 1 to psyminfo.size do
     begin
-      case GDBByte(psymbol^) of
+      case Byte(psymbol^) of
         SHXLine:
           begin
-            inc(pGDBByte(psymbol), sizeof(SHXLine));
+            inc(PByte(psymbol), sizeof(SHXLine));
             PGDBvertex2D(@v)^.x:=pfontfloat(psymbol)^;
             inc(pfontfloat(psymbol));
             PGDBvertex2D(@v)^.y:=pfontfloat(psymbol)^;
@@ -181,7 +181,7 @@ begin
             pv3.count:=0;
             //geom.SHX.add(@pv3);
 
-            //inc(pGDBByte(psymbol), 2 * sizeof(GDBDouble));
+            //inc(PByte(psymbol), 2 * sizeof(Double));
             PGDBvertex2D(@v)^.x:=pfontfloat(psymbol)^;
             inc(pfontfloat(psymbol));
             PGDBvertex2D(@v)^.y:=pfontfloat(psymbol)^;
@@ -211,13 +211,13 @@ begin
 
             //pv.coord:=PGDBvertex2D(@v)^;
             //pv.count:=0;
-            //inc(pGDBByte(psymbol), 2 * sizeof(GDBDouble));
+            //inc(PByte(psymbol), 2 * sizeof(Double));
           end;
         SHXPoly:
           begin
-            inc(pGDBByte(psymbol), sizeof(SHXPoly));
-            len := GDBWord(psymbol^);
-            inc(pGDBByte(psymbol), sizeof(GDBWord));
+            inc(PByte(psymbol), sizeof(SHXPoly));
+            len := Word(psymbol^);
+            inc(PByte(psymbol), sizeof(Word));
             PGDBvertex2D(@v)^.x:=pfontfloat(psymbol)^;
             inc(pfontfloat(psymbol));
             PGDBvertex2D(@v)^.y:=pfontfloat(psymbol)^;
@@ -246,7 +246,7 @@ begin
             //geom.SHX.add(@pv3);
 
 
-            //inc(pGDBByte(psymbol), 2 * sizeof(GDBDouble));
+            //inc(PByte(psymbol), 2 * sizeof(Double));
             k := 1;
             while k < len do //for k:=1 to len-1 do
             begin
@@ -280,7 +280,7 @@ begin
             geom.GeomData.Vertex3S.AddGDBVertex(v);
 
 
-            //inc(pGDBByte(psymbol), 2 * sizeof(GDBDouble));
+            //inc(PByte(psymbol), 2 * sizeof(Double));
             inc(k);
             inc(PrimitivesCount);
             end;
@@ -382,18 +382,18 @@ begin
      if font<>nil then
                       begin
                            font.done;
-                           GDBFreeMem(pointer(font));
+                           Freemem(pointer(font));
                       end;
      inherited;
 end;
 (*procedure GDBfont.ItSHX;
 begin
-     GDBGetMem({$IFDEF DEBUGBUILD}'{FB4B76DB-BD4E-449E-A505-9ABF79E7809A}',{$ENDIF}font,sizeof(SHXFont));
+     Getmem(font,sizeof(SHXFont));
      PSHXFont(font)^.init;
 end;*)
 (*procedure GDBfont.ItFFT;
 begin
-     GDBGetMem({$IFDEF DEBUGBUILD}'{638B5484-83D8-4FEA-AE47-918B8B0CBC08}',{$ENDIF}font,sizeof(TTFFont));
+     Getmem(font,sizeof(TTFFont));
      PTTFFont(font)^.init;
 end;*)
 constructor GDBfont.Init;
@@ -401,16 +401,16 @@ begin
      initnul;
      inherited;
      font:=nil;
-     {GDBGetMem(font,sizeof(SHXFont));
+     {Getmem(font,sizeof(SHXFont));
      font^.init;}
 end;
-function GDBfont.GetOrReplaceSymbolInfo(symbol:GDBInteger{//-ttf-//; var TrianglesDataInfo:TTrianglesDataInfo}):PGDBsymdolinfo;
+function GDBfont.GetOrReplaceSymbolInfo(symbol:Integer{//-ttf-//; var TrianglesDataInfo:TTrianglesDataInfo}):PGDBsymdolinfo;
 //var
    //usi:GDBUNISymbolInfo;
 begin
      result:=font.GetOrReplaceSymbolInfo(symbol{//-ttf-//,TrianglesDataInfo});
 end;
-function GDBfont.GetOrCreateSymbolInfo(symbol:GDBInteger):PGDBsymdolinfo;
+function GDBfont.GetOrCreateSymbolInfo(symbol:Integer):PGDBsymdolinfo;
 begin
      result:=font.GetOrCreateSymbolInfo(symbol);
 end;

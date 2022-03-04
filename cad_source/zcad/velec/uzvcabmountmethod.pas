@@ -17,7 +17,7 @@
 }
 
 unit uzvcabmountmethod;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
      uzceltechtreeprop,//определение класса менеджера "стринговых деревьев"
@@ -25,33 +25,33 @@ uses
      uzctranslations,//работа с локализацией
      uzcefstringstreeselector,//окно выбора в дереве
      uzcsysparams,
-     uzctypesdecorations,zcobjectinspectorui,uzcoidecorations,//для "быстрых" редакторов
+     uzctypesdecorations,zcobjectinspectorui,//uzcoidecorations,//для "быстрых" редакторов
      UUnitManager,
      sysutils,
      Forms,Controls,
 
      uzccommandsimpl,    //тут реализация объекта CommandRTEdObject
      uzccommandsabstract,//базовые объявления для команд
-     uzbtypesbase,       //базовые типы
+            //базовые типы
      uzccommandsmanager, //менеджер команд
 
      uzvcom,             //
      uzvnum,
      uzvtreedevice,      //новая механизм кабеле прокладки на основе Дерева
-     uzvtmasterdev,
+     //uzvtmasterdev,
      uzvagensl,
      uzvtestdraw, // тестовые рисунки
 
      uzcinterface,
-     uzctnrvectorgdbstring,
-     uzbgeomtypes,
+     //uzctnrvectorString,
+     //uzegeometrytypes,
      uzegeometry,
      uzcuitypes,
      uzbtypes,
      typinfo,
-     gzctnrvector,
-     uzvconsts,
-     uzcutils,
+     //gzctnrVector,
+     //uzvconsts,
+     //uzcutils,
      Varman;             //Зкадовский RTTI
 
 var
@@ -69,7 +69,7 @@ begin
   result:=cmd_ok;//все окей
 end;
 
-procedure RunMountingMethodsFastEditor(PInstance:GDBPointer);
+procedure RunMountingMethodsFastEditor(PInstance:Pointer);
 var
    modalresult:integer;
 begin
@@ -98,7 +98,7 @@ initialization
   CreateCommandFastObjectPlugin(@MountingMethodsTest_com,'mt',CADWG,0);//тестовая команда, вызывает окно с твоим деревом
 
 
-  AddFastEditorToType(units.findunit(SupportPath,InterfaceTranslate,'cables').TypeName2PTD('TDCableMountingMethod'),//привязка быстрого редактора, я вяжу к GDBString, ты поставишь свой тип
+  AddFastEditorToType(units.findunit(SupportPath,InterfaceTranslate,'cables').TypeName2PTD('TDCableMountingMethod'),//привязка быстрого редактора, я вяжу к String, ты поставишь свой тип
                       @OIUI_FE_ButtonGetPrefferedSize,//процедура определяющая размер кнопки в инспекторе
                       @OIUI_FE_ButtonMultiplyDraw,//процедура рисующая кнопку в инспекторе
                       @RunMountingMethodsFastEditor);//запуск  редактора  и  возврат  значения

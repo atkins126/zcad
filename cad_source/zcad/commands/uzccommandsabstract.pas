@@ -17,9 +17,9 @@
 }
 
 unit uzccommandsabstract;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses uzbgeomtypes,uzbtypesbase,uzbtypes,uzglviewareadata,uzclog,gzctnrvectortypes;
+uses uzegeometrytypes,uzbtypes,uzglviewareadata,uzclog,gzctnrvectortypes;
 const
      //нужна динамическая регистация
      CADWG=1;                    //есть открытый чертеж
@@ -41,7 +41,7 @@ const
      CEDWGNChanged=2;
      EmptyCommandOperands='';
 type
-TInteractiveProcObjBuild=procedure(const PInteractiveData:GDBPointer;Point:GDBVertex;Click:GDBBoolean);
+TInteractiveProcObjBuild=procedure(const PInteractiveData:Pointer;Point:GDBVertex;Click:Boolean);
     TGetInputPossible=(GPIempty//возможность пустого ввода
                       );
     TGetInputMode=set of TGetInputPossible;//возможности ввода
@@ -67,31 +67,31 @@ TInteractiveProcObjBuild=procedure(const PInteractiveData:GDBPointer;Point:GDBVe
                        GetPointMode:TGetPointMode;(*hidden_in_objinsp*)
                        BasePoint,currentPointValue,GetPointValue:GDBVertex;(*hidden_in_objinsp*)
                        DrawFromBasePoint:Boolean;(*hidden_in_objinsp*)
-                       PInteractiveData:GDBPointer;
-                       PInteractiveProc:{-}TInteractiveProcObjBuild{/GDBPointer/};
+                       PInteractiveData:Pointer;
+                       PInteractiveProc:{-}TInteractiveProcObjBuild{/Pointer/};
                        Input:AnsiString;
                        Id:Integer;
                        {-}PossibleResult:TGetPossibleResult;{//}
                        {-}InputMode:TGetInputMode;{//}
                     end;
-    TCommandOperands={-}GDBString{/GDBPointer/};
-    TCommandResult=GDBInteger;
-  TCStartAttr=GDBInteger;{атрибут разрешения\запрещения запуска команды}
-    TCEndAttr=GDBInteger;{атрибут действия по завершению команды}
+    TCommandOperands={-}String{/Pointer/};
+    TCommandResult=Integer;
+  TCStartAttr=Integer;{атрибут разрешения\запрещения запуска команды}
+    TCEndAttr=Integer;{атрибут действия по завершению команды}
   PCommandObjectDef = ^CommandObjectDef;
   {REGISTEROBJECTTYPE CommandObjectDef}
   CommandObjectDef=object (GDBaseObject)
-    CommandName:GDBString;(*hidden_in_objinsp*)
-    CommandGDBString:GDBString;(*hidden_in_objinsp*)
-    savemousemode: GDBByte;(*hidden_in_objinsp*)
-    mouseclic: GDBInteger;(*hidden_in_objinsp*)
-    dyn:GDBBoolean;(*hidden_in_objinsp*)
-    overlay:GDBBoolean;(*hidden_in_objinsp*)
+    CommandName:String;(*hidden_in_objinsp*)
+    CommandString:String;(*hidden_in_objinsp*)
+    savemousemode: Byte;(*hidden_in_objinsp*)
+    mouseclic: Integer;(*hidden_in_objinsp*)
+    dyn:Boolean;(*hidden_in_objinsp*)
+    overlay:Boolean;(*hidden_in_objinsp*)
     CStartAttrEnableAttr:TCStartAttr;(*hidden_in_objinsp*)
     CStartAttrDisableAttr:TCStartAttr;(*hidden_in_objinsp*)
     CEndActionAttr:TCEndAttr;(*hidden_in_objinsp*)
-    pdwg:GDBPointer;(*hidden_in_objinsp*)
-    NotUseCommandLine:GDBBoolean;(*hidden_in_objinsp*)
+    pdwg:Pointer;(*hidden_in_objinsp*)
+    NotUseCommandLine:Boolean;(*hidden_in_objinsp*)
     IData:TInteractiveData;(*hidden_in_objinsp*)
     procedure CommandStart(Operands:TCommandOperands); virtual; abstract;
     procedure CommandEnd; virtual; abstract;
@@ -99,9 +99,9 @@ TInteractiveProcObjBuild=procedure(const PInteractiveData:GDBPointer;Point:GDBVe
     procedure CommandInit; virtual; abstract;
     procedure DrawHeplGeometry;virtual;
     destructor done;virtual;
-    constructor init(cn:GDBString;SA,DA:TCStartAttr);
-    function GetObjTypeName:GDBString;virtual;
-    function IsRTECommand:GDBBoolean;virtual;
+    constructor init(cn:String;SA,DA:TCStartAttr);
+    function GetObjTypeName:String;virtual;
+    function IsRTECommand:Boolean;virtual;
     procedure CommandContinue; virtual;
   end;
   {REGISTEROBJECTTYPE CommandFastObjectDef}
@@ -118,10 +118,10 @@ TInteractiveProcObjBuild=procedure(const PInteractiveData:GDBPointer;Point:GDBVe
     procedure CommandCancel; virtual;abstract;
     procedure CommandInit; virtual;abstract;
     procedure CommandContinue; virtual;
-    function MouseMoveCallback(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger; virtual;
-    function BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger; virtual;
-    function AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger; virtual;
-    function IsRTECommand:GDBBoolean;virtual;
+    function MouseMoveCallback(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer; virtual;
+    function BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer; virtual;
+    function AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer; virtual;
+    function IsRTECommand:Boolean;virtual;
   end;
 {Export-}
 const
@@ -129,14 +129,14 @@ const
                  TGPMWaitEnt,
                  TGPMWaitInput];
 implementation
-function CommandObjectDef.IsRTECommand:GDBBoolean;
+function CommandObjectDef.IsRTECommand:Boolean;
 begin
      result:=false;
 end;
 procedure CommandObjectDef.CommandContinue;
 begin
 end;
-function CommandObjectDef.GetObjTypeName:GDBString;
+function CommandObjectDef.GetObjTypeName:String;
 begin
      //pointer(result):=typeof(testobj);
      result:='CommandObjectDef';
@@ -156,30 +156,30 @@ destructor CommandObjectDef.done;
 begin
          //inherited;
          CommandName:='';
-         CommandGDBString:='';
+         CommandString:='';
 end;
 procedure CommandObjectDef.DrawHeplGeometry;
 begin
 end;
-function CommandRTEdObjectDef.BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record):GDBInteger;
+function CommandRTEdObjectDef.BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record):Integer;
 begin
      result:=0;
 end;
-function CommandRTEdObjectDef.AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger;
+function CommandRTEdObjectDef.AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer;
 begin
      if self.mouseclic=1 then
                              result:=0
                          else
                              result:=0;
 end;
-function CommandRTEdObjectDef.IsRTECommand:GDBBoolean;
+function CommandRTEdObjectDef.IsRTECommand:Boolean;
 begin
      result:=true;
 end;
 procedure CommandRTEdObjectDef.CommandContinue;
 begin
 end;
-function CommandRTEdObjectDef.MouseMoveCallback(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger;
+function CommandRTEdObjectDef.MouseMoveCallback(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer;
 begin
   //result:=0;
   programlog.logoutstr('CommandRTEdObjectDef.MouseMoveCallback',0);

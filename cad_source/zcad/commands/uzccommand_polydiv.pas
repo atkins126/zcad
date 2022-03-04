@@ -18,13 +18,13 @@
 {$mode delphi}
 unit uzccommand_polydiv;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
   LazLogger,
   uzccommandsabstract,uzccommandsimpl,
-  uzbgeomtypes,uzegeometry,
+  uzegeometrytypes,uzegeometry,
   UGDBPolyLine2DArray,
   uzeentpolyline,
   uzeentlwpolyline,
@@ -43,7 +43,7 @@ implementation
 
 function isrect(const p1,p2,p3,p4:GDBVertex2D):boolean;
 //var
-   //p:gdbdouble;
+   //p:Double;
 begin
      //p:=SqrVertexlength(p1,p3)-sqrVertexlength(p2,p4);
      //p:=SqrVertexlength(p1,p2)-sqrVertexlength(p3,p4);
@@ -258,8 +258,8 @@ begin
   if drawings.GetCurrentDWG.GetLastSelected<>nil then
   if drawings.GetCurrentDWG.GetLastSelected.GetObjType=GDBlwPolylineID then
   begin
-       pva.init({$IFDEF DEBUGBUILD}'{9372BADE-74EE-4101-8FA4-FC696054CD4F}',{$ENDIF}pgdbobjlwpolyline(drawings.GetCurrentDWG.GetLastSelected).Vertex2D_in_OCS_Array.count,true);
-       pvr.init({$IFDEF DEBUGBUILD}'{9372BADE-74EE-4101-8FA4-FC696054CD4F}',{$ENDIF}pgdbobjlwpolyline(drawings.GetCurrentDWG.GetLastSelected).Vertex2D_in_OCS_Array.count,true);
+       pva.init(pgdbobjlwpolyline(drawings.GetCurrentDWG.GetLastSelected).Vertex2D_in_OCS_Array.count,true);
+       pvr.init(pgdbobjlwpolyline(drawings.GetCurrentDWG.GetLastSelected).Vertex2D_in_OCS_Array.count,true);
 
        pgdbobjlwpolyline(drawings.GetCurrentDWG.GetLastSelected).Vertex2D_in_OCS_Array.copyto(pva);
 

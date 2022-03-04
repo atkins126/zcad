@@ -17,33 +17,33 @@
 }
 
 unit uzbstrproc;
-{$INCLUDE def.inc}
-interface
-uses {$IFNDEF DELPHI}{fileutil,}{$ENDIF}uzbtypesbase,uzbtypes,sysutils,strutils{$IFNDEF DELPHI},{LCLProc}LazUTF8,lazutf16{$ENDIF};
-function GetPredStr(var s: GDBString; substr: GDBString): GDBString;overload;
-function GetPredStr(var s: GDBString; substrs: array of const; out nearestsubstr:string): GDBString;overload;
-function readspace(expr: GDBString): GDBString;
 
-//function sys2interf(s:GDBString):GDBString;
+interface
+uses {$IFNDEF DELPHI}{fileutil,}{$ENDIF}uzbtypes,sysutils,strutils{$IFNDEF DELPHI},{LCLProc}LazUTF8,lazutf16{$ENDIF};
+function GetPredStr(var s: String; substr: String): String;overload;
+function GetPredStr(var s: String; substrs: array of const; out nearestsubstr:string): String;overload;
+function readspace(expr: String): String;
+
+//function sys2interf(s:String):String;
 function Tria_Utf8ToAnsi(const s:string):string;
 function Tria_AnsiToUtf8(const s:string):string;
 
-function Ansi2CP(astr:GDBAnsiString):GDBString;
-function Uni2CP(astr:GDBAnsiString):GDBString;
-function CP2Ansi(astr:GDBAnsiString):GDBString;
-function CP2Uni(astr:GDBAnsiString):GDBString;
+function Ansi2CP(astr:AnsiString):String;
+function Uni2CP(astr:AnsiString):String;
+function CP2Ansi(astr:AnsiString):String;
+function CP2Uni(astr:AnsiString):String;
 
 function uch2ach(uch:word):byte;
 function ach2uch(ach:byte):word;
 
-function CompareNUMSTR(str1,str2:GDBString):GDBBoolean;
+function CompareNUMSTR(str1,str2:String):Boolean;
 function AnsiNaturalCompare(const str1, str2: string; vCaseSensitive: boolean = False): integer;
 
-function ConvertFromDxfString(str:TDXFEntsInternalStringType):GDBString;
-function ConvertToDxfString(str:GDBString):TDXFEntsInternalStringType;
-function MakeHash(const s: GDBString):SizeUInt;//TODO в gzctnrstl есть копия этой процедуры. надо убирать
+function ConvertFromDxfString(str:TDXFEntsInternalStringType):String;
+function ConvertToDxfString(str:String):TDXFEntsInternalStringType;
+function MakeHash(const s: String):SizeUInt;//TODO в gzctnrSTL есть копия этой процедуры. надо убирать
 
-procedure KillString(var str:GDBString);inline;
+procedure KillString(var str:String);inline;
 
 Function PosWithBracket(c,OpenBracket,CloseBracket:AnsiChar;Const s:AnsiString;StartPos,InitCounterValue:SizeInt):SizeInt;
 function isNotUtf8(const s:RawByteString):boolean;
@@ -59,7 +59,7 @@ var
 implementation
 //uses
 //    log;
-(*Function PosWithBracket(c : AnsiChar; Const s : {RawByteString}GDBString) : SizeInt;
+(*Function PosWithBracket(c : AnsiChar; Const s : {RawByteString}String) : SizeInt;
 var
   i: SizeInt;
   pc : PAnsiChar;
@@ -100,11 +100,11 @@ begin
   end;
   result:=0;
 end;
-procedure KillString(var str:GDBString);inline;
+procedure KillString(var str:String);inline;
 begin
-     GDBPointer(str):=nil;
+     Pointer(str):=nil;
 end;
-function MakeHash(const s: GDBString):SizeUInt;
+function MakeHash(const s: String):SizeUInt;
 var
   I: Integer;
 begin
@@ -113,19 +113,19 @@ begin
     Result := ((Result shl 7) or (Result shr 25)) + Ord(s[I]);
 end;
 
-function ConvertFromDxfString(str:TDXFEntsInternalStringType):GDBString;
+function ConvertFromDxfString(str:TDXFEntsInternalStringType):String;
 begin
      //result:=Tria_AnsiToUtf8(str);
      {$IFNDEF DELPHI}result:=UTF8Encode(StringsReplace(str, ['\P'],[LineEnding],[rfReplaceAll,rfIgnoreCase]));{$ENDIF}
 end;
 
-function ConvertToDxfString(str:GDBString):TDXFEntsInternalStringType;
+function ConvertToDxfString(str:String):TDXFEntsInternalStringType;
 begin
      //{$IFNDEF DELPHI}result:=StringsReplace(str, [LineEnding],['\P'],[rfReplaceAll,rfIgnoreCase]);{$ENDIF}
      result:={Tria_Utf8ToAnsi}UTF8ToString(StringsReplace(str, [LineEnding],['\P'],[rfReplaceAll,rfIgnoreCase]));
 end;
 function uch2ach(uch:word):byte;
-var s:gdbstring;
+var s:String;
 begin
      {$IFNDEF DELPHI}
      if uch=$412 then
@@ -144,7 +144,7 @@ begin
      {$ENDIF}
 end;
 function ach2uch(ach:byte):word;
-var s:gdbstring;
+var s:String;
     {$IFNDEF DELPHI}tstr:{UTF16String}TDXFEntsInternalStringType;{$ENDIF}
     CharLen: integer;
 begin
@@ -168,7 +168,7 @@ begin
      //                uch:=uch;
      {$ENDIF}
 end;
-function GetDigitCount(str1:GDBString):GDBInteger;
+function GetDigitCount(str1:String):Integer;
 begin
 
      if str1='' then
@@ -341,9 +341,9 @@ begin
   else
     Result := {CorrectedResult}(sign*Result);
 end;
-function CompareNUMSTR(str1,str2:GDBString):GDBBoolean;
+function CompareNUMSTR(str1,str2:String):Boolean;
 var
-   i1,i2{,i}:GDBInteger;
+   i1,i2{,i}:Integer;
 begin
      if (str1='')or(str2='') then
                                  result:=str1>str2
@@ -363,9 +363,9 @@ else
           end;
      end;
 end;
-function readspace(expr: GDBString): GDBString;
+function readspace(expr: String): String;
 var
-  i: GDBInteger;
+  i: Integer;
 //  s:string;
 begin
   //pointer(result):=nil;
@@ -387,8 +387,8 @@ begin
   //result :=s;// copy(expr, i, length(expr) - i + 1);
   //expr:=expr;
 end;
-function GetPredStr(var s: GDBString; substr: GDBString): GDBString;
-var i{, c,a}: GDBInteger;
+function GetPredStr(var s: String; substr: String): String;
+var i{, c,a}: Integer;
 begin
   i:=pos(substr,s);
   if i<>0 then
@@ -403,11 +403,11 @@ begin
                   s:='';
              end;
 end;
-function GetPredStr(var s: GDBString; substrs: array of const; out nearestsubstr:string): GDBString;
-var i,current: GDBInteger;
-    substr:GDBString;
+function GetPredStr(var s: String; substrs: array of const; out nearestsubstr:string): String;
+var i,current: Integer;
+    substr:String;
     itstring:boolean;
-    nearest: GDBInteger;
+    nearest: Integer;
 procedure storecurrent;
 begin
   nearest:=current;
@@ -455,7 +455,7 @@ begin
   //end;
 end;
 
-function Ansi2CP(astr:GDBAnsiString):GDBString;
+function Ansi2CP(astr:AnsiString):String;
 begin
      case CodePage of
                      CP_utf8:result:=
@@ -463,14 +463,14 @@ begin
                      CP_win:result:=astr;
      end;
 end;
-function Uni2CP(astr:GDBAnsiString):GDBString;
+function Uni2CP(astr:AnsiString):String;
 begin
      case CodePage of
                      CP_utf8:result:=astr;
                      CP_win:result:=Tria_Utf8ToAnsi(astr);
      end;
 end;
-function CP2Ansi(astr:GDBAnsiString):GDBString;
+function CP2Ansi(astr:AnsiString):String;
 begin
 case CodePage of
                 CP_utf8:result:=
@@ -479,7 +479,7 @@ case CodePage of
 end;
 end;
 
-function CP2Uni(astr:GDBAnsiString):GDBString;
+function CP2Uni(astr:AnsiString):String;
 begin
 case CodePage of
                 CP_utf8:result:=astr;
@@ -800,7 +800,7 @@ begin
   result:=false;
 end;
 
-(*function sys2interf(s:GDBString):GDBString;
+(*function sys2interf(s:String):String;
 begin
      result:=s//{systoutf8}{WinToK8R}Tria_AnsiToUtf8(s);
 end;*)

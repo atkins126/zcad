@@ -17,7 +17,7 @@
 }
 
 unit uzgldrawerogl;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
     uzgindexsarray,LCLProc,uzepalette,
@@ -27,7 +27,7 @@ uses
     {$IFNDEF DELPHI}LCLIntf,LCLType,{$ENDIF}
     Classes,Controls,
     uzgvertex3sarray,uzegeometry,uzgldrawergeneral,uzgldrawerabstract,uzgloglstatemanager,Graphics,uzbtypes,
-    uzbgeomtypes,uzbtypesbase,uzecamera;
+    uzegeometrytypes,uzecamera;
 const
   texturesize=128;
 type
@@ -43,15 +43,15 @@ TRestoreMode=(
 PTOpenglData=^TOpenglData;
 {REGISTERRECORDTYPE TOpenglData}
 TOpenglData=record
-          RD_Renderer:GDBString;(*'Device'*)(*oi_readonly*)
-          RD_Version:GDBString;(*'Version'*)(*oi_readonly*)
-          RD_Extensions:GDBString;(*'Extensions'*)(*oi_readonly*)
-          RD_Vendor:GDBString;(*'Vendor'*)(*oi_readonly*)
+          RD_Renderer:String;(*'Device'*)(*oi_readonly*)
+          RD_Version:String;(*'Version'*)(*oi_readonly*)
+          RD_Extensions:String;(*'Extensions'*)(*oi_readonly*)
+          RD_Vendor:String;(*'Vendor'*)(*oi_readonly*)
           RD_Restore_Mode:trestoremode;(*'Restore mode'*)
           RD_VSync:TGDB3StateBool;(*'VSync'*)
-          RD_MaxWidth:GDBInteger;(*'Max width'*)(*oi_readonly*)
-          RD_MaxLineWidth:GDBDouble;(*'Max line width'*)(*oi_readonly*)
-          RD_MaxPointSize:GDBDouble;(*'Max point size'*)(*oi_readonly*)
+          RD_MaxWidth:Integer;(*'Max width'*)(*oi_readonly*)
+          RD_MaxLineWidth:Double;(*'Max line width'*)(*oi_readonly*)
+          RD_MaxPointSize:Double;(*'Max point size'*)(*oi_readonly*)
     end;
 {EXPORT-}
 TZGLOpenGLDrawer=class(TZGLGeneralDrawer)

@@ -18,14 +18,14 @@
 {$mode delphi}
 unit uzccommand_dimaligned;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
   LazLogger,
   uzccommandsabstract,uzccommandsimpl,
   uzeconsts,uzcstrconsts,
-  uzbgeomtypes,
+  uzegeometrytypes,
   uzccommandsmanager,
   uzeentline,uzeentityfactory,
   uzcutils,uzeentdimaligned,uzgldrawcontext,uzcdrawings,

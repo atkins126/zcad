@@ -17,22 +17,22 @@
 }
 
 unit UGDBControlPointArray;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses uzepalette,uzgldrawcontext,uzbtypesbase,gzctnrvectordata,sysutils,uzbtypes,uzegeometry,
-     uzbmemman,uzbgeomtypes;
+uses uzepalette,uzgldrawcontext,gzctnrVector,sysutils,uzbtypes,uzegeometry,
+     uzegeometrytypes;
 type
 {Export+}
 PGDBControlPointArray=^GDBControlPointArray;
 {REGISTEROBJECTTYPE GDBControlPointArray}
-GDBControlPointArray= object(GZVectorData{-}<controlpointdesc>{//})
-                           SelectedCount:GDBInteger;
+GDBControlPointArray= object(GZVector{-}<controlpointdesc>{//})
+                           SelectedCount:Integer;
 
                            destructor done;virtual;
                            procedure draw(var DC:TDrawContext;const SelColor,UnSelColor:TRGB);virtual;
                            procedure selectcontrolpointinframe(f1,f2: GDBvertex2DI);virtual;
                            procedure getnearesttomouse(var td:tcontrolpointdist;mx,my:integer);virtual;
-                           procedure selectcurrentcontrolpoint(key:GDBByte;mx,my,h:integer);virtual;
+                           procedure selectcurrentcontrolpoint(key:Byte;mx,my,h:integer);virtual;
                      end;
 {Export-}
 implementation
@@ -42,7 +42,7 @@ begin
 end;
 procedure GDBControlPointArray.draw;
 var point:^controlpointdesc;
-    i:GDBInteger;
+    i:Integer;
 begin
   if count<>0 then
   begin
@@ -66,7 +66,7 @@ begin
 end;
 procedure GDBControlPointArray.selectcontrolpointinframe(f1,f2: GDBvertex2DI);
 var point:^controlpointdesc;
-    i:GDBInteger;
+    i:Integer;
 begin
   if count<>0 then
   begin
@@ -89,7 +89,7 @@ end;
 procedure GDBControlPointArray.getnearesttomouse;
 var point:pcontrolpointdesc;
     d:single;
-    i:GDBInteger;
+    i:Integer;
 begin
   if count<>0 then
   begin
@@ -110,7 +110,7 @@ end;
 procedure GDBControlPointArray.selectcurrentcontrolpoint;
 var point:pcontrolpointdesc;
 //    d:single;
-    i:GDBInteger;
+    i:Integer;
 begin
   SelectedCount:=0;
   if count<>0 then

@@ -17,7 +17,7 @@
 }
 
 unit uzglviewareacanvasgeneral;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
      {$IFDEF LCLQT}
@@ -26,7 +26,7 @@ uses
      {$IFDEF LCLQT5}
      qtwidgets,qt5,
      {$ENDIF}
-     uzgldrawergdi,uzglviewareaabstract,sysutils,uzbmemman,uzbtypes,
+     uzgldrawergdi,uzglviewareaabstract,sysutils,
      uzegeometry,{$IFNDEF DELPHI}LCLType,LMessages,{$ENDIF}{$IFDEF DELPHI}windows,messages,{$ENDIF}
      ExtCtrls,classes,Controls,Graphics,uzglviewareageneral,uzglbackendmanager;
 type

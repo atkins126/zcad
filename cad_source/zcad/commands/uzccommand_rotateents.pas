@@ -15,9 +15,9 @@
 {
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
-{$MODE OBJFPC}
+{$MODE OBJFPC}{$H+}
 unit uzccommand_rotateents;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -28,7 +28,7 @@ uses
   uzeentwithlocalcs,
   uzccommandsabstract,
   uzegeometry,zcmultiobjectchangeundocommand,
-  uzbgeomtypes,uzeentity,LazLogger,
+  uzegeometrytypes,uzeentity,LazLogger,
   uzbtypes,
   uzccommandsimpl;
 

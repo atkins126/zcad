@@ -17,18 +17,18 @@
 }
 
 unit uzclibraryblocksregister;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 
 interface
-uses uzccommandsimpl,uzbstrproc,UGDBOpenArrayOfByte,uzccommandsabstract,uzbpaths,
+uses uzccommandsimpl,uzbstrproc,uzctnrVectorBytes,uzccommandsabstract,uzbpaths,
      uzccommand_mergeblocks,
      uzestyleslayers,UGDBObjBlockdefArray,uzeblockdefsfactory,uzeblockdef,uzedrawingdef,
-     uzbmemman,uzcsysvars,uzbtypesbase,uzbtypes,uzeentity,uzcdrawings,uzclog,LazLogger;
+     uzcsysvars,uzeentity,uzcdrawings,uzclog,LazLogger;
 implementation
-function LoadLibraryBlock(var dwg:PTDrawingDef;const BlockName,BlockDependsOn,BlockDeffinedIn:GDBString):PGDBObjBlockdef;
+function LoadLibraryBlock(var dwg:PTDrawingDef;const BlockName,BlockDependsOn,BlockDeffinedIn:String):PGDBObjBlockdef;
 var
-  DependOnBlock,tdp:gdbstring;
+  DependOnBlock,tdp:String;
   BlockDefArray:PGDBObjBlockdefArray;
 begin
     tdp:=BlockDependsOn;
@@ -44,14 +44,14 @@ begin
 end;
 function ReadBlockLibrary_com(operands:TCommandOperands):TCommandResult;
 var
-  line,block,depends,s:GDBString;
-  f:GDBOpenArrayOfByte;
+  line,block,depends,s:String;
+  f:TZctnrVectorBytes;
 begin
   s:=FindInSupportPath(SupportPath,operands);
   f.InitFromFile(s);
   while f.notEOF do
     begin
-      line:=f.readGDBString;
+      line:=f.readString;
       if line<>'' then
       if line[1]<>';' then
         begin

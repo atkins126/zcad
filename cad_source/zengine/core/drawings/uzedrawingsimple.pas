@@ -17,16 +17,16 @@
 }
 
 unit uzedrawingsimple;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses uzedrawingdef,uzeblockdefsfactory,uzestylesdim,uzeentwithlocalcs,
+uses uzedrawingdef,uzeblockdefsfactory,uzestylesdim,
      gzctnrvectortypes,uzedrawingabstract,uzbstrproc,UGDBObjBlockdefArray,uzestylestables,
-     UGDBNumerator,uzbtypes,sysutils, uzbmemman,uzegeometry,uzbtypesbase,uzeentgenericsubentry,
+     UGDBNumerator,uzbtypes,sysutils,uzegeometry,uzeentgenericsubentry,
      uzestyleslayers,uzestyleslinetypes,uzeentity,UGDBSelectedObjArray,uzestylestexts,
-     uzedimensionaltypes,uzbgeomtypes,uzecamera,UGDBOpenArrayOfPV,uzeroot,uzefont,
+     uzedimensionaltypes,uzegeometrytypes,uzecamera,UGDBOpenArrayOfPV,uzeroot,uzefont,
      uzglviewareaabstract,uzglviewareageneral,uzgldrawcontext,UGDBControlPointArray;
 type
-TMainBlockCreateProc=procedure (_to:PTDrawingDef;name:GDBString) of object;
+TMainBlockCreateProc=procedure (_to:PTDrawingDef;name:String) of object;
 {EXPORT+}
 PTSimpleDrawing=^TSimpleDrawing;
 {REGISTEROBJECTTYPE TSimpleDrawing}
@@ -56,9 +56,9 @@ TSimpleDrawing= object(TAbstractDrawing)
                        procedure myGluUnProject(win:GDBVertex;out obj:GDBvertex);virtual;
                        function GetPcamera:PGDBObjCamera;virtual;
                        function GetCurrentROOT:PGDBObjGenericSubEntry;virtual;
-                       function GetCurrentRootSimple:GDBPointer;virtual;
-                       function GetCurrentRootObjArraySimple:GDBPointer;virtual;
-                       function GetBlockDefArraySimple:GDBPointer;virtual;
+                       function GetCurrentRootSimple:Pointer;virtual;
+                       function GetCurrentRootObjArraySimple:Pointer;virtual;
+                       function GetBlockDefArraySimple:Pointer;virtual;
                        function GetConstructObjRoot:PGDBObjRoot;virtual;
                        function GetConstructEntsCount:Integer;virtual;
                        function GetSelObjArray:PGDBSelectedObjArray;virtual;
@@ -68,40 +68,40 @@ TSimpleDrawing= object(TAbstractDrawing)
                        function GetTextStyleTable:PGDBTextStyleArray;virtual;
                        function GetDimStyleTable:PGDBDimStyleArray;virtual;
                        function GetOnMouseObj:PGDBObjOpenArrayOfPV;virtual;
-                       procedure RotateCameraInLocalCSXY(ux,uy:GDBDouble);virtual;
-                       procedure MoveCameraInLocalCSXY(oldx,oldy:GDBDouble;ax:gdbvertex);virtual;
+                       procedure RotateCameraInLocalCSXY(ux,uy:Double);virtual;
+                       procedure MoveCameraInLocalCSXY(oldx,oldy:Double;ax:gdbvertex);virtual;
                        procedure SetCurrentDWG;virtual;
                        function StoreOldCamerapPos:Pointer;virtual;
                        procedure StoreNewCamerapPos(command:Pointer);virtual;
-                       procedure rtmodify(obj:PGDBObjEntity;md:GDBPointer;dist,wc:gdbvertex;save:GDBBoolean);virtual;
+                       procedure rtmodify(obj:PGDBObjEntity;md:Pointer;dist,wc:gdbvertex;save:Boolean);virtual;
                        procedure rtmodifyonepoint(obj:PGDBObjEntity;rtmod:TRTModifyData;wc:gdbvertex);virtual;
-                       procedure PushStartMarker(CommandName:GDBString);virtual;
+                       procedure PushStartMarker(CommandName:String);virtual;
                        procedure PushEndMarker;virtual;
-                       procedure SetFileName(NewName:GDBString);virtual;
-                       function GetFileName:GDBString;virtual;
-                       procedure ChangeStampt(st:GDBBoolean);virtual;
+                       procedure SetFileName(NewName:String);virtual;
+                       function GetFileName:String;virtual;
+                       procedure ChangeStampt(st:Boolean);virtual;
                        function GetUndoTop:TArrayIndex;virtual;
                        function CanUndo:boolean;virtual;
                        function CanRedo:boolean;virtual;
-                       function GetUndoStack:GDBPointer;virtual;
+                       function GetUndoStack:Pointer;virtual;
                        function GetDWGUnits:{PTUnitManager}pointer;virtual;
                        procedure AssignLTWithFonts(pltp:PGDBLtypeProp);virtual;
-                       function GetMouseEditorMode:GDBByte;virtual;
-                       function DefMouseEditorMode(SetMask,ReSetMask:GDBByte):GDBByte;virtual;
-                       function SetMouseEditorMode(mode:GDBByte):GDBByte;virtual;
+                       function GetMouseEditorMode:Byte;virtual;
+                       function DefMouseEditorMode(SetMask,ReSetMask:Byte):Byte;virtual;
+                       function SetMouseEditorMode(mode:Byte):Byte;virtual;
                        procedure FreeConstructionObjects;virtual;
-                       function GetChangeStampt:GDBBoolean;virtual;
-                       function CreateDrawingRC(_maxdetail:GDBBoolean=false):TDrawContext;virtual;
-                       procedure FillDrawingPartRC(out dc:TDrawContext);virtual;
+                       function GetChangeStampt:Boolean;virtual;
+                       function CreateDrawingRC(_maxdetail:Boolean=false):TDrawContext;virtual;
+                       procedure FillDrawingPartRC(var dc:TDrawContext);virtual;
                        function GetUnitsFormat:TzeUnitsFormat;virtual;
-                       function CreateBlockDef(name:GDBString):GDBPointer;virtual;
+                       procedure CreateBlockDef(name:String);virtual;
                        procedure HardReDraw;
                        function GetCurrentLayer:PGDBLayerProp;
                        function GetCurrentLType:PGDBLtypeProp;
                        function GetCurrentTextStyle:PGDBTextStyle;
                        function GetCurrentDimStyle:PGDBDimStyle;
-                       procedure Selector(PEntity,PGripsCreator:PGDBObjEntity;var SelectedObjCount:GDBInteger);virtual;
-                       procedure DeSelector(PV:PGDBObjEntity;var SelectedObjCount:GDBInteger);virtual;
+                       procedure Selector(PEntity,PGripsCreator:PGDBObjEntity;var SelectedObjCount:Integer);virtual;
+                       procedure DeSelector(PV:PGDBObjEntity;var SelectedObjCount:Integer);virtual;
                  end;
 {EXPORT-}
 function CreateSimpleDWG:PTSimpleDrawing;
@@ -115,7 +115,7 @@ begin
      if tdesc<>nil then
      if PEntity^.IsHaveGRIPS then
      begin
-       GDBGetMem({$IFDEF DEBUGBUILD}'{B50BE8C9-E00A-40C0-A051-230877BD3A56}',{$ENDIF}GDBPointer(tdesc^.pcontrolpoint),sizeof(GDBControlPointArray));
+       Getmem(Pointer(tdesc^.pcontrolpoint),sizeof(GDBControlPointArray));
        PGripsCreator^.addcontrolpoints(tdesc);
      end;
      PEntity^.bp.ListPos.Owner.ImSelected(@self,PEntity^.bp.ListPos.SelfIndex);
@@ -184,7 +184,7 @@ begin
   wa.calcgrid;
   wa.draworinvalidate;
 end;
-function TSimpleDrawing.CreateBlockDef(name:GDBString):GDBPointer;
+procedure TSimpleDrawing.CreateBlockDef(name:String);
 var
    td:pointer;
 begin
@@ -213,7 +213,7 @@ begin
      result.RemoveTrailingZeros:=true;
 end;
 
-function TSimpleDrawing.CreateDrawingRC(_maxdetail:GDBBoolean=false):TDrawContext;
+function TSimpleDrawing.CreateDrawingRC(_maxdetail:Boolean=false):TDrawContext;
 begin
   if assigned(wa)then
                      result:=wa.CreateRC(_maxdetail)
@@ -223,7 +223,7 @@ begin
        FillDrawingPartRC(result);
   end;
 end;
-procedure TSimpleDrawing.FillDrawingPartRC(out dc:TDrawContext);
+procedure TSimpleDrawing.FillDrawingPartRC(var dc:TDrawContext);
 begin
   dc.DrawingContext.VisibleActualy:=Getpcamera.POSCOUNT;
   dc.DrawingContext.InfrustumActualy:=Getpcamera.POSCOUNT;
@@ -239,7 +239,7 @@ begin
   dc.DrawingContext.GlobalLTScale:=LTScale;
 end;
 
-function TSimpleDrawing.GetChangeStampt:GDBBoolean;
+function TSimpleDrawing.GetChangeStampt:Boolean;
 begin
      result:=false;
 end;
@@ -252,7 +252,7 @@ begin
   ConstructObjRoot.ObjMatrix:=onematrix;
 end;
 
-function TSimpleDrawing.GetMouseEditorMode:GDBByte;
+function TSimpleDrawing.GetMouseEditorMode:Byte;
 begin
      if wa.getviewcontrol<>nil then
                                  result:=wa.param.md.mode
@@ -260,13 +260,13 @@ begin
                                  result:=0;
 end;
 
-function TSimpleDrawing.DefMouseEditorMode(SetMask,ReSetMask:GDBByte):GDBByte;
+function TSimpleDrawing.DefMouseEditorMode(SetMask,ReSetMask:Byte):Byte;
 begin
      result:=GetMouseEditorMode;
      SetMouseEditorMode((result or setmask) and (not ReSetMask))
 end;
 
-function TSimpleDrawing.SetMouseEditorMode(mode:GDBByte):GDBByte;
+function TSimpleDrawing.SetMouseEditorMode(mode:Byte):Byte;
 begin
      if wa.getviewcontrol<>nil then
                                  begin
@@ -290,7 +290,7 @@ begin
      tp.oblique:=0;
      tp.size:=1;
      tp.wfactor:=1;
-     pts:=TextStyleTable.addstyle(psp.FontName,'',psp.FontName,tp,true);
+     pts:=TextStyleTable.addstyle(psp.FontName,psp.FontName,psp.FontName,tp,true);
 end;
 
 begin
@@ -301,7 +301,10 @@ begin
                                              if pts=nil then
                                                             createstyle;
                                              PSP^.param.PStyle:=pts;
-                                             PSP^.Psymbol:=pts^.pfont.font.findunisymbolinfos(psp.SymbolName);
+                                             if pts^.pfont<>nil then begin
+                                               PSP^.Psymbol:=pts^.pfont.font.findunisymbolinfos(psp.SymbolName);
+                                               PSP^.ShapeNum:=PSP^.Psymbol^.Number;
+                                             end;
                                              PSP:=pltp.shapearray.iterate(ir2);
                                        until PSP=nil;
    PTP:=pltp.textarray.beginiterate(ir2);
@@ -339,11 +342,11 @@ function TSimpleDrawing.GetLastSelected:PGDBObjEntity;
 begin
      result:=wa.param.SelDesc.LastSelectedObject;
 end;
-procedure TSimpleDrawing.SetFileName(NewName:GDBString);
+procedure TSimpleDrawing.SetFileName(NewName:String);
 begin
 
 end;
-function TSimpleDrawing.GetFileName:GDBString;
+function TSimpleDrawing.GetFileName:String;
 begin
      result:=''
 end;
@@ -356,7 +359,7 @@ function TSimpleDrawing.GetUndoTop:TArrayIndex;
 begin
      result:=0;
 end;
-function TSimpleDrawing.GetUndoStack:GDBPointer;
+function TSimpleDrawing.GetUndoStack:Pointer;
 begin
      result:=nil;
 end;
@@ -373,14 +376,14 @@ function CreateSimpleDWG:PTSimpleDrawing;
 //var
    //ptd:PTSimpleDrawing;
 begin
-     gdBGetMem({$IFDEF DEBUGBUILD}'{2A28BFB9-661F-4331-955A-C6F18DE67A19}',{$ENDIF}GDBPointer(result),sizeof(TSimpleDrawing));
+     Getmem(Pointer(result),sizeof(TSimpleDrawing));
      //ptd:=currentdwg;
      //currentdwg:=pointer(result);
      result^.init(nil);//(@units);
      //self.AddByRef(result^);
      //currentdwg:=pointer(ptd);
 end;
-procedure TSimpleDrawing.PushStartMarker(CommandName:GDBString);
+procedure TSimpleDrawing.PushStartMarker(CommandName:String);
 begin
 
 end;
@@ -395,11 +398,11 @@ begin
      obj^.rtmodifyonepoint(rtmod);
      obj^.YouChanged(self);
 end;
-procedure TSimpleDrawing.rtmodify(obj:PGDBObjEntity;md:GDBPointer;dist,wc:gdbvertex;save:GDBBoolean);
-var i:GDBInteger;
+procedure TSimpleDrawing.rtmodify(obj:PGDBObjEntity;md:Pointer;dist,wc:gdbvertex;save:Boolean);
+var i:Integer;
     point:pcontrolpointdesc;
-    p:GDBPointer;
-    m,m2,mt:DMatrix4D;
+    p:Pointer;
+    m,{m2,}mt:DMatrix4D;
     t:gdbvertex;
     //tt:dvector4d;
     rtmod:TRTModifyData;
@@ -516,7 +519,7 @@ begin
 
           //PGDBObjGenericWithSubordinated(obj^.bp.owner)^.ImEdited({@self}obj,obj^.bp.PSelfInOwnerArray);
           PSelectedObjDesc(md).ptempobj^.done;
-          GDBFreeMem(GDBPointer(PSelectedObjDesc(md).ptempobj));
+          Freemem(Pointer(PSelectedObjDesc(md).ptempobj));
           PSelectedObjDesc(md).ptempobj:=nil;
      end
      else
@@ -565,7 +568,7 @@ begin
 
 end;
 
-procedure TSimpleDrawing.MoveCameraInLocalCSXY(oldx,oldy:GDBDouble;ax:gdbvertex);
+procedure TSimpleDrawing.MoveCameraInLocalCSXY(oldx,oldy:Double;ax:gdbvertex);
 var
     uc:pointer;
 begin
@@ -579,7 +582,7 @@ begin
      StoreNewCamerapPos(uc);
 end;
 
-procedure TSimpleDrawing.RotateCameraInLocalCSXY(ux,uy:GDBDouble);
+procedure TSimpleDrawing.RotateCameraInLocalCSXY(ux,uy:Double);
 var
     uc:pointer;
 begin
@@ -612,16 +615,16 @@ begin
   else
     result:=0;
 end;
-function TSimpleDrawing.GetCurrentRootSimple:GDBPointer;
+function TSimpleDrawing.GetCurrentRootSimple:Pointer;
 begin
      result:=self.pObjRoot;
 end;
-function TSimpleDrawing.GetCurrentRootObjArraySimple:GDBPointer;
+function TSimpleDrawing.GetCurrentRootObjArraySimple:Pointer;
 begin
      result:=@pObjRoot.ObjArray;
 end;
 
-function TSimpleDrawing.GetBlockDefArraySimple:GDBPointer;
+function TSimpleDrawing.GetBlockDefArraySimple:Pointer;
 begin
      result:=@self.BlockDefArray;
 end;
@@ -665,7 +668,7 @@ begin
      if assigned(pcamera) then
                            begin
                                 pcamera^.done;
-                                GDBFreeMem(pointer(pcamera));
+                                Freemem(pointer(pcamera));
                            end;
 end;
 constructor TSimpleDrawing.init;
@@ -685,7 +688,7 @@ begin
   internalcamera:=false;
   if pcamera=nil then
                      begin
-                     GDBGetMem({$IFDEF DEBUGBUILD}'{4B7A0493-E8D6-4F24-BB70-C9C246A351BA}',{$ENDIF}pointer(pcamera), sizeof(GDBObjCamera));
+                     Getmem(pointer(pcamera), sizeof(GDBObjCamera));
                      pcamera^.initnul;
                      internalcamera:=true;
 
@@ -709,21 +712,21 @@ begin
                        pcamera.zmax:=100000.0;
                        pcamera.fovy:=35.0;
                      end;
-  LTypeStyleTable.init({$IFDEF DEBUGBUILD}'{2BF47561-AEBD-4159-BF98-FCBA81DAD595}',{$ENDIF}100);
-  LayerTable.init({$IFDEF DEBUGBUILD}'{6AFCB58D-9C9B-4325-A00A-C2E8BDCBE1DD}',{$ENDIF}200,LTypeStyleTable.GetSystemLT(TLTContinous));
-  DimStyleTable.init({$IFDEF DEBUGBUILD}'{C354FF9D-E581-4E5A-AFE0-09AE87DEC2F0}',{$ENDIF}100);
+  LTypeStyleTable.init(100);
+  LayerTable.init(200,LTypeStyleTable.GetSystemLT(TLTContinous));
+  DimStyleTable.init(100);
   mainobjroot.initnul;
   mainobjroot.vp.Layer:=LayerTable.GetSystemLayer;
   pObjRoot:=@mainobjroot;
   ConstructObjRoot.initnul;
   ConstructObjRoot.vp.Layer:=LayerTable.GetSystemLayer;
-  SelObjArray.init({$IFDEF DEBUGBUILD}'{0CC3A9A3-B9C2-4FB5-BFB1-8791C261C577} - SelObjArray',{$ENDIF}65535);
-  OnMouseObj.init({$IFDEF DEBUGBUILD}'{85654C90-FF49-4272-B429-4D134913BC26} - OnMouseObj',{$ENDIF}20);
+  SelObjArray.init(65535);
+  OnMouseObj.init(20);
 
   //pcamera^.initnul;
-  //ConstructObjRoot.init({$IFDEF DEBUGBUILD}'{B1036F20-562D-4B17-A33A-61CF3F5F2A90} - ConstructObjRoot',{$ENDIF}1);
+  //ConstructObjRoot.init(1);
 
-  TextStyleTable.init({$IFDEF DEBUGBUILD}'{146FC836-1490-4046-8B09-863722570C9F}',{$ENDIF}200);
+  TextStyleTable.init(200);
   //tp.size:=2.5;
   //tp.oblique:=0;
 
@@ -732,10 +735,10 @@ begin
   //TextStyleTable.addstyle('R2_5','romant.shx',tp);
   //TextStyleTable.addstyle('standart','txt.shx',tp);
 
-  BlockDefArray.init({$IFDEF DEBUGBUILD}'{D53DA395-A6A2-4FDD-842D-A52E6385E2DD}',{$ENDIF}100);
+  BlockDefArray.init(100);
   Numerator.init(10);
 
-  TableStyleTable.init({$IFDEF DEBUGBUILD}'{E5CE9274-01D8-4D19-AF2E-D1AB116B5737}',{$ENDIF}10);
+  TableStyleTable.init(10);
 
   PTempTableStyle:=TableStyleTable.AddStyle('Temp');
 

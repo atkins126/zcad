@@ -16,14 +16,14 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 } 
 unit uzetextpreprocessor;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
-uses uzbtypes,uzbstrproc,sysutils,uzbtypesbase,usimplegenerics,gzctnrstl,LazLogger,gutil,uzeparser;
+uses uzbtypes,uzbstrproc,sysutils,gzctnrSTL,LazLogger,uzeparser;
 type
   TInternalCharType=UnicodeChar;
   TInternalStringType=UnicodeString;
-  TStrProcessFunc=function(const str:TDXFEntsInternalStringType;const operands:TDXFEntsInternalStringType;var startpos:integer;pobj:pointer):gdbstring;
+  TStrProcessFunc=function(const str:TDXFEntsInternalStringType;const operands:TDXFEntsInternalStringType;var startpos:integer;pobj:pointer):String;
   TStrProcessorData=record
     Id:TInternalStringType;
     OBracket,CBracket:TInternalCharType;
@@ -51,8 +51,9 @@ var
     Parser:TMyParser;
 
     ZCADToken:TTokenDescription.TEnumItemType;
-function textformat(s:TDXFEntsInternalStringType;pobj:GDBPointer):TDXFEntsInternalStringType;
-function convertfromunicode(s:GDBString):GDBString;
+function textformat(s:TDXFEntsInternalStringType;pobj:Pointer):TDXFEntsInternalStringType;overload;
+function textformat(s:string;pobj:Pointer):string;overload;
+function convertfromunicode(s:TDXFEntsInternalStringType):TDXFEntsInternalStringType;
 implementation
 
 
@@ -75,9 +76,9 @@ begin
   RegisterKey(key,data);
 end;
 
-function convertfromunicode(s:GDBString):GDBString;
-var //i,i2:GDBInteger;
-    ps{,varname}:GDBString;
+function convertfromunicode(s:TDXFEntsInternalStringType):TDXFEntsInternalStringType;
+var //i,i2:Integer;
+    ps{,varname}:TDXFEntsInternalStringType;
     //pv:pvardesk;
     //num,code:integer;
 begin
@@ -123,8 +124,13 @@ begin
    end;
 end;
 {$endif}
-function textformat;
-var FindedIdPos,ContinuePos,EndBracketPos,i2,counter:GDBInteger;
+function textformat(s:string;pobj:Pointer):string;overload;
+begin
+  result:=string(textformat(TDXFEntsInternalStringType(s),pobj));
+end;
+
+function textformat(s:TDXFEntsInternalStringType;pobj:Pointer):TDXFEntsInternalStringType;
+var FindedIdPos,ContinuePos,EndBracketPos,{i2,}counter:Integer;
     ps{,s2},res,operands:TDXFEntsInternalStringType;
     pair:Prefix2ProcessFunc.TDictionaryPair;
     (*{$IFNDEF DELPHI}

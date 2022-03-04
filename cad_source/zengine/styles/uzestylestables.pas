@@ -17,10 +17,10 @@
 }
 
 unit uzestylestables;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses uzbtypesbase,sysutils,uzbtypes,uzegeometry,
-     UGDBNamedObjectsArray,gzctnrvectordata;
+uses sysutils,uzbtypes,uzegeometry,
+     UGDBNamedObjectsArray,gzctnrVector;
 type
 {EXPORT+}
 TTableCellJustify=(jcl(*'TopLeft'*),
@@ -29,28 +29,28 @@ TTableCellJustify=(jcl(*'TopLeft'*),
 PTGDBTableCellStyle=^TGDBTableCellStyle;
 {REGISTERRECORDTYPE TGDBTableCellStyle}
 TGDBTableCellStyle=record
-                          Width,TextWidth:GDBDouble;
+                          Width,TextWidth:Double;
                           CF:TTableCellJustify;
                     end;
 {REGISTEROBJECTTYPE GDBCellFormatArray}
-GDBCellFormatArray= object(GZVectorData{-}<TGDBTableCellStyle>{//})(*OpenArrayOfData=TGDBTableCellStyle*)
+GDBCellFormatArray= object(GZVector{-}<TGDBTableCellStyle>{//})(*OpenArrayOfData=TGDBTableCellStyle*)
                    end;
 PTGDBTableStyle=^TGDBTableStyle;
 {REGISTEROBJECTTYPE TGDBTableStyle}
 TGDBTableStyle= object(GDBNamedObject)
-                     rowheight:gdbinteger;
-                     textheight:gdbdouble;
+                     rowheight:Integer;
+                     textheight:Double;
                      tblformat:GDBCellFormatArray;
-                     HeadBlockName:GDBString;
-                     constructor Init(n:GDBString);
+                     HeadBlockName:String;
+                     constructor Init(n:String);
                      destructor Done;virtual;
                end;
 PGDBTableStyleArray=^GDBTableStyleArray;
 {REGISTEROBJECTTYPE GDBTableStyleArray}
 GDBTableStyleArray= object(GDBNamedObjectsArray{-}<PTGDBTableStyle,TGDBTableStyle>{//})(*OpenArrayOfData=TGDBTableStyle*)
-                    constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger);
+                    constructor init(m:Integer);
                     constructor initnul;
-                    function AddStyle(name:GDBString):PTGDBTableStyle;
+                    function AddStyle(name:String):PTGDBTableStyle;
               end;
 {EXPORT-}
 var
@@ -60,7 +60,7 @@ implementation
 //    log;
 constructor GDBTableStyleArray.init;
 begin
-  inherited init({$IFDEF DEBUGBUILD}ErrGuid,{$ENDIF}m{,sizeof(TGDBTableStyle)});
+  inherited init(m);
   //addlayer(LNSysLayerName,CGDBWhile,lwgdbdefault,true,false,true);
 end;
 constructor GDBTableStyleArray.initnul;
@@ -72,7 +72,7 @@ end;
 constructor TGDBTableStyle.Init;
 begin
     inherited;
-    tblformat.init({$IFDEF DEBUGBUILD}'{3FD7CFC7-3885-4C97-9BEE-BA27E83862BB}',{$ENDIF}10{,sizeof(TGDBTableCellStyle)});
+    tblformat.init(10);
 end;
 destructor TGDBTableStyle.Done;
 begin

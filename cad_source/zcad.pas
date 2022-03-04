@@ -18,7 +18,7 @@
 
 program zcad;
 //файл с объявлениями директив компилятора - должен быть подключен во все файлы проекта
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 {$IFDEF FPC}
   {$CODEPAGE UTF8}
@@ -48,10 +48,10 @@ uses
   uzcregexceptions,
 
   Interfaces,forms, classes,LCLVersion,
+  uzclog,uzcreglog,
   uzcfsplash,
   uzcsysvars,
 
-  uzbmemman,uzclog,
   uzcsysparams,uzcsysinfo,
   uzbpaths,
 
@@ -64,7 +64,6 @@ uses
   uzcreggeneralwiewarea,
   uzcregfontmanager,
   uzcregpaths,
-  uzcreglog,
   uzcregenginefeatures,
   uzcreginterface,
   uzcregnavigatorentities,
@@ -229,9 +228,11 @@ uses
   uzccommand_exporttexttocsv,
   uzccommand_dataexport,uzccommand_dataimport,
   uzccommand_extdrentslist,uzccommand_extdralllist,uzccommand_extdradd,
+  uzccommand_DevDefSync,
 
   uzcenitiesvariablesextender,uzcExtdrLayerControl,uzcExtdrSmartTextEnt,
 
+  {$IFNDEF DARWIN}
   {$IFDEF ELECTROTECH}
   //**for velec func**//
   uzccommand_drawsuperline,
@@ -239,11 +240,13 @@ uses
   uzvagslcom, //создания именных суперлиний в комнате между извещателями
   uzvstripmtext, //очистка мтекста, сделано плохо, в будущем надо переделывать мтекст и механизм.
   uzvcabmountmethod,
+  uzvelscheme, //создание электрической схемы
   //**//
+  {$ENDIF}
   {$ENDIF}
 
   //uzccomexample2,
-  //uzventsuperline,
+  uzventsuperline,
   uzccomobjectinspector,
   //uzccomexperimental,
 
@@ -251,7 +254,7 @@ uses
   uzcregelectrotechfeatures,
   uzccomelectrical,
   uzccomops,
-  uzccommaps,
+  //uzccommaps,
   {$ENDIF}
   uzcplugins,
   //zcregisterobjectinspector,
@@ -264,13 +267,14 @@ uses
   uzcregisterenitiesextenders,
   uzcoiregistermultiproperties,
   uzclibraryblocksregister,
-  uzglviewareaogl,uzglviewareagdi,uzglviewareacanvas,
+  {$IF not((DEFINED(WINDOWS))and(DEFINED(LCLQT5)))}uzglviewareaogl,{$ENDIF}uzglviewareagdi,uzglviewareacanvas,
   {$IFDEF WINDOWS}{uzglviewareadx,}{$ENDIF}
 
   uzctbexttoolbars, uzctbextmenus, uzctbextpalettes,
 
   uzcinterface,
   uzccommand_dbgappexplorer,
+  {$IFDEF WINDOWS}{$IFDEF LCLQT5}uDarkStyle,{$ENDIF}{$ENDIF}
   uzelongprocesssupport;
 
 resourcestring
@@ -304,6 +308,7 @@ begin
     Application.MainFormOnTaskBar:=true;
   {$ENDIF}
   //создание окна программы
+  {$IFDEF WINDOWS}{$IFDEF LCLQT5}uDarkStyle.ApplyDarkStyle;{$ENDIF}{$ENDIF}
   Application.CreateForm(TZCADMainWindow,ZCADMainWindow);
   ZCADMainWindow.show;
   {if sysvar.SYS.SYS_IsHistoryLineCreated<>nil then
@@ -340,5 +345,6 @@ begin
   programlog.logoutstr('END.',0,LM_Necessarily);
   programlog.logoutstr('<<<<<<<<<<<<<<<Start units finalization',0,LM_Debug);
 end.
+
 
 

@@ -9,7 +9,7 @@ unit uzccomelectrical;
 {$IFDEF FPC}
   {$CODEPAGE UTF8}
 {$endif}
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -18,11 +18,11 @@ uses
   uzcenitiesvariablesextender,uzgldrawcontext,uzcdrawing,uzcvariablesutils,
   uzcstrconsts,UGDBSelectedObjArray,uzeentityfactory,uzcsysvars,
   csvdocument,
-  UGDBOpenArrayOfPV,uzeentblockinsert,devices,UGDBTree,uzcdrawings,uzbtypesbase,
+  UGDBOpenArrayOfPV,uzeentblockinsert,{devices,}{UGDBTree,}uzcdrawings,
   uzccommandsmanager,uzccomdraw,uzcentelleader,
   uzccommandsabstract,
   uzccommandsimpl,
-  uzbgeomtypes,uzbtypes,
+  uzegeometrytypes,uzbtypes,
   uzcutils,
   sysutils,
   {fileutil}LazUTF8,
@@ -30,16 +30,17 @@ uses
   uzglviewareadata,
   uzcinterface,
   uzegeometry,
-  uzbmemman,
+
   uzeconsts,
   uzeentity,uzeentline,
   uzcentnet,
   uzeentsubordinated,uzcentcable,varman,uzcdialogsfiles,uunitmanager,
-  gzctnrvectorpobjects,uzcbillofmaterial,uzccablemanager,uzeentdevice,uzeenttable,
-  uzbpaths,uzctnrvectorgdbstring,math,Masks,uzclog,uzbstrproc,
-  uzeentmtext,uzeblockdef,UGDBPoint3DArray,uzcdevicebaseabstract,uzelongprocesssupport,LazLogger,
+  uzcbillofmaterial,uzccablemanager,uzeentdevice,uzeenttable,
+  uzbpaths,uzctnrvectorstrings,math,Masks,uzclog,uzbstrproc,
+  uzeentabstracttext,uzeentmtext,uzeblockdef,UGDBPoint3DArray,uzcdevicebaseabstract,
+  uzelongprocesssupport,LazLogger,
   generics.Collections,
-  uzccommand_treestat,uzccommand_line2,uzccmdfloatinsert,uzcregother,uzcfcommandline,uzeparsercmdprompt;
+  uzccommand_treestat,uzccommand_line2,uzccmdfloatinsert,uzcregother,uzcfcommandline,uzeparsercmdprompt,uzctnrvectorpgdbaseobjects;
 type
 {Export+}
   TFindType=(
@@ -51,17 +52,17 @@ type
 PTBasicFinter=^TBasicFinter;
 {REGISTERRECORDTYPE TBasicFinter}
 TBasicFinter=record
-                   IncludeCable:GDBBoolean;(*'Include filter'*)
-                   IncludeCableMask:GDBString;(*'Include mask'*)
-                   ExcludeCable:GDBBoolean;(*'Exclude filter'*)
-                   ExcludeCableMask:GDBString;(*'Exclude mask'*)
+                   IncludeCable:Boolean;(*'Include filter'*)
+                   IncludeCableMask:String;(*'Include mask'*)
+                   ExcludeCable:Boolean;(*'Exclude filter'*)
+                   ExcludeCableMask:String;(*'Exclude mask'*)
              end;
   PTFindDeviceParam=^TFindDeviceParam;
   {REGISTERRECORDTYPE TFindDeviceParam}
   TFindDeviceParam=record
                         FindType:TFindType;(*'Find in'*)
-                        FindMethod:GDBBoolean;(*'Use symbols *, ?'*)
-                        FindString:GDBString;(*'Text'*)
+                        FindMethod:Boolean;(*'Use symbols *, ?'*)
+                        FindString:String;(*'Text'*)
                     end;
   {REGISTERRECORDTYPE GDBLine}
      GDBLine=record
@@ -71,33 +72,33 @@ TBasicFinter=record
   {REGISTERRECORDTYPE TELCableComParam}
   TELCableComParam=record
                         Traces:TEnumData;(*'Trace'*)
-                        PCable:{PGDBObjCable}GDBPointer;(*'Cabel'*)
-                        PTrace:{PGDBObjNet}GDBPointer;(*'Trace (pointer)'*)
+                        PCable:{PGDBObjCable}Pointer;(*'Cabel'*)
+                        PTrace:{PGDBObjNet}Pointer;(*'Trace (pointer)'*)
                    end;
   {REGISTERRECORDTYPE TELLeaderComParam}
   TELLeaderComParam=record
-                        Scale:GDBDouble;(*'Scale'*)
-                        Size:GDBInteger;(*'Size'*)
-                        twidth:GDBDouble;(*'Width'*)
+                        Scale:Double;(*'Scale'*)
+                        Size:Integer;(*'Size'*)
+                        twidth:Double;(*'Width'*)
                    end;
 {Export-}
   El_Wire_com = object(CommandRTEdObject)
     New_line: PGDBObjLine;
     FirstOwner,SecondOwner,OldFirstOwner:PGDBObjNet;
-    constructor init(cn:GDBString;SA,DA:TCStartAttr);
+    constructor init(cn:String;SA,DA:TCStartAttr);
     procedure CommandStart(Operands:TCommandOperands); virtual;
     procedure CommandCancel; virtual;
-    function BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger; virtual;
-    function AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger; virtual;
+    function BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer; virtual;
+    function AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer; virtual;
   end;
 
-  EM_SRBUILD_com = object(FloatInsert_com)
+  {EM_SRBUILD_com = object(FloatInsert_com)
     procedure Command(Operands:TCommandOperands); virtual;
   end;
   EM_SEPBUILD_com = object(FloatInsertWithParams_com)
     procedure Command(Operands:TCommandOperands); virtual;
     procedure BuildDM(Operands:TCommandOperands); virtual;
-  end;
+  end;}
   KIP_CDBuild_com=object(FloatInsert_com)
     procedure Command(Operands:TCommandOperands); virtual;
   end;
@@ -109,10 +110,10 @@ TBasicFinter=record
 
     (*PGDBEmSEPDeviceNode=^GDBEmSEPDeviceNode;
     GDBEmSEPDeviceNode=object(GDBVisNode)
-                              NodeName:GDBString;
+                              NodeName:String;
                               upcable:PTCableDesctiptor;
                               dev,shell:PGDBObjDevice;
-                              function GetNodeName:GDBString;virtual;
+                              function GetNodeName:String;virtual;
                        end;*)
    TBGMode=(BGAvtomat,DG1J,BGComm,DG2J,BGNagr);
 var
@@ -127,10 +128,10 @@ var
    pcabcom,pfindcom:pCommandRTEdObjectPlugin;
    cabcomparam:TELCableComParam;
    csel:pCommandFastObjectPlugin;
-   MainSpecContentFormat:TZctnrVectorGDBString;
+   MainSpecContentFormat:TZctnrVectorStrings;
 
-   EM_SRBUILD:EM_SRBUILD_com;
-   EM_SEPBUILD:EM_SEPBUILD_com;
+   //EM_SRBUILD:EM_SRBUILD_com;
+   //EM_SEPBUILD:EM_SEPBUILD_com;
    em_sepbuild_params:TBasicFinter;
    KIP_CDBuild:KIP_CDBuild_com;
    KIP_LugTableBuild:KIP_LugTableBuild_com;
@@ -143,22 +144,22 @@ var
 procedure finalize;}
 procedure Cable2CableMark(pcd:PTCableDesctiptor;pv:pGDBObjDevice);
 implementation
-function GetCableMaterial(pcd:PTCableDesctiptor):GDBString;
+function GetCableMaterial(pcd:PTCableDesctiptor):String;
 var
    {pvn,}{pvm,}pvmc{,pvl}:pvardesk;
-   line:gdbstring;
+   line:String;
    eq:pvardesk;
 begin
                                         pvmc:=FindVariableInEnt(pcd^.StartSegment,'DB_link');
                                         if pvmc<>nil then
                                         begin
-                                        line:=pstring(pvmc^.data.Instance)^;
+                                        line:=pstring(pvmc^.data.Addr.Instance)^;
                                         eq:=DWGDBUnit.FindVariable(line);
                                         if eq=nil then
                                                       result:='(!)'+line
                                                   else
                                                       begin
-                                                           result:=PDbBaseObject(eq^.data.Instance)^.NameShort;
+                                                           result:=PDbBaseObject(eq^.data.Addr.Instance)^.NameShort;
                                                       end;
                                         end
                                         else
@@ -167,7 +168,7 @@ end;
 procedure Cable2CableMark(pcd:PTCableDesctiptor;pv:pGDBObjDevice);
 var
    {pvn,}pvm,{pvmc,}pvl:pvardesk;
-   //line:gdbstring;
+   //line:String;
    //eq:pvardesk;
    pentvarext:TVariablesExtender;
 begin
@@ -175,43 +176,45 @@ begin
      pvm:=pentvarext.entityunit.FindVariable('CableMaterial');
                         if pvm<>nil then
                                     begin
-                                         pstring(pvm^.data.Instance)^:={Tria_Utf8ToAnsi}( GetCableMaterial(pcd));
+                                         pstring(pvm^.data.Addr.Instance)^:={Tria_Utf8ToAnsi}( GetCableMaterial(pcd));
                                         {pvmc:=pcd^.StartSegment^.FindVariable('DB_link');
                                         if pvmc<>nil then
                                         begin
-                                        line:=pstring(pvmc^.data.Instance)^;
+                                        line:=pstring(pvmc^.Instance)^;
                                         eq:=DWGDBUnit.FindVariable(line);
                                         if eq=nil then
-                                                      pstring(pvm^.data.Instance)^:='(!)'+line
+                                                      pstring(pvm^.Instance)^:='(!)'+line
                                                   else
                                                       begin
-                                                           pstring(pvm^.data.Instance)^:=PDbBaseObject(eq^.data.Instance)^.NameShort;
+                                                           pstring(pvm^.Instance)^:=PDbBaseObject(eq^.Instance)^.NameShort;
                                                       end;
                                         end
                                         else
-                                            pgdbstring(pvm^.data.Instance)^:='Не определен';}
+                                            pString(pvm^.Instance)^:='Не определен';}
                                     end;
                        pvl:=pentvarext.entityunit.FindVariable('CableLength');
                        if pvl<>nil then
-                                       pgdbdouble(pvl^.data.Instance)^:=pcd^.length;
+                                       pDouble(pvl^.data.Addr.Instance)^:=pcd^.length;
 end;
-{function GDBEmSEPDeviceNode.GetNodeName:GDBString;
+{function GDBEmSEPDeviceNode.GetNodeName:String;
 begin
      result:=nodename;
 end;}
+(*
 procedure IP(pnode:PGDBBaseNode;PProcData:Pointer);
 //var
 //   pvd:pvardesk;
 begin
-(*     if PGDBEmSEPDeviceNode(pnode)^.upcable<>nil then
+     if PGDBEmSEPDeviceNode(pnode)^.upcable<>nil then
      begin
           pvd:=PGDBEmSEPDeviceNode(pnode)^.upcable^.StartSegment.OU.FindVariable('GC_HDGroup');
           if pvd<>nil then
-          if PGDBInteger(pvd^.data.Instance)^>PGDBInteger(Pprocdata)^ then
-             PGDBInteger(Pprocdata)^:=PGDBInteger(pvd^.data.Instance)^;
-     end; *)
+          if PInteger(pvd^.Instance)^>PInteger(Pprocdata)^ then
+             PInteger(Pprocdata)^:=PInteger(pvd^.Instance)^;
+     end;
 end;
-(*function icf (pnode:PGDBBaseNode;PExpr:GDBPointer):GDBBoolean;
+*)
+(*function icf (pnode:PGDBBaseNode;PExpr:Pointer):Boolean;
 //var
 //   pvd:pvardesk;
 begin
@@ -220,15 +223,15 @@ begin
      begin
           pvd:=PGDBEmSEPDeviceNode(pnode)^.upcable^.StartSegment.OU.FindVariable('GC_HDGroup');
           if pvd<>nil then
-          if PGDBInteger(pvd^.data.Instance)^=PGDBInteger(PExpr)^ then
+          if PInteger(pvd^.Instance)^=PInteger(PExpr)^ then
              result:=true;
      end;
 end;*)
-function g2x(g:gdbinteger):GDBInteger;
+function g2x(g:Integer):Integer;
 begin
      result:=30*g;
 end;
-function TBGMode2y(bgm:TBGMode):GDBDouble;
+function TBGMode2y(bgm:TBGMode):Double;
 begin
      case bgm of
        BGAvtomat:
@@ -243,7 +246,7 @@ begin
               result:=-121.5;
      end;
 end;
-function insertblock(bname,obozn:GDBString;p:gdbVertex):TBoundingBox;
+function insertblock(bname:String;obozn:TDXFEntsInternalStringType;p:gdbVertex):TBoundingBox;
 var
    pgdbins:pgdbobjblockinsert;
    pbdef:PGDBObjBlockdef;
@@ -277,7 +280,7 @@ end;
 procedure drawlineandtext(pcabledesk:PTCableDesctiptor;p1,p2:GDBVertex);
 var
    pl:pgdbobjline;
-   a:gdbdouble;
+   a:Double;
    ptext:PGDBObjMText;
    v:gdbvertex;
    DC:TDrawContext;
@@ -307,12 +310,12 @@ begin
                               a:=180+vertexangle(PGDBVertex2d(@p1)^,PGDBVertex2d(@p2)^)*180/pi;
 
           ptext:=pointer(AllocEnt(GDBMtextID));
-          ptext^.init(@drawings.CurrentDWG.ConstructObjRoot,drawings.GetCurrentDWG.LayerTable.getAddres('TEXT'),sysvar.dwg.DWG_CLinew^,GetCableMaterial(pcabledesk)+' L='+floattostr(pcabledesk^.length)+'м',vertexadd(Vertexmorph(p1,p2,0.5),v),2.5,0,0.65,a,jsbc,vertexlength(p1,p2),1);
+          ptext^.init(@drawings.CurrentDWG.ConstructObjRoot,drawings.GetCurrentDWG.LayerTable.getAddres('TEXT'),sysvar.dwg.DWG_CLinew^,TDXFEntsInternalStringType(GetCableMaterial(pcabledesk)+' L='+floattostr(pcabledesk^.length)+'m'),vertexadd(Vertexmorph(p1,p2,0.5),v),2.5,0,0.65,a,jsbc,vertexlength(p1,p2),1);
           drawings.CurrentDWG.ConstructObjRoot.ObjArray.AddPEntity(ptext^);
           ptext^.Formatentity(drawings.GetCurrentDWG^,dc);
 
           ptext:=pointer(AllocEnt(GDBMtextID));
-          ptext^.init(@drawings.CurrentDWG.ConstructObjRoot,drawings.GetCurrentDWG.LayerTable.getAddres('TEXT'),sysvar.dwg.DWG_CLinew^,pcabledesk^.Name,vertexsub(Vertexmorph(p1,p2,0.5),v),2.5,0,0.65,a,jstc,vertexlength(p1,p2),1);
+          ptext^.init(@drawings.CurrentDWG.ConstructObjRoot,drawings.GetCurrentDWG.LayerTable.getAddres('TEXT'),sysvar.dwg.DWG_CLinew^,TDXFEntsInternalStringType(pcabledesk^.Name),vertexsub(Vertexmorph(p1,p2,0.5),v),2.5,0,0.65,a,jstc,vertexlength(p1,p2),1);
           drawings.CurrentDWG.ConstructObjRoot.ObjArray.AddPEntity(ptext^);
           ptext^.Formatentity(drawings.GetCurrentDWG^,dc);
 
@@ -351,17 +354,17 @@ else if bgm1<bgm2 then
 
 end;
 //TBGMode=(BGAvtomat,DG1J,BGComm,DG2J,BGNagr);
-(*procedure EM_SEP_build_group(const cman:TCableManager;const node:PGDBEmSEPDeviceNode;var group:GDBInteger;P1:GDBVertex;var BGM:TBGMode;oldgabarit:GDBBoundingBbox);
+(*procedure EM_SEP_build_group(const cman:TCableManager;const node:PGDBEmSEPDeviceNode;var group:Integer;P1:GDBVertex;var BGM:TBGMode;oldgabarit:GDBBoundingBbox);
 var
    pvd:pvardesk;
    tempbgm,newBGM,nextBGM,TnextBGM:TBGMode;
    ir:itrec;
    subnode:PGDBEmSEPDeviceNode;
-   tempgroup,maxgroup:gdbinteger;
+   tempgroup,maxgroup:Integer;
    pgdbins:pgdbobjblockinsert;
-   name:GDBString;
+   name:String;
    gabarit:GDBBoundingBbox;
-   y:GDBDouble;
+   y:Double;
    p:gdbvertex;
 begin
           drawings.AddBlockFromDBIfNeed(drawings.GetCurrentDWG,'EM_PSRS_HEAD');
@@ -375,7 +378,7 @@ begin
      pvd:=node.shell.OU.FindVariable('Device_Type');
      if pvd<>nil then
      case
-         PTDeviceType(pvd^.data.Instance)^ of
+         PTDeviceType(pvd^.Instance)^ of
          TDT_SilaPotr,TDT_SilaIst:begin
                                        nextBGM:=BGNagr;
                                   end;
@@ -401,7 +404,7 @@ begin
           name:='';
           pvd:=node.shell.ou.FindVariable('NMO_Name');
                          if pvd<>nil then
-                                         name:=pgdbstring(pvd.data.Instance)^;
+                                         name:=pString(pvd.Instance)^;
           //y:=TBGMode2y(nextBGM);
           p:=createvertex(g2x(group),TBGMode2y(nextBGM),0);
           gabarit:=insertblock(node.shell.Name,name,p);
@@ -447,7 +450,7 @@ begin
 
 procedure EM_SEP_build_graphix(const cman:TCableManager;const tree:PTGDBTree);
 var
-   group,groupmax,dg:GDBInteger;
+   group,groupmax,dg:Integer;
    pgroupnode:PGDBEmSEPDeviceNode;
    BGM:TBGMode;
    gabarit:GDBBoundingBbox;
@@ -474,7 +477,7 @@ var
    root2:PGDBEmSEPDeviceNode;
    sd:PGDBObjDevice;
    pvd:pvardesk;
-   name:GDBString;
+   name:String;
    pendobj: pGDBObjEntity;
    dev,shell:PGDBObjDevice;
    oldtree:PTGDBTree;
@@ -492,7 +495,7 @@ begin
                     begin
                          if tree=nil then
                          begin
-                              gdbgetmem({$IFDEF DEBUGBUILD}'{E1158636-E1BD-49B8-BFB2-25723FC26625}',{$ENDIF}pointer(tree),sizeof(TGDBTree));
+                              Getmem(pointer(tree),sizeof(TGDBTree));
                               tree.init(10);
                               ptree:=@tree;
                               if oldtree=nil then
@@ -508,11 +511,11 @@ begin
                                shell:=pointer(dev^.FindShellByClass(TDC_Shell));
 
 
-                         gdbgetmem({$IFDEF DEBUGBUILD}'{E1158636-E1BD-49B8-BFB2-25723FC26625}',{$ENDIF}pointer(root2),sizeof(GDBEmSEPDeviceNode));
+                         Getmem(pointer(root2),sizeof(GDBEmSEPDeviceNode));
                          root2^.initnul;
                          pvd:=shell.ou.FindVariable('NMO_Name');
                          if pvd<>nil then
-                                         name:=pgdbstring(pvd.data.Instance)^;
+                                         name:=pString(pvd.Instance)^;
                          //if name= then
                          
 
@@ -528,7 +531,7 @@ begin
 
                          if ptree^=nil then
                          begin
-                              gdbgetmem({$IFDEF DEBUGBUILD}'{E1158636-E1BD-49B8-BFB2-25723FC26625}',{$ENDIF}pointer(ptree^),sizeof(TGDBTree));
+                              Getmem(pointer(ptree^),sizeof(TGDBTree));
                               ptree^.init(10);
                          end;
 
@@ -553,18 +556,18 @@ begin
               until pcabledesk=nil;
 end;
 *)
-procedure EM_SEPBUILD_com.BuildDM(Operands:TCommandOperands);
+{procedure EM_SEPBUILD_com.BuildDM(Operands:TCommandOperands);
 begin
     //commandmanager.DMAddProcedure('test1','подсказка1',nil);
     commandmanager.DMAddMethod('Разместить','подсказка3',run);
     commandmanager.DMAddMethod('Разместить','подсказка3',run);
     commandmanager.DMAddMethod('Разместить','подсказка3',run);
     commandmanager.DMShow;
-end;
-procedure EM_SEPBUILD_com.Command(Operands:TCommandOperands);
+end;}
+{procedure EM_SEPBUILD_com.Command(Operands:TCommandOperands);
 begin
 
-end;
+end;}
 
 (*procedure EM_SEPBUILD_com.Command(Operands:pansichar);
 var
@@ -573,7 +576,7 @@ var
       counter:integer;
       //tcd:TCopyObjectDesc;
       pvd:pvardesk;
-      name:GDBString;
+      name:String;
       cman:TCableManager;
 
       root:PGDBEmSEPDeviceNode;
@@ -601,19 +604,19 @@ commandmanager.DMShow;
     begin
          pvd:=pobj^.ou.FindVariable('Device_Type');
          if pvd<>nil then
-         if PTDeviceType(pvd^.data.Instance)^=TDT_SilaIst then
+         if PTDeviceType(pvd^.Instance)^=TDT_SilaIst then
          begin
               inc(counter);
 
 
               pvd:=pobj^.ou.FindVariable('NMO_Name');
               if pvd<>nil then
-                              name:=pgdbstring(pvd.data.Instance)^;
+                              name:=pString(pvd.Instance)^;
               zf.initxywh('EMTREE',@mainformn,100,100,500,500,false);
               treecontrol.initxywh('asas',@zf,500,0,500,45,false);
               treecontrol.align:=al_client;
 
-              gdbgetmem({$IFDEF DEBUGBUILD}'{E1158636-E1BD-49B8-BFB2-25723FC26625}',{$ENDIF}pointer(root),sizeof(GDBEmSEPDeviceNode));
+              Getmem(pointer(root),sizeof(GDBEmSEPDeviceNode));
               root^.initnul;
               root^.NodeName:=name;
 
@@ -674,7 +677,7 @@ begin
                 //pvd:=PTObjectUnit(psd^.objaddr^.ou.Instance)^.FindVariable('DESC_MountingSite');
                 pvd:=pentvarext.entityunit.FindVariable({'DESC_MountingSite'}'NMO_Name');
                 if pvd<>nil then
-                                dn.name:=pvd.data.PTD.GetValueAsString(pvd.data.Instance)
+                                dn.name:=pvd.data.PTD.GetValueAsString(pvd.data.Addr.Instance)
                             else
                                 dn.name:='';
                 dn.pdev:=pointer(psd^.objaddr);
@@ -816,7 +819,7 @@ begin
                 //pvd:=PTObjectUnit(psd^.objaddr^.ou.Instance)^.FindVariable('DESC_MountingSite');
                 pvd:=pentvarext.entityunit.FindVariable({'DESC_MountingSite'}'NMO_Name');
                 if pvd<>nil then
-                                dn.name:=pvd.data.PTD.GetValueAsString(pvd.data.Instance)
+                                dn.name:=pvd.data.PTD.GetValueAsString(pvd.data.Addr.Instance)
                             else
                                 dn.name:='';
                 dn.pdev:=pointer(psd^.objaddr);
@@ -922,7 +925,7 @@ begin
      end;
      dna.Destroy;
 end;
-
+(*
 procedure EM_SRBUILD_com.Command(Operands:TCommandOperands);
 var
       pobj: pGDBObjEntity;
@@ -931,16 +934,16 @@ var
       counter:integer;
       //tcd:TCopyObjectDesc;
       pvd:pvardesk;
-      name,{material,}potrname{,potrmaterial}:GDBString;
-      p,pust,i,iust,cosf:PGDBDouble;
-      potrpust,potriust,potrpr,potrir,potrpv,potrp,potri,potrks,potrcos,sumpcos,sumpotrp,sumpotri:GDBDouble;
+      name,{material,}potrname{,potrmaterial}:String;
+      p,pust,i,iust,cosf:PDouble;
+      potrpust,potriust,potrpr,potrir,potrpv,potrp,potri,potrks,potrcos,sumpcos,sumpotrp,sumpotri:Double;
       cman:TCableManager;
       pcabledesk:PTCableDesctiptor;
       node:PGDBObjDevice;
       pt:PGDBObjTable;
-      psl,psfirstline:PTZctnrVectorGDBString;
+      psl,psfirstline:PTZctnrVectorStrings;
       //first:boolean;
-      s:gdbstring;
+      s:String;
       TCP:TCodePage;
       DC:TDrawContext;
       pentvarext,pgroupdevvarext,pcablevarext:TVariablesExtender;
@@ -963,7 +966,7 @@ begin
          //pvd:=PTObjectUnit(pobj^.ou.Instance)^.FindVariable('Device_Type');
          pvd:=pentvarext.entityunit.FindVariable('Device_Type');
          if pvd<>nil then
-         if PTDeviceType(pvd^.data.Instance)^=TDT_SilaIst then
+         if PTDeviceType(pvd^.data.Addr.Instance)^=TDT_SilaIst then
          begin
 
 
@@ -973,10 +976,10 @@ begin
               //material:='Без имени';
               pvd:=pentvarext.entityunit.FindVariable('NMO_Name');
               if pvd<>nil then
-                              name:=pgdbstring(pvd.data.Instance)^;
+                              name:=pString(pvd.data.Addr.Instance)^;
               pvd:=pentvarext.entityunit.FindVariable('DB_link');
               //if pvd<>nil then
-              //                material:=pgdbstring(pvd.data.Instance)^;
+              //                material:=pString(pvd.Instance)^;
               ZCMsgCallBackInterface.TextMessage('Найден объект источник энергии "'+name+'"',TMWOHistoryOut);
 
               p:=nil;pust:=nil;i:=nil;iust:=nil;cosf:=nil;
@@ -984,23 +987,23 @@ begin
 
               pvd:=pentvarext.entityunit.FindVariable('Power');
               if pvd<>nil then
-                              p:=pvd.data.Instance;
+                              p:=pvd.data.Addr.Instance;
               pvd:=pentvarext.entityunit.FindVariable('PowerUst');
               if pvd<>nil then
-                              pust:=pvd.data.Instance;
+                              pust:=pvd.data.Addr.Instance;
               pvd:=pentvarext.entityunit.FindVariable('Current');
               if pvd<>nil then
-                              i:=pvd.data.Instance;
+                              i:=pvd.data.Addr.Instance;
               pvd:=pentvarext.entityunit.FindVariable('CurrentUst');
               if pvd<>nil then
-                              iust:=pvd.data.Instance;
+                              iust:=pvd.data.Addr.Instance;
               pvd:=pentvarext.entityunit.FindVariable('CosPHI');
               if pvd<>nil then
-                              cosf:=pvd.data.Instance;
+                              cosf:=pvd.data.Addr.Instance;
               if (p<>nil)and(pust<>nil)and(i<>nil)and(iust<>nil) then
               begin
 
-                     GDBGetMem({$IFDEF DEBUGBUILD}'{76F46B7D-CAFA-4509-8B65-8759292D8709}',{$ENDIF}pointer(pt),sizeof(GDBObjTable));
+                     Getmem(pointer(pt),sizeof(GDBObjTable));
                      pt^.initnul;
                      pt^.ptablestyle:=drawings.GetCurrentDWG.TableStyleTable.getAddres('ShRaspr');
                      pt^.tbl.free;
@@ -1037,7 +1040,7 @@ begin
                                          pvd:=pgroupdevvarext.entityunit.FindVariable('Device_Type');
                                          if pvd<>nil then
                                          begin
-                                              case PTDeviceType(pvd^.data.Instance)^ of
+                                              case PTDeviceType(pvd^.data.Addr.Instance)^ of
                                                    TDT_SilaPotr:
                                                                 begin
                                                                       //potrmaterial:='Без имени';
@@ -1045,33 +1048,33 @@ begin
                                                                       if pvd<>nil then
                                                                                       begin
                                                                                            if potrname='' then
-                                                                                                              potrname:=Uni2CP(pgdbstring(pvd.data.Instance)^)
+                                                                                                              potrname:=Uni2CP(pString(pvd.data.Addr.Instance)^)
                                                                                                           else
-                                                                                                              potrname:=potrname+'+ '+Uni2CP(pgdbstring(pvd.data.Instance)^);
+                                                                                                              potrname:=potrname+'+ '+Uni2CP(pString(pvd.data.Addr.Instance)^);
                                                                                       end;
                                                                       pvd:=pgroupdevvarext.entityunit.FindVariable('DB_link');
                                                                       //if pvd<>nil then
-                                                                      //                potrmaterial:=pgdbstring(pvd.data.Instance)^;
+                                                                      //                potrmaterial:=pString(pvd.Instance)^;
                                                                       potrpv:=1;
                                                                       pvd:=pgroupdevvarext.entityunit.FindVariable('PV');
                                                                       if pvd<>nil then
-                                                                                      potrpv:=pgdbdouble(pvd.data.Instance)^;
+                                                                                      potrpv:=pDouble(pvd.data.Addr.Instance)^;
                                                                       potrp:=0;
                                                                       pvd:=pgroupdevvarext.entityunit.FindVariable('Power');
                                                                       if pvd<>nil then
-                                                                                      potrp:=pgdbdouble(pvd.data.Instance)^;
+                                                                                      potrp:=pDouble(pvd.data.Addr.Instance)^;
                                                                       potri:=0;
                                                                       pvd:=pgroupdevvarext.entityunit.FindVariable('Current');
                                                                       if pvd<>nil then
-                                                                                      potri:=pgdbdouble(pvd.data.Instance)^;
+                                                                                      potri:=pDouble(pvd.data.Addr.Instance)^;
                                                                       potrks:=1;
                                                                       pvd:=pgroupdevvarext.entityunit.FindVariable('Ks');
                                                                       if pvd<>nil then
-                                                                                      potrks:=pgdbdouble(pvd.data.Instance)^;
+                                                                                      potrks:=pDouble(pvd.data.Addr.Instance)^;
                                                                       potrcos:=1;
                                                                       pvd:=pgroupdevvarext.entityunit.FindVariable('CosPHI');
                                                                       if pvd<>nil then
-                                                                                      potrcos:=pgdbdouble(pvd.data.Instance)^;
+                                                                                      potrcos:=pDouble(pvd.data.Addr.Instance)^;
 
                                                                       pust^:=pust^+potrp;
                                                                       iust^:=iust^+potri;
@@ -1121,7 +1124,7 @@ begin
 //                                                                      s:='qwer';
 //                                                                      pvd:=pcabledesk^.StartSegment^.ou.FindVariable('DB_link');
 //                                                                      if pvd<>nil then
-//                                                                                      s:=pgdbstring(pvd.data.Instance)^;
+//                                                                                      s:=pString(pvd.Instance)^;
 //                                                                      pvd:=pgroupdev^.ou.FindVariable('DB_link');
 //                                                                      psl.add(@s);
 //                                                                      s:=floattostr(pcabledesk^.length);
@@ -1147,33 +1150,33 @@ begin
                                                                       if pvd<>nil then
                                                                                       begin
                                                                                            if potrname='' then
-                                                                                                              potrname:=Uni2CP(pgdbstring(pvd.data.Instance)^)
+                                                                                                              potrname:=Uni2CP(pString(pvd.data.Addr.Instance)^)
                                                                                                           else
-                                                                                                              potrname:=potrname+'+ '+Uni2CP(pgdbstring(pvd.data.Instance)^);
+                                                                                                              potrname:=potrname+'+ '+Uni2CP(pString(pvd.data.Addr.Instance)^);
                                                                                       end;
                                                                       pvd:=pgroupdevvarext.entityunit.FindVariable('DB_link');
                                                                       //if pvd<>nil then
-                                                                      //                potrmaterial:=pgdbstring(pvd.data.Instance)^;
+                                                                      //                potrmaterial:=pString(pvd.Instance)^;
                                                                       potrp:=0;
                                                                       pvd:=pgroupdevvarext.entityunit.FindVariable('PowerUst');
                                                                       if pvd<>nil then
-                                                                                      potrp:=pgdbdouble(pvd.data.Instance)^;
+                                                                                      potrp:=pDouble(pvd.data.Addr.Instance)^;
                                                                       potri:=0;
                                                                       pvd:=pgroupdevvarext.entityunit.FindVariable('CurrentUst');
                                                                       if pvd<>nil then
-                                                                                      potri:=pgdbdouble(pvd.data.Instance)^;
+                                                                                      potri:=pDouble(pvd.data.Addr.Instance)^;
                                                                       potrpr:=0;
                                                                       pvd:=pgroupdevvarext.entityunit.FindVariable('Power');
                                                                       if pvd<>nil then
-                                                                                      potrpr:=pgdbdouble(pvd.data.Instance)^;
+                                                                                      potrpr:=pDouble(pvd.data.Addr.Instance)^;
                                                                       potrir:=0;
                                                                       pvd:=pgroupdevvarext.entityunit.FindVariable('Current');
                                                                       if pvd<>nil then
-                                                                                      potrir:=pgdbdouble(pvd.data.Instance)^;
+                                                                                      potrir:=pDouble(pvd.data.Addr.Instance)^;
                                                                       potrcos:=1;
                                                                       pvd:=pgroupdevvarext.entityunit.FindVariable('CosPHI');
                                                                       if pvd<>nil then
-                                                                                      potrcos:=pgdbdouble(pvd.data.Instance)^;
+                                                                                      potrcos:=pDouble(pvd.data.Addr.Instance)^;
 
                                                                       pust^:=pust^+potrp;
                                                                       iust^:=iust^+potri;
@@ -1198,7 +1201,7 @@ begin
                                          {pv:=1;
                                          pvd:=pobj^.ou.FindVariable('PV');
                                          if pvd<>nil then
-                                         pv:=pgdbdouble(pvd.data.Instance)^;}
+                                         pv:=pDouble(pvd.Instance)^;}
                                     end;
 
 
@@ -1233,7 +1236,7 @@ begin
                   pcablevarext:=pcabledesk^.StartSegment^.GetExtension<TVariablesExtender>;
                   pvd:=pcablevarext.entityunit.FindVariable('DB_link');
                   if pvd<>nil then
-                                  s:=Uni2CP(pgdbstring(pvd.data.Instance)^);
+                                  s:=Uni2CP(pString(pvd.data.Addr.Instance)^);
                   //pvd:=pgroupdev^.ou.FindVariable('DB_link');
                   psl.PushBackData(s);
                   s:=floattostr(pcabledesk^.length);
@@ -1306,7 +1309,7 @@ begin
                    ZCMsgCallBackInterface.TextMessage('Выбери объект(ы) источник энергии!',TMWOHistoryOut);
   cman.done;
   CodePage:=TCP;
-end;
+end;*)
 constructor El_Wire_com.init;
 begin
   inherited init(cn,sa,da);
@@ -1327,13 +1330,13 @@ procedure El_Wire_com.CommandCancel;
 begin
 end;
 
-function El_Wire_com.BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger;
+function El_Wire_com.BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer;
 var //po:PGDBObjSubordinated;
     Objects:GDBObjOpenArrayOfPV;
     DC:TDrawContext;
 begin
   result:=0;
-  Objects.init({$IFDEF DEBUGBUILD}'{8BE71BAA-507B-4D6B-BE2C-63693022090C}',{$ENDIF}10);
+  Objects.init(10);
   if drawings.GetCurrentROOT.FindObjectsInPoint(wc,Objects) then
   begin
        FirstOwner:=pointer(drawings.FindOneInArray(Objects,GDBNetID,true));
@@ -1346,9 +1349,9 @@ begin
        then
        begin
             PGDBObjEntity(osp^.PGDBObject)^.format;
-            TMWOHistoryOut(GDBPointer(PGDBObjline(osp^.PGDBObject)^.ObjToGDBString('Found: ','')));
+            TMWOHistoryOut(Pointer(PGDBObjline(osp^.PGDBObject)^.ObjToString('Found: ','')));
             po:=PGDBObjEntity(osp^.PGDBObject)^.getowner;
-            //FirstOwner:=GDBPointer(po);
+            //FirstOwner:=Pointer(po);
        end
   end {else FirstOwner:=oldfirstowner};*)
   if (button and MZW_LBUTTON)<>0 then
@@ -1357,19 +1360,19 @@ begin
     Prompt('Вторая точка:');
     New_line := PGDBObjLine(ENTF_CreateLine(@drawings.GetCurrentDWG^.ConstructObjRoot,@drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray,[wc.x,wc.y,wc.z,wc.x,wc.y,wc.z]));
     zcSetEntPropFromCurrentDrawingProp(New_line);
-    //New_line := GDBPointer(drawings.GetCurrentDWG.ConstructObjRoot.ObjArray.CreateObj(GDBLineID{,drawings.GetCurrentROOT}));
+    //New_line := Pointer(drawings.GetCurrentDWG.ConstructObjRoot.ObjArray.CreateObj(GDBLineID{,drawings.GetCurrentROOT}));
     //GDBObjLineInit(drawings.GetCurrentROOT,New_line,drawings.GetCurrentDWG.LayerTable.GetCurrentLayer,sysvar.dwg.DWG_CLinew^,wc,wc);
     New_line^.Formatentity(drawings.GetCurrentDWG^,dc);
   end
 end;
 
-function El_Wire_com.AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record): GDBInteger;
+function El_Wire_com.AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer;
 var //po:PGDBObjSubordinated;
-    mode:GDBInteger;
+    mode:Integer;
     TempNet:PGDBObjNet;
-    //nn:GDBString;
+    //nn:String;
     pvd{,pvd2}:pvardesk;
-    nni:gdbinteger;
+    nni:Integer;
     Objects:GDBObjOpenArrayOfPV;
     DC:TDrawContext;
     ptempnetvarext,pfirstownervarext,psecondownervarext:TVariablesExtender;
@@ -1383,7 +1386,7 @@ begin
   //po:=nil;
   if (button and MZW_LBUTTON)<>0 then
                                      button:=button;
-  Objects.init({$IFDEF DEBUGBUILD}'{8BE71BAA-507B-4D6B-BE2C-63693022090C}',{$ENDIF}10);
+  Objects.init(10);
   if drawings.GetCurrentROOT.FindObjectsInPoint(wc,Objects) then
   begin
        SecondOwner:=pointer(drawings.FindOneInArray(Objects,GDBNetID,true));
@@ -1397,9 +1400,9 @@ begin
        then
        begin
             PGDBObjEntity(osp^.PGDBObject)^.formatentity(drawings.GetCurrentDWG^,dc);
-            ZCMsgCallBackInterface.TextMessage(PGDBObjline(osp^.PGDBObject)^.ObjToGDBString('Found: ',''),TMWOHistoryOut);
+            ZCMsgCallBackInterface.TextMessage(PGDBObjline(osp^.PGDBObject)^.ObjToString('Found: ',''),TMWOHistoryOut);
             //po:=PGDBObjEntity(osp^.PGDBObject)^.getowner;
-            //SecondOwner:=GDBPointer(po);
+            //SecondOwner:=Pointer(po);
        end
   end {else SecondOwner:=nil};
   //pl^.RenderFeedback;
@@ -1423,18 +1426,18 @@ begin
     case mode of
           0:begin
                  TempNet:=nil;
-                 GDBGetMem({$IFDEF DEBUGBUILD}'{C92353C3-EA26-48A9-A47F-89F7723E3D16}',{$ENDIF}GDBPointer(TempNet),sizeof(GDBObjNet));
+                 Getmem(Pointer(TempNet),sizeof(GDBObjNet));
                  TempNet^.initnul(nil);
                  zcSetEntPropFromCurrentDrawingProp(TempNet);
                  drawings.standardization(TempNet,GDBNetID);
                  ptempnetvarext:=TempNet^.GetExtension<TVariablesExtender>;
                  ptempnetvarext.entityunit.copyfrom(units.findunit(SupportPath,InterfaceTranslate,'trace'));
                  pvd:=ptempnetvarext.entityunit.FindVariable('NMO_Suffix');
-                 pstring(pvd^.data.Instance)^:=inttostr(drawings.GetCurrentDWG.numerator.getnumber(UNNAMEDNET,SysVar.DSGN.DSGN_TraceAutoInc^));
+                 pstring(pvd^.data.Addr.Instance)^:=inttostr(drawings.GetCurrentDWG.numerator.getnumber(UNNAMEDNET,SysVar.DSGN.DSGN_TraceAutoInc^));
                  pvd:=ptempnetvarext.entityunit.FindVariable('NMO_Prefix');
-                 pstring(pvd^.data.Instance)^:='@';
+                 pstring(pvd^.data.Addr.Instance)^:='@';
                  pvd:=ptempnetvarext.entityunit.FindVariable('NMO_BaseName');
-                 pstring(pvd^.data.Instance)^:=UNNAMEDNET;
+                 pstring(pvd^.data.Addr.Instance)^:=UNNAMEDNET;
                  //TempNet^.name:=drawings.numerator.getnamenumber(el_unname_prefix);
                  New_line^.bp.ListPos.Owner:=TempNet;
                  TempNet^.ObjArray.AddPEntity(New_line^);
@@ -1453,7 +1456,7 @@ begin
           2:begin
                  //pvd:=SecondOwner.ou.FindVariable('NMO_Name');
                  //pvd2:=firstowner.ou.FindVariable('NMO_Name');
-                 nni:=SecondOwner.CalcNewName(SecondOwner,firstowner{pstring(pvd^.data.Instance)^,pstring(pvd2^.data.Instance)^});
+                 nni:=SecondOwner.CalcNewName(SecondOwner,firstowner{pstring(pvd^.Instance)^,pstring(pvd2^.Instance)^});
                  if {nn<>''}nni<>0 then
                  begin
                  SecondOwner^.MigrateTo(FirstOwner);
@@ -1494,7 +1497,7 @@ begin
   end;
   result:=cmd_ok;
 end;
-function GetEntName(pu:PGDBObjGenericWithSubordinated):GDBString;
+function GetEntName(pu:PGDBObjGenericWithSubordinated):String;
 var
    pvn:pvardesk;
    pentvarext:TVariablesExtender;
@@ -1504,12 +1507,12 @@ begin
      pvn:=pentvarext.entityunit.FindVariable('NMO_Name');
      if (pvn<>nil) then
                                       begin
-                                           result:=pstring(pvn^.data.Instance)^;
+                                           result:=pstring(pvn^.data.Addr.Instance)^;
                                       end;
 end;
 procedure cabcomformat;
 var
-   s:gdbstring;
+   s:String;
    ir_inGDB:itrec;
    currentobj:PGDBObjNet;
 begin
@@ -1539,7 +1542,7 @@ begin
 end;
 function _Cable_com_CommandStart(operands:TCommandOperands):TCommandResult;
 var
-   s:gdbstring;
+   s:String;
    ir_inGDB:itrec;
    currentobj:PGDBObjNet;
 begin
@@ -1596,9 +1599,9 @@ begin
   end;
   cabcomparam.PCable:=nil;
   cabcomparam.PTrace:=nil;
-  //gdbfreemem(pointer(p3dpl));
+  //Freemem(pointer(p3dpl));
 end;
-function _Cable_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
+function _Cable_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
 var
    pvd:pvardesk;
    domethod,undomethod:tmethod;
@@ -1611,8 +1614,8 @@ begin
     if p3dpl=nil then
     begin
       dc:=drawings.GetCurrentDWG^.CreateDrawingRC;
-    p3dpl := GDBPointer(drawings.GetCurrentDWG.ConstructObjRoot.ObjArray.CreateInitObj(GDBCableID,drawings.GetCurrentROOT));
-    //p3dpl := GDBPointer(drawings.GetCurrentROOT.ObjArray.CreateinitObj(GDBCableID,drawings.GetCurrentROOT));
+    p3dpl := Pointer(drawings.GetCurrentDWG.ConstructObjRoot.ObjArray.CreateInitObj(GDBCableID,drawings.GetCurrentROOT));
+    //p3dpl := Pointer(drawings.GetCurrentROOT.ObjArray.CreateinitObj(GDBCableID,drawings.GetCurrentROOT));
     zcSetEntPropFromCurrentDrawingProp(p3dpl);
     drawings.standardization(p3dpl,GDBCableID);
     //p3dpl^.init(@drawings.GetCurrentDWG.ObjRoot,drawings.LayerTable.GetCurrentLayer, sysvar.dwg.DWG_CLinew^);
@@ -1621,18 +1624,18 @@ begin
     pcablevarext:=p3dpl^.GetExtension<TVariablesExtender>;
     pcablevarext.entityunit.copyfrom(units.findunit(SupportPath,InterfaceTranslate,'cable'));
     //pvd:=p3dpl^.ou.FindVariable('DB_link');
-    //pstring(pvd^.data.Instance)^:='Кабель ??';
+    //pstring(pvd^.Instance)^:='Кабель ??';
 
     {pvd:=p3dpl.ou.FindVariable('NMO_BaseName');
-    pstring(pvd^.data.Instance)^:=drawings.numerator.getnamenumber('К');}
+    pstring(pvd^.Instance)^:=drawings.numerator.getnamenumber('К');}
     //pvd:=p3dpl.ou.FindVariable('NMO_Prefix');
-    //pstring(pvd^.data.Instance)^:='';
+    //pstring(pvd^.Instance)^:='';
 
     //pvd:=p3dpl.ou.FindVariable('NMO_BaseName');
-    //pstring(pvd^.data.Instance)^:='@';
+    //pstring(pvd^.Instance)^:='@';
 
     pvd:=pcablevarext.entityunit.FindVariable('NMO_Suffix');
-    pstring(pvd^.data.Instance)^:=inttostr(drawings.GetCurrentDWG.numerator.getnumber('CableNum',true));
+    pstring(pvd^.data.Addr.Instance)^:=inttostr(drawings.GetCurrentDWG.numerator.getnumber('CableNum',true));
     //p3dpl^.bp.Owner:=@drawings.GetCurrentDWG.ObjRoot;
     //drawings.GetCurrentDWG.ObjRoot.ObjArray.add(addr(p3dpl));
     //GDBobjinsp.setptr(SysUnit.TypeName2PTD('GDBObjCable'),p3dpl);
@@ -1685,13 +1688,13 @@ begin
     cable^.AddVertex(NextPoint);
 end;
 
-procedure rootbytrace(firstpoint,lastpoint:GDBVertex;PTrace:PGDBObjNet;cable:PGDBObjCable;addfirstpoint:gdbboolean);
+procedure rootbytrace(firstpoint,lastpoint:GDBVertex;PTrace:PGDBObjNet;cable:PGDBObjCable;addfirstpoint:Boolean);
 var //po:PGDBObjSubordinated;
     //plastw:pgdbvertex;
     tw1,tw2:gdbvertex;
     l1,l2:pgdbobjline;
     pa:GDBPoint3dArray;
-    prevpoint:GDBVertex;
+    //prevpoint:GDBVertex;
     //polydata:tpolydata;
     //domethod,undomethod:tmethod;
 begin
@@ -1714,7 +1717,7 @@ begin
                  begin
                       tw2:=NearestPointOnSegment(lastpoint,l2.CoordInWCS.lBegin,l2.CoordInWCS.lEnd);
                       PTrace.BuildGraf(drawings.GetCurrentDWG^);
-                      pa.init({$IFDEF DEBUGBUILD}'{FE5DE449-60C7-4D92-9BA5-FEB937820B96}',{$ENDIF}100);
+                      pa.init(100);
                       PTrace.graf.FindPath(tw1,tw2,l1,l2,pa);
                       if addfirstpoint then
                       cable^.AddVertex(firstpoint);
@@ -1737,7 +1740,7 @@ begin
     AddPolySegmentIfZnotMatch(firstpoint,lastpoint,cable);
   end;
 end;
-function RootByMultiTrace(firstpoint,lastpoint:GDBVertex;PTrace:PGDBObjNet;cable:PGDBObjCable;addfirstpoint:gdbboolean):TZctnrVectorPGDBaseObjects;
+function RootByMultiTrace(firstpoint,lastpoint:GDBVertex;PTrace:PGDBObjNet;cable:PGDBObjCable;addfirstpoint:Boolean):TZctnrVectorPGDBaseObjects;
 var //po:PGDBObjSubordinated;
     //plastw:pgdbvertex;
     tw1,tw2:gdbvertex;
@@ -1755,7 +1758,7 @@ begin
   pointer(l1):=PTrace.GetNearestLine(firstpoint);
   pointer(l2):=PTrace.GetNearestLine(lastpoint);
   tw1:=NearestPointOnSegment(firstpoint,l1.CoordInWCS.lBegin,l1.CoordInWCS.lEnd);
-  result.init({$IFDEF DEBUGBUILD}'{C8C93C89-003D-407B-A6F3-2AAA5D12E01D}',{$ENDIF}100);
+  result.init(100);
   if l1=l2 then
                begin
                  if addfirstpoint then
@@ -1771,7 +1774,7 @@ begin
                begin
                     tw2:=NearestPointOnSegment(lastpoint,l2.CoordInWCS.lBegin,l2.CoordInWCS.lEnd);
                     PTrace.BuildGraf(drawings.GetCurrentDWG^);
-                    pa.init({$IFDEF DEBUGBUILD}'{FE5DE449-60C7-4D92-9BA5-FEB937820B96}',{$ENDIF}100);
+                    pa.init(100);
                     PTrace.graf.FindPath(tw1,tw2,l1,l2,pa);
                     if addfirstpoint then
                     cable^.AddVertex(firstpoint);
@@ -1790,14 +1793,14 @@ begin
                                begin
                                     tcable := AllocCable;
                                     tcable.init(drawings.GetCurrentROOT,nil,0);
-                                    //tcable := GDBPointer(drawings.GetCurrentROOT.ObjArray.CreateinitObj(GDBCableID,drawings.GetCurrentROOT));
+                                    //tcable := Pointer(drawings.GetCurrentROOT.ObjArray.CreateinitObj(GDBCableID,drawings.GetCurrentROOT));
                                     ptcablevarext:=tcable^.GetExtension<TVariablesExtender>;
                                     pcablevarext:=cable^.GetExtension<TVariablesExtender>;
                                     ptcablevarext.entityunit.copyfrom(@pcablevarext.entityunit);
                                     drawings.standardization(tcable,GDBCableID);
                                     pvd:=ptcablevarext.entityunit.FindVariable('CABLE_Segment');
                                     if pvd<>nil then
-                                    PGDBInteger(pvd^.data.Instance)^:=PGDBInteger(pvd^.data.Instance)^+cablecount;
+                                    PInteger(pvd^.data.Addr.Instance)^:=PInteger(pvd^.data.Addr.Instance)^+cablecount;
                                     inc(cablecount);
                                     result.PushBackData(tcable);
                                end;
@@ -1815,7 +1818,7 @@ begin
 end;
 
 
-function _Cable_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
+function _Cable_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
 var //po:PGDBObjSubordinated;
     plastw:pgdbvertex;
     //tw1,tw2:gdbvertex;
@@ -1875,7 +1878,7 @@ else begin
                        begin
                             tw2:=NearestPointOnSegment(wc,l2.CoordInWCS.lBegin,l2.CoordInWCS.lEnd);
                             cabcomparam.PTrace.BuildGraf;
-                            pa.init({$IFDEF DEBUGBUILD}'{FE5DE449-60C7-4D92-9BA5-FEB937820B96}',{$ENDIF}100);
+                            pa.init(100);
                             cabcomparam.PTrace.graf.FindPath(tw1,tw2,l1,l2,pa);
                             if not IsPointEqual(tw1,plastw^) then
                                                                 p3dpl^.AddVertex(tw1);
@@ -1896,21 +1899,21 @@ else begin
     zcRedrawCurrentDrawing;
   end;
 end;
-function _Cable_com_Hd(mclick:GDBInteger):TCommandResult;
+function _Cable_com_Hd(mclick:Integer):TCommandResult;
 begin
      //mclick:=mclick;//        asdf
      result:=cmd_ok;
 end;
-//function _Cable_com_Legend(Operands:pansichar):GDBInteger;
-//var i: GDBInteger;
+//function _Cable_com_Legend(Operands:pansichar):Integer;
+//var i: Integer;
 //    pv:pGDBObjEntity;
 //    ir,irincable,ir_inNodeArray:itrec;
-//    filename,cablename,CableMaterial,CableLength,devstart,devend: GDBString;
+//    filename,cablename,CableMaterial,CableLength,devstart,devend: String;
 //    handle:cardinal;
 //    pvd,pvds,pvdal:pvardesk;
 //    nodeend,nodestart:PTNodeProp;
 //
-//    line:gdbstring;
+//    line:String;
 //    firstline:boolean;
 //    cman:TCableManager;
 //begin
@@ -1931,13 +1934,13 @@ end;
 //    begin
 //         line:='';
 //         pvd:=pv^.ou.FindVariable('NMO_Name');
-//         cablename:=pstring(pvd^.data.Instance)^;
+//         cablename:=pstring(pvd^.Instance)^;
 //
 //         pvd:=pv^.ou.FindVariable('DB_link');
-//         CableMaterial:=pstring(pvd^.data.Instance)^;
+//         CableMaterial:=pstring(pvd^.Instance)^;
 //
 //         pvd:=pv^.ou.FindVariable('AmountD');
-//         CableLength:=floattostr(pgdbdouble(pvd^.data.Instance)^);
+//         CableLength:=floattostr(pDouble(pvd^.Instance)^);
 //
 //          firstline:=true;
 //          devstart:='Не присоединено';
@@ -1946,7 +1949,7 @@ end;
 //                                         begin
 //                                              pvd:=nodestart^.DevLink^.FindVariable('NMO_Name');
 //                                              if pvd<>nil then
-//                                                              devstart:=pstring(pvd^.data.Instance)^;
+//                                                              devstart:=pstring(pvd^.Instance)^;
 //                                         end;
 //          nodeend:=pgdbobjcable(pv)^.NodePropArray.iterate(ir_inNodeArray);
 //          repeat
@@ -1965,7 +1968,7 @@ end;
 //                                           nodeend:=pgdbobjcable(pv)^.NodePropArray.iterate(ir_inNodeArray);
 //                until pvd<>nil;
 //                if nodeend<>nil then
-//                                    devend:=pstring(pvd^.data.Instance)^;
+//                                    devend:=pstring(pvd^.Instance)^;
 //                if firstline then
 //                                 line:=cablename+';'+CableMaterial+';'+CableLength+';'+devstart+';'+devend+#13#10
 //                             else
@@ -1987,19 +1990,19 @@ end;
 //  result:=cmd_ok;
 //end;
 function _Cable_com_Legend(operands:TCommandOperands):TCommandResult;
-var //i: GDBInteger;
+var //i: Integer;
     pv:PTCableDesctiptor;
     ir,{irincable,}ir_inNodeArray:itrec;
-    filename,cablename,CableMaterial,CableLength,devstart,devend,puredevstart: GDBString;
+    filename,cablename,CableMaterial,CableLength,devstart,devend,puredevstart: String;
     handle:cardinal;
     pvd{,pvds,pvdal}:pvardesk;
     nodeend,nodestart:PGDBObjDevice;
 
-    line,s:gdbstring;
+    line,s:String;
     firstline:boolean;
     cman:TCableManager;
     pt:PGDBObjTable;
-    psl{,psfirstline}:PTZctnrVectorGDBString;
+    psl{,psfirstline}:PTZctnrVectorStrings;
 
     eq:pvardesk;
     DC:TDrawContext;
@@ -2017,7 +2020,7 @@ begin
   pv:=cman.beginiterate(ir);
   if pv<>nil then
   begin
-                     GDBGetMem({$IFDEF DEBUGBUILD}'{9F4AB2A7-1093-4FFB-8053-E8885D691B85}',{$ENDIF}pointer(pt),sizeof(GDBObjTable));
+                     Getmem(pointer(pt),sizeof(GDBObjTable));
                      pt^.initnul;
                      zcSetEntPropFromCurrentDrawingProp(pt);
                      pt^.ptablestyle:=drawings.GetCurrentDWG.TableStyleTable.getAddres('KZ');
@@ -2031,12 +2034,12 @@ begin
 
          pstartsegmentvarext:=pv^.StartSegment^.GetExtension<TVariablesExtender>;
          pvd:=pstartsegmentvarext.entityunit.FindVariable('DB_link');
-         CableMaterial:=pstring(pvd^.data.Instance)^;
+         CableMaterial:=pstring(pvd^.data.Addr.Instance)^;
 
                                         eq:=DWGDBUnit.FindVariable(CableMaterial);
                                         if eq<>nil then
                                                       begin
-                                                           CableMaterial:=PDbBaseObject(eq^.data.Instance)^.NameShort;
+                                                           CableMaterial:=PDbBaseObject(eq^.data.Addr.Instance)^.NameShort;
                                                       end;
          CableLength:=floattostr(pv^.length);
 
@@ -2047,7 +2050,7 @@ begin
                                          begin
                                               pvd:=FindVariableInEnt(pv^.StartDevice,'NMO_Name');
                                               if pvd<>nil then
-                                                              devstart:=pstring(pvd^.data.Instance)^;
+                                                              devstart:=pstring(pvd^.data.Addr.Instance)^;
                                               nodeend:=pv^.Devices.iterate(ir_inNodeArray);
                                          end
                                   else
@@ -2064,15 +2067,15 @@ begin
                                            nodeend:=pv^.Devices.iterate(ir_inNodeArray);
                 until pvd<>nil;
                 if nodeend<>nil then
-                                    devend:=pstring(pvd^.data.Instance)^;
+                                    devend:=pstring(pvd^.data.Addr.Instance)^;
                 {psl:=pointer(pt^.tbl.CreateObject);
                 psl.init(12);}
                 if firstline then
                                  begin
                                  line:='`'+cablename+';'+CableMaterial+';'+CableLength+';'+devstart+';'+devend+#13#10;
                                  s:='';
-                                 psl.addutoa((cablename));
-                                 psl.addutoa(devstart);
+                                 psl.PushBackData(Tria_Utf8ToAnsi(cablename));
+                                 psl.PushBackData(Tria_Utf8ToAnsi(devstart));
                                  {psl.add(@devend);
                                  psl.add(@s);
                                  psl.add(@s);
@@ -2102,20 +2105,20 @@ begin
                 nodeend:=pv^.Devices.iterate(ir_inNodeArray);
           until nodeend=nil;
                                  s:='';
-                                 psl.addutoa(devend);
-                                 psl.addutoa(s);
-                                 psl.addutoa(s);
-                                 psl.addutoa(s);
-                                 psl.addutoa(s);
-                                 psl.addutoa(CableMaterial);
-                                 psl.addutoa(CableLength);
-                                 psl.addutoa(s);
-                                 psl.addutoa(s);
+                                 psl.PushBackData(Tria_Utf8ToAnsi(devend));
+                                 psl.PushBackData(Tria_Utf8ToAnsi(s));
+                                 psl.PushBackData(Tria_Utf8ToAnsi(s));
+                                 psl.PushBackData(Tria_Utf8ToAnsi(s));
+                                 psl.PushBackData(Tria_Utf8ToAnsi(s));
+                                 psl.PushBackData(Tria_Utf8ToAnsi(CableMaterial));
+                                 psl.PushBackData(Tria_Utf8ToAnsi(CableLength));
+                                 psl.PushBackData(Tria_Utf8ToAnsi(s));
+                                 psl.PushBackData(Tria_Utf8ToAnsi(s));
                                  s:='';
-                                 psl.addutoa(s);
+                                 psl.PushBackData(Tria_Utf8ToAnsi(s));
 
-         //ZCMsgCallBackInterface.TextMessage(cablename+' '+CableMaterial+' '+CableLength);
-         ZCMsgCallBackInterface.TextMessage('Кабель "'+pv^.Name+'", сегментов '+inttostr(pv^.Segments.Count)+', материал "'+CableMaterial+'", начало: '+puredevstart+' конец: '+devend,TMWOHistoryOut);
+         //ZCMsgCallBackInterface.TextMessage('Cable "'+pv^.Name+'", segments '+inttostr(pv^.Segments.Count)+', материал "'+CableMaterial+'", начало: '+puredevstart+' конец: '+devend,TMWOHistoryOut);
+         ZCMsgCallBackInterface.TextMessage(format('Cable %s, %d segments, %s, from: %s to: %s',[pv^.Name,pv^.Segments.Count,CableMaterial,puredevstart,devend]),TMWOHistoryOut);
 
 
     end;
@@ -2135,23 +2138,23 @@ begin
   result:=cmd_ok;
 end;
 function _Material_com_Legend(operands:TCommandOperands):TCommandResult;
-var //i: GDBInteger;
+var //i: Integer;
     pv:pGDBObjEntity;
     ir,{irincable,ir_inNodeArray,}ir_inscf:itrec;
-    s,filename{,cablename,CableMaterial,CableLength,devstart}: GDBString;
-    currentgroup:PGDBString;
+    s,filename{,cablename,CableMaterial,CableLength,devstart}: String;
+    currentgroup:PString;
     handle:cardinal;
     pvad,pvai,pvm:pvardesk;
     //nodeend,nodestart:PTNodeProp;
 
-    line:gdbstring;
+    line:String;
     //firstline:boolean;
 
     bom:GDBBbillOfMaterial;
     PBOMITEM:PGDBBOMItem;
 
     pt:PGDBObjTable;
-    psl{,psfirstline}:PTZctnrVectorGDBString;
+    psl{,psfirstline}:PTZctnrVectorStrings;
 
     pdbu:ptunit;
     pdbv:pvardesk;
@@ -2184,21 +2187,21 @@ begin
               pvai:=pcablevarext.entityunit.FindVariable('AmountI');
               //if (pvad<>nil)or(pvai<>nil) then
               begin
-                   pbomitem:=bom.findorcreate(pstring(pvm^.data.Instance)^);
+                   pbomitem:=bom.findorcreate(pstring(pvm^.data.Addr.Instance)^);
                    if pbomitem<>nil then
                    begin
                         if (pvad<>nil) then
-                                           pbomitem.Amount:=pbomitem.Amount+pgdbdouble(pvad^.data.Instance)^
+                                           pbomitem.Amount:=pbomitem.Amount+pDouble(pvad^.data.Addr.Instance)^
                    else if (pvai<>nil) then
-                                           pbomitem.Amount:=pbomitem.Amount+pgdbinteger(pvai^.data.Instance)^
+                                           pbomitem.Amount:=pbomitem.Amount+PInteger(pvai^.data.Addr.Instance)^
                    else
                        pbomitem.Amount:=pbomitem.Amount+1;
                         pvm:=pcablevarext.entityunit.FindVariable('NMO_Name');
                         if (pvm<>nil) then
                                            if pbomitem.Names<>'' then
-                                                                     pbomitem.Names:=pbomitem.Names+','+pstring(pvm^.data.Instance)^
+                                                                     pbomitem.Names:=pbomitem.Names+','+pstring(pvm^.data.Addr.Instance)^
                                                                  else
-                                                                     pbomitem.Names:=pstring(pvm^.data.Instance)^;
+                                                                     pbomitem.Names:=pstring(pvm^.data.Addr.Instance)^;
 
 
                    end;
@@ -2224,7 +2227,7 @@ begin
   if pvm<>nil then
   begin
        begin
-            pbomitem:=bom.findorcreate(pstring(pvm^.data.Instance)^);
+            pbomitem:=bom.findorcreate(pstring(pvm^.data.Addr.Instance)^);
             if pbomitem<>nil then
             begin
                  pbomitem.Amount:=pbomitem.Amount+pcd.length;
@@ -2253,7 +2256,7 @@ begin
   FileClose(handle);
 
 
-                     GDBGetMem({$IFDEF DEBUGBUILD}'{76882CEC-39E7-459C-9CCB-F596DE17539A}',{$ENDIF}pointer(pt),sizeof(GDBObjTable));
+                     Getmem(pointer(pt),sizeof(GDBObjTable));
                      pt^.initnul;
                      zcSetEntPropFromCurrentDrawingProp(pt);
                      pt^.ptablestyle:=drawings.GetCurrentDWG.TableStyleTable.getAddres('Spec');
@@ -2289,7 +2292,7 @@ begin
               if not(PBOMITEM.processed) then
 
               begin
-                   pdbi:=pdbv^.data.Instance;
+                   pdbi:=pdbv^.data.Addr.Instance;
                    if MatchesMask(pdbi^.Group,currentgroup^) then
 
                    begin
@@ -2299,33 +2302,33 @@ begin
                    psl.init(9);
 
                    s:=pdbi^.Position;
-                   psl.addutoa(s);
+                   psl.PushBackData(Tria_Utf8ToAnsi(s));
 
                    s:=' '+pdbi^.NameFull;
-                   psl.addutoa(s);
+                   psl.PushBackData(Tria_Utf8ToAnsi(s));
 
                    s:=pdbi^.NameShort+' '+pdbi^.Standard;
-                   psl.addutoa(s);
+                   psl.PushBackData(Tria_Utf8ToAnsi(s));
 
                    s:=pdbi^.OKP;
-                   psl.addutoa(s);
+                   psl.PushBackData(Tria_Utf8ToAnsi(s));
 
                    s:=pdbi^.Manufacturer;
-                   psl.addutoa(s);
+                   psl.PushBackData(Tria_Utf8ToAnsi(s));
 
                    s:='??';
                    case pdbi^.EdIzm of
                                       _sht:s:='шт.';
                                       _m:s:='м';
                    end;
-                   psl.addutoa(s);
+                   psl.PushBackData(Tria_Utf8ToAnsi(s));
 
                    s:=floattostr(PBOMITEM^.Amount);
                    psl.PushBackData(s);
 
                    s:='';
-                   psl.addutoa(s);
-                   psl.addutoa(s);
+                   psl.PushBackData(Tria_Utf8ToAnsi(s));
+                   psl.PushBackData(Tria_Utf8ToAnsi(s));
                    end;
 
 
@@ -2352,7 +2355,7 @@ begin
   result:=cmd_ok;
 end;
 function _Cable_com_Select(operands:TCommandOperands):TCommandResult;
-var //i: GDBInteger;
+var //i: Integer;
     pv:pGDBObjEntity;
     ir,irnpa:itrec;
     ptn{,ptnfirst,ptnfirst2,ptnlast,ptnlast2}:PTNodeProp;
@@ -2383,12 +2386,12 @@ begin
   result:=cmd_ok;
 end;
 {
-function _Ren_n_to_0n_com(Operands:pansichar):GDBInteger;
-var len: GDBInteger;
+function _Ren_n_to_0n_com(Operands:pansichar):Integer;
+var len: Integer;
     pv:pGDBObjEntity;
     ir:itrec;
     pvd:pvardesk;
-    name:gdbstring;
+    name:String;
 begin
   pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
   if pv<>nil then
@@ -2398,14 +2401,14 @@ begin
          pvd:=pv^.ou.FindVariable('NMO_Name');
          if pvd<>nil then
                          begin
-                              name:=pgdbstring(pvd.data.Instance)^;
+                              name:=pString(pvd.Instance)^;
                               len:=length(name);
                               if len=3 then
                               if name[len] in ['0'..'9'] then
                               if not(name[len-1] in ['0'..'9']) then
                               begin
                                    name:=system.copy(name,1,len-1)+'0'+system.copy(name,len,1);
-                                   pgdbstring(pvd.data.Instance)^:=name;
+                                   pString(pvd.Instance)^:=name;
                                    ZCMsgCallBackInterface.TextMessage('Переименован кабель '+name);
                               end
                          end;
@@ -2418,9 +2421,9 @@ function VarReport_com(operands:TCommandOperands):TCommandResult;
 var pv:pGDBObjEntity;
     ir:itrec;
     pvd:pvardesk;
-    name,content:gdbstring;
-    VarContents:TZctnrVectorGDBString;
-    ps{,pspred}:pgdbstring;
+    name,content:String;
+    VarContents:TZctnrVectorStrings;
+    ps{,pspred}:pString;
     pentvarext:TVariablesExtender;
 begin
   if operands<>''then
@@ -2436,7 +2439,7 @@ begin
     pvd:=pentvarext.entityunit.FindVariable(name);
     if pvd<>nil then
     begin
-         content:=pvd.data.PTD.GetValueAsString(pvd.data.Instance);
+         content:=pvd.data.PTD.GetValueAsString(pvd.data.Addr.Instance);
     end
        else
            begin
@@ -2464,7 +2467,7 @@ begin
 end;
 
 function _Cable_com_Invert(operands:TCommandOperands):TCommandResult;
-var //i: GDBInteger;
+var //i: Integer;
     pv:pGDBObjEntity;
     ir:itrec;
     DC:TDrawContext;
@@ -2486,7 +2489,7 @@ begin
   result:=cmd_ok;
 end;
 function _Cable_com_Join(operands:TCommandOperands):TCommandResult;
-var //i: GDBInteger;
+var //i: Integer;
     pv:pGDBObjEntity;
     pc1,pc2:PGDBObjCable;
     pv11,pv12,pv21,pv22:Pgdbvertex;
@@ -2569,7 +2572,7 @@ else
   result:=cmd_ok;
 end;
 function Find_com(operands:TCommandOperands):TCommandResult;
-//var i: GDBInteger;
+//var i: Integer;
    // pv:pGDBObjEntity;
    // ir:itrec;
 begin
@@ -2582,20 +2585,20 @@ end;
 procedure commformat;
 var pv,pvlast:pGDBObjEntity;
     v:pvardesk;
-    varvalue,sourcestr,varname:gdbstring;
+    varvalue,sourcestr,varname:String;
     ir:itrec;
     count:integer;
     //a:HandledMsg;
-    tpz{, glx1, gly1}: GDBDouble;
+    tpz{, glx1, gly1}: Double;
   {fv1,}{tp,}wcsLBN,wcsRTF,dcsLBN,dcsRTF: GDBVertex;
-    findvarvalue:gdbboolean;
+    findvarvalue:Boolean;
     DC:TDrawContext;
     pentvarext:TVariablesExtender;
 begin
   drawings.GetCurrentDWG.SelObjArray.Free;
   drawings.GetCurrentROOT.ObjArray.DeSelect(drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount,drawings.GetCurrentDWG^.deselector);
    case FindDeviceParam.FindType of
-      tft_obozn:begin
+      TFT_Obozn:begin
                      varname:=('NMO_Name');
                 end;
       TFT_DBLink:begin
@@ -2604,6 +2607,7 @@ begin
       TFT_DESC_MountingDrawing:begin
                      varname:=('DESC_MountingDrawing');
                 end;
+      TFT_variable:;//заглушка для warning
    end;
 
   sourcestr:=uppercase(FindDeviceParam.FindString);
@@ -2619,7 +2623,7 @@ begin
         v:=pentvarext.entityunit.FindVariable(varname);
         if v<>nil then
         begin
-             varvalue:=uppercase(v^.data.PTD.GetValueAsString(v^.data.Instance));
+             varvalue:=uppercase(v^.data.PTD.GetValueAsString(v^.data.Addr.Instance));
              findvarvalue:=true;
         end;
 
@@ -2690,18 +2694,19 @@ begin
   //drawings.GetCurrentDWG.ConstructObjRoot.calcvisible;
   end;
   zcRedrawCurrentDrawing;
-  ZCMsgCallBackInterface.TextMessage('Найдено '+inttostr(count)+' объектов',TMWOHistoryOut);
+  //ZCMsgCallBackInterface.TextMessage('Найдено '+inttostr(count)+' объектов',TMWOHistoryOut);
+  ZCMsgCallBackInterface.TextMessage(format('Founded %d entities',[count]),TMWOHistoryOut);
 end;
 function _Cable_mark_com(operands:TCommandOperands):TCommandResult;
-var //i: GDBInteger;
+var //i: Integer;
     pv:pGDBObjDevice;
     ir{,irincable,ir_inNodeArray}:itrec;
-    //filename,cablename,CableMaterial,CableLength,devstart,devend: GDBString;
+    //filename,cablename,CableMaterial,CableLength,devstart,devend: String;
     //handle:cardinal;
     pvn{,pvm,pvmc,pvl}:pvardesk;
     //nodeend,nodestart:PTNodeProp;
 
-    //line:gdbstring;
+    //line:String;
     cman:TCableManager;
     pcd:PTCableDesctiptor;
     DC:TDrawContext;
@@ -2721,7 +2726,7 @@ begin
               pvn:=pentvarext.entityunit.FindVariable('CableName');
               if (pvn<>nil) then
               begin
-                   pcd:=cman.Find(pstring(pvn^.data.Instance)^);
+                   pcd:=cman.Find(pstring(pvn^.data.Addr.Instance)^);
                    if pcd<>nil then
                    begin
                         Cable2CableMark(pcd,pv);
@@ -2731,19 +2736,20 @@ begin
                                         pvmc:=pcd^.StartSegment^.FindVariable('DB_link');
                                         if pvmc<>nil then
                                         begin
-                                        line:=pstring(pvmc^.data.Instance)^;
-                                        pstring(pvm^.data.Instance)^:=line;
+                                        line:=pstring(pvmc^.Instance)^;
+                                        pstring(pvm^.Instance)^:=line;
                                         end
                                         else
-                                            pgdbstring(pvm^.data.Instance)^:='Не определен';
+                                            pString(pvm^.Instance)^:='Не определен';
                                     end;
                        pvl:=pv^.ou.FindVariable('CableLength');
                        if pvl<>nil then
-                                       pgdbdouble(pvl^.data.Instance)^:=pcd^.length;}
+                                       pDouble(pvl^.Instance)^:=pcd^.length;}
                        pv^.Formatentity(drawings.GetCurrentDWG^,dc);
                    end
                       else
-                          ZCMsgCallBackInterface.TextMessage('Кабель "'+pstring(pvn^.data.Instance)^+'" на плане не найден',TMWOHistoryOut);
+                          //ZCMsgCallBackInterface.TextMessage('Кабель "'+pstring(pvn^.data.Addr.Instance)^+'" на плане не найден',TMWOHistoryOut);
+                          ZCMsgCallBackInterface.TextMessage(format('Cable %s not found on plan',[pstring(pvn^.data.Addr.Instance)^]),TMWOHistoryOut);
               end;
          end;
     end;
@@ -2754,7 +2760,7 @@ begin
   cman.done;
   result:=cmd_ok;
 end;
-function El_Leader_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
+function El_Leader_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
 var //po:PGDBObjSubordinated;
     pleader:PGDBObjElLeader;
     domethod,undomethod:tmethod;
@@ -2775,8 +2781,8 @@ begin
        then
        begin
             PGDBObjEntity(osp^.PGDBObject)^.formatentity(drawings.GetCurrentDWG^,dc);
-            //PGDBObjEntity(osp^.PGDBObject)^.ObjToGDBString('Found: ','');
-            ZCMsgCallBackInterface.TextMessage(PGDBObjline(osp^.PGDBObject)^.ObjToGDBString('Found: ',''),TMWOHistoryOut);
+            //PGDBObjEntity(osp^.PGDBObject)^.ObjToString('Found: ','');
+            ZCMsgCallBackInterface.TextMessage(PGDBObjline(osp^.PGDBObject)^.ObjToString('Found: ',''),TMWOHistoryOut);
             //po:=PGDBObjEntity(osp^.PGDBObject)^.getowner;
             pold:=osp^.PGDBObject;
        end
@@ -2787,7 +2793,7 @@ begin
     begin
     PCreatedGDBLine^.bp.ListPos.Owner:=drawings.GetCurrentROOT;
 
-  GDBGetMem({$IFDEF DEBUGBUILD}'{33202D9B-6197-4A09-8BC8-1D24AA3053DA}',{$ENDIF}pointer(pleader),sizeof(GDBObjElLeader));
+  Getmem(pointer(pleader),sizeof(GDBObjElLeader));
   pleader^.initnul;
   //pleader^.ou.copyfrom(units.findunit('_riser'));
   pleader^.scale:=ELLeaderComParam.Scale;
@@ -2831,7 +2837,7 @@ begin
   result:=cmd_ok;
 end;
 function _Cable_com_Manager(operands:TCommandOperands):TCommandResult;
-//var i: GDBInteger;
+//var i: Integer;
     //pv:pGDBObjEntity;
     //ir:itrec;
 begin
@@ -2841,11 +2847,11 @@ begin
         result:=cmd_ok;
 end;
 function _Ren_n_to_0n_com(operands:TCommandOperands):TCommandResult;
-var {i,}len: GDBInteger;
+var {i,}len: Integer;
     pv:pGDBObjEntity;
     ir:itrec;
     pvd{,pvn,pvm,pvmc,pvl}:pvardesk;
-    name:gdbstring;
+    name:String;
     pentvarext:TVariablesExtender;
 begin
   pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
@@ -2857,15 +2863,16 @@ begin
          pvd:=pentvarext.entityunit.FindVariable('NMO_Name');
          if pvd<>nil then
                          begin
-                              name:=pgdbstring(pvd.data.Instance)^;
+                              name:=pString(pvd.data.Addr.Instance)^;
                               len:=length(name);
                               if len=3 then
                               if name[len] in ['0'..'9'] then
                               if not(name[len-1] in ['0'..'9']) then
                               begin
                                    name:=system.copy(name,1,len-1)+'0'+system.copy(name,len,1);
-                                   pgdbstring(pvd.data.Instance)^:=name;
-                                   ZCMsgCallBackInterface.TextMessage('Переименован кабель '+name,TMWOHistoryOut);
+                                   pString(pvd.data.Addr.Instance)^:=name;
+                                   //ZCMsgCallBackInterface.TextMessage('Переименован кабель '+name,TMWOHistoryOut);
+                                   ZCMsgCallBackInterface.TextMessage(format('Cable %s renamed',[name]),TMWOHistoryOut);
                               end
                                  {else
                                      ZCMsgCallBackInterface.TextMessage(name);;}
@@ -2876,11 +2883,11 @@ begin
   result:=cmd_ok;
 end;
 function _SelectMaterial_com(operands:TCommandOperands):TCommandResult;
-var //i,len: GDBInteger;
+var //i,len: Integer;
     pv:pGDBObjEntity;
     ir:itrec;
     pvd{,pvn,pvm,pvmc,pvl}:pvardesk;
-    mat:gdbstring;
+    mat:String;
     pentvarext:TVariablesExtender;
 begin
   pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
@@ -2893,11 +2900,11 @@ begin
          pvd:=pentvarext.entityunit.FindVariable('DB_link');
          if pvd<>nil then
                          begin
-                              mat:=pgdbstring(pvd.data.Instance)^;
+                              mat:=pString(pvd.data.Addr.Instance)^;
                               if uppercase(mat)=uppercase(operands) then
                                                                         begin
                                                                         //pv^.Select;
-                                                                        pgdbstring(pvd.data.Instance)^:='ТППэП 20х2х0.5';
+                                                                        pString(pvd.data.Addr.Instance)^:='ТППэП 20х2х0.5';
                                                                         end;
                          end;
     end;
@@ -2928,7 +2935,7 @@ repeat
       CurrentSubObj:=CurrentObj^.VarObjArray.iterate(ir_inDevice);
 until CurrentSubObj=nil;
 end;
-function CreateCable(name,mater:gdbstring):PGDBObjCable;
+function CreateCable(name,mater:String):PGDBObjCable;
 var
     //vd,pvn,pvn2: pvardesk;
     pvd{,pvd2}:pvardesk;
@@ -2936,24 +2943,24 @@ var
 begin
   result := AllocCable;
   result.init(drawings.GetCurrentROOT,nil,0);
-  //result := GDBPointer(drawings.GetCurrentROOT.ObjArray.CreateInitObj(GDBCableID,drawings.GetCurrentROOT));
+  //result := Pointer(drawings.GetCurrentROOT.ObjArray.CreateInitObj(GDBCableID,drawings.GetCurrentROOT));
   pentvarext:=result^.GetExtension<TVariablesExtender>;
   pentvarext.entityunit.copyfrom(units.findunit(SupportPath,InterfaceTranslate,'cable'));
   pvd:=pentvarext.entityunit.FindVariable('NMO_Suffix');
-  pstring(pvd^.data.Instance)^:='';
+  pstring(pvd^.data.Addr.Instance)^:='';
   pvd:=pentvarext.entityunit.FindVariable('NMO_Prefix');
-  pstring(pvd^.data.Instance)^:='';
+  pstring(pvd^.data.Addr.Instance)^:='';
   pvd:=pentvarext.entityunit.FindVariable('NMO_BaseName');
-  pstring(pvd^.data.Instance)^:='';
+  pstring(pvd^.data.Addr.Instance)^:='';
   pvd:=pentvarext.entityunit.FindVariable('NMO_Template');
-  pstring(pvd^.data.Instance)^:='';
+  pstring(pvd^.data.Addr.Instance)^:='';
   pvd:=pentvarext.entityunit.FindVariable('NMO_Name');
-  pstring(pvd^.data.Instance)^:=name;
+  pstring(pvd^.data.Addr.Instance)^:=name;
   pvd:=pentvarext.entityunit.FindVariable('DB_link');
-  pstring(pvd^.data.Instance)^:=mater;
+  pstring(pvd^.data.Addr.Instance)^:=mater;
 
   pvd:=pentvarext.entityunit.FindVariable('CABLE_AutoGen');
-  pgdbboolean(pvd^.data.Instance)^:=true;
+  pBoolean(pvd^.data.Addr.Instance)^:=true;
   zcSetEntPropFromCurrentDrawingProp(result);
   drawings.standardization(result,GDBCableID);
 end;
@@ -2962,7 +2969,7 @@ function _El_ExternalKZ_com(operands:TCommandOperands):TCommandResult;
 var
     FDoc: TCSVDocument;
     isload:boolean;
-    s: GDBString;
+    s: String;
     row,col:integer;
     startdev,enddev,riser,riser2:PGDBObjDevice;
     supernet,net,net2:PGDBObjNet;
@@ -2981,25 +2988,29 @@ var
     DC:TDrawContext;
     priservarext,priser2varext,psupernetvarext,pnetvarext,plinevarext:TVariablesExtender;
     lph:TLPSHandle;
-procedure GetStartEndPin(startdevname,enddevname:GDBString);
+procedure GetStartEndPin(startdevname,enddevname:String);
 begin
   PGDBObjEntity(startdev):=drawings.FindEntityByVar(GDBDeviceID,'NMO_Name',startdevname);
   PGDBObjEntity(enddev):=drawings.FindEntityByVar(GDBDeviceID,'NMO_Name',enddevname);
   if startdev=nil then
-                      ZCMsgCallBackInterface.TextMessage('В строке '+inttostr(row)+' не найдено стартовое устройство '+startdevname,TMWOHistoryOut)
+                      //ZCMsgCallBackInterface.TextMessage('В строке '+inttostr(row)+' не найдено стартовое устройство '+startdevname,TMWOHistoryOut)
+                      ZCMsgCallBackInterface.TextMessage(format('In row %d startdevice "%s" not found',[row,startdevname]),TMWOHistoryOut)
                   else
                       begin
                       startdev:=findconnector(startdev);
                       if startdev=nil then
-                                          ZCMsgCallBackInterface.TextMessage('В строке '+inttostr(row)+' не найден коннектор стартового устройства '+startdevname,TMWOHistoryOut);
+                                          //ZCMsgCallBackInterface.TextMessage('В строке '+inttostr(row)+' не найден коннектор стартового устройства '+startdevname,TMWOHistoryOut);
+                                          ZCMsgCallBackInterface.TextMessage(format('In row %d startdevice "%s" connector not found',[row,startdevname]),TMWOHistoryOut)
                       end;
   if enddev=nil then
-                      ZCMsgCallBackInterface.TextMessage('В строке '+inttostr(row)+' не найдено конечное устройство '+enddevname,TMWOHistoryOut)
+                    //ZCMsgCallBackInterface.TextMessage('В строке '+inttostr(row)+' не найдено конечное устройство '+enddevname,TMWOHistoryOut)
+                    ZCMsgCallBackInterface.TextMessage(format('In row %d enddevice "%s" not found',[row,enddevname]),TMWOHistoryOut)
                   else
                       begin
                       enddev:=findconnector(enddev);
                       if enddev=nil then
-                                          ZCMsgCallBackInterface.TextMessage('В строке '+inttostr(row)+' не найден коннектор конечного устройства '+enddevname,TMWOHistoryOut);
+                                        //ZCMsgCallBackInterface.TextMessage('В строке '+inttostr(row)+' не найден коннектор конечного устройства '+enddevname,TMWOHistoryOut);
+                                        ZCMsgCallBackInterface.TextMessage(format('In row %d enddevice "%s" connector not found',[row,enddevname]),TMWOHistoryOut);
 
                       end;
 end;
@@ -3027,7 +3038,7 @@ begin
 end;
 
 begin
-  linesarray.init({$IFDEF DEBUGBUILD}'{B2D2F2AE-360B-4755-8DE8-A950788B7533}',{$ENDIF}10);
+  linesarray.init(10);
   dc:=drawings.GetCurrentDWG^.CreateDrawingRC;
   if length(operands)=0 then
                      begin
@@ -3053,13 +3064,13 @@ begin
   isload:=FileExists(utf8tosys(s));
   if isload then
   begin
-       processednets.init({$IFDEF DEBUGBUILD}'{01A8C9B3-E4A9-4A72-9697-A7049151B7B7}',{$ENDIF}100);
-       supernetsarray.init({$IFDEF DEBUGBUILD}'{B8FBA153-889E-4FC7-AF16-5DE56A14A72F}',{$ENDIF}100);
+       processednets.init(100);
+       supernetsarray.init(100);
        FDoc:=TCSVDocument.Create;
        FDoc.Delimiter:=';';
        FDoc.LoadFromFile(utf8tosys(s));
        lph:=lps.StartLongProcess('Create cables',nil,FDoc.RowCount);
-       netarray.init({$IFDEF DEBUGBUILD}'{6FC12C96-F62C-47A3-A5B4-35D9564DB25E}',{$ENDIF}100);
+       netarray.init(100);
        for row:=0 to FDoc.RowCount-1 do
        begin
             if FDoc.ColCount[row]>4 then
@@ -3073,7 +3084,8 @@ begin
                  begin
                   PGDBaseObject(net):=netarray.getDataMutable(0);
                  if net=nil then
-                                     ZCMsgCallBackInterface.TextMessage('В строке '+inttostr(row)+' не найдена трасса '+FDoc.Cells[3,row],TMWOHistoryOut);
+                                //ZCMsgCallBackInterface.TextMessage('В строке '+inttostr(row)+' не найдена трасса '+FDoc.Cells[3,row],TMWOHistoryOut);
+                                ZCMsgCallBackInterface.TextMessage(format('In row %d trace "%s" not found',[row,FDoc.Cells[3,row]]),TMWOHistoryOut);
                  if (net<>nil) then
                  begin
                  if (startdev<>nil)and(enddev<>nil) then
@@ -3095,7 +3107,7 @@ begin
 
                           if supernet=nil then
                           begin
-                          riserarray.init({$IFDEF DEBUGBUILD}'{FC1F0E75-3A1C-4144-A901-7DCE7B8BB0BB}',{$ENDIF}100);
+                          riserarray.init(100);
                           drawings.FindMultiEntityByVar2(GDBDeviceID,'RiserName',riserarray);
 
                           LinkRisersToNets;
@@ -3124,11 +3136,11 @@ begin
                                                   pvd2:=priser2varext.entityunit.FindVariable('RiserName');
                                                   if (pvd<>nil)and(pvd2<>nil) then
                                                   begin
-                                                       if pstring(pvd^.data.Instance)^=pstring(pvd2^.data.Instance)^then
+                                                       if pstring(pvd^.data.Addr.Instance)^=pstring(pvd2^.data.Addr.Instance)^then
                                                        begin
                                                             if supernet=nil then
                                                             begin
-                                                                 gdbgetmem({$IFDEF DEBUGBUILD}'{79828350-69E9-418A-A023-BB8B187639A1}',{$ENDIF}supernet,sizeof(GDBObjNet));
+                                                                 Getmem(supernet,sizeof(GDBObjNet));
                                                                  supernet.initnul(nil);
                                                                  psupernetvarext:=supernet.GetExtension<TVariablesExtender>;
                                                                  psupernetvarext.entityunit.copyfrom(@pnetvarext.entityunit);
@@ -3157,7 +3169,7 @@ begin
                                                                 pvn2:=FindVariableInEnt(riser,'Elevation');
                                                                 if (pvn<>nil)and(pvn2<>nil)and(vd<>nil)then
                                                                 begin
-                                                                     pgdbdouble(vd^.data.Instance)^:=abs(pgdbdouble(pvn^.data.Instance)^-pgdbdouble(pvn2^.data.Instance)^);
+                                                                     pDouble(vd^.data.Addr.Instance)^:=abs(pDouble(pvn^.data.Addr.Instance)^-pDouble(pvn2^.data.Addr.Instance)^);
                                                                 end;
                                                                 New_line^.Formatentity(drawings.GetCurrentDWG^,dc);
                                                                 supernet^.ObjArray.AddPEntity(New_line^);
@@ -3214,7 +3226,8 @@ begin
                           segments.done;
                           end
                           else
-                              ZCMsgCallBackInterface.TextMessage('В строке '+inttostr(row)+' обнаружено несколько не связанных трасс "'+FDoc.Cells[3,row],TMWOShowError);
+                              //ZCMsgCallBackInterface.TextMessage('В строке '+inttostr(row)+' обнаружено несколько не связанных трасс "'+FDoc.Cells[3,row],TMWOShowError);
+                              ZCMsgCallBackInterface.TextMessage(format('In row %d several unlinced traces "%s" found',[row,FDoc.Cells[3,row]]),TMWOHistoryOut);
                           end
                           else begin
                             if uppercase(FDoc.Cells[3,row])='DIRECTLY' then begin
@@ -3224,14 +3237,16 @@ begin
                               Cable^.Formatentity(drawings.GetCurrentDWG^,dc);
                               Cable^.RenderFeedback(drawings.GetCurrentDWG.pcamera^.POSCOUNT,drawings.GetCurrentDWG.pcamera^,drawings.GetCurrentDWG^.myGluProject2,dc);
                             end else
-                              ZCMsgCallBackInterface.TextMessage('В строке "'+inttostr(row)+'" обнаружена трасса "'+FDoc.Cells[3,row]+'" отсутствующая в чертеже((',TMWOShowError);
+                              //ZCMsgCallBackInterface.TextMessage('В строке "'+inttostr(row)+'" обнаружена трасса "'+FDoc.Cells[3,row]+'" отсутствующая в чертеже((',TMWOShowError);
+                              ZCMsgCallBackInterface.TextMessage(format('In row %d trace "%s" not found in drawing',[row,FDoc.Cells[3,row]]),TMWOHistoryOut);
                             end;
                           end;
 
             end
             else
                 begin
-                ZCMsgCallBackInterface.TextMessage('В строке '+inttostr(row)+'мало параметров',TMWOHistoryOut);
+                //ZCMsgCallBackInterface.TextMessage('В строке '+inttostr(row)+'мало параметров',TMWOHistoryOut);
+                ZCMsgCallBackInterface.TextMessage(format('In row %d too few parameters',[row]),TMWOHistoryOut);
                 for col:=0 to FDoc.ColCount[row] do
                 ZCMsgCallBackInterface.TextMessage(FDoc.Cells[col,row],TMWOHistoryOut);
                 end;
@@ -3258,14 +3273,15 @@ begin
        lps.EndLongProcess(lph)
   end
             else
-     ZCMsgCallBackInterface.TextMessage('GDBCommandsElectrical.El_ExternalKZ: Не могу открыть файл: '+s+'('+Operands+')',TMWOShowError);
+     //ZCMsgCallBackInterface.TextMessage('GDBCommandsElectrical.El_ExternalKZ: Не могу открыть файл: '+s+'('+Operands+')',TMWOShowError);
+     ZCMsgCallBackInterface.TextMessage(format('GDBCommandsElectrical.El_ExternalKZ: can''t open file: "%s"("%s")',[s,Operands]),TMWOShowError);
 end;
 function _AutoGenCableRemove_com(operands:TCommandOperands):TCommandResult;
-var //i,len: GDBInteger;
+var //i,len: Integer;
     pv:pGDBObjEntity;
     ir:itrec;
     pvd{,pvn,pvm,pvmc,pvl}:pvardesk;
-    //mat:gdbstring;
+    //mat:String;
 begin
   pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
   if pv<>nil then
@@ -3276,7 +3292,7 @@ begin
          pvd:=FindVariableInEnt(pv,'CABLE_AutoGen');
          if pvd<>nil then
                          begin
-                              if pgdbboolean(pvd^.data.Instance)^ then
+                              if pBoolean(pvd^.data.Addr.Instance)^ then
                                                                         begin
                                                                         pv^.YouDeleted(drawings.GetCurrentDWG^);
                                                                         end;
@@ -3298,7 +3314,7 @@ function _test_com(operands:TCommandOperands):TCommandResult;
 var
     p:GDBVertex;
     pet:CMDLinePromptParser.TGeneralParsedText;
-    ts:utf8string;
+    //ts:utf8string;
     gr:TGetResult;
 begin
      ZCMsgCallBackInterface.TextMessage('Тест производительности. запасаемя терпением',TMWOHistoryOut);
@@ -3317,6 +3333,7 @@ begin
              GRId:ZCMsgCallBackInterface.TextMessage('Id:'+inttostr(commandmanager.GetLastId),TMWOHistoryOut);
          GRNormal:ZCMsgCallBackInterface.TextMessage('Normal',TMWOHistoryOut);
           GRInput:ZCMsgCallBackInterface.TextMessage('Input:'+commandmanager.GetLastInput,TMWOHistoryOut);
+          GRCancel:ZCMsgCallBackInterface.TextMessage('Cancel',TMWOHistoryOut);
        end;
      until gr=GRCancel;
      //for i:=0 to 10000 do
@@ -3407,8 +3424,8 @@ begin
           if (pvd<>nil)and(pvd2<>nil) then begin
             startnodename:=PointerToNodeName(nodestart);
             endnodename:=PointerToNodeName(nodeend);
-            startnodelabel:=pstring(pvd^.data.Instance)^;
-            endnodelabel:=pstring(pvd2^.data.Instance)^;
+            startnodelabel:=pstring(pvd^.data.Addr.Instance)^;
+            endnodelabel:=pstring(pvd2^.data.Addr.Instance)^;
 
             if not alreadywrite.ContainsKey(nodestart) then begin
               ZCMsgCallBackInterface.TextMessage(format(' %s [label="%s"]',[startnodename,startnodelabel]),TMWOHistoryOut);
@@ -3417,8 +3434,6 @@ begin
             if not alreadywrite.ContainsKey(nodeend) then begin
               ZCMsgCallBackInterface.TextMessage(format(' %s [label="%s"]',[endnodename,endnodelabel]),TMWOHistoryOut);
               alreadywrite.add(nodeend,1);
-              if endnodelabel='П1-ШУ' then
-                endnodelabel:=endnodelabel;
             end;
             ZCMsgCallBackInterface.TextMessage(format(' %s->%s [label="%s"]',[startnodename,endnodename,pv^.Name]),TMWOHistoryOut);
             nodestart:=nodeend;
@@ -3445,7 +3460,7 @@ end;
 
 procedure startup;
 //var
-  // s:gdbstring;
+  // s:String;
 begin
   MainSpecContentFormat.init(100);
   MainSpecContentFormat.loadfromfile(FindInSupportPath(SupportPath,'main.sf'));
@@ -3474,12 +3489,12 @@ begin
   CreateCommandFastObjectPlugin(@_AutoGenCableRemove_com,'EL_AutoGen_Cable_Remove',CADWG,0);
   CreateCommandFastObjectPlugin(@Connection2Dot_com,'Connection2Dot',CADWG,0);
 
-  EM_SRBUILD.init('EM_SRBUILD',CADWG,0);
-  EM_SEPBUILD.init('EM_SEPBUILD',CADWG,0);
+  //EM_SRBUILD.init('EM_SRBUILD',CADWG,0);
+  //EM_SEPBUILD.init('EM_SEPBUILD',CADWG,0);
   KIP_CDBuild.init('KIP_CDBuild',CADWG,0);
   KIP_LugTableBuild.init('KIP_LugTableBuild',CADWG,0);
 
-  EM_SEPBUILD.SetCommandParam(@em_sepbuild_params,'PTBasicFinter');
+  //EM_SEPBUILD.SetCommandParam(@em_sepbuild_params,'PTBasicFinter');
 
   CreateCommandRTEdObjectPlugin(@ElLeaser_com_CommandStart,@Line_com_CommandEnd,nil,nil,@Line_com_BeforeClick,@El_Leader_com_AfterClick,nil,nil,'El_Leader',0,0);
   pfindcom:=CreateCommandRTEdObjectPlugin(@Find_com,nil,nil,@commformat,nil,nil,nil,nil,'El_Find',0,0);

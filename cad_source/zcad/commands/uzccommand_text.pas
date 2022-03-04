@@ -15,22 +15,23 @@
 {
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
-{$MODE OBJFPC}
+{$MODE OBJFPC}{$H+}
 unit uzccommand_text;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
   SysUtils,
-  gzctnrvectortypes,zcmultiobjectcreateundocommand,
+  gzctnrvectortypes,
   uzgldrawcontext,
-  uzbtypesbase,
+  
   uzbtypes,
   uzcdrawings,
   uzeutils,uzcutils,
   URecordDescriptor,typedescriptors,uzeentityfactory,uzegeometry,Varman,
-  uzccommandsabstract,uzccmdfloatinsert,uzeenttext,uzeentmtext,uzcinterface,uzcstrconsts,uzccommandsmanager,
-  uzeentity,LazLogger,uzctnrvectorgdbstring,uzestylestexts,uzeconsts,uzcsysvars,uzctextenteditor;
+  uzccommandsabstract,uzccmdfloatinsert,uzeentabstracttext,uzeenttext,uzeentmtext,
+  uzcinterface,uzcstrconsts,uzccommandsmanager,
+  uzeentity,LazLogger,uzctnrvectorstrings,uzestylestexts,uzeconsts,uzcsysvars,uzctextenteditor;
 type
 {EXPORT+}
   {REGISTEROBJECTTYPE TextInsert_com}
@@ -54,13 +55,13 @@ TTextInsertParams=record
                    mode:TIMode;(*'Entity'*)
                    Style:TEnumData;(*'Style'*)
                    justify:TTextJustify;(*'Justify'*)
-                   h:GDBDouble;(*'Height'*)
-                   WidthFactor:GDBDouble;(*'Width factor'*)
-                   Oblique:GDBDouble;(*'Oblique'*)
-                   Width:GDBDouble;(*'Width'*)
-                   LineSpace:GDBDouble;(*'Line space factor'*)
-                   text:GDBAnsiString;(*'Text'*)
-                   runtexteditor:GDBBoolean;(*'Run text editor'*)
+                   h:Double;(*'Height'*)
+                   WidthFactor:Double;(*'Width factor'*)
+                   Oblique:Double;(*'Oblique'*)
+                   Width:Double;(*'Width'*)
+                   LineSpace:Double;(*'Line space factor'*)
+                   text:TDXFEntsInternalStringType;(*'Text'*)
+                   runtexteditor:Boolean;(*'Run text editor'*)
              end;
 
 implementation
@@ -81,7 +82,7 @@ begin
              PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('Width',FA_READONLY,0);
              PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('LineSpace',FA_READONLY,0);
 
-                pt := GDBPointer(AllocEnt(GDBTextID));
+                pt := Pointer(AllocEnt(GDBTextID));
                 pt^.init(@drawings.GetCurrentDWG^.ConstructObjRoot,drawings.GetCurrentDWG^.GetCurrentLayer,sysvar.dwg.DWG_CLinew^,'',nulvertex,2.5,0,1,0,jstl);
                 zcSetEntPropFromCurrentDrawingProp(pt);
            end;
@@ -93,7 +94,7 @@ begin
                 PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('Width',0,FA_READONLY);
                 PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('LineSpace',0,FA_READONLY);
 
-                pt := GDBPointer(AllocEnt(GDBMTextID));
+                pt := Pointer(AllocEnt(GDBMTextID));
                 pgdbobjmtext(pt)^.init(@drawings.GetCurrentDWG^.ConstructObjRoot,drawings.GetCurrentDWG^.GetCurrentLayer,sysvar.dwg.DWG_CLinew^,
                                   '',nulvertex,2.5,0,1,0,jstl,10,1);
                 zcSetEntPropFromCurrentDrawingProp(pt);
@@ -117,10 +118,10 @@ begin
 
 end;
 
-function GetStyleNames(var BDefNames:TZctnrVectorGDBString;selname:GDBString):GDBInteger;
+function GetStyleNames(var BDefNames:TZctnrVectorStrings;selname:String):Integer;
 var pb:PGDBTextStyle;
     ir:itrec;
-    i:gdbinteger;
+    i:Integer;
 begin
      result:=-1;
      i:=0;
@@ -184,7 +185,7 @@ begin
      pt^.vp.Layer:=drawings.GetCurrentDWG^.GetCurrentLayer;
      pt^.vp.LineWeight:=sysvar.dwg.DWG_CLinew^;
      //pt^.TXTStyleIndex:=drawings.GetCurrentDWG^.TextStyleTable.getMutableData(TextInsertParams.Style.Selected);
-     pt^.TXTStyleIndex:=drawings.GetCurrentDWG^.TextStyleTable.FindStyle(pgdbstring(TextInsertParams.Style.Enums.getDataMutable(TextInsertParams.Style.Selected))^,false);
+     pt^.TXTStyleIndex:=drawings.GetCurrentDWG^.TextStyleTable.FindStyle(pString(TextInsertParams.Style.Enums.getDataMutable(TextInsertParams.Style.Selected))^,false);
      pt^.textprop.size:=TextInsertParams.h;
      pt^.Content:='';
      pt^.Template:=(TextInsertParams.text);
@@ -228,7 +229,7 @@ begin
   TextInsertParams.h:=2.5;
   TextInsertParams.Oblique:=0;
   TextInsertParams.WidthFactor:=1;
-  TextInsertParams.justify:=uzbtypes.jstl;
+  TextInsertParams.justify:=uzeentabstracttext.jstl;
   TextInsertParams.text:='text';
   TextInsertParams.runtexteditor:=false;
   TextInsertParams.Width:=100;

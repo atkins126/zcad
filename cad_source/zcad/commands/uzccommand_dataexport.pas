@@ -20,7 +20,7 @@
   {$MODE DELPHI}
 {$ENDIF}
 unit uzccommand_dataexport;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -39,7 +39,7 @@ uses
   uzeparserenttypefilter,uzeparserentpropfilter,uzeentitiestypefilter,
   uzelongprocesssupport,uzeparser,uzcoimultiproperties,uzedimensionaltypes,
   uzcoimultipropertiesutil,varmandef,uzcvariablesutils,Masks,uzcregother,
-  uzbtypesbase,uzeparsercmdprompt,uzcinterface,uzcdialogsfiles;
+  uzeparsercmdprompt,uzcinterface,uzcdialogsfiles;
 
 resourcestring
   RSCLPDataExportWaitFile                ='Configure export ${"&[p]arams",Keys[p],StrId[CLPIdOptions]}, run ${"&[f]ile dialog",Keys[f],StrId[CLPIdFileDialog]} or enter file name (empty for default):';
@@ -54,10 +54,10 @@ resourcestring
 type
   //** Тип данных для отображения в инспекторе опций
   TDataExportParam=record
-    EntFilter:PGDBString;
-    PropFilter:PGDBString;
-    Exporter:PGDBString;
-    FileName:PGDBString;
+    EntFilter:PString;
+    PropFilter:PString;
+    Exporter:PString;
+    FileName:PString;
   end;
 
 var
@@ -68,6 +68,7 @@ implementation
 type
   TDataExport=record
     FDoc:TCSVDocument;
+    f:TzeUnitsFormat;
     CurrentEntity:pGDBObjEntity;
   end;
 
@@ -177,7 +178,7 @@ begin
   if (ParsedOperands<>nil)
       and(ParsedOperands is TExporterParser.TParsedText)
       and((ParsedOperands as TExporterParser.TParsedText).Parts.size=3)then begin
-
+        op1:='';
         opResultParam.P.CodeUnitPos:=OnlyGetLength;
         opResultParam.L.CodeUnits:=0;
         TExporterParser.TGeneralParsedText.GetResultWithPart(Source,(ParsedOperands as TExporterParser.TParsedText).Parts.Mutable[0]^,data,op1,opResultParam);
@@ -211,6 +212,7 @@ begin
      and((ParsedOperands as TExporterParser.TParsedText).Parts.size=3)
      {and((ParsedOperands as TEntityFilterParser.TParsedTextWithOneToken).Part.TextInfo.TokenId=StringId)} then begin
          op1:=inttostr((ParsedOperands as TExporterParser.TParsedText).Parts.size);
+         op2:='';
          opResultParam.P.CodeUnitPos:=OnlyGetLength;
          opResultParam.L.CodeUnits:=0;
          TExporterParser.TGeneralParsedText.GetResultWithPart(Source,(ParsedOperands as TExporterParser.TParsedText).Parts.Mutable[0]^,data,op1,opResultParam);
@@ -246,7 +248,7 @@ class procedure TExport.StaticDoit(const Source:TRawByteStringManipulator.TStrin
                                InsideBracketParser:TObject;
                                var Data:TDataExport);
 var
-  op1,op2:TRawByteStringManipulator.TStringType;
+  op1{,op2}:TRawByteStringManipulator.TStringType;
   ResultParam:TRawByteStringManipulator.TCharRange;
   i,r,c:integer;
 begin
@@ -254,6 +256,7 @@ begin
   c:=1;
   if (ParsedOperands<>nil)and(not(ParsedOperands is TExporterParser.TParsedTextWithoutTokens)) then begin
     if ParsedOperands is TExporterParser.TParsedTextWithOneToken then begin
+      op1:='';
       ResultParam.P.CodeUnitPos:=OnlyGetLength;
       ResultParam.L.CodeUnits:=0;
       TExporterParser.TGeneralParsedText.GetResultWithPart(Source,(ParsedOperands as TExporterParser.TParsedTextwithOnetoken).Part,data,op1,ResultParam);
@@ -296,7 +299,7 @@ procedure TGetEntParam.GetResult(const Source:TRawByteStringManipulator.TStringT
 var
   i:integer;
   mpd:TMultiPropertyDataForObjects;
-  f:TzeUnitsFormat;
+  //f:TzeUnitsFormat;
   ChangedData:TChangedData;
 begin
   if ResultParam.P.CodeUnitPos=OnlyGetLength then begin
@@ -305,14 +308,14 @@ begin
         ChangedData:=CreateChangedData(data.CurrentEntity,mpd.GSData);
         if @mpd.EntBeforeIterateProc<>nil then
           mpd.EntBeforeIterateProc({bip}mp.PIiterateData,ChangedData);
-        mpd.EntIterateProc({bip}mp.PIiterateData,ChangedData,mp,true,mpd.EntChangeProc,f);
-        tempresult:=mp.MPType.GetDecoratedValueAsString(PTOneVarData({bip}mp.PIiterateData)^.PVarDesc.data.Instance,f);
+        mpd.EntIterateProc({bip}mp.PIiterateData,ChangedData,mp,true,mpd.EntChangeProc,data.f);
+        tempresult:=mp.MPType.GetDecoratedValueAsString(PVarDesk(PTOneVarData(mp.PIiterateData)^.VDAddr.Instance).data.Addr.Instance,data.f);
       end else if mp.MPObjectsData.MyGetValue(TObjIDWithExtender.Create(PGDBObjEntity(data.CurrentEntity)^.GetObjType,nil),mpd) then begin
         ChangedData:=CreateChangedData(data.CurrentEntity,mpd.GSData);
         if @mpd.EntBeforeIterateProc<>nil then
           mpd.EntBeforeIterateProc({bip}mp.PIiterateData,ChangedData);
-        mpd.EntIterateProc({bip}mp.PIiterateData,ChangedData,mp,true,mpd.EntChangeProc,f);
-        tempresult:=mp.MPType.GetDecoratedValueAsString(PTOneVarData({bip}mp.PIiterateData)^.PVarDesc.data.Instance,f);
+        mpd.EntIterateProc({bip}mp.PIiterateData,ChangedData,mp,true,mpd.EntChangeProc,data.f);
+        tempresult:=mp.MPType.GetDecoratedValueAsString(PVarDesk(PTOneVarData(mp.PIiterateData)^.VDAddr.Instance).data.Addr.Instance,data.f);
       end else
         tempresult:='';
     end else
@@ -367,7 +370,7 @@ begin
   if data.CurrentEntity<>nil then
     pv:=FindVariableInEnt(data.CurrentEntity,variablename);
   if pv<>nil then
-    tempresult:=pv^.data.ptd^.GetValueAsString(pv^.data.Instance)
+    tempresult:=pv^.data.ptd^.GetValueAsString(pv^.data.Addr.Instance)
   else
     tempresult:='!!ERR('+variablename+')!!';
   ResultParam.L.CodeUnits:=Length(tempresult);
@@ -408,7 +411,7 @@ var
   ir:itrec;
   lpsh:TLPSHandle;
   Data:TDataExport;
-  inpt:gdbstring;
+  inpt:String;
   gr:TGetResult;
   CmdMode:TCmdMode;
   filename:string;
@@ -521,6 +524,8 @@ begin
     EntityIncluder:=ParserEntityPropFilter.GetTokens(DataExportParam.PropFilter^);
     lpsh:=LPSHEmpty;
 
+     Data.f:=drawings.GetUnitsFormat;
+     propdata.f:=Data.f;
      Data.FDoc:=TCSVDocument.Create;
        if drawings.GetCurrentDWG<>nil then
        begin
@@ -555,6 +560,7 @@ begin
     EntsTypeFilter.Free;
     EntityIncluder.Free;
   end;
+  result:=cmd_ok;
 end;
 
 initialization
@@ -563,19 +569,19 @@ initialization
   VU.init('test');
   VU.InterfaceUses.PushBackIfNotPresent(sysunit);
 
-  DataExportParam.EntFilter:=savedunit.FindOrCreateValue('tmpCmdParamSave_DataExportParam_EntFilter','GDBAnsiString');
+  DataExportParam.EntFilter:=savedunit.FindOrCreateValue('tmpCmdParamSave_DataExportParam_EntFilter','AnsiString').data.Addr.Instance;
   if DataExportParam.EntFilter^='' then
     DataExportParam.EntFilter^:='IncludeEntityName(''Cable'');'#13#10'IncludeEntityName(''Device'')';
-  DataExportParam.PropFilter:=savedunit.FindOrCreateValue('tmpCmdParamSave_DataExportParam_PropFilter','GDBAnsiString');
+  DataExportParam.PropFilter:=savedunit.FindOrCreateValue('tmpCmdParamSave_DataExportParam_PropFilter','AnsiString').data.Addr.Instance;
   //if DataExportParam.PropFilter^='' then
   //  DataExportParam.PropFilter:='';
-  DataExportParam.Exporter:=savedunit.FindOrCreateValue('tmpCmdParamSave_DataExportParam_Exporter','GDBAnsiString');
+  DataExportParam.Exporter:=savedunit.FindOrCreateValue('tmpCmdParamSave_DataExportParam_Exporter','AnsiString').data.Addr.Instance;
   if DataExportParam.Exporter^='' then
     DataExportParam.Exporter^:='DoIf(SameMask(%%(''EntityName''),''Device''),Export(%%(''EntityName''),''NMO_Name'',@@(''NMO_Name''),''Position'',@@(''Position'')))'+
                            #10+'DoIf(SameMask(%%(''EntityName''),''Device''),Export(%%(''EntityName''),''NMO_Name'',@@(''NMO_Name''),''Power'',@@(''Power'')))'+
                            #10+'DoIf(SameMask(%%(''EntityName''),''Cable''),Export(%%(''EntityName''),''NMO_Name'',@@(''NMO_Name''),''AmountD'',@@(''AmountD'')))'+
                            #10+'DoIf(SameMask(%%(''EntityName''),''Cable''),Export(%%(''EntityName''),''NMO_Name'',@@(''NMO_Name''),''CABLE_Segment'',@@(''CABLE_Segment'')))';
-  DataExportParam.FileName:=savedunit.FindOrCreateValue('tmpCmdParamSave_DataExportParam_FileName','GDBAnsiString');
+  DataExportParam.FileName:=savedunit.FindOrCreateValue('tmpCmdParamSave_DataExportParam_FileName','AnsiString').data.Addr.Instance;
   if DataExportParam.FileName^='' then
     DataExportParam.FileName^:='d:\test.csv';
 

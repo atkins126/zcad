@@ -17,12 +17,12 @@
 }
 
 unit uzccommand_loadmenus;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
  LCLProc,
- uzbpaths,uzccommandsabstract,uzccommandsimpl,uzbtypes,uzmenusmanager;
+ uzbpaths,uzccommandsabstract,uzccommandsimpl,uzmenusmanager;
 
 implementation
 function LoadMenus_com(operands:TCommandOperands):TCommandResult;

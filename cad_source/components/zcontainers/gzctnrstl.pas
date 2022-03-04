@@ -15,8 +15,7 @@
 {
 @author(Andrey Zubarev <zamtmn@yandex.ru>)
 }
-unit gzctnrstl;
-{$INCLUDE def.inc}
+unit gzctnrSTL;
 
 interface
 uses {$IFNDEF DELPHI}gutil,gmap,ghashmap,gvector,generics.collections,{$ENDIF}
@@ -39,7 +38,7 @@ end;
 end;
 {$IFNDEF DELPHI}TMyMapCounter <TKey> = class( TMyMap<TKey, SizeUInt>){$ENDIF}
  {$IFDEF DELPHI}TMyMapCounter <TKey, TCompare> = class( TMyMap<TKey, SizeUInt>){$ENDIF}
-  procedure CountKey(const key:TKey; const InitialCounter:SizeUInt);inline;
+  function CountKey(const key:TKey; const InitialCounter:SizeUInt):SizeUInt;inline;
 end;
 {$IFNDEF DELPHI}GKey2DataMap <TKey, TValue> = class(TMyMapGen<TKey, TValue>){$ENDIF}
  {$IFDEF DELPHI}GKey2DataMap <TKey, TValue> = class(TDictionary<TKey, TValue>){$ENDIF}
@@ -83,11 +82,11 @@ end;
   function MyGetValue(key:TKey; out Value:TValue):boolean;
 end;
 {$IFNDEF DELPHI}
-GDBStringHash=class
+StringHash=class
   class function hash(s:AnsiString; n:longint):SizeUInt;
 end;
 {$ENDIF}
-TMyGDBAnsiStringDictionary <TValue> = class(TMyHashMap<AnsiString, TValue{$IFNDEF DELPHI},GDBStringHash{$ENDIF}>)
+TMyAnsiStringDictionary <TValue> = class(TMyHashMap<AnsiString, TValue{$IFNDEF DELPHI},StringHash{$ENDIF}>)
 end;
 implementation
 {$IFDEF DELPHI}
@@ -157,7 +156,7 @@ begin
   for I := 1 to Length(s) do
     Result := ((Result shl 7) or (Result shr 25)) + Ord(s[I]);
 end;
-class function GDBStringHash.hash(s:AnsiString; n:longint):SizeUInt;
+class function StringHash.hash(s:AnsiString; n:longint):SizeUInt;
 begin
      result:=makehash(s) mod SizeUInt(n);
 end;
@@ -190,19 +189,23 @@ begin
   if LIndex < 0 then begin
     result:=false;
     PAValue:=nil;
-  end
-  else
+  end else begin
+    result:=true;
     PAValue:=@FItems[LIndex].Pair.Value;
+  end;
 end;
 
-procedure TMyMapCounter<TKey>.CountKey(const key:TKey; const InitialCounter:SizeUInt);
+function TMyMapCounter<TKey>.CountKey(const key:TKey; const InitialCounter:SizeUInt):SizeUInt;
 var
   PAValue:PValue;
 begin
-  if MyGetMutableValue(key,PAValue) then
-    inc(PAValue^)
-  else
+  if MyGetMutableValue(key,PAValue) then begin
+    inc(PAValue^);
+    result:=PAValue^;
+  end else begin
     add(key,InitialCounter);
+    result:=InitialCounter;
+  end;
 end;
 procedure TMyMap<TKey, TValue>.MyGetOrCreateValue(const key:TKey; var Value:TValue; out OutValue:TValue);
 {$IFNDEF DELPHI}

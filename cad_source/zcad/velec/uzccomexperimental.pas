@@ -15,7 +15,7 @@
 {
 @author(Andrey Zubarev <zamtmn@yandex.ru>)
 }
-{$mode objfpc}
+{$mode objfpc}{$H+}
 
 {**Модуль реализации чертежных команд (линия, круг, размеры и т.д.)}
 unit uzccomexperimental;
@@ -26,7 +26,7 @@ unit uzccomexperimental;
 { файл def.inc необходимо включать в начале каждого модуля zcad
   он содержит в себе централизованные настройки параметров компиляции  }
   
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -35,7 +35,7 @@ uses
     and actions }
   { подключеные модули, список будет меняться в зависимости от требуемых
     примитивов и действий с ними }
-  uzbgeomtypes,
+  uzegeometrytypes,
   sysutils, math, uzccomexample,uzccominteractivemanipulators,
 
   URecordDescriptor,TypeDescriptors,
@@ -79,7 +79,7 @@ uses
                       //системные переменные
   uzgldrawcontext,
   uzcinterface,
-  uzbtypesbase,uzbtypes, //base types
+  uzbtypes, //base types
                       //описания базовых типов
   uzeconsts, //base constants
                       //описания базовых констант
@@ -105,15 +105,15 @@ type
     PTEntityModifyData_Point_Scale_Rotation=^TEntityModifyData_Point_Scale_Rotation;
     TEntityModifyData_Point_Scale_Rotation=record
                                                  PInsert,Scale:GDBVertex;
-                                                 Rotate:GDBDouble;
+                                                 Rotate:Double;
                                                  PEntity:PGDBObjEntity;
                                            end;
 
 implementation
 
-procedure InteractiveBlockInsertManipulator( const PInteractiveData:GDBPointer;
+procedure InteractiveBlockInsertManipulator( const PInteractiveData:Pointer;
                                                    Point:GDBVertex;
-                                                   Click:GDBBoolean);
+                                                   Click:Boolean);
 var
     PBlockInsert : PGDBObjBlockInsert absolute PInteractiveData;
     dc:TDrawContext;
@@ -127,13 +127,13 @@ begin
    end;
 end;
 
-procedure InteractiveBlockScaleManipulator( const PInteractiveData:GDBPointer;
+procedure InteractiveBlockScaleManipulator( const PInteractiveData:Pointer;
                                                   Point:GDBVertex;
-                                                  Click:GDBBoolean);
+                                                  Click:Boolean);
 var
     PBlockInsert : PGDBObjBlockInsert;
     PInsert,vscale : GDBVertex;
-    rscale:GDBDouble;
+    rscale:Double;
     dc:TDrawContext;
 begin
   PBlockInsert:=pointer(PTEntityModifyData_Point_Scale_Rotation(PInteractiveData)^.PEntity);
@@ -154,13 +154,13 @@ begin
    end;
 end;
 
-procedure InteractiveBlockRotateManipulator( const PInteractiveData:GDBPointer;
+procedure InteractiveBlockRotateManipulator( const PInteractiveData:Pointer;
                                                    Point:GDBVertex;
-                                                   Click:GDBBoolean);
+                                                   Click:Boolean);
 var
     PBlockInsert : PGDBObjBlockInsert;
     PInsert,AngleVector : GDBVertex;
-    rRotate:GDBDouble;
+    rRotate:Double;
     dc:TDrawContext;
 begin
   PBlockInsert:=pointer(PTEntityModifyData_Point_Scale_Rotation(PInteractiveData)^.PEntity);
@@ -221,7 +221,7 @@ begin
   begin
     {точка была указана, еск пользователь не жал}
     {запрашиваем масштаб, растягивая блок на точке}
-    {commandmanager.Get3DPointInteractive тут пока временно, будет организован commandmanager.GeScaleInteractive:GDBDouble возвращающая масштаб а не точку}
+    {commandmanager.Get3DPointInteractive тут пока временно, будет организован commandmanager.GeScaleInteractive:Double возвращающая масштаб а не точку}
     if commandmanager.Get3DPointInteractive(rscmSpecifyScale,//текст запроса
                                             vertex,//сюда будут возвращены координаты указанные пользователем, далее не используется
                                             @InteractiveBlockScaleManipulator,//"интерактивная" процедура масштабирующая блок на точке
@@ -230,7 +230,7 @@ begin
     begin
       {масштаб была указан, еск пользователь не жал}
       {запрашиваем поворот, крутя блок на точке}
-      {commandmanager.Get3DPointInteractive тут пока временно, будет организован commandmanager.GeRotateInteractive:GDBDouble возвращающая угол а не точку}
+      {commandmanager.Get3DPointInteractive тут пока временно, будет организован commandmanager.GeRotateInteractive:Double возвращающая угол а не точку}
       if commandmanager.Get3DPointInteractive(rscmSpecifyRotate,vertex,@InteractiveBlockRotateManipulator,@CreatedData) then
       begin
            {поворот была указан, еск пользователь не жал}
@@ -261,9 +261,9 @@ begin
     result:=cmd_ok;
 end;
 //
-//procedure InteractivePolyLineManipulator( const PInteractiveData : GDBPointer {pointer to the line entity};
+//procedure InteractivePolyLineManipulator( const PInteractiveData : Pointer {pointer to the line entity};
 //                                                          Point : GDBVertex  {new end coord};
-//                                                          Click : GDBBoolean {true if lmb presseed});
+//                                                          Click : Boolean {true if lmb presseed});
 //var
 //  ln : PGDBObjLine absolute PInteractiveData;
 //  ln2 : PGDBObjLine absolute PInteractiveData;
@@ -309,9 +309,9 @@ end;
 //  ln2^.FormatEntity(drawings.GetCurrentDWG^,dc);
 //
 //end;
-//procedure InteractivePolyLineManipulator2( const PInteractiveData : GDBPointer;
+//procedure InteractivePolyLineManipulator2( const PInteractiveData : Pointer;
 //                                                      Point : GDBVertex;
-//                                                      Click : GDBBoolean);
+//                                                      Click : Boolean);
 //var
 //    PointData:TArcrtModify;
 //    ln : PGDBObjLine;
@@ -362,9 +362,9 @@ end;
 //  //ln^.FormatEntity(drawings.GetCurrentDWG^,dc);
 //end;
 
-procedure InteractiveLWRectangleManipulator( const PInteractiveData : GDBPointer {pointer to the line entity};
+procedure InteractiveLWRectangleManipulator( const PInteractiveData : Pointer {pointer to the line entity};
                                                           Point : GDBVertex  {new end coord};
-                                                          Click : GDBBoolean {true if lmb presseed});
+                                                          Click : Boolean {true if lmb presseed});
 var
   polyLWObj : PGDBObjLWPolyline absolute PInteractiveData;
   stPoint: GDBvertex2D;
@@ -391,9 +391,9 @@ begin
 end;
 
 
-procedure InteractiveRectangleManipulator( const PInteractiveData : GDBPointer {pointer to the line entity};
+procedure InteractiveRectangleManipulator( const PInteractiveData : Pointer {pointer to the line entity};
                                                           Point : GDBVertex  {new end coord};
-                                                          Click : GDBBoolean {true if lmb presseed});
+                                                          Click : Boolean {true if lmb presseed});
 var
   polyObj : PGDBObjPolyline absolute PInteractiveData;
   stPoint: GDBvertex;
@@ -434,7 +434,7 @@ var
     PUser:PUserTypeDescriptor;
     setUserParam:TRectangParam;
     pf:PfieldDescriptor;  //**< dfgdfgdfgd
-    testDoubl:GDBDouble;
+    testDoubl:Double;
 begin
    PInternalRTTITypeDesk:=pointer(SysUnit^.TypeName2PTD( 'TRectangParam'));//находим описание типа TRectangParam, мы сразу знаем что это описание записи, поэтому нужно привести тип
 
@@ -454,7 +454,7 @@ begin
 
      // pf:=PInternalRTTITypeDesk^.FindField('PolyWidth');
     //  PUser:= pf^.base.PFT^.;
-      //testDoubl:=GDBDouble(pf^.base.PFT^.GetTypeAttributes);
+      //testDoubl:=Double(pf^.base.PFT^.GetTypeAttributes);
       //           PInternalRTTITypeDesk^.Fields.getDataMutable(1);
       //setUserParam:=TRectangParam(PInternalRTTITypeDesk^.PUnit^);
       PollyWidth.endw:=RectangParam.PolyWidth;
@@ -469,7 +469,7 @@ begin
       pf:=PInternalRTTITypeDesk^.FindField('ET');//находим описание поля ET
       pf^.base.Attributes:=pf^.base.Attributes or FA_READONLY;//устанавливаем ему флаг ридонли
 
-        // pline := GDBPointer(drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.CreateInitObj(GDBLineID,drawings.GetCurrentROOT));
+        // pline := Pointer(drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.CreateInitObj(GDBLineID,drawings.GetCurrentROOT));
          //создаем только одну полилинию//GDBObjLWPolyline.CreateInstance;
          polyObj:=GDBObjLWPolyline.CreateInstance;
       //polyObj:=GDBObjPolyline.CreateInstance;

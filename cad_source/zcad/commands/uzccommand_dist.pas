@@ -18,7 +18,7 @@
 {$mode delphi}
 unit uzccommand_dist;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -26,14 +26,14 @@ uses
   SysUtils,
   uzccommandsabstract,uzccommandsimpl,
   uzcdrawings,uzcinterface,
-  uzcstrconsts,uzbgeomtypes,uzbtypesbase,
+  uzcstrconsts,uzegeometrytypes,
   uzccommandsmanager,
   varmandef,uzegeometry;
 
 implementation
 var
    c1,c2:integer;
-   distlen:gdbdouble;
+   distlen:Double;
    oldpoint,point:gdbvertex;
 function Dist_com_CommandStart(operands:TCommandOperands):TCommandResult;
 begin
@@ -47,7 +47,7 @@ procedure Dist_com_CommandCont;
 var
    cs:integer;
    vd:vardesk;
-   len:gdbdouble;
+   len:Double;
 begin
      cs:=commandmanager.GetValueHeap;
      if cs=c1 then
@@ -56,7 +56,7 @@ begin
           exit;
      end;
      vd:=commandmanager.PopValue;
-     point:=pgdbvertex(vd.data.Instance)^;
+     point:=pgdbvertex(vd.data.Addr.Instance)^;
      //c1:=cs;
      c1:=commandmanager.GetValueHeap;
      if c2<>-1 then

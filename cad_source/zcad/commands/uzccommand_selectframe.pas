@@ -17,11 +17,10 @@
 }
 
 unit uzccommand_selectframe;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
- {$IFDEF DEBUGBUILD}strutils,{$ENDIF}
  uzglviewareageneral,zeundostack,uzcoimultiobjects,
  uzgldrawcontext,uzbpaths,uzeffmanager,
  uzestylesdim,uzeenttext,
@@ -37,14 +36,14 @@ uses
   sysutils,
   varmandef,
   uzglviewareadata,
-  UGDBOpenArrayOfByte,
+  uzctnrVectorBytes,
   uzeffdxf,
   uzcinterface,
   uzeconsts,
   uzeentity,
- uzbtypesbase,uzbmemman,uzcdialogsfiles,
+ uzcdialogsfiles,
  UUnitManager,uzclog,Varman,
- uzbgeomtypes,dialogs,uzcinfoform,
+ uzegeometrytypes,dialogs,uzcinfoform,
  uzeentpolyline,uzeentlwpolyline,UGDBSelectedObjArray,
  gzctnrvectortypes,uzegeometry,uzelongprocesssupport;
 var
@@ -52,8 +51,8 @@ var
 
 procedure FrameEdit_com_CommandStart(Operands:pansichar);
 procedure FrameEdit_com_Command_End;
-function FrameEdit_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
-function FrameEdit_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
+function FrameEdit_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
+function FrameEdit_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
 
 implementation
 procedure FrameEdit_com_CommandStart(Operands:pansichar);
@@ -66,7 +65,7 @@ begin
   drawings.GetCurrentDWG.wa.param.seldesc.MouseFrameON := false;
 end;
 
-function FrameEdit_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
+function FrameEdit_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
 begin
   result:=0;
   if (button and MZW_LBUTTON)<>0 then
@@ -79,10 +78,10 @@ begin
     drawings.GetCurrentDWG.wa.param.seldesc.Frame23d := wc;
   end
 end;
-function FrameEdit_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
+function FrameEdit_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
 var
-  ti: GDBInteger;
-  x,y,w,h:gdbdouble;
+  ti: Integer;
+  x,y,w,h:Double;
   pv:PGDBObjEntity;
   ir:itrec;
   r:TInBoundingVolume;

@@ -16,11 +16,12 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
 unit typedescriptors;
-{$INCLUDE def.inc}
+
 {$MODE DELPHI}
 interface
-uses uzedimensionaltypes,uzctnrvectorgdbpointer,LCLProc,uzbtypesbase,varmandef,uzbtypes,gzctnrvectordata,uzctnrvectorgdbstring,uzbmemman,
-     gzctnrvectortypes,gzctnrvectorp,uzbstrproc,sysutils;
+uses uzedimensionaltypes,uzctnrVectorPointers,LCLProc,
+     varmandef,uzctnrvectorstrings,
+     gzctnrvectortypes,gzctnrVectorP,uzbstrproc,sysutils,uzbLogIntf;
 const
      m_procedure=1;
      m_function=2;
@@ -55,17 +56,17 @@ TPropertyDeskriptorArray=object(GZVectorP{-}<PPropertyDeskriptor>{//})
                                procedure cleareraseobj;virtual;
                                function GetRealPropertyDeskriptorsCount:integer;virtual;
                                function findcategory(category:TInternalScriptString):PPropertyDeskriptor;
-                               function findvalkey(valkey:GDBString):integer;
+                               function findvalkey(valkey:String):integer;
                          end;
 SimpleProcOfObj=procedure of object;
-SimpleProcOfObjDouble=procedure (arg:GDBDouble) of object;
-SimpleFuncOfObjDouble=function:GDBDouble  of object;
+SimpleProcOfObjDouble=procedure (arg:Double) of object;
+SimpleFuncOfObjDouble=function:Double  of object;
 PFieldDescriptor=^FieldDescriptor;
 pBaseDescriptor=^BaseDescriptor;
 BaseDescriptor=record
-                      ProgramName:GDBString;
+                      ProgramName:String;
 
-                      UserName:GDBString;
+                      UserName:String;
 
                       PFT:PUserTypeDescriptor;
 
@@ -75,36 +76,36 @@ BaseDescriptor=record
                        samplef^.base.Attributes:=samplef^.base.Attributes and (not FA_HIDDEN_IN_OBJ_INSP); сбрасываем ему флаг cкрытности
                        samplef^.base.Attributes:=samplef^.base.Attributes or FA_HIDDEN_IN_OBJ_INSP; устанавливаем ему флаг cкрытности
                        }
-                      Attributes:GDBWord;
+                      Attributes:Word;
 
-                      Saved:GDBWord;
+                      Saved:Word;
                end;
 
 FieldDescriptor=record
                       base:BaseDescriptor;
-                      //FieldName:GDBString;
-                      //UserName:GDBString;
+                      //FieldName:String;
+                      //UserName:String;
                       //PFT:PUserTypeDescriptor;
-                      Offset,Size:GDBInteger;
-                      //Attributes:GDBWord;
-                      Collapsed:GDBBoolean;
+                      Offset,Size:Integer;
+                      //Attributes:Word;
+                      Collapsed:Boolean;
                 end;
 PPropertyDescriptor=^PropertyDescriptor;
 PropertyDescriptor=record
                       base:BaseDescriptor;
-                      //PropertyName:GDBString;
-                      //UserName:GDBString;
-                      r,w:GDBString;
+                      //PropertyName:String;
+                      //UserName:String;
+                      r,w:String;
                       //PFT:PUserTypeDescriptor;
-                      //Attributes:GDBWord;
-                      Collapsed:GDBBoolean;
+                      //Attributes:Word;
+                      Collapsed:Boolean;
                 end;
 PTUserTypeDescriptor=^TUserTypeDescriptor;
 TUserTypeDescriptor=object(UserTypeDescriptor)
                           function CreateProperties(const f:TzeUnitsFormat;mode:PDMode;PPDA:PTPropertyDeskriptorArray;Name:TInternalScriptString;PCollapsed:Pointer;ownerattrib:Word;var bmode:Integer;const addr:Pointer;ValKey,ValType:TInternalScriptString):PTPropertyDeskriptorArray;virtual;abstract;
-                          //procedure IncAddr(var addr:GDBPointer);virtual;
-                          function CreatePD:GDBPointer;
-                          function GetPPD(PPDA:PTPropertyDeskriptorArray;var bmode:GDBInteger):PPropertyDeskriptor;
+                          //procedure IncAddr(var addr:Pointer);virtual;
+                          function CreatePD:Pointer;
+                          function GetPPD(PPDA:PTPropertyDeskriptorArray;var bmode:Integer):PPropertyDeskriptor;
                           function FindField(fn:TInternalScriptString):PFieldDescriptor;virtual;
                    end;
 var zcpmode:tzcpmode;
@@ -112,7 +113,7 @@ var zcpmode:tzcpmode;
     debugShowHiddenFieldInObjInsp:boolean=false;
 implementation
 uses strmy;
-function TUserTypeDescriptor.GetPPD(PPDA:PTPropertyDeskriptorArray;var bmode:GDBInteger):PPropertyDeskriptor;
+function TUserTypeDescriptor.GetPPD(PPDA:PTPropertyDeskriptorArray;var bmode:Integer):PPropertyDeskriptor;
 begin
      if bmode=property_build
      then
@@ -123,14 +124,14 @@ begin
      else
          begin
               result:=pointer(ppda^.getDataMutable(abs(bmode)-1));
-              result:=pGDBPointer(result)^;
+              result:=pPointer(result)^;
               if bmode<0 then
                              bmode:=property_build;
          end;
 end;
 function TUserTypeDescriptor.CreatePD;
 begin
-     gdbgetmem({$IFDEF DEBUGBUILD}'{CC044792-AE73-48C9-B10A-346BFE9E46C9}',{$ENDIF}result,sizeof(PropertyDeskriptor));
+     Getmem(result,sizeof(PropertyDeskriptor));
      PPropertyDeskriptor(result)^.initnul;
 end;
 function TUserTypeDescriptor.FindField(fn:TInternalScriptString):PFieldDescriptor;
@@ -140,19 +141,19 @@ end;
 
 {procedure TUserTypeDescriptor.IncAddr;
 begin
-     inc(pGDBByte(addr),SizeInGDBBytes);
+     inc(PByte(addr),SizeInBytes);
 end;}
 constructor PropertyDeskriptor.initnul;
 begin
      inherited;
 
-    GDBPointer(Name):=nil;
-    GDBPointer(Value):=nil;
-    GDBPointer(ValKey):=nil;
-    GDBPointer(ValType):=nil;
-    GDBPointer(category):=nil;
-    GDBPointer(r):=nil;
-    GDBPointer(w):=nil;
+    Pointer(Name):=nil;
+    Pointer(Value):=nil;
+    Pointer(ValKey):=nil;
+    Pointer(ValType):=nil;
+    Pointer(category):=nil;
+    Pointer(r):=nil;
+    Pointer(w):=nil;
     PTypeManager:=nil;
     Attr:=0;
     Collapsed:=nil;
@@ -176,12 +177,12 @@ begin
     if valueAddres<>nil then
                                  begin
                                       PTypeManager.MagicFreeInstance(valueAddres);
-                                      GDBFreeMem(valueAddres);
+                                      Freemem(valueAddres);
                                  end;
     if SubNode<>nil then
     begin
          PTPropertyDeskriptorArray(SubNode)^.Done;
-         gdbfreemem(GDBPointer(SubNode));
+         Freemem(Pointer(SubNode));
     end;
     if assigned(FastEditors) then
                                  freeandnil(FastEditors);
@@ -199,15 +200,14 @@ begin
   repeat
         if curr^.SubNode<>nil then
                                       PTPropertyDeskriptorArray(curr^.SubNode)^.cleareraseobj;
-        if VerboseLog^ then
-          DebugLn('{T}[ZSCRIPT]',curr^.Name,'=',curr^.Value);
+        zTraceLn('{T}[ZSCRIPT]'+curr^.Name+'='+curr^.Value);
         //programlog.LogOutStr(curr^.Name,0,LM_Trace);
         //programlog.LogOutStr('='+curr^.Value,0,LM_Trace);
         curr^.Name:='';
         curr^.Value:='';
 
         curr^.done;
-        gdbfreemem(GDBPointer(curr));
+        Freemem(Pointer(curr));
         curr:=iterate(ir);
   until curr=nil;
   count:=0;

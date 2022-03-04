@@ -17,25 +17,25 @@
 }
 
 unit uzventsuperline;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses uzeobjectextender,LCLProc,uzeentityfactory,uzedrawingdef,
-     uzestyleslayers,uzbtypesbase,uzeentsubordinated,
-     uzeentline,uzeentity,UGDBOpenArrayOfByte,uzbtypes,uzeconsts,
-     uzbgeomtypes,uzegeometry,uzeffdxfsupport,uzbmemman;
+     uzestyleslayers,uzeentsubordinated,
+     uzeentline,uzeentity,uzctnrVectorBytes,uzbtypes,uzeconsts,
+     uzegeometrytypes,uzegeometry,uzeffdxfsupport;
 type
 {Export+}
 {REGISTEROBJECTTYPE GDBObjSuperLine}
 PGDBObjSuperLine=^GDBObjSuperLine;
 GDBObjSuperLine= object(GDBObjLine)
-                  constructor init(own:GDBPointer;layeraddres:PGDBLayerProp;LW:GDBSmallint;p1,p2:GDBvertex);
+                  constructor init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt;p1,p2:GDBvertex);
                   constructor initnul(owner:PGDBObjGenericWithSubordinated);
-                  function GetObjTypeName:GDBString;virtual;
+                  function GetObjTypeName:String;virtual;
                   class function CreateInstance:PGDBObjLine;static;
                   function GetObjType:TObjID;virtual;
-                  function Clone(own:GDBPointer):PGDBObjEntity;virtual;
-                  procedure SaveToDXFObjXData(var outhandle:GDBOpenArrayOfByte;var IODXFContext:TIODXFContext);virtual;
+                  function Clone(own:Pointer):PGDBObjEntity;virtual;
+                  procedure SaveToDXFObjXData(var outhandle:TZctnrVectorBytes;var IODXFContext:TIODXFContext);virtual;
                   class function GetDXFIOFeatures:TDXFEntIODataManager;static;
            end;
 {Export-}
@@ -43,7 +43,7 @@ function AllocAndInitSuperLine(owner:PGDBObjGenericWithSubordinated):PGDBObjLine
 var
     GDBObjSuperLineDXFFeatures:TDXFEntIODataManager;
 implementation
-constructor GDBObjSuperLine.init(own:GDBPointer;layeraddres:PGDBLayerProp;LW:GDBSmallint;p1,p2:GDBvertex);
+constructor GDBObjSuperLine.init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt;p1,p2:GDBvertex);
 begin
      inherited;
      GetDXFIOFeatures.AddExtendersToEntity(@self);
@@ -53,10 +53,10 @@ begin
      inherited;
      GetDXFIOFeatures.AddExtendersToEntity(@self);
 end;
-procedure GDBObjSuperLine.SaveToDXFObjXData(var outhandle:GDBOpenArrayOfByte;var IODXFContext:TIODXFContext);
+procedure GDBObjSuperLine.SaveToDXFObjXData(var outhandle:TZctnrVectorBytes;var IODXFContext:TIODXFContext);
 begin
      inherited;
-     dxfGDBStringout(outhandle,1000,'_UPGRADE=10');
+     dxfStringout(outhandle,1000,'_UPGRADE=10');
 end;
 class function GDBObjSuperLine.GetDXFIOFeatures:TDXFEntIODataManager;
 begin
@@ -73,7 +73,7 @@ end;
 function GDBObjSuperLine.Clone;
 var tvo: PGDBObjSuperLine;
 begin
-  GDBGetMem({$IFDEF DEBUGBUILD}'GDBObjSuperLine.Clone',{$ENDIF}GDBPointer(tvo), sizeof(GDBObjSuperLine));
+  Getmem(Pointer(tvo), sizeof(GDBObjSuperLine));
   tvo^.init(bp.ListPos.owner,vp.Layer, vp.LineWeight, CoordInOCS.lBegin, CoordInOCS.lEnd);
   CopyVPto(tvo^);
   CopyExtensionsTo(tvo^);
@@ -83,7 +83,7 @@ begin
 end;
 function AllocSuperLine:PGDBObjLine;
 begin
-  GDBGetMem({$IFDEF DEBUGBUILD}'{AllocLine}',{$ENDIF}pointer(result),sizeof(GDBObjSuperLine));
+  Getmem(pointer(result),sizeof(GDBObjSuperLine));
 end;
 function AllocAndInitSuperLine(owner:PGDBObjGenericWithSubordinated):PGDBObjLine;
 begin
@@ -111,7 +111,7 @@ begin
 end;
 function UpgradeLine2SuperLine(ptu:PExtensionData;pent:PGDBObjLine;const drawing:TDrawingDef):PGDBObjSuperLine;
 begin
-     GDBGetMem({$IFDEF DEBUGBUILD}'{6E92EE79-96D1-45BB-94CF-5C4C2141D886}',{$ENDIF}pointer(result),sizeof(GDBObjSuperLine));
+     Getmem(pointer(result),sizeof(GDBObjSuperLine));
      result^.initnul(pent^.bp.ListPos.Owner);
      result^.CoordInOCS:=pent^.CoordInOCS;
      pent.CopyVPto(result^);
@@ -124,12 +124,3 @@ finalization
   debugln('{I}[UnitsFinalization] Unit "',{$INCLUDE %FILE%},'" finalization');
   GDBObjSuperLineDXFFeatures.destroy;
 end.
-{
-initialization
-  RegisterEntity(GDBDeviceID,'Device',@AllocDevice,@AllocAndInitDevice,@SetBlockInsertGeomProps,@AllocAndCreateDevice);
-  RegisterEntityUpgradeInfo(GDBBlockInsertID,1,@UpgradeBlockInsert2Device);
-  GDBObjDeviceDXFFeatures:=TDXFEntIODataManager.Create;
-finalization
-  debugln('{I}[UnitsFinalization] Unit "',{$INCLUDE %FILE%},'" finalization');
-  GDBObjDeviceDXFFeatures.Destroy;
-}

@@ -17,13 +17,13 @@
 }
 
 unit uzccommand_closedwg;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
   LCLProc,Forms,
   uzccommandsabstract,uzccommandsimpl,
-  uzcdrawing,uzcdrawings,
+  uzcdrawing,uzcdrawings,uzccommand_quit,
   uzcmainwindow;
 
 implementation

@@ -3,25 +3,25 @@ interface
 uses system,devices;
 var
 
-SLCABAGEN_SLTypeagen:GDBString;(*'Имя суперлинии/трассы монтажа кабеля'*)
+SLCABAGEN_SLTypeagen:String;(*'Имя суперлинии/трассы монтажа кабеля'*)
 
-SLCABAGEN_HeadDeviceName:GDBString;(*'Имя головного устройства'*)
+SLCABAGEN_HeadDeviceName:String;(*'Имя головного устройства'*)
 
-SLCABAGEN_NGHeadDevice:GDBString;(*'Номер группы в головном устройстве'*)
+SLCABAGEN_NGHeadDevice:String;(*'Номер группы в головном устройстве'*)
 
-//SLCABAGEN_CableRoutingNodes:GDBString;(*'Промежуточные узлы прокладки кабеля от устройсва/УУ до головного устройства. Множественность через ~ '*)
+//SLCABAGEN_CableRoutingNodes:String;(*'Промежуточные узлы прокладки кабеля от устройсва/УУ до головного устройства. Множественность через ~ '*)
 
-SLCABAGEN_ControlUnitName:GDBString;(*'Имя узла управления устройствами'*)
+SLCABAGEN_ControlUnitName:String;(*'Имя узла управления устройствами'*)
 
-SLCABAGEN_NGControlUnit:GDBString;(*'Номер группы в узле управления устройствами'*)
+SLCABAGEN_NGControlUnit:String;(*'Номер группы в узле управления устройствами'*)
 
-//SLCABAGEN_NGControlUnitNodes:GDBString;(*'Промежуточные узлы прокладки кабеля от устройсва до УУ. Множественность через ~ '*)
+//SLCABAGEN_NGControlUnitNodes:String;(*'Промежуточные узлы прокладки кабеля от устройсва до УУ. Множественность через ~ '*)
 
 SLCABAGEN_TypeCableRouting:TTypeCableRouting;(*'НЕРАБОТАЕТ. НЕТ ПОНИМАНИЯ ЧТО ЭТО. Прокладка кабеля одиночная/групповая.'*)
 
 SLCABAGEN_DevConnectMethod:TDevConnectMethod;(*'Соединение устройств выполняется'*)
 
-//SLCABAGEN_inerNodeWithoutConnection:GDBBoolean;(*'Промежуточный узел. К головному стройству кабель не прокладывается'*)
+//SLCABAGEN_inerNodeWithoutConnection:Boolean;(*'Промежуточный узел. К головному стройству кабель не прокладывается'*)
 
 implementation
 begin

@@ -18,14 +18,14 @@
 {$mode delphi}
 unit uzccommand_extdradd;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
   LazLogger,SysUtils,
   uzccommandsabstract,uzccommandsimpl,
-  uzeentity,gzctnrvectortypes,uzcdrawings,uzcdrawing,uzcstrconsts,uzeentityextender,
-  uzcinterface,uzcutils,gzctnrstl,gutil;
+  uzeentity,gzctnrvectortypes,uzcdrawings,uzcstrconsts,uzeentityextender,
+  uzcinterface;
 
 function extdrAdd_com(operands:TCommandOperands):TCommandResult;
 
@@ -36,7 +36,6 @@ var
   extdr:TMetaEntityExtender;
   pv,pls:pGDBObjEntity;
   ir:itrec;
-  i:integer;
   count:integer;
 begin
   try
@@ -46,7 +45,7 @@ begin
       pls:=drawings.GetCurrentOGLWParam.SelDesc.LastSelectedObject;
       if pls<>nil then begin
         if pls^.GetExtension(extdr)=nil then begin
-          pls^.AddExtension(extdr.Create(pv));
+          pls^.AddExtension(extdr.Create(pls));
           inc(count);
         end;
       end;

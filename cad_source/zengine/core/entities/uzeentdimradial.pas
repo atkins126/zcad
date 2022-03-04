@@ -16,13 +16,13 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>)
 }
 unit uzeentdimradial;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses uzeentityfactory,uzeentdimdiametric,uzeentdimension,uzestylesdim,
-     uzestyleslayers,uzedrawingdef,uzbstrproc,UGDBOpenArrayOfByte,
-     uzegeometry,uzbtypesbase,sysutils,uzeentity,uzbtypes,uzeconsts,uzeffdxfsupport,
-     uzbgeomtypes,uzbmemman,uzeentsubordinated;
+     uzestyleslayers,uzedrawingdef,uzbstrproc,uzctnrVectorBytes,
+     uzegeometry,sysutils,uzeentity,uzbtypes,uzeconsts,uzeffdxfsupport,
+     uzegeometrytypes,uzeentsubordinated;
 (*
 
 Diametric dimension structure in DXF
@@ -37,20 +37,20 @@ type
 PGDBObjRadialDimension=^GDBObjRadialDimension;
 {REGISTEROBJECTTYPE GDBObjRadialDimension}
 GDBObjRadialDimension= object(GDBObjDiametricDimension)
-                        constructor init(own:GDBPointer;layeraddres:PGDBLayerProp;LW:GDBSmallint);
+                        constructor init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt);
                         constructor initnul(owner:PGDBObjGenericWithSubordinated);
-                        function GetObjTypeName:GDBString;virtual;
+                        function GetObjTypeName:String;virtual;
 
-                        function GetDimStr(var drawing:TDrawingDef):GDBString;virtual;
+                        function GetDimStr(var drawing:TDrawingDef):TDXFEntsInternalStringType;virtual;
                         function GetCenterPoint:GDBVertex;virtual;
-                        function Clone(own:GDBPointer):PGDBObjEntity;virtual;
+                        function Clone(own:Pointer):PGDBObjEntity;virtual;
 
                         function P10ChangeTo(tv:GDBVertex):GDBVertex;virtual;
                         function P15ChangeTo(tv:GDBVertex):GDBVertex;virtual;
                         function P11ChangeTo(tv:GDBVertex):GDBVertex;virtual;
-                        function GetRadius:GDBDouble;virtual;
+                        function GetRadius:Double;virtual;
 
-                        procedure SaveToDXF(var outhandle:GDBOpenArrayOfByte;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
+                        procedure SaveToDXF(var outhandle:TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
                         function GetObjType:TObjID;virtual;
                    end;
 {EXPORT-}
@@ -62,15 +62,15 @@ begin
   dxfvertexout(outhandle,10,DimData.P10InWCS);
   dxfvertexout(outhandle,11,DimData.P11InOCS);
   {if DimData.TextMoved then}
-                           dxfGDBIntegerout(outhandle,70,4+128)
+                           dxfIntegerout(outhandle,70,4+128)
                        {else
-                           dxfGDBIntegerout(outhandle,70,4);};
-  dxfGDBStringout(outhandle,3,PDimStyle^.Name);
-  dxfGDBStringout(outhandle,100,'AcDbRadialDimension');
+                           dxfIntegerout(outhandle,70,4);};
+  dxfStringout(outhandle,3,PDimStyle^.Name);
+  dxfStringout(outhandle,100,'AcDbRadialDimension');
   dxfvertexout(outhandle,15,DimData.P15InWCS)
 end;
 
-function GDBObjRadialDimension.GetRadius:GDBDouble;
+function GDBObjRadialDimension.GetRadius:Double;
 begin
      result:=Vertexlength(DimData.P15InWCS,DimData.P10InWCS);
 end;
@@ -116,7 +116,7 @@ end;
 function GDBObjRadialDimension.Clone;
 var tvo: PGDBObjRadialDimension;
 begin
-  GDBGetMem({$IFDEF DEBUGBUILD}'GDBObjRadialDimension.Clone',{$ENDIF}GDBPointer(tvo), sizeof(GDBObjRadialDimension));
+  Getmem(Pointer(tvo), sizeof(GDBObjRadialDimension));
   tvo^.init(bp.ListPos.owner,vp.Layer, vp.LineWeight);
   CopyVPto(tvo^);
   CopyExtensionsTo(tvo^);
@@ -130,7 +130,7 @@ begin
      result:=DimData.P10InWCS;
 end;
 
-function GDBObjRadialDimension.GetDimStr(var drawing:TDrawingDef):GDBString;
+function GDBObjRadialDimension.GetDimStr(var drawing:TDrawingDef):TDXFEntsInternalStringType;
 begin
      result:='R'+GetLinearDimStr(Vertexlength(DimData.P10InWCS,DimData.P15InWCS),drawing);
 end;
@@ -155,7 +155,7 @@ begin
 end;
 function AllocRadialDimension:PGDBObjRadialDimension;
 begin
-  GDBGetMem({$IFDEF DEBUGBUILD}'{AllocRadialDimension}',{$ENDIF}result,sizeof(GDBObjRadialDimension));
+  Getmem(result,sizeof(GDBObjRadialDimension));
 end;
 function AllocAndInitRadialDimension(owner:PGDBObjGenericWithSubordinated):PGDBObjRadialDimension;
 begin

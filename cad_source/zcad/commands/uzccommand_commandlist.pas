@@ -18,13 +18,13 @@
 {$mode delphi}
 unit uzccommand_commandlist;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
   LazLogger,
   uzccommandsabstract,uzccommandsimpl,
-  gzctnrvectortypes,uzctnrvectorgdbstring,
+  gzctnrvectortypes,uzctnrvectorstrings,
   uzccommandsmanager,
   uzcinterface;
 
@@ -34,7 +34,7 @@ function CommandList_com(operands:TCommandOperands):TCommandResult;
 var
    p:PCommandObjectDef;
    ir:itrec;
-   clist:TZctnrVectorGDBString;
+   clist:TZctnrVectorStrings;
 begin
    clist.init(200);
    p:=commandmanager.beginiterate(ir);

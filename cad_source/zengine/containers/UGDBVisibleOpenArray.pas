@@ -17,17 +17,17 @@
 }
 
 unit UGDBVisibleOpenArray;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses gzctnrvectortypes,uzbgeomtypes,uzeentity,uzecamera,uzbtypesbase,UGDBOpenArrayOfPV,sysutils,uzbtypes,uzegeometry,uzbmemman;
+uses gzctnrvectortypes,uzegeometrytypes,uzeentity,uzecamera,UGDBOpenArrayOfPV,sysutils,uzbtypes,uzegeometry;
 type
 {Export+}
 PGDBObjEntityOpenArray=^GDBObjEntityOpenArray;
 {REGISTEROBJECTTYPE GDBObjEntityOpenArray}
 GDBObjEntityOpenArray= object(GDBObjOpenArrayOfPV)(*OpenArrayOfPObj*)
                       function AddPEntity(var entity:GDBObjEntity):TArrayIndex;virtual;
-                      procedure CloneEntityTo(PEA:PGDBObjEntityOpenArray;own:GDBPointer);virtual;
-                      procedure SetInFrustumFromTree(const frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:GDBInteger; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:GDBDouble);virtual;
+                      procedure CloneEntityTo(PEA:PGDBObjEntityOpenArray;own:Pointer);virtual;
+                      procedure SetInFrustumFromTree(const frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double);virtual;
 
                 end;
 {Export-}
@@ -45,7 +45,7 @@ begin
 end;
 
 
-procedure GDBObjEntityOpenArray.CloneEntityTo(PEA:PGDBObjEntityOpenArray;own:GDBPointer);
+procedure GDBObjEntityOpenArray.CloneEntityTo(PEA:PGDBObjEntityOpenArray;own:Pointer);
 var pobj,pcobj:PGDBObjEntity;
     ir:itrec;
 begin

@@ -17,12 +17,12 @@
 }
 
 unit uzccommand_loadpalettes;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
  LCLProc,
- uzbpaths,uzccommandsabstract,uzccommandsimpl,uzbtypes,uztoolbarsmanager;
+ uzbpaths,uzccommandsabstract,uzccommandsimpl,uztoolbarsmanager;
 
 implementation
 function LoadPalettes_com(operands:TCommandOperands):TCommandResult;

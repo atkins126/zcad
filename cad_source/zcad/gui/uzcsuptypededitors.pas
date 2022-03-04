@@ -17,13 +17,13 @@
 }
 
 unit uzcsuptypededitors;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 
 uses
   zeundostack,zebaseundocommands,usupportgui,Varman,UBaseTypeDescriptor,varmandef,
-  StdCtrls,sysutils,Forms,uzcdrawings,Controls,Classes,uzbstrproc,uzcsysvars,
+  StdCtrls,sysutils,Forms,Controls,Classes,uzbstrproc,uzcsysvars,
   uzccommandsmanager,uzcinterface;
 
 type

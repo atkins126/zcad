@@ -3,32 +3,32 @@ interface
 uses system,devices;
 usescopy blocktype;
 var
-   NMO_Template:GDBString;(*'Шаблон Обозначения'*) 
-   NMO_Name:GDBString;(*'Обозначение'*)
-   NMO_BaseName:GDBString;(*'Короткое Имя'*)
-   NameNumber:GDBInteger;(*'Номер'*)
+   NMO_Template:String;(*'Шаблон Обозначения'*) 
+   NMO_Name:String;(*'Обозначение'*)
+   NMO_BaseName:String;(*'Короткое Имя'*)
+   NameNumber:Integer;(*'Номер'*)
 
 
-   Power:GDBDouble;(*'Мощность расчетная, кВт'*)
-   PowerUst:GDBDouble;(*'Мощность установленная, кВт'*)
-   Current:GDBDouble;(*'Ток расчетный, А'*)
-   CurrentUst:GDBDouble;(*'Ток установленный, А'*)
-   CosPHI:GDBDouble;(*'Cos(фи)'*)
+   Power:Double;(*'Мощность расчетная, кВт'*)
+   PowerUst:Double;(*'Мощность установленная, кВт'*)
+   Current:Double;(*'Ток расчетный, А'*)
+   CurrentUst:Double;(*'Ток установленный, А'*)
+   CosPHI:Double;(*'Cos(фи)'*)
    Voltage:TVoltage;(*'Напряжение питания'*)
    Phase:TPhase;(*'Фаза'*)
 
-   DB_link:GDBString;(*'Материал'*)
-   AmountI:GDBInteger;(*'Количество'*)
+   DB_link:String;(*'Материал'*)
+   AmountI:Integer;(*'Количество'*)
    
-   GC_HeadDevice:GDBString;
-   GC_HDShortName:GDBString;
-   GC_HDGroup:GDBInteger;
+   GC_HeadDevice:String;
+   GC_HDShortName:String;
+   GC_HDGroup:Integer;
 
-   SerialConnection:GDBInteger;
-   NumberInSleif:GDBInteger;
+   SerialConnection:Integer;
+   NumberInSleif:Integer;
 
 
-   EL_Cab_AddLength:GDBDouble;(*'Добавлять к длине кабеля'*)
+   EL_Cab_AddLength:Double;(*'Добавлять к длине кабеля'*)
 implementation
 begin
    Device_Type:=TDT_SilaIst;

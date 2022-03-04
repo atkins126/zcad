@@ -1,6 +1,6 @@
 # ZCAD
+[![GitHub Release](https://img.shields.io/github/release/zamtmn/zcad.svg)](https://github.com/zamtmn/zcad/releases)[![Build status](https://ci.appveyor.com/api/projects/status/7bsg5me8q1r5jjt4/branch/master?svg=true)](https://ci.appveyor.com/project/zamtmn/zcad/branch/master)
 ![screenshot](https://github.com/zamtmn/zcad/raw/master/docs/img/zcadet_qt.png)
-[→ Download ←](https://github.com/zamtmn/zcad/releases)
 ## Overview
 ZCAD is simple CAD program, written in Lazarus / FPC.
 
@@ -48,15 +48,3 @@ Build ZCADELECTROTECH:
 * `make zcadelectrotech LP=/path/to/your/lazarus PCP=/path/to/your/lazarus/primary/config`
 
 `make installpkgstolaz` you need to do it only one time, this will install packages from '**cad_sources/components**' and '**cad_sources/other**' to your lazarus and will rebuild it
-
-Build ZCAD (Old way):
-
-* install zcad packages from '**cad_sources/components**' to lazarus
-* install third party packages from '**cad_sources/other**' to lazarus:
-  * cad_source\other\AGraphLaz\lazarus\ *.lpk
-  * cad_source\other\laz.virtualtreeview_package\laz.virtualtreeview_package.lpk
-  * cad_source\other\uniqueinstance\uniqueinstance_package.lpk
-* check whether the **PATH** variable includes path to lazbuild binary
-* if need set **PATH** variable: `$ export PATH="$PATH:/your/patch/to/lazarus/"`
-* run `$ ./zcad.sh` (or zcadelectrotech.sh) file
-* open zcad.lpi in lazarus and compile

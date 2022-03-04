@@ -17,16 +17,16 @@
 }
 
 unit uzeentdevice;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses uzestyleslayers,uzepalette,uzeobjectextender,uabstractunit,uzeentityfactory,
      uzgldrawcontext,uzedrawingdef,uzecamera,uzcsysvars,sysutils,
-     UGDBOpenArrayOfByte,gzctnrvectorpobjects,uunitmanager,uzbmemman,uzegeometry,
-     uzeconsts,uzeentity,uzeentsubordinated,varmandef,uzbtypesbase,
-     uzbgeomtypes,uzeentblockinsert,uzbtypes,UGDBVisibleOpenArray,UGDBObjBlockdefArray,
+     uzctnrVectorBytes,uunitmanager,uzegeometry,
+     uzeconsts,uzeentity,uzeentsubordinated,varmandef,
+     uzegeometrytypes,uzeentblockinsert,uzbtypes,UGDBVisibleOpenArray,UGDBObjBlockdefArray,
      gzctnrvectortypes,uzeblockdef,uzeffdxfsupport,UGDBSelectedObjArray,uzeentitiestree,
-     LazLogger,uzestrconsts;
+     LazLogger,uzestrconsts,uzctnrvectorpgdbaseobjects;
 
 type
 {EXPORT+}
@@ -35,52 +35,52 @@ PGDBObjDevice=^GDBObjDevice;
 GDBObjDevice= object(GDBObjBlockInsert)
                    VarObjArray:GDBObjEntityOpenArray;(*oi_readonly*)(*hidden_in_objinsp*)
                    lstonmouse:PGDBObjEntity;(*oi_readonly*)(*hidden_in_objinsp*)
-                   function Clone(own:GDBPointer):PGDBObjEntity;virtual;
+                   function Clone(own:Pointer):PGDBObjEntity;virtual;
                    constructor initnul;
-                   constructor init(own:GDBPointer;layeraddres:PGDBLayerProp;LW:GDBSmallint);
+                   constructor init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt);
                    destructor done;virtual;
-                   function CalcInFrustum(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:GDBInteger; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:GDBDouble):GDBBoolean;virtual;
+                   function CalcInFrustum(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
                    function CalcTrueInFrustum(frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
                    procedure FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
                    procedure FormatFeatures(var drawing:TDrawingDef);virtual;
-                   procedure DrawGeometry(lw:GDBInteger;var DC:TDrawContext{infrustumactualy:TActulity;subrender:GDBInteger});virtual;
-                   procedure DrawOnlyGeometry(lw:GDBInteger;var DC:TDrawContext{infrustumactualy:TActulity;subrender:GDBInteger});virtual;
+                   procedure DrawGeometry(lw:Integer;var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
+                   procedure DrawOnlyGeometry(lw:Integer;var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
                    procedure renderfeedbac(infrustumactualy:TActulity;pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;
-                   function onmouse(var popa:TZctnrVectorPGDBaseObjects;const MF:ClipArray;InSubEntry:GDBBoolean):GDBBoolean;virtual;
-                   function ReturnLastOnMouse(InSubEntry:GDBBoolean):PGDBObjEntity;virtual;
-                   procedure ImEdited(pobj:PGDBObjSubordinated;pobjinarray:GDBInteger;var drawing:TDrawingDef);virtual;
-                   procedure DeSelect(var SelectedObjCount:GDBInteger;ds2s:TDeSelect2Stage);virtual;
+                   function onmouse(var popa:TZctnrVectorPGDBaseObjects;const MF:ClipArray;InSubEntry:Boolean):Boolean;virtual;
+                   function ReturnLastOnMouse(InSubEntry:Boolean):PGDBObjEntity;virtual;
+                   procedure ImEdited(pobj:PGDBObjSubordinated;pobjinarray:Integer;var drawing:TDrawingDef);virtual;
+                   procedure DeSelect(var SelectedObjCount:Integer;ds2s:TDeSelect2Stage);virtual;
                    //function GetDeviceType:TDeviceType;virtual;
                    procedure getoutbound(var DC:TDrawContext);virtual;
                    function getonlyvisibleoutbound(var DC:TDrawContext):TBoundingBox;virtual;
 
-                   //function AssignToVariable(pv:pvardesk):GDBInteger;virtual;
-                   function GetObjTypeName:GDBString;virtual;
+                   //function AssignToVariable(pv:pvardesk):Integer;virtual;
+                   function GetObjTypeName:String;virtual;
 
                    procedure BuildGeometry(var drawing:TDrawingDef);virtual;
                    procedure BuildVarGeometry(var drawing:TDrawingDef);virtual;
 
-                   procedure SaveToDXFFollow(var outhandle:{GDBInteger}GDBOpenArrayOfByte;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
-                   procedure SaveToDXFObjXData(var outhandle:{GDBInteger}GDBOpenArrayOfByte;var IODXFContext:TIODXFContext);virtual;
+                   procedure SaveToDXFFollow(var outhandle:{Integer}TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
+                   procedure SaveToDXFObjXData(var outhandle:{Integer}TZctnrVectorBytes;var IODXFContext:TIODXFContext);virtual;
                    procedure AddMi(pobj:PGDBObjSubordinated);virtual;
                    //procedure select;virtual;
-                   procedure SetInFrustumFromTree(const frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:GDBInteger; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:GDBDouble);virtual;
-                   procedure addcontrolpoints(tdesc:GDBPointer);virtual;
+                   procedure SetInFrustumFromTree(const frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double);virtual;
+                   procedure addcontrolpoints(tdesc:Pointer);virtual;
 
-                   procedure EraseMi(pobj:pGDBObjEntity;pobjinarray:GDBInteger;var drawing:TDrawingDef);virtual;
-                   procedure correctobjects(powner:PGDBObjEntity;pinownerarray:GDBInteger);virtual;
+                   procedure EraseMi(pobj:pGDBObjEntity;pobjinarray:Integer;var drawing:TDrawingDef);virtual;
+                   procedure correctobjects(powner:PGDBObjEntity;pinownerarray:Integer);virtual;
                    procedure FormatAfterDXFLoad(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
                    class function GetDXFIOFeatures:TDXFEntIODataManager;static;
 
                    function CreateInstance:PGDBObjDevice;static;
-                   function GetNameInBlockTable:GDBString;virtual;
+                   function GetNameInBlockTable:String;virtual;
                    function GetObjType:TObjID;virtual;
              end;
 {EXPORT-}
 var
     GDBObjDeviceDXFFeatures:TDXFEntIODataManager;
 implementation
-function GDBObjDevice.GetNameInBlockTable:GDBString;
+function GDBObjDevice.GetNameInBlockTable:String;
 begin
   result:=DevicePrefix+name;
 end;
@@ -112,12 +112,12 @@ begin
      VarObjArray.DeleteElement(pobjinarray);
 
      //p^.done;
-     //memman.GDBFreeMem(GDBPointer(p))
+     //memman.Freemem(Pointer(p))
      pobj^.done;
-     uzbmemman.GDBFreeMem(GDBPointer(pobj));
+     Freemem(Pointer(pobj));
 end;
 
-procedure GDBObjDevice.addcontrolpoints(tdesc:GDBPointer);
+procedure GDBObjDevice.addcontrolpoints(tdesc:Pointer);
 var pdesc:controlpointdesc;
     ir:itrec;
     pv{,pvc}:pgdbobjEntity;
@@ -126,7 +126,7 @@ begin
           begin
           if SysVar.DWG.DWG_AdditionalGrips^ then
           begin
-               PSelectedObjDesc(tdesc)^.pcontrolpoint^.init({$IFDEF DEBUGBUILD}'{E8AC77BE-9C28-4A6E-BB1A-D5F8729BDDAD}',{$ENDIF}1);
+               PSelectedObjDesc(tdesc)^.pcontrolpoint^.init(1);
           end
           else
           inherited addcontrolpoints(tdesc);
@@ -177,13 +177,13 @@ begin
 end;
 procedure GDBObjDevice.SaveToDXFFollow;
 var
-  //i:GDBInteger;
+  //i:Integer;
   pv,pvc,pvc2:pgdbobjEntity;
   ir:itrec;
   m4:DMatrix4D;
   DC:TDrawContext;
 begin
-     //historyoutstr('Device DXFOut self='+inttohex(longword(@self),10)+' owner'+inttohex(bp.owner.gethandle,10));
+     //historyoutstr('Device DXFOut self='+inttohex(LongWord(@self),10)+' owner'+inttohex(bp.owner.gethandle,10));
      inherited;
      m4:={self.ObjMatrix; //}getmatrix^;
      //MatrixInvert(m4);
@@ -193,7 +193,7 @@ begin
      repeat
          pvc:=pv^.Clone(@self{.bp.Owner});
          pvc2:=pv^.Clone(@self{.bp.Owner});
-         //historyoutstr(pv^.ObjToGDBString('','')+'  cloned obj='+pvc^.ObjToGDBString('',''));
+         //historyoutstr(pv^.ObjToString('','')+'  cloned obj='+pvc^.ObjToString('',''));
          if pvc^.GetObjType=GDBTextID then
             pvc:=pvc;
 
@@ -226,8 +226,8 @@ begin
          pvc^.done;
          pvc2.rtsave(pv);
          //pv^.FormatEntity(drawing,dc);
-         GDBFREEMEM(pointer(pvc));
-         GDBFREEMEM(pointer(pvc2));
+         Freemem(pointer(pvc));
+         Freemem(pointer(pvc2));
          pv:=VarObjArray.iterate(ir);
      until pv=nil;
      objmatrix:=m4;
@@ -235,15 +235,15 @@ begin
      //historyout('Device DXFOut end');
      //self.CalcObjMatrix;
 end;
-procedure GDBObjDevice.SaveToDXFObjXData(var outhandle:{GDBInteger}GDBOpenArrayOfByte;var IODXFContext:TIODXFContext);
+procedure GDBObjDevice.SaveToDXFObjXData(var outhandle:{Integer}TZctnrVectorBytes;var IODXFContext:TIODXFContext);
 //var
-   //s:gdbstring;
+   //s:String;
 begin
      inherited;
      //s:=inttohex(GetHandle,10);
      //historyout(@s[1]);
-     dxfGDBStringout(outhandle,1000,'_HANDLE='+inttohex(GetHandle,10));
-     dxfGDBStringout(outhandle,1000,'_UPGRADE=1');
+     dxfStringout(outhandle,1000,'_HANDLE='+inttohex(GetHandle,10));
+     dxfStringout(outhandle,1000,'_UPGRADE=1');
 end;
 (*function GDBObjDevice.GetDeviceType;
 begin
@@ -255,7 +255,7 @@ function GDBObjDevice.GetObjTypeName;
 begin
      result:=ObjN_GDBObjDevice;
 end;
-{function GDBObjDevice.AssignToVariable(pv:pvardesk):GDBInteger;
+{function GDBObjDevice.AssignToVariable(pv:pvardesk):Integer;
 begin
      PDevDesk:=pv;
 end;}
@@ -305,13 +305,13 @@ var tvo: PGDBObjDevice;
 begin
   //result:=inherited Clone(own);
   //exit;
-  GDBGetMem({$IFDEF DEBUGBUILD}'{F9D41F4A-1E80-4D3A-9DD1-D0037EFCA988}',{$ENDIF}GDBPointer(tvo), sizeof(GDBObjDevice));
+  Getmem(Pointer(tvo), sizeof(GDBObjDevice));
   tvo^.init({bp.owner}own,vp.Layer, vp.LineWeight);
   //tvo^.vp.id :=GDBDeviceID;
   //tvo^.vp.layer :=vp.layer;
   CopyVPto(tvo^);
   CopyExtensionsTo(tvo^);
-  GDBPointer(tvo^.name) := nil;
+  Pointer(tvo^.name) := nil;
   tvo^.name := name;
   tvo^.pattrib := nil;
   tvo^.Local.p_insert := Local.p_insert;
@@ -319,8 +319,8 @@ begin
   tvo^.scale := scale;
   tvo^.rotate := rotate;
   tvo.index := index;
-  //tvo.ConstObjArray.init({$IFDEF DEBUGBUILD}'{E9005274-601F-4A3F-BDB8-E311E59D558C}',{$ENDIF}ConstObjArray.Count);
-  tvo.VarObjArray.init({$IFDEF DEBUGBUILD}'{E9005274-601F-4A3F-BDB8-E311E59D558C}',{$ENDIF}varObjArray.Count+1);
+  //tvo.ConstObjArray.init(ConstObjArray.Count);
+  tvo.VarObjArray.init(varObjArray.Count+1);
   ConstObjArray.CloneEntityTo(@tvo.ConstObjArray,tvo);
   varObjArray.CloneEntityTo(@tvo.varObjArray,tvo);
   //tvo^.format;
@@ -340,7 +340,7 @@ begin
      //lstonmouse:=nil;
 end;
 procedure GDBObjDevice.ImEdited;
-//var t:gdbinteger;
+//var t:Integer;
 begin
      inherited imedited (pobj,pobjinarray,drawing);
      //bp.owner^.ImEdited(@self,bp.PSelfInOwnerArray);
@@ -359,10 +359,10 @@ begin
                                           else result:=@self;
 end;
 function GDBObjDevice.onmouse;
-var //t,xx,yy:GDBDouble;
-    //i:GDBInteger;
+var //t,xx,yy:Double;
+    //i:Integer;
     p:pgdbobjEntity;
-    ot:GDBBoolean;
+    ot:Boolean;
     ir:itrec;
 begin
   result:=inherited onmouse(popa,mf,InSubEntry);
@@ -383,7 +383,7 @@ end;
 procedure GDBObjDevice.renderfeedbac(infrustumactualy:TActulity;pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);
 //var pblockdef:PGDBObjBlockdef;
     //pvisible:PGDBObjEntity;
-    //i:GDBInteger;
+    //i:Integer;
 begin
   //if POGLWnd=nil then exit;
   inherited;
@@ -420,7 +420,7 @@ procedure GDBObjDevice.DrawGeometry;
 var p:pgdbobjEntity;
      v:gdbvertex;
          ir:itrec;
-   oldlw:gdbsmallint;
+   oldlw:SmallInt;
 begin
   oldlw:=dc.OwnerLineWeight;
   dc.OwnerLineWeight:=self.GetLineWeight;
@@ -451,9 +451,9 @@ procedure GDBObjDevice.BuildVarGeometry;
 var //pblockdef:PGDBObjBlockdef;
     pvisible,pvisible2:PGDBObjEntity;
     //freelayer:PGDBLayerProp;
-    i:GDBInteger;
-    //varobject:gdbboolean;
-    devnam:GDBString;
+    i:Integer;
+    //varobject:Boolean;
+    devnam:String;
     DC:TDrawContext;
 begin
           //name:=copy(name,8,length(name)-7);
@@ -466,7 +466,7 @@ begin
           pblockdef:=PGDBObjBlockdefArray(drawing.GetBlockDefArraySimple).getDataMutable(index);
           for i:=0 to pblockdef.ObjArray.count-1 do
           begin
-               pvisible:=GDBPointer(pblockdef.ObjArray.getDataMutable(i));
+               pvisible:=Pointer(pblockdef.ObjArray.getDataMutable(i));
                pvisible:=pvisible^.Clone(@self);
                pvisible2:=PGDBObjEntity(pvisible^.FromDXFPostProcessBeforeAdd(nil,drawing));
                dc:=drawing.createdrawingrc;
@@ -509,9 +509,9 @@ procedure GDBObjDevice.BuildGeometry;
 var //pblockdef:PGDBObjBlockdef;
     pvisible,pvisible2:PGDBObjEntity;
     //freelayer:PGDBLayerProp;
-    i:GDBInteger;
-    //varobject:gdbboolean;
-    //devnam:GDBString;
+    i:Integer;
+    //varobject:Boolean;
+    //devnam:String;
     DC:TDrawContext;
 begin
      inherited;
@@ -528,7 +528,7 @@ begin
           pblockdef:=PGDBObjBlockdefArray(drawing.GetBlockDefArraySimple).getDataMutable(index);
           for i:=0 to pblockdef.ObjArray.count-1 do
           begin
-               pvisible:=GDBPointer(pblockdef.ObjArray.getDataMutable(i)^);
+               pvisible:=Pointer(pblockdef.ObjArray.getDataMutable(i)^);
                pvisible:=pvisible^.Clone(@self);
                pvisible2:=PGDBObjEntity(pvisible^.FromDXFPostProcessBeforeAdd(nil,drawing));
                if pvisible2=nil then
@@ -554,7 +554,7 @@ begin
           pblockdef:=GDB.BlockDefArray.getDataMutable(index);
           for i:=0 to pblockdef.ObjArray.count-1 do
           begin
-               pvisible:=GDBPointer(pblockdef.ObjArray.getDataMutable(i)^);
+               pvisible:=Pointer(pblockdef.ObjArray.getDataMutable(i)^);
                pvisible:=pvisible^.Clone(@self);
                pvisible2:=PGDBObjEntity(pvisible^.FromDXFPostProcessBeforeAdd);
                if pvisible2=nil then
@@ -604,11 +604,11 @@ begin
   calcbb(dc);
   //format;
 end;
-constructor GDBObjDevice.init(own:GDBPointer;layeraddres:PGDBLayerProp;LW:GDBSmallint);
+constructor GDBObjDevice.init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt);
 begin
   inherited init(own,layeraddres,LW);
   //vp.ID:=GDBDeviceID;
-  VarObjArray.init({$IFDEF DEBUGBUILD}'{1C49F5F6-5AA4-493D-90FF-A86D9EA666CE}',{$ENDIF}100);
+  VarObjArray.init(100);
   GetDXFIOFeatures.AddExtendersToEntity(@self);
 end;
 function GDBObjDevice.GetObjType;
@@ -619,7 +619,7 @@ constructor GDBObjDevice.initnul;
 begin
   inherited initnul;
   //vp.ID:=GDBDeviceID;
-  VarObjArray.init({$IFDEF DEBUGBUILD}'{1C49F5F6-5AA4-493D-90FF-A86D9EA666CE}',{$ENDIF}100);
+  VarObjArray.init(100);
   //DType:=DT_Unknown;
   //DBorder:=DB_Empty;
   //DGroup:=DG_Unknown;
@@ -636,7 +636,7 @@ procedure GDBObjDevice.FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext)
 (*var pvn,{pvnt,}pvp,pvphase,pvi,pvcos:pvardesk;
     volt:TVoltage;
     calcip:TCalcIP;
-    u:gdbdouble;*)
+    u:Double;*)
 begin
   if assigned(EntExtensions)then
     EntExtensions.RunOnBeforeEntityFormat(@self,drawing,DC);
@@ -655,13 +655,13 @@ begin
           (*pvn:=ou.FindVariable('Device_Type');
           if pvn<>nil then
           begin
-               case PTDeviceType(pvn^.data.Instance)^ of
+               case PTDeviceType(pvn^.Instance)^ of
                TDT_SilaPotr:
                begin
                     pvn:=ou.FindVariable('Voltage');
                     if pvn<>nil then
                     begin
-                          volt:=PTVoltage(pvn^.data.Instance)^;
+                          volt:=PTVoltage(pvn^.Instance)^;
                           u:=0;
                           case volt of
                                       _AC_220V_50Hz:u:=0.22;
@@ -669,34 +669,34 @@ begin
                           end;{case}
                           pvn:=ou.FindVariable('CalcIP');
                           if pvn<>nil then
-                                          calcip:=PTCalcIP(pvn^.data.Instance)^;
+                                          calcip:=PTCalcIP(pvn^.Instance)^;
                           pvp:=ou.FindVariable('Power');
                           pvi:=ou.FindVariable('Current');
                           pvcos:=ou.FindVariable('CosPHI');
                           pvphase:=ou.FindVariable('Phase');
                           if pvn<>nil then
-                                          calcip:=PTCalcIP(pvn^.data.Instance)^;
+                                          calcip:=PTCalcIP(pvn^.Instance)^;
                           if (pvp<>nil)and(pvi<>nil)and(pvcos<>nil)and(pvphase<>nil) then
                           begin
                           if calcip=_ICOS_from_P then
                           begin
-                               if pgdbdouble(pvp^.data.Instance)^<1 then pgdbdouble(pvcos^.data.Instance)^:=0.65
-                          else if pgdbdouble(pvp^.data.Instance)^<=4 then pgdbdouble(pvcos^.data.Instance)^:=0.75
-                          else pgdbdouble(pvcos^.data.Instance)^:=0.85;
+                               if pDouble(pvp^.Instance)^<1 then pDouble(pvcos^.Instance)^:=0.65
+                          else if pDouble(pvp^.Instance)^<=4 then pDouble(pvcos^.Instance)^:=0.75
+                          else pDouble(pvcos^.Instance)^:=0.85;
 
                                calcip:=_I_from_p;
                           end;
 
                           case calcip of
                                _I_from_P:begin
-                                              if PTPhase(pvphase^.data.Instance)^=_ABC
-                                              then pgdbdouble(pvi^.data.Instance)^:=pgdbdouble(pvp^.data.Instance)^/u/1.73/pgdbdouble(pvcos^.data.Instance)^
-                                              else pgdbdouble(pvi^.data.Instance)^:=pgdbdouble(pvp^.data.Instance)^/u/pgdbdouble(pvcos^.data.Instance)^
+                                              if PTPhase(pvphase^.Instance)^=_ABC
+                                              then pDouble(pvi^.Instance)^:=pDouble(pvp^.Instance)^/u/1.73/pDouble(pvcos^.Instance)^
+                                              else pDouble(pvi^.Instance)^:=pDouble(pvp^.Instance)^/u/pDouble(pvcos^.Instance)^
                                          end;
                                _P_from_I:begin
-                                              if PTPhase(pvphase^.data.Instance)^=_ABC
-                                              then pgdbdouble(pvp^.data.Instance)^:=pgdbdouble(pvi^.data.Instance)^*u*1.73*pgdbdouble(pvcos^.data.Instance)^
-                                              else pgdbdouble(pvp^.data.Instance)^:=pgdbdouble(pvi^.data.Instance)^*u*pgdbdouble(pvcos^.data.Instance)^
+                                              if PTPhase(pvphase^.Instance)^=_ABC
+                                              then pDouble(pvp^.Instance)^:=pDouble(pvi^.Instance)^*u*1.73*pDouble(pvcos^.Instance)^
+                                              else pDouble(pvp^.Instance)^:=pDouble(pvi^.Instance)^*u*pDouble(pvcos^.Instance)^
                                          end
 
 
@@ -721,7 +721,7 @@ begin
 end;
 function AllocDevice:PGDBObjDevice;
 begin
-  GDBGetMem({$IFDEF DEBUGBUILD}'{AllocDevice}',{$ENDIF}result,sizeof(GDBObjDevice));
+  Getmem(result,sizeof(GDBObjDevice));
 end;
 function AllocAndInitDevice(owner:PGDBObjGenericWithSubordinated):PGDBObjDevice;
 begin

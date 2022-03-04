@@ -17,10 +17,10 @@
 }
 
 unit uzcsysinfo;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
-  MacroDefIntf,uzmacros,uzcsysparams,LCLProc,uzclog,uzblog,uzbpaths,uzbtypesbase,Forms,uzbtypes,
+  MacroDefIntf,uzmacros,uzcsysparams,LCLProc,uzclog,uzblog,uzbpaths,Forms,
   {$IFDEF WINDOWS}ShlObj,{$ENDIF}{$IFNDEF DELPHI}LazUTF8,{$ENDIF}sysutils,uzcsysvars;
 const
   zcaduniqueinstanceid='zcad unique instance';
@@ -76,7 +76,7 @@ end;
 procedure ProcessParamStr;
 var
    i:integer;
-   param,paramUC:GDBString;
+   param,paramUC:String;
    ll:TLogLevel;
 const
   LogEnableModulePrefix='LEM_';
@@ -88,7 +88,6 @@ begin
      SysParam.saved.UniqueInstance:=true;
      LoadParams(expandpath(ProgramPath+'rtl/config.xml'),SysParam.saved);
      SysParam.notsaved.PreloadedFile:='';
-     uzbtypes.VerboseLog:=@uzclog.VerboseLog;
      i:=paramcount;
      for i:=1 to paramcount do
        begin
@@ -160,7 +159,6 @@ begin
      //SysParam.verstr:=Format('%d.%d.%d.%d SVN: %s',[SysParam.Ver.major,SysParam.Ver.minor,SysParam.Ver.release,SysParam.Ver.build,RevisionStr]);
      debugln('{N}ZCAD log v'+sysparam.notsaved.ver.versionstring+' started');
 {$IFDEF FPC}                 debugln('{N}Program compiled on Free Pascal Compiler');{$ENDIF}
-{$IFDEF DEBUGBUILD}          debugln('{N}Program compiled with {$DEFINE DEBUGDUILD}');{$ENDIF}
 {$IFDEF PERFOMANCELOG}       debugln('{N}Program compiled with {$DEFINE PERFOMANCELOG}');{$ENDIF}
 {$IFDEF LOUDERRORS}debugln('{N}Program compiled with {$DEFINE LOUDERRORS}');{$ENDIF}
                              debugln('{N}DefaultSystemCodePage:='+inttostr(DefaultSystemCodePage));
@@ -206,14 +204,15 @@ end;
 class function TZCADPathsMacroMethods.MacroFuncSystemFontsPath(const {%H-}Param: string; const Data: PtrInt;var {%H-}Abort: boolean): string;
 {$IF defined(WINDOWS)}
 var
-  s: string;
+  s:string;
 begin
-   SetLength(s,MAX_PATH );
-   if not SHGetSpecialFolderPath(0,PChar(s),CSIDL_FONTS,false) then
-      s:='';
-   Result:=PChar(s);
+  s:='';
+  SetLength(s,MAX_PATH );
+  if not SHGetSpecialFolderPath(0,PChar(s),CSIDL_FONTS,false) then
+    s:='';
+  Result:=PChar(s);
 end;
-{$ELSEIF defined(LINUX)}
+{$ELSEIF (defined(LINUX))or(defined(DARWIN))}
 begin
    Result:='/todo/';
 end;
@@ -223,12 +222,13 @@ class function TZCADPathsMacroMethods.MacroFuncsUserFontsPath (const {%H-}Param:
 var
   s: string;
 begin
-   SetLength(s,MAX_PATH );
-   if not SHGetSpecialFolderPath(0,PChar(s),CSIDL_LOCAL_APPDATA,false) then
-      s:='';
-   Result:=PChar(s)+'\Microsoft\Windows\Fonts';
+  s:='';
+  SetLength(s,MAX_PATH );
+  if not SHGetSpecialFolderPath(0,PChar(s),CSIDL_LOCAL_APPDATA,false) then
+    s:='';
+  Result:=PChar(s)+'\Microsoft\Windows\Fonts';
 end;
-{$ELSEIF defined(LINUX)}
+{$ELSEIF (defined(LINUX))or(defined(DARWIN))}
 begin
    Result:='/todo/';
 end;

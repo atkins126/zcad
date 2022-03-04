@@ -17,24 +17,24 @@
 }
 
 unit uzvagslcom;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses uzccommandsimpl,    //тут реализация объекта CommandRTEdObject
      uzccommandsabstract,//базовые объявления для команд
-     uzbtypesbase,       //базовые типы
+            //базовые типы
      uzccommandsmanager, //менеджер команд
        uzeentpolyline,
        uzcinterface,
        sysutils,
-     uzbgeomtypes,
+     uzegeometrytypes,
      //uzvcom,             //
      //uzvnum,
      //uzvagensl,
 
 
-     UGDBSelectedObjArray,
+     //UGDBSelectedObjArray,
 
-     uzcutils,
+     //uzcutils,
      Varman;             //Зкадовский RTTI
 
 type
@@ -43,30 +43,30 @@ Tuzvagsl_com=object(CommandRTEdObject)//определяем тип - объек
              //procedure CommandEnd; virtual;//переопределяем метод вызываемый при окончании команды
              //procedure CommandCancel; virtual;//переопределяем метод вызываемый при отмене команды
 
-             procedure generatorSLinRooms(pdata:GDBPlatformint); virtual;//построение графа и его визуализация
-             //procedure visualInspectionGroupHeadGraph(pdata:GDBPlatformint); virtual;//построение графа и его визуализация
-             //procedure cablingGroupHeadGraph(pdata:GDBPlatformint); virtual;//прокладка кабелей по трассе полученной в результате поисков пути и т.д.
+             procedure generatorSLinRooms(pdata:PtrInt); virtual;//построение графа и его визуализация
+             //procedure visualInspectionGroupHeadGraph(pdata:PtrInt); virtual;//построение графа и его визуализация
+             //procedure cablingGroupHeadGraph(pdata:PtrInt); virtual;//прокладка кабелей по трассе полученной в результате поисков пути и т.д.
 
-             //procedure DoSomething(pdata:GDBPlatformint); virtual;//реализация какогото действия
-             //procedure DoSomething2(pdata:GDBPlatformint); virtual;//реализация какогото другого действия
+             //procedure DoSomething(pdata:PtrInt); virtual;//реализация какогото действия
+             //procedure DoSomething2(pdata:PtrInt); virtual;//реализация какогото другого действия
             end;
 
 //PTTypeNumbering=^TTypeNumbering;
 //TTypeNumbering=packed record
 //                         pu:PTUnit;                //рантайм юнит с параметрами суперлинии
-//                         LayerNamePrefix:GDBString;//префикс
-//                         ProcessLayer:GDBBoolean;  //выключатель
+//                         LayerNamePrefix:String;//префикс
+//                         ProcessLayer:Boolean;  //выключатель
 //                     end;
 PTuzvagslComParams=^TuzvagslComParams;//указатель на тип данных параметров команды. зкад работает с ними через указатель
 TuzvagslComParams=record       //определяем параметры команды которые будут видны в инспекторе во время выполнения команды
                                       //регистрировать их будем паскалевским RTTI
                                       //не через экспорт исходников и парсинг файла с определениями типов
-  //InverseX:gdbboolean;
-  //InverseY:gdbboolean;
-  BaseName:gdbstring;
-  DeadDand:GDBDouble;
-  NumberVar:gdbstring;
-  option2:gdbboolean;
+  //InverseX:Boolean;
+  //InverseY:Boolean;
+  BaseName:String;
+  DeadDand:Double;
+  NumberVar:String;
+  option2:Boolean;
 
 end;
 
@@ -99,11 +99,11 @@ begin
   inherited CommandStart('');
 end;
 
-procedure Tuzvagsl_com.generatorSLinRooms(pdata:GDBPlatformint);
+procedure Tuzvagsl_com.generatorSLinRooms(pdata:PtrInt);
 var
  contourRoom:PGDBObjPolyLine;
- listDeviceinRoom:TListVertexDevice;
- contourRoomEmbedSL:TListVertex;
+ //listDeviceinRoom:TListVertexDevice;
+ //contourRoomEmbedSL:TListVertex;
  stPoint:gdbvertex;
 begin
   if commandmanager.get3dpoint('Specify insert point:',stPoint)= GRNormal then
@@ -125,7 +125,7 @@ begin
 end;
 
 
-//procedure Tuzvagsl_com.visualInspectionGroupHeadGraph(pdata:GDBPlatformint);
+//procedure Tuzvagsl_com.visualInspectionGroupHeadGraph(pdata:PtrInt);
 //var
 // i,j,counterColor:integer;
 // UndoMarcerIsPlazed:boolean;
@@ -157,7 +157,7 @@ end;
 //  //Commandmanager.executecommandend;
 //end;
 //
-//procedure Tuzvagsl_com.cablingGroupHeadGraph(pdata:GDBPlatformint);
+//procedure Tuzvagsl_com.cablingGroupHeadGraph(pdata:PtrInt);
 //var
 // i,j,counterColor:integer;
 // UndoMarcerIsPlazed:boolean;
@@ -183,7 +183,7 @@ end;
 //end;
 //
 //
-//procedure Tuzvagsl_com.DoSomething(pdata:GDBPlatformint);
+//procedure Tuzvagsl_com.DoSomething(pdata:PtrInt);
 //var
 // k:integer;
 //begin
@@ -199,7 +199,7 @@ end;
 //
 //end;
 //
-//procedure Tuzvagsl_com.DoSomething2(pdata:GDBPlatformint);
+//procedure Tuzvagsl_com.DoSomething2(pdata:PtrInt);
 //begin
 //  //тут делаем чтонибудь что будет усполнено по нажатию DoSomething2
 //  //выполним Commandmanager.executecommandend;

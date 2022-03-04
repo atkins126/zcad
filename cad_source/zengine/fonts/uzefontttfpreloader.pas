@@ -17,18 +17,18 @@
 }
 
 unit uzefontttfpreloader;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 
 uses
-  sysutils,classes,LCLProc,bufstream,StrUtils;
+  sysutils,classes,LCLProc,bufstream{,StrUtils};
 
 const
-  maxNameID=25;
+  maxNameID=26;
 
 type
-  TNameTableValueType=string;
+  TNameTableValueType=String;
   TTTFFileParams=record
     ValidTTFFile:boolean;
     //this from https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6name.html
@@ -73,7 +73,7 @@ type
   Short    = Smallint;    (* signed short integer,   must be on 16 bits *)
   Long        = Longint;
   ULong       = LongWord; (* unsigned long integer, must be on 32 bits *)
-  TT_Fixed    = LongInt;  (* Signed Fixed 16.16 Float *)
+  TT_Fixed    = LongInt;  (* Signed Fixed 16.16 Single *)
   TStorage    = array[0..16000] of Long;
   PStorage    = ^TStorage;
 
@@ -198,12 +198,13 @@ begin
     else
       len:=NameRecord.length div 2;
     AStream.Seek(NameRecord.offset+StorageOffsetInFile,soBeginning);
+    ts:='';
     setlength(ts,len);
-    ts:=DupeString('-',len);
+    //ts:=DupeString('-',len);
     AStream.Read((@ts[1])^,len*2);
     for i:=1 to len do
       PWord(@ts[i])^:=BEtoN(PWord(@ts[i])^);
-    result:=ts;
+    result:=TNameTableValueType(ts);
   end;
 end;
 
@@ -235,9 +236,10 @@ begin
     end;
 
     (*workaround https://bugs.freepascal.org/view.php?id=38351*)
-    ulong(TableDir.version):=TTCHeader.Tag;
     AStream.Seek({0}4,soBeginning);
     TableDir:=readTablreDir(AStream);
+    ulong(TableDir.version):=TTCHeader.Tag;
+
 
     if (TableDir.version <> $10000   )(* MS fonts  *) and
        (TableDir.version <> $74727565)(* Mac fonts *) then begin
@@ -353,14 +355,17 @@ end;
 
 function TTTFFileStream.GET_ULong:ULong;
 begin
+  result:=0;
   read(result,SizeOf(Result));
 end;
 function TTTFFileStream.GET_Long:Long;
 begin
+  result:=0;
   read(result,SizeOf(Result));
 end;
 function TTTFFileStream.GET_UShort:UShort;
 begin
+  result:=0;
   read(result,SizeOf(Result));
 end;
 initialization

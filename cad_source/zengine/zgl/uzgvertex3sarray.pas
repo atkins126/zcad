@@ -17,23 +17,23 @@
 }
 
 unit uzgvertex3sarray;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses uzbtypesbase,gzctnrvectordata,sysutils,uzbtypes,uzbmemman,
-     gzctnrvectortypes,uzbgeomtypes,uzegeometry;
+uses gzctnrVector,sysutils,
+     gzctnrvectortypes,uzegeometrytypes,uzegeometry;
 type
 {Export+}
 PZGLVertex3Sarray=^ZGLVertex3Sarray;
 {REGISTEROBJECTTYPE ZGLVertex3Sarray}
-ZGLVertex3Sarray= object(GZVectorData{-}<GDBvertex3S>{//})(*OpenArrayOfData=GDBvertex3S*)
-                constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger);
+ZGLVertex3Sarray= object(GZVector{-}<GDBvertex3S>{//})(*OpenArrayOfData=GDBvertex3S*)
+                constructor init(m:Integer);
                 constructor initnul;
                 function AddGDBVertex(const v:GDBvertex):TArrayIndex;virtual;
-                function GetLength(const i:TArrayIndex):GDBFloat;virtual;
+                function GetLength(const i:TArrayIndex):Single;virtual;
              end;
 {Export-}
 implementation
-function ZGLVertex3Sarray.GetLength(const i:TArrayIndex):GDBFloat;
+function ZGLVertex3Sarray.GetLength(const i:TArrayIndex):Single;
 var
     pv1,pv2:PGDBvertex3S;
     v:GDBvertex3S;
@@ -59,7 +59,7 @@ end;
 
 constructor ZGLVertex3Sarray.init;
 begin
-  inherited init({$IFDEF DEBUGBUILD}ErrGuid,{$ENDIF}m{,sizeof(GDBvertex3S)});
+  inherited init(m);
 end;
 constructor ZGLVertex3Sarray.initnul;
 begin
@@ -68,7 +68,7 @@ begin
 end;
 (*procedure ZGLVertex3Sarray.drawgeometry;
 var p:PGDBVertex3S;
-    i:GDBInteger;
+    i:Integer;
 begin
   //if count<2 then exit;
   p:=parray;

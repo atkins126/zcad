@@ -16,7 +16,7 @@ type
 {REGISTEROBJECTTYPE filestream}
   filestream =  object
     name:TMyString;
-    bufer:{-}popenarrayc{/GDBPointer/};
+    bufer:{-}popenarrayc{/Pointer/};
     filesize,
       filepos,
       currentpos,
@@ -27,12 +27,12 @@ type
       buferpos: {GDB}Integer;
     constructor init(bsize: {GDB}Integer);
     constructor ReadFromFile(filename:TMyString);
-    procedure assign(const fname: TMyString; mode: {GDB}Longword);
+    procedure assign(const fname: TMyString; mode: {GDB}LongWord);
     procedure close;
     procedure readtobufer;
     procedure continuebufer(symbolcount:{GDB}Integer);
-    function readGDBString: TMyString;
-    function ReadString: TMyString;
+    function readString: TMyString;
+    function ReadString2: TMyString;
     function ReadByte: {GDB}Byte;
     function ReadWord: {GDB}Word;
     function readworld(break, ignore: TMyString): shortString;
@@ -64,7 +64,7 @@ begin
   close;
   done;
 end;
-procedure filestream.assign(const fname: TMyString; mode: {GDB}Longword);
+procedure filestream.assign(const fname: TMyString; mode: {GDB}LongWord);
 begin
   filehandle := fileopen(fname, mode);
   if filehandle > 0 then
@@ -126,9 +126,9 @@ begin
   result := copy(expr, i, length(expr) - i + 1);
   expr:=expr;
 end;
-function filestream.ReadString: TMyString;
+function filestream.ReadString2: TMyString;
 begin
-     result:=readspace(readGDBString)
+     result:=readspace(readString)
 end;
 function filestream.readbyte: {GDB}Byte;
 begin
@@ -143,9 +143,9 @@ function filestream.readword: {GDB}Word;
 begin
      result:=readbyte+256*readbyte;
 end;
-function filestream.readGDBString: TMyString;
+function filestream.readString: TMyString;
 var
-  s: {shortGDBString}TMyString {[100]};
+  s: {shortString}TMyString {[100]};
   cr: {GDB}Boolean;
   var i:{GDB}Integer;
 begin
@@ -171,7 +171,7 @@ begin
           inc(buferpos);
           inc(currentpos);
           setlength(s,i-1);
-          readGDBString := s;
+          readString := s;
           exit;
         end
         else
@@ -186,7 +186,7 @@ begin
     readtobufer;
   end;
   setlength(s,i-1);
-  readGDBString := s;
+  readString := s;
 end;
 
 function filestream.readworld(break, ignore: TMyString): shortString;

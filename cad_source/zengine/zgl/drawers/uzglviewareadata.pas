@@ -17,11 +17,11 @@
 }
 
 unit uzglviewareadata;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
-  uzegeometry,uzeconsts,uzbgeomtypes,uzbtypesbase,uzbtypes, UGDBPoint3DArray,
+  uzegeometry,uzeconsts,uzegeometrytypes,uzbtypes, UGDBPoint3DArray,
   UGDBTracePropArray,uzgldrawcontext;
 const
 MZW_LBUTTON=1;
@@ -33,7 +33,7 @@ type
   pmousedesc = ^mousedesc;
   {REGISTERRECORDTYPE mousedesc}
   mousedesc = record
-    mode: GDBByte;
+    mode: Byte;
     mouse, mouseglue: GDBvertex2DI;
     glmouse:GDBvertex2DI;
     workplane: {GDBplane}DVector4D;
@@ -42,30 +42,30 @@ type
     mouseray: GDBPiece;
     mouseonworkplanecoord: GDBvertex;
     mouse3dcoord: GDBvertex;
-    mouseonworkplan: GDBBoolean;
-    mousein: GDBBoolean;
+    mouseonworkplan: Boolean;
+    mousein: Boolean;
   end;
 
   PSelectiondesc = ^Selectiondesc;
   {REGISTERRECORDTYPE Selectiondesc}
   Selectiondesc = record
-    OnMouseObject,LastSelectedObject:GDBPointer;
-    Selectedobjcount:GDBInteger;
-    MouseFrameON: GDBBoolean;
-    MouseFrameInverse:GDBBoolean;
+    OnMouseObject,LastSelectedObject:Pointer;
+    Selectedobjcount:Integer;
+    MouseFrameON: Boolean;
+    MouseFrameInverse:Boolean;
     Frame1, Frame2: GDBvertex2DI;
     Frame13d, Frame23d: GDBVertex;
     BigMouseFrustum:ClipArray;
   end;
   {REGISTERRECORDTYPE tcpdist}
   tcpdist = record
-    cpnum: GDBInteger;
-    cpdist: GDBInteger;
+    cpnum: Integer;
+    cpdist: Integer;
   end;
   {REGISTERRECORDTYPE traceprop2}
   traceprop2 = record
-    tmouse: GDBDouble;
-    dmouse: GDBInteger;
+    tmouse: Double;
+    dmouse: Integer;
     dir: GDBVertex;
     dispraycoord: GDBVertex;
     worldraycoord: GDBVertex;
@@ -73,23 +73,23 @@ type
   arrtraceprop = packed array[0..0] of traceprop;
   {REGISTERRECORDTYPE GDBArraytraceprop_GDBWord}
   GDBArraytraceprop_GDBWord = record
-    count: GDBWord;
+    count: Word;
     arr: arrtraceprop;
   end;
   {REGISTERRECORDTYPE objcontrolpoint}
   objcontrolpoint = record
-    objnum: GDBInteger;
-    newobjnum: GDBInteger;
+    objnum: Integer;
+    newobjnum: Integer;
     ostype: real;
     worldcoord: gdbvertex;
     dispcoord: GDBvertex2DI;
-    selected: GDBBoolean;
+    selected: Boolean;
   end;
   arrayobjcontrolpoint = packed array[0..0] of objcontrolpoint;
   popenarrayobjcontrolpoint_GDBWordwm = ^openarrayobjcontrolpoint_GDBWordwm;
   {REGISTERRECORDTYPE openarrayobjcontrolpoint_GDBWordwm}
   openarrayobjcontrolpoint_GDBWordwm = record
-    count, max: GDBWord;
+    count, max: Word;
     arraycp: arrayobjcontrolpoint;
   end;
 
@@ -100,59 +100,59 @@ type
     worldcoord: GDBVertex;
     dispcoord: GDBVertex;
     dmousecoord: GDBVertex;
-    tmouse: GDBDouble;
+    tmouse: Double;
     arrayworldaxis:GDBPoint3DArray;
     arraydispaxis:GDBtracepropArray;
-    ostype: GDBFloat;
-    radius: GDBFloat;
-    PGDBObject:GDBPointer;
+    ostype: Single;
+    radius: Single;
+    PGDBObject:Pointer;
   end;
   {REGISTERRECORDTYPE totrackarray}
   totrackarray = record
     otrackarray: packed array[0..3] of os_record;
-    total, current: GDBInteger;
+    total, current: Integer;
   end;
   {REGISTERRECORDTYPE TCSIcon}
   TCSIcon=record
                CSIconCoord: GDBvertex;
                CSIconX,CSIconY,CSIconZ: GDBvertex;
                CSX, CSY, CSZ: GDBvertex2DI;
-               AxisLen:GDBDouble;
+               AxisLen:Double;
          end;
   TForceRedrawVolume=record
-   ForceRedraw:GDBBoolean;
+   ForceRedraw:Boolean;
    Volume:TBoundingBox;
   end;
 
   POGLWndtype = ^OGLWndtype;
   OGLWndtype = object(GDBaseObject)
-    polarlinetrace: GDBInteger;
-    pointnum, axisnum: GDBInteger;
+    polarlinetrace: Integer;
+    pointnum, axisnum: Integer;
     CSIcon:TCSIcon;
     BLPoint,CPoint,TRPoint:GDBvertex2D;
-    ViewHeight:GDBDouble;
-    projtype: GDBInteger;
-    firstdraw: GDBBoolean;
+    ViewHeight:Double;
+    projtype: Integer;
+    firstdraw: Boolean;
     md: mousedesc;
-    gluetocp: GDBBoolean;
+    gluetocp: Boolean;
     cpdist: tcpdist;
     ospoint, oldospoint: os_record;
-    height, width: GDBInteger;
+    height, width: Integer;
     SelDesc: Selectiondesc;
-    otracktimerwork: GDBInteger;
-    scrollmode:GDBBoolean;
+    otracktimerwork: Integer;
+    scrollmode:Boolean;
     lastcp3dpoint,lastpoint: GDBVertex;
-    lastonmouseobject:GDBPointer;
+    lastonmouseobject:Pointer;
     nearesttcontrolpoint:tcontrolpointdist;
     startgluepoint:pcontrolpointdesc;
     ontrackarray: totrackarray;
     mouseclipmatrix:Dmatrix4D;
     mousefrustum,mousefrustumLCS:ClipArray;
-    ShowDebugFrustum:GDBBoolean;
+    ShowDebugFrustum:Boolean;
     debugfrustum:ClipArray;
-    ShowDebugBoundingBbox:GDBBoolean;
+    ShowDebugBoundingBbox:Boolean;
     DebugBoundingBbox:TBoundingBox;
-    processObjConstruct:GDBBoolean;
+    processObjConstruct:Boolean;
     ForceRedrawVolume:TForceRedrawVolume;
     constructor init;
     destructor done;virtual;
@@ -197,21 +197,21 @@ begin
 
   CSIcon.CSIconZ:=nulvertex;
 
-  ontrackarray.otrackarray[0].arrayworldaxis.init({$IFDEF DEBUGBUILD}'{8BE71BAA-507B-4D6B-BE2C-63693022090C}',{$ENDIF}10);
-  ontrackarray.otrackarray[0].arraydispaxis.init({$IFDEF DEBUGBUILD}'{722A886F-5616-4E8F-B94D-3A1C3D7ADBD4}',{$ENDIF}10);
+  ontrackarray.otrackarray[0].arrayworldaxis.init(10);
+  ontrackarray.otrackarray[0].arraydispaxis.init(10);
 
 
        for i := 0 to 3 do
                        begin
-                       ontrackarray.otrackarray[i].arrayworldaxis.init({$IFDEF DEBUGBUILD}'{722A886F-5616-4E8F-B94D-3A1C3D7ADBD4}',{$ENDIF}10);
+                       ontrackarray.otrackarray[i].arrayworldaxis.init(10);
                        ontrackarray.otrackarray[i].arrayworldaxis.CreateArray;
-                       ontrackarray.otrackarray[i].arraydispaxis.init({$IFDEF DEBUGBUILD}'{722A886F-5616-4E8F-B94D-3A1C3D7ADBD4}',{$ENDIF}10);
+                       ontrackarray.otrackarray[i].arraydispaxis.init(10);
                        ontrackarray.otrackarray[i].arraydispaxis.CreateArray;
                        end;
 
 
-       ospoint.arraydispaxis.init({$IFDEF DEBUGBUILD}'{722A886F-5616-4E8F-B94D-3A1C3D7ADBD4}',{$ENDIF}10);
-       ospoint.arrayworldaxis.init({$IFDEF DEBUGBUILD}'{722A886F-5616-4E8F-B94D-3A1C3D7ADBD4}',{$ENDIF}10);
+       ospoint.arraydispaxis.init(10);
+       ospoint.arrayworldaxis.init(10);
   ForceRedrawVolume.ForceRedraw:=false;
 end;
 

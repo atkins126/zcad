@@ -10,8 +10,8 @@ usescopy _addtocable;
 
 var
 
-T1:GDBString;(*'Группа'*)
-T2:GDBString;(*'Код'*)
+T1:String;(*'Группа'*)
+T2:String;(*'Код'*)
 
 implementation
 
@@ -29,7 +29,5 @@ SerialConnection:=1;
 GC_HeadDevice:='ЩО??';
 GC_HDShortName:='??';
 GC_HDGroup:=0;
-
-T2:='К';
 
 end.

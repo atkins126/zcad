@@ -18,7 +18,7 @@
 {$mode delphi}
 unit uzccommand_multiobjvarman;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -28,7 +28,7 @@ uses
   uzbpaths,
   uzccmdinfoform,
   uzccommandsabstract,uzccommandsimpl,
-  UGDBOpenArrayOfByte,
+  uzctnrVectorBytes,
   uzeentity,
   gzctnrvectortypes,
   uzcenitiesvariablesextender,
@@ -42,7 +42,7 @@ implementation
 
 function MultiObjVarMan_com(operands:TCommandOperands):TCommandResult;
 var
-  mem:GDBOpenArrayOfByte;
+  mem:TZctnrVectorBytes;
   pobj:PGDBObjEntity;
   modalresult:integer;
   u8s:UTF8String;
@@ -51,7 +51,7 @@ var
   ir:itrec;
   pentvarext:TVariablesExtender;
 begin
-  mem.init({$IFDEF DEBUGBUILD}'{A1891083-67C6-4C21-8012-6D215935F6A6}',{$ENDIF}1024);
+  mem.init(1024);
 
   createInfoFormVar;
   counter:=0;

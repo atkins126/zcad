@@ -26,8 +26,8 @@ unit uzeparser;
 
 interface
 uses Generics.Collections,
-     {$IFDEF FPC}gvector,gmap,gutil,gdeque,{$ENDIF}
-     sysutils,uzbhandles,uzbsets,StrUtils;
+     {$IFDEF FPC}gvector,gdeque,{$ENDIF}
+     sysutils,uzbhandles,uzbsets{,StrUtils};
 resourcestring
   rsRunTimeError='uzeparser: Execution error (%s)';
   rsProcessorClassNilError='uzeparser: ProcessorClass=nil (%s)';
@@ -40,8 +40,8 @@ const MaxCashedValues={4}5;
       InitialStartPos=1;
 
 type
-  TTokenOptions=GTSetWithGlobalEnums<Longword,Longword{byte,byte}>;
-  TTokenDescription=GTSetWithGlobalEnums<Longword,Longword{byte,byte}>;
+  TTokenOptions=GTSetWithGlobalEnums<LongWord,LongWord{byte,byte}>;
+  TTokenDescription=GTSetWithGlobalEnums<LongWord,LongWord{byte,byte}>;
   TZPIndex={$IFDEF FPC}SizeInt{$ELSE}Integer{$ENDIF};
   TZPSize={$IFDEF FPC}SizeInt{$ELSE}Integer{$ENDIF};
 var
@@ -127,7 +127,7 @@ type
       class function LengthBetweenPos(const APos1:TCharPosition;const APos2:TCharPosition;const ExcludePos2:boolean=False):TCharLength;inline;
       class procedure IncPosition(const AStr:GStingType;var APos1:TCharPosition);inline;
       //class procedure ProcessPosition(const AStr:GStingType;var APos:TCharPosition;const SetupFromHere:Boolean=False);//inline;
-      class procedure AddToPosition(var Rslt:TCharPosition;const AStr:GStingType; constref  APos1:TCharPosition;Offset:integer);inline;
+      class procedure AddToPosition(out Rslt:TCharPosition;const AStr:GStingType; constref  APos1:TCharPosition;Offset:integer);inline;
       class procedure AddToPosition2(const AStr:GStingType; var  APos1:TCharPosition;Offset:integer);inline;
       class procedure NextPosition(var Rslt:TCharPosition;const AStr:GStingType; var R:TCharRange);inline;
 
@@ -138,6 +138,7 @@ type
       class procedure InitStartPos(var ARange:TCharRange);inline;
       class function GetHumanReadableAdress(const APos:TCharPosition):String;inline;
       class function CharRange2CharInterval(const ARange:TCharRange):TCharInterval;inline;
+      class function CreateFullInterval(const AStr:GStingType):TCharInterval;inline;
       class function EmptyCharLength:TCharLength;inline;
       class function WrongCharPosition:TCharPosition;inline;
       class function StartCharPosition(const AStr:GStingType):TCharPosition;inline;
@@ -309,7 +310,7 @@ type
 
     function ConfirmToken(Text:GTokenizerString;const SubStr:GManipulatorInterval;CurrentPos:GManipulatorCUIndex;TokenId:TTokenId;NextPos:GManipulatorCUIndex;var TokenDataVector:TTokenDataVector;var FirstSymbol:TGZTokenizer<GManipulator,GTokenizerString,GTokenizerSymbol,GManipulatorCUIndex,GManipulatorCharIndex,GManipulatorCharLength,GManipulatorInterval,GManipulatorCharRange,GTokenizerSymbolToOptChar,GTokenizerDataType>):boolean;//inline;
     function SubGetToken(Text:GTokenizerString;const SubStr:GManipulatorInterval;var CurrentPos:GManipulatorCharIndex;out TokenTextInfo:TTokenTextInfo;level:integer;var IncludedCharsPos:TIncludedChars;var AllChars:TChars;var TokenDataVector:TTokenDataVector;var FirstSymbol:TGZTokenizer<GManipulator,GTokenizerString,GTokenizerSymbol,GManipulatorCUIndex,GManipulatorCharIndex,GManipulatorCharLength,GManipulatorInterval,GManipulatorCharRange,GTokenizerSymbolToOptChar,GTokenizerDataType>):TTokenId;//inline;
-    function Sub2GetToken(Text:GTokenizerString;const SubStr:GManipulatorInterval;constref CurrentPos:GManipulatorCharIndex;out TokenTextInfo:TTokenTextInfo;level:integer;var TokenDataVector:TTokenDataVector;var FirstSymbol:TGZTokenizer<GManipulator,GTokenizerString,GTokenizerSymbol,GManipulatorCUIndex,GManipulatorCharIndex,GManipulatorCharLength,GManipulatorInterval,GManipulatorCharRange,GTokenizerSymbolToOptChar,GTokenizerDataType>):TTokenId;//inline;
+    function Sub2GetToken(Text:GTokenizerString;const SubStr:GManipulatorInterval;constref CurrentPos:GManipulatorCharIndex;var TokenTextInfo:TTokenTextInfo;level:integer;var TokenDataVector:TTokenDataVector;var FirstSymbol:TGZTokenizer<GManipulator,GTokenizerString,GTokenizerSymbol,GManipulatorCUIndex,GManipulatorCharIndex,GManipulatorCharLength,GManipulatorInterval,GManipulatorCharRange,GTokenizerSymbolToOptChar,GTokenizerDataType>):TTokenId;//inline;
     function GetToken(Text:GTokenizerString;const SubStr:GManipulatorInterval;CurrentPos:GManipulatorCharIndex;out TokenTextInfo:TTokenTextInfo;var IncludedCharsPos:TIncludedChars;var AllChars:TChars;var TokenDataVector:TTokenDataVector;var FirstSymbol:TGZTokenizer<GManipulator,GTokenizerString,GTokenizerSymbol,GManipulatorCUIndex,GManipulatorCharIndex,GManipulatorCharLength,GManipulatorInterval,GManipulatorCharRange,GTokenizerSymbolToOptChar,GTokenizerDataType>):TTokenId;//inline;
 
     function GetSymbolData(const Text:GTokenizerString;const CurrentPos:GManipulatorCUIndex):TTokenizerMap.PTValue;//inline;
@@ -331,7 +332,7 @@ type
           TGeneralParsedText=class(TAbstractParsedText<GParserString,GDataType>)
             Source:GParserString;
             Parser:TGZParser<GManipulator,GParserString,GParserSymbol,GManipulatorCUIndex,GManipulatorCharIndex,GManipulatorCharLength,GManipulatorInterval,GManipulatorCharRange,GDataType,GSymbolToOptChar>;
-            procedure SetOperands;virtual;abstract;
+            //procedure SetOperands;virtual;abstract;
             constructor Create(_Source:GParserString;_Parser:TGZParser<GManipulator,GParserString,GParserSymbol,GManipulatorCUIndex,GManipulatorCharIndex,GManipulatorCharLength,GManipulatorInterval,GManipulatorCharRange,GDataType,GSymbolToOptChar>);
             destructor Destroy;override;
             class procedure DoItWithPart(const Src:GParserString;var APart:TParserTokenizer.TTextPart;var data:GDataType);
@@ -372,7 +373,7 @@ type
     destructor Destroy;override;
     procedure clearStoredToken;
     function RegisterToken(
-                           const Token:string;
+                           const Token:GParserString;
                            const BrackeOpen,BrackeClose:char;
                            const ProcessorClass:TParserTokenizer.TStrProcessorClass;
                            InsideBracketParser:TGZParser<GManipulator,GParserString,GParserSymbol,GManipulatorCUIndex,GManipulatorCharIndex,GManipulatorCharLength,GManipulatorInterval,GManipulatorCharRange,GDataType,GSymbolToOptChar>;
@@ -593,7 +594,7 @@ begin
 
   end;
 end;}
-class procedure TStringManipulator<GStingType,GCharType,GAdditionalDataManipulator,GAdditionalPositionData,GAdditionalLengthData>.AddToPosition(var Rslt:TCharPosition;const AStr:GStingType; constref  APos1:TCharPosition;Offset:integer);
+class procedure TStringManipulator<GStingType,GCharType,GAdditionalDataManipulator,GAdditionalPositionData,GAdditionalLengthData>.AddToPosition(out Rslt:TCharPosition;const AStr:GStingType; constref  APos1:TCharPosition;Offset:integer);
 var
   i:integer;
 begin
@@ -774,8 +775,8 @@ class procedure TStaticStrProcessorString<GManipulator,GString,GSymbol,GManipula
                                   var Result:GString;
                                   var ResultParam:GManipulatorCharRange;
                                   var data:GDataType);
-var
-  i:integer;
+//var
+  //i:integer;
 begin
   GManipulator.CopyStr(Operands,Source,ResultParam,Result);
   {ResultParam.L:=Operands.L;
@@ -792,7 +793,7 @@ class procedure TGFakeStrProcessor<GManipulator,GString,GSymbol,GManipulatorChar
                                                   var Result:GString;
                                                   var ResultParam:GManipulatorCharRange;
                                                   var data:GDataType);
-var i:integer;
+//var i:integer;
 begin
   GManipulator.CopyStr(Token,Source,ResultParam,Result);
   {ResultParam.L:=Token.L;
@@ -812,6 +813,8 @@ function TGZParser<GManipulator,GParserString,GParserSymbol,GManipulatorCUIndex,
 var
   ResultParam:GManipulatorCharRange;
 begin
+  Result:=Default(GParserString);
+  ResultParam:=default(GManipulatorCharRange);
   GManipulator.OnlyGetLengthValue(ResultParam);
   {ResultParam.StartPos:=OnlyGetLength;
   ResultParam.L:=0;}
@@ -866,9 +869,10 @@ function TGZParser<GManipulator,GParserString,GParserSymbol,GManipulatorCUIndex,
 var
   totallength,i:integer;
   ResultParam:GManipulatorCharRange;
-  cp:TSystemCodePage;
+  //cp:TSystemCodePage;
 begin
-  result:=default(GParserString);
+  result:=Default(GParserString);
+  ResultParam:=Default(GManipulatorCharRange);
   totallength:=0;
   for i:=0 to Parts.size-1 do begin
     GManipulator.OnlyGetLengthValue(ResultParam);
@@ -890,9 +894,9 @@ begin
       totallength:=totallength+ResultParam.Length;
     end;}
   end;
-  result:=dupestring('+',totallength);
-  //SetLength(result,totallength);
-  cp:=StringCodePage(result);
+  //result:=dupestring('+',totallength);
+  SetLength(result,totallength);
+  //cp:=StringCodePage(result);
   //GManipulator.InitStartPos(ResultParam);
   ResultParam:=GManipulator.StartCharRange('');
   //ResultParam.StartPos:=InitialStartPos;
@@ -910,10 +914,10 @@ end;
 procedure TGZParser<GManipulator,GParserString,GParserSymbol,GManipulatorCUIndex,GManipulatorCharIndex,GManipulatorCharLength,GManipulatorInterval,GManipulatorCharRange,GDataType,GSymbolToOptChar>.TParsedText.Doit(var data:GDataType);
 var
   i:integer;
-  prt:TParserTokenizer.TTextPart;
+  //dbg:TParserTokenizer.TTextPart;
 begin
   for i:=0 to Parts.size-1 do begin
-    prt:=parts[i];
+    //dbg:=parts[i];
     if (parts[i].TokenInfo.ProcessorClass<>nil)and(not(TTokenOptions.IsAllPresent(parts[i].TokenInfo.Options,TGOFake))) then begin
       if parts[i].TokenInfo.ProcessorClass.GetProcessorType=PTStatic then begin
         parts[i].TokenInfo.ProcessorClass.StaticDoit(Source,parts[i].TextInfo.TokenPos,parts[i].TextInfo.OperandsPos,parts[i].Operands,parts[i].TokenInfo.InsideBracketParser,data);
@@ -1015,13 +1019,15 @@ end;
 function TGZTokenizer<GManipulator,GTokenizerString,GTokenizerSymbol,GManipulatorCUIndex,GManipulatorCharIndex,GManipulatorCharLength,GManipulatorInterval,GManipulatorCharRange,GTokenizerSymbolToOptChar,GTokenizerDataType>.SubGetToken(Text:GTokenizerString;const SubStr:GManipulatorInterval;var CurrentPos:GManipulatorCharIndex;out TokenTextInfo:TTokenTextInfo;level:integer;var IncludedCharsPos:TIncludedChars;var AllChars:TChars;var TokenDataVector:TTokenDataVector;var FirstSymbol:TGZTokenizer<GManipulator,GTokenizerString,GTokenizerSymbol,GManipulatorCUIndex,GManipulatorCharIndex,GManipulatorCharLength,GManipulatorInterval,GManipulatorCharRange,GTokenizerSymbolToOptChar,GTokenizerDataType>):TTokenId;
 var
   PTokenizerSymbolData:TTokenizerMap.PTValue;
-  i,step:integer;
+  {i,}step:integer;
   len:integer;
   match:boolean;
   OptChar:TOptChar;
   //SubStrLastsym:integer;
   TaddResult:GManipulatorCharIndex;
 begin
+  TaddResult:=Default(GManipulatorCharIndex);
+  TokenTextInfo.TokenPos.P:=CurrentPos;
   //SubStrLastsym:=SubStr.StartPos+SubStr.L-1;
   if isOnlyOneToken<>'' then begin
   while {GManipulator.PosToIndex(CurrentPos)<=SubStrLastsym}(GManipulator.PosInInterval(CurrentPos,SubStr.P,SubStr.CUL)=0)and(SubStr.CUL.CodeUnits>0) do begin
@@ -1147,7 +1153,7 @@ begin
     {result:=}map.MyGetMutableValue({UpCase}(GManipulator.CodeUnitAtPos(Text,CurrentPos)),{PTokenizerSymbolData}result);
 end;
 
-function TGZTokenizer<GManipulator,GTokenizerString,GTokenizerSymbol,GManipulatorCUIndex,GManipulatorCharIndex,GManipulatorCharLength,GManipulatorInterval,GManipulatorCharRange,GTokenizerSymbolToOptChar,GTokenizerDataType>.Sub2GetToken(Text:GTokenizerString;const SubStr:GManipulatorInterval;constref CurrentPos:GManipulatorCharIndex;out TokenTextInfo:TTokenTextInfo;level:integer;var TokenDataVector:TTokenDataVector;var FirstSymbol:TGZTokenizer<GManipulator,GTokenizerString,GTokenizerSymbol,GManipulatorCUIndex,GManipulatorCharIndex,GManipulatorCharLength,GManipulatorInterval,GManipulatorCharRange,GTokenizerSymbolToOptChar,GTokenizerDataType>):TTokenId;
+function TGZTokenizer<GManipulator,GTokenizerString,GTokenizerSymbol,GManipulatorCUIndex,GManipulatorCharIndex,GManipulatorCharLength,GManipulatorInterval,GManipulatorCharRange,GTokenizerSymbolToOptChar,GTokenizerDataType>.Sub2GetToken(Text:GTokenizerString;const SubStr:GManipulatorInterval;constref CurrentPos:GManipulatorCharIndex;var TokenTextInfo:TTokenTextInfo;level:integer;var TokenDataVector:TTokenDataVector;var FirstSymbol:TGZTokenizer<GManipulator,GTokenizerString,GTokenizerSymbol,GManipulatorCUIndex,GManipulatorCharIndex,GManipulatorCharLength,GManipulatorInterval,GManipulatorCharRange,GTokenizerSymbolToOptChar,GTokenizerDataType>):TTokenId;
 var
   PTokenizerSymbolData:TTokenizerMap.PTValue;
   OptChar:TOptChar;
@@ -1155,6 +1161,7 @@ var
   match:boolean;
   TaddResult:GManipulatorCharIndex;
 begin
+  TaddResult:=Default(GManipulatorCharIndex);
   //inc(debTokenizerSub2GetToken);
   //maxlevel:=level;
   if isOnlyOneToken<>'' then begin
@@ -1213,7 +1220,7 @@ end;
 
 function TGZParser<GManipulator,GParserString,GParserSymbol,GManipulatorCUIndex,GManipulatorCharIndex,GManipulatorCharLength,GManipulatorInterval,GManipulatorCharRange,GDataType,GSymbolToOptChar>.GetTokenFromSubStr(Text:GParserString;const SubStr:GManipulatorInterval;CurrentPos:GManipulatorCharIndex;out TokenTextInfo:TParserTokenizer.TTokenTextInfo):TParserTokenizer.TTokenId;
 var
-  PTokenizerSymbolData:TParserTokenizer.TTokenizerMap.PTValue;
+  //PTokenizerSymbolData:TParserTokenizer.TTokenizerMap.PTValue;
   startpos:GManipulatorCharIndex;
   TTI:TParserTokenizer.TTokenTextInfo;
 begin
@@ -1249,12 +1256,21 @@ begin
     exit(TokenTextInfo.TokenId);
   end;
 end;
+class function TStringManipulator<GStingType,GCharType,GAdditionalDataManipulator,GAdditionalPositionData,GAdditionalLengthData>.CreateFullInterval(const AStr:GStingType):TCharInterval;
+begin
+  result.P:=StartCharPosition(AStr);
+  result.CUL:=Len(AStr);
+  TAdditionalDataManipulator.SetStartPosition(AStr,result.P,result.P.AdditionalPosData);
+end;
+
 function TGZParser<GManipulator,GParserString,GParserSymbol,GManipulatorCUIndex,GManipulatorCharIndex,GManipulatorCharLength,GManipulatorInterval,GManipulatorCharRange,GDataType,GSymbolToOptChar>.GetTokens(Text:GParserString):TGeneralParsedText;
 var
   SubStr:GManipulatorInterval;
 begin
-  SubStr.P:=GManipulator.StartCharPosition(Text);
-  SubStr.CUL:=GManipulator.Len(Text);
+  SubStr:=GManipulator.CreateFullInterval(Text);
+  //SubStr.P:=GManipulator.StartCharPosition(Text);
+  //SubStr.CUL:=GManipulator.Len(Text);
+  //GManipulator.TAdditionalDataManipulator.SetStartPosition(Text,SubStr.P,SubStr.P.AdditionalPosData);
   result:=GetTokensFromSubStr(Text,SubStr);
 end;
 function TGZParser<GManipulator,GParserString,GParserSymbol,GManipulatorCUIndex,GManipulatorCharIndex,GManipulatorCharLength,GManipulatorInterval,GManipulatorCharRange,GDataType,GSymbolToOptChar>.GetTokensFromSubStr(Text:GParserString;const SubStr:GManipulatorInterval):TGeneralParsedText;
@@ -1319,6 +1335,7 @@ var
   currpos:GManipulatorCharIndex;
   openedbrcount,brcount:integer;
 begin
+    currpos:=Default(GManipulatorCharIndex);
     if (not TTokenOptions.IsAllPresent(TokenDataVector[TokenId].Options,TGOFake))
       and (TokenDataVector[TokenId].BrackeOpen<>#0)
       and (TokenDataVector[TokenId].BrackeClose<>#0) then
@@ -1397,7 +1414,7 @@ begin
   //StoredTokenTextInfo.TokenPos.StartPos:=0;
 end;
 
-function TGZParser<GManipulator,GParserString,GParserSymbol,GManipulatorCUIndex,GManipulatorCharIndex,GManipulatorCharLength,GManipulatorInterval,GManipulatorCharRange,GDataType,GSymbolToOptChar>.RegisterToken(const Token:string;
+function TGZParser<GManipulator,GParserString,GParserSymbol,GManipulatorCUIndex,GManipulatorCharIndex,GManipulatorCharLength,GManipulatorInterval,GManipulatorCharRange,GDataType,GSymbolToOptChar>.RegisterToken(const Token:GParserString;
                                                                                        const BrackeOpen,BrackeClose:char;
                                                                                        const ProcessorClass:TParserTokenizer.TStrProcessorClass;
                                                                                        InsideBracketParser:TGZParser<GManipulator,GParserString,GParserSymbol,GManipulatorCUIndex,GManipulatorCharIndex,GManipulatorCharLength,GManipulatorInterval,GManipulatorCharRange,GDataType,GSymbolToOptChar>;
@@ -1454,7 +1471,7 @@ end;
 destructor TGZTokenizer<GManipulator,GTokenizerString,GTokenizerSymbol,GManipulatorCUIndex,GManipulatorCharIndex,GManipulatorCharLength,GManipulatorInterval,GManipulatorCharRange,GTokenizerSymbolToOptChar,GTokenizerDataType>.Destroy;
 var
   sd:TPair<GTokenizerSymbol,TTokenizerSymbolData>;
-  i:integer;
+  //i:integer;
 begin
   inherited;
   for sd in Map do begin
@@ -1514,6 +1531,7 @@ var
   OptChar:TOptChar;
   savesym:GManipulatorCharIndex;
 begin
+  PTokenizerSymbolData:=nil;
   if map.MyGetMutableValue(GManipulator.CodeUnitAtPos(Token,sym),PTokenizerSymbolData)then begin
     if GManipulator.CompareI(sym,GManipulator.LenToSize(GManipulator.Len(Token)))<0 {GManipulator.PosToIndex(sym)<length(Token)} then begin   {сравнение}
       if not assigned(PTokenizerSymbolData^.NextSymbol) then

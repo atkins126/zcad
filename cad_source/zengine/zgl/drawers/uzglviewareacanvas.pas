@@ -17,14 +17,14 @@
 }
 
 unit uzglviewareacanvas;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
      (*{$IFDEF LCLQT}
      qt4,
      {$ENDIF}*)
-     uzgldrawercanvas,uzglviewareaabstract,sysutils,uzbmemman,
-     uzbtypesbase,uzbtypes,
+     uzgldrawercanvas,uzglviewareaabstract,sysutils,
+     
      varmandef,uzccommandsmanager,uzcsysvars,uzegeometry,LCLType,
      ExtCtrls,classes,Controls,Graphics,uzglbackendmanager,
      uzglviewareacanvasgeneral;
@@ -34,7 +34,7 @@ type
                       CanvasData:TCanvasData;
                       procedure CreateDrawer; override;
                       function getParam:pointer; override;
-                      function getParamTypeName:GDBString; override;
+                      function getParamTypeName:String; override;
                       procedure setdeicevariable; override;
                       function NeedDrawInsidePaintEvent:boolean; override;
                   end;
@@ -58,7 +58,7 @@ function TCanvasViewArea.getParam:pointer;
 begin
      result:=@CanvasData;
 end;
-function TCanvasViewArea.getParamTypeName:GDBString;
+function TCanvasViewArea.getParamTypeName:String;
 begin
      result:='PTCanvasData';
 end;

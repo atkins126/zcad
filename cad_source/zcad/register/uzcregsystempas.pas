@@ -17,13 +17,13 @@
 }
 
 unit uzcregsystempas;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses uzbpaths,UUnitManager,uzcsysvars,{$IFNDEF DELPHI}uzctranslations,{$ENDIF}
-     uzbstrproc,Varman,languade,SysUtils,
-     UBaseTypeDescriptor,uzbtypes,UGDBOpenArrayOfByte, strmy, varmandef,
+     uzbstrproc,Varman,SysUtils,
+     UBaseTypeDescriptor,uzctnrVectorBytes, strmy, varmandef,
      uzcsysparams,uzcsysinfo,TypeDescriptors,URecordDescriptor,
-     uzblog,uzclog,uzbmemman,LazLogger;
+     uzblog,uzclog,LazLogger;
 implementation
 {$IFNDEF WINDOWS}
 var

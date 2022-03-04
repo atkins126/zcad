@@ -15,13 +15,13 @@
 {
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
-{MODE OBJFPC}
+{MODE OBJFPC}{H+}
 unit uzeentityextender;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
-uses uzbmemman,uzedrawingdef,uzbtypesbase,uzbtypes,usimplegenerics,
-     UGDBOpenArrayOfByte,gzctnrstl,uzeffdxfsupport,uzeBaseExtender,
+uses uzedrawingdef,usimplegenerics,
+     uzctnrVectorBytes,gzctnrSTL,uzeffdxfsupport,uzeBaseExtender,
      uzgldrawcontext;
 
 type
@@ -38,7 +38,7 @@ TBaseEntityExtender=class(TBaseExtender)
                   procedure CopyExt2Ent(pSourceEntity,pDestEntity:pointer);virtual;abstract;
                   procedure ReorganizeEnts(OldEnts2NewEntsMap:TMapPointerToPointer);virtual;abstract;
                   procedure PostLoad(var context:TIODXFLoadContext);virtual;abstract;
-                  procedure SaveToDxf(var outhandle:GDBOpenArrayOfByte;PEnt:Pointer;var IODXFContext:TIODXFContext);virtual;abstract;
+                  procedure SaveToDxf(var outhandle:TZctnrVectorBytes;PEnt:Pointer;var IODXFContext:TIODXFContext);virtual;abstract;
 end;
 TMetaEntityExtender=class of TBaseEntityExtender;
 TEntityExtenderVector= TMyVector<TBaseEntityExtender>;
@@ -65,7 +65,7 @@ TEntityExtensions=class
                        procedure RunSupportOldVersions(pEntity:pointer;const drawing:TDrawingDef);
                        procedure RunReorganizeEnts(OldEnts2NewEntsMap:TMapPointerToPointer);
                        procedure RunPostload(var context:TIODXFLoadContext);
-                       procedure RunSaveToDxf(var outhandle:GDBOpenArrayOfByte;PEnt:Pointer;var IODXFContext:TIODXFContext);
+                       procedure RunSaveToDxf(var outhandle:TZctnrVectorBytes;PEnt:Pointer;var IODXFContext:TIODXFContext);
                   end;
   TEntityExtendersMap=GKey2DataMap<string,TMetaEntityExtender>;
 var
@@ -186,11 +186,11 @@ end;
 procedure TEntityExtensions.CopyAllExtToEnt(pSourceEntity,pDestEntity:pointer);
 var
   i:integer;
-  s:string;
+  //s:string;
 begin
      if assigned(fEntityExtensions)then
      for i:=0 to fEntityExtensions.Size-1 do begin
-       s:=fEntityExtensions[i].getExtenderName;
+       //s:=fEntityExtensions[i].getExtenderName;
        fEntityExtensions[i].CopyExt2Ent(pSourceEntity,pDestEntity);
      end;
 end;
@@ -210,10 +210,9 @@ begin
      for i:=0 to fEntityExtensions.Size-1 do
        fEntityExtensions[i].PostLoad(context);
 end;
-procedure TEntityExtensions.RunSaveToDxf(var outhandle:GDBOpenArrayOfByte;PEnt:Pointer;var IODXFContext:TIODXFContext);
+procedure TEntityExtensions.RunSaveToDxf(var outhandle:TZctnrVectorBytes;PEnt:Pointer;var IODXFContext:TIODXFContext);
 var
   i:integer;
-  ExtObj:TBaseEntityExtender;
 begin
      if assigned(fEntityExtensions)then
      for i:=0 to fEntityExtensions.Size-1 do

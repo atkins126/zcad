@@ -15,23 +15,23 @@
 {
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
-{$MODE OBJFPC}
+{$MODE OBJFPC}{$H+}
 unit uzccomimport;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses uzcinterface,uzgldrawcontext,uzeentityfactory,
      {$IFNDEF DELPHI}dxfvectorialreader,svgvectorialreader,epsvectorialreader,fpvectorial,fileutil,{$ENDIF}
      uzedrawingsimple,
      uzeentcircle,uzeentarc,uzeentline,
-     uzegeometry,uzbtypesbase,uzclog,uzbtypes,
-     sysutils,uzbmemman,uzeconsts,
-     UGDBOpenArrayOfByte,uzeentity;
+     uzegeometry,uzclog,
+     sysutils,uzeconsts,
+     uzctnrVectorBytes,uzeentity;
 {$IFNDEF DELPHI}
-procedure Import(name: GDBString;var drawing:TSimpleDrawing);
+procedure Import(name: String;var drawing:TSimpleDrawing);
 {$ENDIF}
 implementation
 {$IFNDEF DELPHI}
-procedure Import(name: GDBString;var drawing:TSimpleDrawing);
+procedure Import(name: String;var drawing:TSimpleDrawing);
 var
   Vec: TvVectorialDocument;
   source:{TvVectorialPage}TvPage;

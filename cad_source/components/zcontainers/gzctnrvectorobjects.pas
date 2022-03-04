@@ -16,36 +16,35 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
 
-unit gzctnrvectorobjects;
-{$INCLUDE def.inc}
+unit gzctnrVectorObjects;
+
 interface
-uses uzbtypesbase,gzctnrvectordata,
-     uzbtypes,uzbmemman;
+uses gzctnrVector;
 type
 {Export+}
 {-----------REGISTEROBJECTTYPE GZVectorObjects}
-GZVectorObjects{-}<T>{//}=object
-                                (GZVectorData{-}<T>{//})
-                             function CreateObject:PGDBaseObject;
+GZVectorObjects{-}<TData>{//}=object
+                                (GZVector{-}<TData>{//})
+                             function CreateObject:PT;
                              procedure free;virtual;
                        end;
 {Export-}
 implementation
-function GZVectorObjects<T>.CreateObject;
-{var addr: GDBPlatformint;}
+function GZVectorObjects<TData>.CreateObject;
+{var addr: PtrInt;}
 begin
-     result:=getdatamutable(pushbackdata(default(T)));
+     result:=getdatamutable(pushbackdata(default(TData)));
   {if parray=nil then
                     createarray;
   if count = max then grow;
   begin
-       GDBPointer(addr) := parray;
-       addr := addr + GDBPlatformint(count*SizeOfData);
+       Pointer(addr) := parray;
+       addr := addr + PtrInt(count*SizeOfData);
        result:=pointer(addr);
        inc(count);
   end;}
 end;
-procedure GZVectorObjects<T>.free;
+procedure GZVectorObjects<TData>.free;
 var i:integer;
 begin
      for i:=0 to count-1 do

@@ -17,10 +17,10 @@
 }
 
 unit UGDBGraf;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses varman,uzedrawingdef,varmandef,UGDBPoint3DArray,uzbtypesbase,gzctnrvectordata,
-     uzbgeomtypes,sysutils,uzbtypes,uzegeometry,uzeentity,UGDBOpenArrayOfPV,
+uses varman,uzedrawingdef,varmandef,UGDBPoint3DArray,gzctnrVector,
+     uzegeometrytypes,sysutils,uzbtypes,uzegeometry,uzeentity,UGDBOpenArrayOfPV,
      gzctnrvectortypes,uzcenitiesvariablesextender,uzeentline,math;
 type
 {EXPORT+}
@@ -29,13 +29,13 @@ TLinkType=(LT_Normal,LT_OnlyLink);
 pgrafelement=^grafelement;
 {REGISTEROBJECTTYPE grafelement}
 grafelement= object(GDBaseObject)
-                  linkcount:GDBInteger;
+                  linkcount:Integer;
                   point:gdbvertex;
                   link:GDBObjOpenArrayOfPV;
                   workedlink:PGDBObjEntity;
-                  connected:GDBInteger;
-                  step:GDBInteger;
-                  pathlength:GDBDouble;
+                  connected:Integer;
+                  step:Integer;
+                  pathlength:Double;
 
                   constructor initnul;
                   constructor init(v:gdbvertex);
@@ -43,12 +43,12 @@ grafelement= object(GDBaseObject)
                   function IsConnectedTo(node:pgrafelement):pgdbobjEntity;
             end;
 {REGISTEROBJECTTYPE GDBGraf}
-GDBGraf= object(GZVectorData{-}<grafelement>{//})(*OpenArrayOfData=grafelement*)
-                constructor init(m:GDBInteger);
+GDBGraf= object(GZVector{-}<grafelement>{//})(*OpenArrayOfData=grafelement*)
+                constructor init(m:Integer);
                 function addge(v:gdbvertex):pgrafelement;
                 procedure clear;virtual;
-                function minimalize(var drawing:TDrawingDef):GDBBoolean;
-                function divide:GDBBoolean;
+                function minimalize(var drawing:TDrawingDef):Boolean;
+                function divide:Boolean;
                 destructor done;virtual;
                 procedure freeelement(PItem:PT);virtual;
 
@@ -85,12 +85,12 @@ begin
      if pvd=nil then
                     result:=LT_Normal
                 else
-                    result:=PTLinkType(pvd.data.Instance)^;
+                    result:=PTLinkType(pvd.data.Addr.Instance)^;
   end
   else
       result:=LT_Normal;
 end;
-function getlinklength(pv:PGDBObjLine):GDBDouble;
+function getlinklength(pv:PGDBObjLine):Double;
 var
     pvd:pvardesk;
     pentvarext:TVariablesExtender;
@@ -102,7 +102,7 @@ begin
      if pvd=nil then
                     result:=Vertexlength(pv^.CoordInWCS.lbegin,pv^.CoordInWCS.lend)
                 else
-                    result:=PGDBDouble(pvd.data.Instance)^;
+                    result:=PDouble(pvd.data.Addr.Instance)^;
      end
         else
             result:=Vertexlength(pv^.CoordInWCS.lbegin,pv^.CoordInWCS.lend);
@@ -111,10 +111,10 @@ procedure GDBGraf.FindPath;
 var
   pgfe,pgfe2,pgfe3: pgrafelement;
   ir,ir2,ir3:itrec;
-  step,oldstep:gdbinteger;
-  isend:gdbboolean;
+  step,oldstep:Integer;
+  isend:Boolean;
   pl:pgdbobjEntity;
-  npath,npathmin,linklength:gdbdouble;
+  npath,npathmin,linklength:Double;
   linkline,mainlinkline:pgdbobjEntity;
 begin
 
@@ -249,14 +249,14 @@ end;
 constructor grafelement.initnul;
 begin
      point:=nulvertex;
-     link.init({$IFDEF DEBUGBUILD}'{9C4A4FB4-31B7-45A0-BDF4-52233F18BBF8}',{$ENDIF}100);
+     link.init(100);
      linkcount:=0;
      connected:=0;
 end;
 constructor grafelement.init(v:gdbvertex);
 begin
      point:=v;
-     link.init({$IFDEF DEBUGBUILD}'{4BCEE078-467B-4360-918C-A2E3D1D8860C}',{$ENDIF}100);
+     link.init(100);
      link.CreateArray;
      linkcount:=0;
      connected:=0;
@@ -266,15 +266,15 @@ begin
   pgrafelement(PItem).link.Clear;
   pgrafelement(PItem).link.done;
   //pgrafelement(p).
-  //GDBFreeMem(PGDBFontRecord(p).Pfont);
+  //Freemem(PGDBFontRecord(p).Pfont);
 end;
 constructor GDBGraf.init;
 begin
-  inherited init({$IFDEF DEBUGBUILD}'{C0D04628-FDC7-4EC4-A3F7-F03C05C15CCE}',{$ENDIF}m{,sizeof(grafelement)});
+  inherited init(m);
 end;
 function GDBGraf.minimalize;
 var
-  i{,j}: GDBInteger;
+  i{,j}: Integer;
   tgf: pgrafelement;
   l1,l2:pgdbobjline;
 begin
@@ -311,11 +311,11 @@ begin
      inherited done;
 end;
 function GDBGraf.divide;
-function marknearelement(pgf:pgrafelement):GDBBoolean;
-var i,j,k: GDBInteger;
+function marknearelement(pgf:pgrafelement):Boolean;
+var i,j,k: Integer;
     tgf: pgrafelement;
     l1,l2:pgdbobjline;
-    l1addr,l2addr:GDBPointer;
+    l1addr,l2addr:Pointer;
 begin
   result:=false;
   for i := 0 to count - 1 do
@@ -347,10 +347,10 @@ begin
   end;
 end;
 var
-  i{,j}: GDBInteger;
+  i{,j}: Integer;
   tgf: pgrafelement;
 //  l1,l2:pgdbobjline;
-  q:GDBBoolean;
+  q:Boolean;
   ir:itrec;
 begin
   result:=false;
@@ -384,7 +384,7 @@ begin
 end;
 function GDBGraf.addge;
 var
-  i: GDBInteger;
+  i: Integer;
   tgf: pgrafelement;
 begin
   if count = 0 then
@@ -418,7 +418,7 @@ begin
 end;
 procedure GDBGraf.clear;
 //var
-//  i: GDBInteger;
+//  i: Integer;
 //  tgf: pgrafelement;
 begin
   {if count = 0 then exit;

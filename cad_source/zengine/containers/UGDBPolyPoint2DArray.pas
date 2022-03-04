@@ -17,14 +17,14 @@
 }
 
 unit UGDBPolyPoint2DArray;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses uzbgeomtypes,uzbtypesbase,gzctnrvectordata,sysutils,uzbtypes, uzegeometry;
+uses uzegeometrytypes,gzctnrVector,sysutils,uzegeometry;
 type
 {Export+}
 PGDBPolyPoint2DArray=^GDBPolyPoint2DArray;
 {REGISTEROBJECTTYPE GDBPolyPoint2DArray}
-GDBPolyPoint2DArray= object(GZVectorData{-}<GDBPolyVertex2D>{//})
+GDBPolyPoint2DArray= object(GZVector{-}<GDBPolyVertex2D>{//})
                       //procedure DrawGeometry;virtual;
                       function InRect(Frame1, Frame2: GDBvertex2DI):TInBoundingVolume;virtual;
                       procedure freeelement(PItem:PT);virtual;
@@ -36,7 +36,7 @@ begin
 end;
 (*procedure GDBPolyPoint2DArray.drawgeometry;
 var p:PGDBPolyVertex2D;
-    i:GDBInteger;
+    i:Integer;
 begin
   if count<2 then exit;
 
@@ -60,9 +60,9 @@ begin
 end;*)
 function GDBPolyPoint2DArray.inrect;
 var p,pp:PGDBPolyVertex2D;
-    counter:GDBInteger;
-    i:GDBInteger;
-    //lines:GDBBoolean;
+    counter:Integer;
+    i:Integer;
+    //lines:Boolean;
 begin
   if (count<2){or(not POGLWND^.seldesc.MouseFrameInverse)} then exit;
   p:=GetParrayAsPointer;

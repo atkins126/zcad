@@ -18,7 +18,7 @@
 {$mode delphi}
 unit uzccommand_blockdefvarman;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -28,7 +28,7 @@ uses
   uzbpaths,
   uzccmdinfoform,
   uzccommandsabstract,uzccommandsimpl,
-  UGDBOpenArrayOfByte,
+  uzctnrVectorBytes,
   uzeentity,
   uzcenitiesvariablesextender,
   uzcinterface,

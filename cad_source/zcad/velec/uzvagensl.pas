@@ -15,15 +15,15 @@
 {
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
-{$mode objfpc}
+{$mode objfpc}{$H+}
 
 unit uzvagensl;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
 
-{*uzcenitiesvariablesextender,sysutils,UGDBOpenArrayOfPV,uzbtypesbase,uzbtypes,
+{*uzcenitiesvariablesextender,sysutils,UGDBOpenArrayOfPV,uzbtypes,
      uzeentity,varmandef,uzeentsubordinated,
 
 
@@ -51,12 +51,12 @@ uses
   Pointerv,
   Graphs,
    *}
-   sysutils, math,
+   sysutils, //math,
 
   URecordDescriptor,TypeDescriptors,
 
   Forms, //uzcfblockinsert,
-   uzcfarrayinsert,
+  //uzcfarrayinsert,
 
   uzeentblockinsert,      //unit describes blockinsert entity
                        //модуль описывающий примитив вставка блока
@@ -82,17 +82,17 @@ uses
   uzeentarc,
   uzeentcircle,
   uzeentity,
-  uzbgeomtypes,
+  uzegeometrytypes,
 
 
-  gvector,garrayutils, // Подключение Generics и модуля для работы с ним
+  gvector,//garrayutils, // Подключение Generics и модуля для работы с ним
 
   uzcentcable,
   uzeentdevice,
-  UGDBOpenArrayOfPV,
+  //UGDBOpenArrayOfPV,
 
   uzegeometry,
-  uzeentitiesmanager,
+  //uzeentitiesmanager,
 
   //uzcmessagedialogs,
   uzeentityfactory,    //unit describing a "factory" to create primitives
@@ -101,7 +101,7 @@ uses
                       //системные переменные
   uzgldrawcontext,
   uzcinterface,
-  uzbtypesbase,uzbtypes, //base types
+  uzbtypes, //base types
                       //описания базовых типов
   uzeconsts, //base constants
                       //описания базовых констант
@@ -109,7 +109,7 @@ uses
   uzccommandsabstract,
   uzccommandsimpl, //Commands manager and related objects
                       //менеджер команд и объекты связанные с ним
-  uzcdrawing,
+  //uzcdrawing,
   uzedrawingsimple,
   uzcdrawings,     //Drawings manager, all open drawings are processed him
                       //"Менеджер" чертежей
@@ -117,16 +117,16 @@ uses
                       //разные функции упрощающие создание примитивов, пока их там очень мало
   varmandef,
   Varman,
-  {UGDBOpenArrayOfUCommands,}zcchangeundocommand,
+  {UGDBOpenArrayOfUCommands,}//zcchangeundocommand,
 
   uzclog,                //log system
                       //<**система логирования
-  uzcvariablesutils, // для работы с ртти
+  //uzcvariablesutils, // для работы с ртти
 
   //для работы графа
-  ExtType,
-  Pointerv,
-  Graphs,
+  //ExtType,
+  //Pointerv,
+  //Graphs,
 
    uzcenitiesvariablesextender,
    UUnitManager,
@@ -167,7 +167,7 @@ type
                          orient:integer; //0-слева,1-сверху,2-справа,3-снизу
                          public
                          constructor Create;
-                         destructor Destroy;virtual;
+                         destructor Destroy;override;
       end;
       TListColumnDev=specialize TVector<TInfoColumnDev>;
 
@@ -194,11 +194,11 @@ type
       //** Создания списка ребер графа
       PTEdgeGraph=^TEdgeGraph;
       TEdgeGraph=record
-                         VIndex1:GDBInteger; //номер 1-й вершниы по списку
-                         VIndex2:GDBInteger; //номер 2-й вершниы по списку
+                         VIndex1:Integer; //номер 1-й вершниы по списку
+                         VIndex2:Integer; //номер 2-й вершниы по списку
                          VPoint1:GDBVertex;  //координаты 1й вершниы
                          VPoint2:GDBVertex;  //координаты 2й вершниы
-                         edgeLength:GDBDouble; // длина ребра
+                         edgeLength:Double; // длина ребра
       end;
       TListEdgeGraph=specialize TVector<TEdgeGraph>;
 
@@ -320,12 +320,12 @@ end;
 
   procedure getListEdge(var listVertexGraph:TListVertexGraph;var listEdgeGraph:TListEdgeGraph; stpoint,edpoint:GDBVertex;accuracy:double);
   var
-     i,j,k:integer;
+     {i,}j,k:integer;
      areaLine, areaVertex:TBoundingBox;
      vertexRectangleLine:TRectangleLine;
      infoEdge:TEdgeGraph;
      tempListNumVertex:TListNum;
-     tempNumVertex:TInfoTempNumVertex;
+     //tempNumVertex:TInfoTempNumVertex;
      inAddEdge:boolean;
   begin
          tempListNumVertex:=TListNum.Create;                                    //создаем временный список номеров вершин
@@ -384,14 +384,15 @@ var
  tempVertex,mainVertexPerpend,stPoint:GDBVertex;
  pointBuildLine:TInfoBuildLine;
 
- p1new,p2new,p3new,p4new:GDBVertex;
+ //p1new,p2new,p3new,p4new:GDBVertex;
  i,j,tNum,orient,counter:integer;
- tempLength,templen2:double;
- isLine:boolean;
+ tempLength{,templen2}:double;
+ //isLine:boolean;
 
   UndoMarcerIsPlazed:boolean;
 
  begin
+
      //создаем точки помещения
      pointBuildLine.p1.x:=10;
      pointBuildLine.p1.y:=10;
@@ -646,6 +647,7 @@ var
           zcPlaceUndoEndMarkerIfNeed(UndoMarcerIsPlazed);
 
         ZCMsgCallBackInterface.TextMessage(' работает ' + test,TMWOHistoryOut);
+        result:=cmd_ok;
  end;
 
 function TestModul_com(operands:TCommandOperands):TCommandResult;
@@ -653,10 +655,12 @@ var
  test:string;
  r:integer;
  begin
+
         test:='УРА';
         r:=autoGenSLBetweenDevices(test);
 
         ZCMsgCallBackInterface.TextMessage(' работает ' + test,TMWOHistoryOut);
+        result:=cmd_ok;
  end;
 
 

@@ -1,5 +1,5 @@
 unit uzcflayers;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 {$mode objfpc}{$H+}
 
 interface
@@ -9,7 +9,7 @@ uses
   FileUtil, LResources, Forms, Controls, Graphics, GraphType,
   Buttons, ExtCtrls, StdCtrls, ComCtrls,LCLIntf,lcltype, ActnList,
 
-  uzcgui2linetypes,uzeconsts,uzestyleslayers,uzcdrawings,uzbtypesbase,uzbtypes,varmandef,
+  uzcgui2linetypes,uzeconsts,uzestyleslayers,uzcdrawings,uzbtypes,varmandef,
 
   uzcinterface, uzcstrconsts, uzbstrproc,UBaseTypeDescriptor,
   gzctnrvectortypes,uzcimagesmanager, usupportgui, ZListView, uzcuitypes;
@@ -65,7 +65,7 @@ type
       Selected: Boolean);
     procedure MkCurrent(Sender: TObject);
     procedure MaceItemCurrent(ListItem:TListItem);
-    procedure countlayer(player:PGDBLayerProp;out e,b:GDBInteger);
+    procedure countlayer(player:PGDBLayerProp;out e,b:Integer);
 
     procedure CreateUndoStartMarkerNeeded;
     procedure CreateUndoEndMarkerNeeded;
@@ -138,7 +138,7 @@ end;
 function TLayersForm.createnameeditor(Item: TListItem;r: TRect):boolean;
 begin
   //createeditor(Item,r,@PGDBLayerProp(Item.Data)^.Name);
-  result:=SupportTypedEditors.createeditor(ListView1,Item,r,PGDBLayerProp(Item.Data)^.Name,'GDBAnsiString',@CreateUndoStartMarkerNeeded,r.Bottom-r.Top);
+  result:=SupportTypedEditors.createeditor(ListView1,Item,r,PGDBLayerProp(Item.Data)^.Name,'AnsiString',@CreateUndoStartMarkerNeeded,r.Bottom-r.Top);
 end;
 function TLayersForm.GetLayerName(Item: TListItem):string;
 begin
@@ -368,7 +368,7 @@ end;
 {layer description handle procedures}
 function TLayersForm.createdesceditor(Item: TListItem;r: TRect):boolean;
 begin
-  result:=SupportTypedEditors.createeditor(ListView1,Item,r,PGDBLayerProp(Item.Data)^.desk,'GDBAnsiString',@CreateUndoStartMarkerNeeded,r.Bottom-r.Top);
+  result:=SupportTypedEditors.createeditor(ListView1,Item,r,PGDBLayerProp(Item.Data)^.desk,'AnsiString',@CreateUndoStartMarkerNeeded,r.Bottom-r.Top);
 end;
 function TLayersForm.GetDescName(Item: TListItem):string;
 begin
@@ -512,7 +512,7 @@ begin
      ListView1.SetFocus;
      ListView1.EndUpdate;
 end;
-procedure TLayersForm.countlayer(player:PGDBLayerProp;out e,b:GDBInteger);
+procedure TLayersForm.countlayer(player:PGDBLayerProp;out e,b:Integer);
 var
    pdwg:PTSimpleDrawing;
 begin
@@ -595,7 +595,7 @@ procedure TLayersForm._PurgeLayers(Sender: TObject);
 var
    i,purgedcounter:integer;
    ProcessedItem:TListItem;
-   inEntities,inBlockTable{,indimstyles}:GDBInteger;
+   inEntities,inBlockTable{,indimstyles}:Integer;
    PCurrentLayer:PGDBLayerProp;
 begin
      i:=0;
@@ -622,7 +622,7 @@ procedure TLayersForm.LayerDelete(Sender: TObject); // Процедура уда
 var
    player:PGDBLayerProp;
    //pdwg:PTSimpleDrawing;
-   e,b:GDBInteger;
+   e,b:Integer;
    //domethod,undomethod:tmethod;
 begin
   //TMWOShowError(rsNotYetImplemented);

@@ -15,21 +15,21 @@
 {
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
-{$MODE OBJFPC}
+{$MODE OBJFPC}{$H+}
 unit uzccommand_selsim;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
   gzctnrvectortypes,
   uzctnrvectorobjid,
-  uzctnrvectorgdbdouble,
+  uzctnrVectorDouble,
   uzctnrvectorgdblineweight,
-  uzctnrvectorgdbpointer,
+  uzctnrVectorPointers,
   uzcstrconsts,
   uzeenttext,
   uzccommandsabstract,
-  uzbtypesbase,
+  
   uzccommandsmanager,
   uzccommandsimpl,
   uzbtypes,
@@ -41,29 +41,29 @@ uses
   uzeentity,
   uzeentmtext,
   uzeentblockinsert,
-  uzctnrvectorgdbstring,
+  uzctnrvectorstrings,
   Varman,
   LazLogger,uzctnrvectorgdbpalettecolor;
 type
 TSelGeneralParams=record
-                        SameLayer:GDBBoolean;(*'Same layer'*)
-                        SameLineWeight:GDBBoolean;(*'Same line weight'*)
-                        SameLineType:GDBBoolean;(*'Same line type'*)
-                        SameLineTypeScale:GDBBoolean;(*'Same line type scale'*)
-                        SameEntType:GDBBoolean;(*'Same entity type'*)
-                        SameColor:GDBBoolean;(*'Same color'*)
+                        SameLayer:Boolean;(*'Same layer'*)
+                        SameLineWeight:Boolean;(*'Same line weight'*)
+                        SameLineType:Boolean;(*'Same line type'*)
+                        SameLineTypeScale:Boolean;(*'Same line type scale'*)
+                        SameEntType:Boolean;(*'Same entity type'*)
+                        SameColor:Boolean;(*'Same color'*)
                   end;
 TDiff=(
         TD_Diff(*'Diff'*),
         TD_NotDiff(*'Not Diff'*)
        );
 TSelBlockParams=record
-                        SameName:GDBBoolean;(*'Same name'*)
+                        SameName:Boolean;(*'Same name'*)
                         DiffBlockDevice:TDiff;(*'Block and Device'*)
                   end;
 TSelTextParams=record
-                        SameContent:GDBBoolean;(*'Same content'*)
-                        SameTemplate:GDBBoolean;(*'Same template'*)
+                        SameContent:Boolean;(*'Same content'*)
+                        SameTemplate:Boolean;(*'Same template'*)
                         DiffTextMText:TDiff;(*'Text and Mtext'*)
                   end;
 PTSelSimParams=^TSelSimParams;
@@ -75,18 +75,19 @@ TSelSimParams=record
   {REGISTEROBJECTTYPE SelSim_com}
   SelSim_com= object(CommandRTEdObject)
                          created:boolean;
-                         bnames,textcontents,textremplates:TZctnrVectorGDBString;
+                         bnames:TZctnrVectorStrings;
+                         textcontents,textremplates:TZctnrVectorUnicodeStrings;
                          layers,linetypes:TZctnrVectorGDBPointer;
                          colors:TZctnrVectorTGDBPaletteColor;
                          weights:TZctnrVectorGDBLineWeight;
                          objtypes:TZctnrVectorObjID;
-                         linetypescales:TZctnrVectorGDBDouble;
+                         linetypescales:TZctnrVectorDouble;
                          procedure CommandStart(Operands:TCommandOperands); virtual;
                          procedure createbufs;
                          //procedure BuildDM(Operands:pansichar); virtual;
                          //procedure Format;virtual;
-                         procedure Run(pdata:GDBPlatformint); virtual;
-                         procedure Sel(pdata:{pointer}GDBPlatformint); virtual;
+                         procedure Run(pdata:PtrInt); virtual;
+                         procedure Sel(pdata:{pointer}PtrInt); virtual;
                    end;
 var
    SelSim:SelSim_com;
@@ -110,7 +111,7 @@ begin
     Commandmanager.executecommandend;
   end;
 end;
-procedure SelSim_com.Sel(pdata:GDBPlatformint);
+procedure SelSim_com.Sel(pdata:PtrInt);
 begin
   createbufs;
   //commandmanager.ExecuteCommandSilent('SelectFrame');
@@ -126,12 +127,12 @@ begin
   bnames.init(100);
   textcontents.init(100);
   textremplates.init(100);
-  layers.init({$IFDEF DEBUGBUILD}'{79828350-69E9-418A-A023-BB8B187639A1}',{$ENDIF}100);
-  weights.init({$IFDEF DEBUGBUILD}'{79828350-69E9-418A-A023-BB8B187639A1}',{$ENDIF}100);
-  objtypes.init({$IFDEF DEBUGBUILD}'{79828350-69E9-418A-A023-BB8B187639A1}',{$ENDIF}100);
-  linetypes.init({$IFDEF DEBUGBUILD}'{79828350-69E9-418A-A023-BB8B187639A1}',{$ENDIF}100);
-  linetypescales.init({$IFDEF DEBUGBUILD}'{79828350-69E9-418A-A023-BB8B187639A1}',{$ENDIF}100);
-  colors.init({$IFDEF DEBUGBUILD}'{79828350-69E9-418A-A023-BB8B187639A1}',{$ENDIF}100);
+  layers.init(100);
+  weights.init(100);
+  objtypes.init(100);
+  linetypes.init(100);
+  linetypescales.init(100);
+  colors.init(100);
 
   pobj:=drawings.GetCurrentROOT^.ObjArray.beginiterate(ir);
   if pobj<>nil then
@@ -170,7 +171,7 @@ begin
 
 end;
 
-procedure SelSim_com.Run(pdata:GDBPlatformint);
+procedure SelSim_com.Run(pdata:PtrInt);
 var
    pobj: pGDBObjEntity;
    ir:itrec;

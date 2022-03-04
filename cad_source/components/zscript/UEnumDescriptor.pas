@@ -17,31 +17,31 @@
 }
 
 unit UEnumDescriptor;
-{$INCLUDE def.inc}
+
 {$MODE DELPHI}
 interface
-uses types,sysutils,UGDBOpenArrayOfByte,TypeDescriptors,
-     gzctnrvectortypes,uzedimensionaltypes,uzbtypesbase,varmandef,uzbtypes,gzctnrvectordata,uzctnrvectorgdbstring,uzbmemman;
+uses types,sysutils,uzctnrVectorBytes,TypeDescriptors,
+     gzctnrvectortypes,uzedimensionaltypes,varmandef,uzbtypes,gzctnrVector,uzctnrvectorstrings;
 resourcestring
   rsDifferent='Different';
 type
 PTByteVector=^TByteVector;
-TByteVector=GZVectorData<Byte>;
+TByteVector=GZVector<Byte>;
 PTWordVector=^TWordVector;
-TWordVector=GZVectorData<Word>;
+TWordVector=GZVector<Word>;
 PTCardinalVector=^TCardinalVector;
-TCardinalVector=GZVectorData<Cardinal>;
+TCardinalVector=GZVector<Cardinal>;
 PEnumDescriptor=^EnumDescriptor;
 EnumDescriptor=object(TUserTypeDescriptor)
-                     SourceValue:TZctnrVectorGDBString;
-                     UserValue:TZctnrVectorGDBString;
+                     SourceValue:TZctnrVectorStrings;
+                     UserValue:TZctnrVectorStrings;
                      Value:PTByteVector;
-                     constructor init(size:GDBInteger;tname:string;pu:pointer);
+                     constructor init(size:Integer;tname:string;pu:pointer);
                      function CreateProperties(const f:TzeUnitsFormat;mode:PDMode;PPDA:PTPropertyDeskriptorArray;Name:TInternalScriptString;PCollapsed:Pointer;ownerattrib:Word;var bmode:Integer;const addr:Pointer;ValKey,ValType:TInternalScriptString):PTPropertyDeskriptorArray;virtual;
-                     function CreateEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorGDBString;FreeOnLostFocus:boolean;InitialValue:TInternalScriptString;preferedHeight:integer):TEditorDesc;virtual;
-                     function GetNumberInArrays(addr:Pointer;out number:GDBLongword):GDBBoolean;virtual;
-                     //function Serialize(PInstance:Pointer;SaveFlag:GDBWord;var membuf:PGDBOpenArrayOfByte;var  linkbuf:PGDBOpenArrayOfTObjLinkRecord;var sub:integer):integer;virtual;
-                     //function DeSerialize(PInstance:Pointer;SaveFlag:GDBWord;var membuf:GDBOpenArrayOfByte;linkbuf:PGDBOpenArrayOfTObjLinkRecord):integer;virtual;
+                     function CreateEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;InitialValue:TInternalScriptString;preferedHeight:integer):TEditorDesc;virtual;
+                     function GetNumberInArrays(addr:Pointer;out number:LongWord):Boolean;virtual;
+                     //function Serialize(PInstance:Pointer;SaveFlag:Word;var membuf:PTZctnrVectorBytes;var  linkbuf:PGDBOpenArrayOfTObjLinkRecord;var sub:integer):integer;virtual;
+                     //function DeSerialize(PInstance:Pointer;SaveFlag:Word;var membuf:TZctnrVectorBytes;linkbuf:PGDBOpenArrayOfTObjLinkRecord):integer;virtual;
                      function GetValueAsString(pinstance:Pointer):TInternalScriptString;virtual;
                      function GetUserValueAsString(pinstance:Pointer):TInternalScriptString;virtual;
                      destructor Done;virtual;
@@ -62,27 +62,22 @@ begin
      SourceValue.Done;
      UserValue.Done;
      value.Done;
-     gdbfreemem(Value);
+     Freemem(Value);
 end;
 constructor EnumDescriptor.init;
 begin
-     //gdbgetmem({$IFDEF DEBUGBUILD}'{B8CB2886-0E46-4426-B99B-EA4A0948FAE7}',{$ENDIF}Pointer(PSourceValue),sizeof(PSourceValue^));
-     //gdbgetmem({$IFDEF DEBUGBUILD}'{28FC622D-1EAD-4CCA-801B-ECF3B7E3C9D5}',{$ENDIF}Pointer(PSourceValue),sizeof(PUserValue^));
      inherited init(size,tname,pu);
      SourceValue.init(20);
      UserValue.init(20);
-     gdbgetmem({$IFDEF DEBUGBUILD}'{B8CB2886-0E46-4426-B99B-EA4A0948FAE7}',{$ENDIF}Pointer(Value),sizeof(TByteVector));
+     Getmem(Pointer(Value),sizeof(TByteVector));
      case size of
-                 1:Value.init({$IFDEF DEBUGBUILD}'{EA29780F-2455-4BBF-9CB6-054B6A4D48C5}',{$ENDIF}20{,1});
-                 2:PTWordVector(Value).init({$IFDEF DEBUGBUILD}'{E17DB617-1782-4815-BA8B-12F53B06DAD8}',{$ENDIF}20{,2});
-                 4:PTCardinalVector(Value).init({$IFDEF DEBUGBUILD}'{21381F6A-26DC-43C3-B4F8-0BBB24722B75}',{$ENDIF}20{,4});
+                 1:Value.init(20);
+                 2:PTWordVector(Value).init(20);
+                 4:PTCardinalVector(Value).init(20);
      end;
 end;
 function EnumDescriptor.CreateProperties;
-var currval:GDBLongword;
-//    p:Pointer;
-//    found:GDBBoolean;
-//    i:GDBInteger;
+var currval:LongWord;
     ppd:PPropertyDeskriptor;
 begin
      ppd:=GetPPD(ppda,bmode);
@@ -106,20 +101,20 @@ begin
      //IncAddr(addr);
 end;
 function EnumDescriptor.GetNumberInArrays;
-var currval:GDBLongword;
+var currval:LongWord;
     p:Pointer;
-    //found:GDBBoolean;
-//    i:GDBInteger;
+    //found:Boolean;
+//    i:Integer;
         ir:itrec;
 begin
      result:=false;
-     case SizeInGDBBytes of
+     case SizeInBytes of
                       1:begin
-                             currval:=pGDBByte(addr)^;
+                             currval:=PByte(addr)^;
                              p:=Value.beginiterate(ir);
                              if p<>nil then
                              repeat
-                                   if pGDBByte(p)^=currval then
+                                   if PByte(p)^=currval then
                                                             begin
                                                                  //found:=true;
                                                                  number:=ir.itc;
@@ -132,14 +127,14 @@ begin
      end;
 end;
 procedure EnumDescriptor.SetValueFromString(PInstance:Pointer;_Value:TInternalScriptString);
-var //currval:GDBLongword;
+var //currval:LongWord;
     p,p2,pp:Pointer;
-//    found:GDBBoolean;
-//    i:GDBInteger;
+//    found:Boolean;
+//    i:Integer;
         ir,ir2,irr:itrec;
 begin
      _value:=uppercase(_value);
-     case SizeInGDBBytes of
+     case SizeInBytes of
                       1:begin
                              p:=SourceValue.beginiterate(ir);
                              p2:=UserValue.beginiterate(ir2);
@@ -149,7 +144,7 @@ begin
                              if (_value=uppercase(pstring(p)^))
                              or (_value=uppercase(pstring(p2)^))then
                              begin
-                                  pGDBByte(pinstance)^:=pbyte(pp)^;
+                                  PByte(pinstance)^:=pbyte(pp)^;
                                   exit;
                              end;
                                    p:=SourceValue.iterate(ir);
@@ -160,10 +155,10 @@ begin
      end;
 end;
 function EnumDescriptor.GetValueAsString;
-var //currval:GDBLongword;
+var //currval:LongWord;
 //    p:Pointer;
-//    found:GDBBoolean;
-//    i:GDBInteger;
+//    found:Boolean;
+//    i:Integer;
     num:cardinal;
 begin
      result:='ENUMERROR';
@@ -171,10 +166,10 @@ begin
      result:={UserValue}SourceValue.getData(num)
 end;
 function EnumDescriptor.GetUserValueAsString;
-var //currval:GDBLongword;
+var //currval:LongWord;
 //    p:Pointer;
-//    found:GDBBoolean;
-//    i:GDBInteger;
+//    found:Boolean;
+//    i:Integer;
     num:cardinal;
 begin
      result:='ENUMERROR';

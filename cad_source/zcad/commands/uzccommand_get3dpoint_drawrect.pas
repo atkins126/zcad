@@ -18,14 +18,14 @@
 {$mode delphi}
 unit uzccommand_get3dpoint_drawrect;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
   LazLogger,
   uzccommandsabstract,uzccommandsimpl,
   uzcdrawings,uzeconsts,uzcinterface,
-  uzcstrconsts,uzbgeomtypes,uzbtypesbase,
+  uzcstrconsts,uzegeometrytypes,
   uzglviewareadata,uzccommandsmanager,
   varmandef,uzbtypes,uzegeometry;
 
@@ -43,7 +43,7 @@ begin
                      ZCMsgCallBackInterface.TextMessage(operands,TMWOHistoryOut);
   result:=cmd_ok;
 end;
-function Line_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: GDBByte;osp:pos_record;mclick:GDBInteger): GDBInteger;
+function Line_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
 begin
   point:=wc;
   if (button and MZW_LBUTTON)<>0 then
@@ -53,14 +53,14 @@ begin
        result:=1;
   end
 end;
-function DrawRect(mclick:GDBInteger):GDBInteger;
+function DrawRect(mclick:Integer):Integer;
 var
    vd:vardesk;
    p1,p2,p4:gdbvertex;
    matrixs:tmatrixs;
 begin
      vd:=commandmanager.GetValue;
-     p1:=pgdbvertex(vd.data.Instance)^;
+     p1:=pgdbvertex(vd.data.Addr.Instance)^;
 
      p2:=createvertex(p1.x,point.y,p1.z);
      p4:=createvertex(point.x,p1.y,point.z);

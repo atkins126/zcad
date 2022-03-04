@@ -17,11 +17,11 @@
 }
 
 unit uzelongprocesssupport;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 
 interface
-uses sysutils,gzctnrstl,LazLogger;
+uses sysutils,gzctnrSTL,LazLogger;
 const
   LPSHEmpty=-1;
 type

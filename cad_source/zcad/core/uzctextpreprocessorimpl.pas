@@ -16,16 +16,16 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 } 
 unit uzctextpreprocessorimpl;
-{$INCLUDE def.inc}
-{$mode objfpc}
+{$INCLUDE zcadconfig.inc}
+{$mode objfpc}{$H+}
 
 interface
-uses uzeentity,uzcvariablesutils,uzetextpreprocessor,languade,uzbstrproc,sysutils,
-     uzbtypesbase,varmandef,uzbtypes,uzcenitiesvariablesextender,uzeentsubordinated,
+uses uzeentity,uzcvariablesutils,uzetextpreprocessor,uzbstrproc,sysutils,
+     varmandef,uzbtypes,uzcenitiesvariablesextender,
      uzcpropertiesutils,uzeparser,LazUTF8;
 type
   TStr2VarProcessor=class(TMyParser.TParserTokenizer.TDynamicProcessor)
-    function GetResult(const str:gdbstring;const operands:gdbstring;var NextSymbolPos:integer;pobj:Pointer):gdbstring;
+    function GetResult(const str:String;const operands:String;var NextSymbolPos:integer;pobj:Pointer):String;
   end;
 
   TNum2StrProcessor=class(TMyParser.TParserTokenizer.TStaticProcessor)
@@ -59,21 +59,20 @@ type
 var
   TokenTextInfo:TMyParser.TParserTokenizer.TTokenTextInfo;
   pt:TMyParser.TGeneralParsedText;
-  s:gdbstring;
+  s:UnicodeString;
   p:pointer;
 implementation
-function TStr2VarProcessor.GetResult(const str:gdbstring;const operands:gdbstring;var NextSymbolPos:integer;pobj:Pointer):gdbstring;
+function TStr2VarProcessor.GetResult(const str:String;const operands:String;var NextSymbolPos:integer;pobj:Pointer):String;
 var
-  varname:GDBString;
   pv:pvardesk;
 begin
   pv:=nil;
   if pobj<>nil then
     pv:=FindVariableInEnt(PGDBObjEntity(pobj),operands);
   if pv<>nil then
-    result:=pv^.data.ptd^.GetValueAsString(pv^.data.Instance)
+    result:=pv^.data.ptd^.GetValueAsString(pv^.data.Addr.Instance)
   else
-    result:='!!ERR('+varname+')!!';
+    result:='!!ERR('+operands+')!!';
 end;
 class procedure TNum2StrProcessor.StaticGetResult(const Source:TUnicodeStringManipulator.TStringType;
                                                   const Token :TUnicodeStringManipulator.TCharRange;
@@ -117,31 +116,29 @@ begin
   end;
 end;
 
-function prop2value(const str:TDXFEntsInternalStringType;const operands:TDXFEntsInternalStringType;var NextSymbolPos:integer;pobj:Pointer):gdbstring;
+function prop2value(const str:TDXFEntsInternalStringType;const operands:TDXFEntsInternalStringType;var NextSymbolPos:integer;pobj:Pointer):String;
 begin
   if GetProperty(pobj,operands,result) then
     else
       result:='!!ERRprop('+operands+')!!';
 end;
 
-function var2value(const str:TDXFEntsInternalStringType;const operands:TDXFEntsInternalStringType;var NextSymbolPos:integer;pobj:Pointer):gdbstring;
+function var2value(const str:TDXFEntsInternalStringType;const operands:TDXFEntsInternalStringType;var NextSymbolPos:integer;pobj:Pointer):String;
 var
-  endpos:integer;
-  varname:GDBString;
   pv:pvardesk;
 begin
   pv:=nil;
   if pobj<>nil then
     pv:=FindVariableInEnt(PGDBObjEntity(pobj),operands);
   if pv<>nil then
-    result:=pv^.data.ptd^.GetValueAsString(pv^.data.Instance)
+    result:=pv^.data.ptd^.GetValueAsString(pv^.data.Addr.Instance)
   else
-    result:='!!ERR('+varname+')!!';
+    result:='!!ERR('+operands+')!!';
 end;
-{function evaluatesubstr(var str:gdbstring;var startpos:integer;pobj:PGDBObjGenericWithSubordinated):gdbstring;
+{function evaluatesubstr(var str:String;var startpos:integer;pobj:PGDBObjGenericWithSubordinated):String;
 var
   endpos:integer;
-  varname:GDBString;
+  varname:String;
   //pv:pvardesk;
   vd:vardesk;
   pentvarext:TVariablesExtender;
@@ -155,18 +152,18 @@ begin
     varname:=copy(str,NextSymbolPos-1+3,endpos-NextSymbolPos-1-3);
     pentvarext:=pobj^.GetExtension(TVariablesExtender);
     vd:=evaluate(varname,@pentvarext.entityunit);
-    if (assigned(vd.data.ptd))and(assigned(vd.data.Instance)) then
-                                                                  str:=copy(str,1,NextSymbolPos-1-1)+vd.data.ptd^.GetValueAsString(vd.data.Instance)+copy(str,endpos+1,length(str)-endpos)
+    if (assigned(vd.data.ptd))and(assigned(vd.Instance)) then
+                                                                  str:=copy(str,1,NextSymbolPos-1-1)+vd.data.ptd^.GetValueAsString(vd.Instance)+copy(str,endpos+1,length(str)-endpos)
                                                               else
                                                                   str:=copy(str,1,NextSymbolPos-1-1)+'!!ERR('+varname+')!!'+copy(str,endpos+1,length(str)-endpos)
   end;
   startpos:=NextSymbolPos-1;
 end;}
 
-function EscapeSeq(const str:TDXFEntsInternalStringType;const operands:TDXFEntsInternalStringType;var NextSymbolPos:integer;pobj:Pointer):gdbstring;
+function EscapeSeq(const str:TDXFEntsInternalStringType;const operands:TDXFEntsInternalStringType;var NextSymbolPos:integer;pobj:Pointer):String;
 var
   sym:char;
-  value,s1,s2:string;
+  value:TDXFEntsInternalStringType;
   num,code:integer;
 begin
   result:='';
@@ -190,7 +187,7 @@ begin
   end;
 end;
 
-function date2value(const str:TDXFEntsInternalStringType;const operands:TDXFEntsInternalStringType;var NextSymbolPos:integer;pobj:Pointer):gdbstring;
+function date2value(const str:TDXFEntsInternalStringType;const operands:TDXFEntsInternalStringType;var NextSymbolPos:integer;pobj:Pointer):String;
 begin
   result:=datetostr(date);
 end;

@@ -21,26 +21,27 @@ interface
 
 uses
   sysutils,
-  uzbtypesbase,uzbtypes,
+  uzbtypes,
   math,uzegeometry,
-  UGDBOpenArrayOfByte,
+  uzctnrVectorBytes,
   uzedrawingdef,uzgldrawcontext,
   uzeffdxfsupport,
-  uzeentdevice,uzeentsubordinated,uzeentity,uzeenttext,uzeblockdef,uzeentmtext,uzeentwithlocalcs,
+  uzeentdevice,uzeentsubordinated,uzeentity,uzeentabstracttext,uzeenttext,
+  uzeblockdef,uzeentmtext,uzeentwithlocalcs,
   uzeentityextender,uzeBaseExtender;
 const
   SmartTextEntExtenderName='extdrSmartTextEnt';
 type
   TSmartTextEntExtender=class(TBaseEntityExtender)
-    GoodLayer,BadLayer:GDBString;
-    VariableName:GDBString;
-    Inverse:GDBBoolean;
+    GoodLayer,BadLayer:String;
+    VariableName:String;
+    Inverse:Boolean;
     class function getExtenderName:string;override;
     constructor Create(pEntity:Pointer);override;
     procedure Assign(Source:TBaseExtender);override;
     procedure onBeforeEntityFormat(pEntity:Pointer;const drawing:TDrawingDef;var DC:TDrawContext);override;
     procedure onAfterEntityFormat(pEntity:Pointer;const drawing:TDrawingDef;var DC:TDrawContext);override;
-    procedure SaveToDxf(var outhandle:GDBOpenArrayOfByte;PEnt:Pointer;var IODXFContext:TIODXFContext);override;
+    procedure SaveToDxf(var outhandle:TZctnrVectorBytes;PEnt:Pointer;var IODXFContext:TIODXFContext);override;
     procedure PostLoad(var context:TIODXFLoadContext);override;
     procedure onEntitySupportOldVersions(pEntity:pointer;const drawing:TDrawingDef);override;
   end;
@@ -89,7 +90,7 @@ begin
   result:=SmartTextEntExtenderName;
 end;
 
-procedure TSmartTextEntExtender.SaveToDxf(var outhandle:GDBOpenArrayOfByte;PEnt:Pointer;var IODXFContext:TIODXFContext);
+procedure TSmartTextEntExtender.SaveToDxf(var outhandle:TZctnrVectorBytes;PEnt:Pointer;var IODXFContext:TIODXFContext);
 begin
 end;
 

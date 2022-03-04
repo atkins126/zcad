@@ -6,13 +6,11 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, ComCtrls,
-  StdCtrls, ActnList, laz.VirtualTrees, gvector,
-  uzbtypes,uzegeometry, uzccommandsmanager,
-  uzcinterface,uzeentity,uzcimagesmanager,uzcdrawings,
+  ActnList, laz.VirtualTrees, gvector,
+  uzegeometry, uzccommandsmanager,
+  uzcinterface,uzeentity,uzcimagesmanager,
   uzcenitiesvariablesextender,varmandef,uzbstrproc,uzcmainwindow,uzctreenode,
-  Varman,
-  {uzeparser,uzeentitiestypefilter,}strutils,Masks,
-  uzcoimultiproperties,uzedimensionaltypes;
+  Varman,uzcoimultiproperties;
 type
   TExtColumnParams=record
     Pattern:string;
@@ -51,7 +49,7 @@ type
     ficonindex:integer;
     function FindById(pnd:Pointer; Criteria:string):boolean;
     function FindByName(pnd:Pointer; Criteria:string):boolean;
-    constructor Create(AOwner:TComponent; ATree: TVirtualStringTree; AName:string);
+    constructor Create(AOwner:TComponent; ATree: TVirtualStringTree; AName:string);overload;
     destructor Destroy;override;
     function find(BaseName:string;basenode:PVirtualNode):PVirtualNode;
     procedure ProcessEntity(CreateEntityNode:TCreateEntityNodeFunc;pent:pGDBObjEntity;filterproc:TFilterEntityProc;traceproc:TTraceEntityProc);
@@ -75,7 +73,7 @@ implementation
 function GetMainFunction(const pent:pGDBObjEntity):pGDBObjEntity;
 var
   pentvarext:TVariablesExtender;
-  pvd:pvardesk;
+  //pvd:pvardesk;
 begin
   pentvarext:=pent^.GetExtension<TVariablesExtender>;
   if pentvarext<>nil then
@@ -95,7 +93,7 @@ begin
   begin
        pvd:=pentvarext.entityunit.FindVariable(varname);
        if pvd<>nil then
-                       result:=pvd.data.PTD^.GetValueAsString(pvd.data.Instance);
+                       result:=pvd.data.PTD^.GetValueAsString(pvd.data.Addr.Instance);
   end;
 end;
 
@@ -282,7 +280,7 @@ procedure TBaseRootNodeDesk.ProcessEntity(CreateEntityNode:TCreateEntityNodeFunc
 var
   Name:string;
   basenode2,namenode,pnode:PVirtualNode;
-  pnd:PTNodeData;
+  //pnd:PTNodeData;
   include:boolean;
 begin
   basenode2:=nil;

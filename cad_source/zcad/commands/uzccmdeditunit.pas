@@ -17,7 +17,7 @@
 }
 
 unit uzccmdeditunit;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
@@ -27,7 +27,7 @@ uses
   uzbpaths,
   Varman,
   UUnitManager,
-  UGDBOpenArrayOfByte,
+  uzctnrVectorBytes,
   uzcinterface,
   uzctranslations,
   Controls,
@@ -39,14 +39,15 @@ implementation
 
 function EditUnit(var entityunit:TSimpleUnit):boolean;
 var
-   mem:GDBOpenArrayOfByte;
+   mem:TZctnrVectorBytes;
    //pobj:PGDBObjEntity;
-   //op:gdbstring;
+   //op:String;
    modalresult:integer;
    u8s:UTF8String;
    astring:ansistring;
 begin
-     mem.init({$IFDEF DEBUGBUILD}'{A1891083-67C6-4C21-8012-6D215935F6A6}',{$ENDIF}1024);
+  astring:='';
+     mem.init(1024);
      entityunit.SaveToMem(mem);
      //mem.SaveToFile(expandpath(ProgramPath+'autosave\lastvariableset.pas'));
      setlength(astring,mem.Count);

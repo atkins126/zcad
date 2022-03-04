@@ -17,17 +17,17 @@
 }
 
 unit uzglgeomdata;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses uzgindexsarray,uzgvertex3sarray,sysutils,uzbtypesbase,uzbtypes,uzbmemman,
-     gzctnrvectortypes,uzbgeomtypes,uzegeometry;
+uses uzgindexsarray,uzgvertex3sarray,sysutils,uzbtypes,
+     uzegeometrytypes,uzegeometry,gzctnrvectortypes;
 type
 {Export+}
 {REGISTEROBJECTTYPE ZGLGeomData}
 ZGLGeomData=object(GDBaseObject)
                                                 Vertex3S:ZGLVertex3Sarray;
                                                 Indexes:ZGLIndexsArray;
-                                                constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger);
+                                                constructor init(m:Integer);
                                                 destructor done;virtual;
                                                 procedure Clear;virtual;
                                                 procedure Shrink;virtual;
@@ -47,8 +47,8 @@ begin
 end;
 constructor ZGLGeomData.init;
 begin
-  Vertex3S.init({$IFDEF DEBUGBUILD}ErrGuid,{$ENDIF}m);
-  Indexes.init({$IFDEF DEBUGBUILD}ErrGuid,{$ENDIF}m);
+  Vertex3S.init(m);
+  Indexes.init(m);
 end;
 destructor ZGLGeomData.done;
 begin

@@ -17,7 +17,7 @@
 }
 
 unit uzglviewareagdi;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
      {$IFDEF LCLGTK2}
@@ -29,8 +29,8 @@ uses
      {$IFDEF LCLQT5}
      qt5,qtint,
      {$ENDIF}
-     uzgldrawergdi,uzglviewareaabstract,sysutils,uzbmemman,uzbtypesbase,uzbtypes,
-     uzbgeomtypes,uzegeometry,{$IFNDEF DELPHI}LCLType,{$ENDIF}{$IFDEF DELPHI}Types,{$ENDIF}
+     uzgldrawergdi,uzglviewareaabstract,sysutils,
+     uzegeometrytypes,uzegeometry,{$IFNDEF DELPHI}LCLType,{$ENDIF}{$IFDEF DELPHI}Types,{$ENDIF}
      ExtCtrls,classes,Controls,Graphics,uzglviewareageneral,uzglbackendmanager,uzglviewareacanvasgeneral;
 type
     TGDIViewArea=class(TGeneralCanvasViewArea)
@@ -38,7 +38,7 @@ type
                       GDIData:TGDIData;
                       procedure CreateDrawer; override;
                       function getParam:pointer; override;
-                      function getParamTypeName:GDBString; override;
+                      function getParamTypeName:String; override;
                       procedure setdeicevariable; override;
                   end;
 const
@@ -79,7 +79,7 @@ function TGDIViewArea.getParam:pointer;
 begin
      result:=@GDIData;
 end;
-function TGDIViewArea.getParamTypeName:GDBString;
+function TGDIViewArea.getParamTypeName:String;
 begin
      result:='PTGDIData';
 end;

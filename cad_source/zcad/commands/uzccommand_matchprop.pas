@@ -18,16 +18,14 @@
 {$mode delphi}
 unit uzccommand_matchprop;
 
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
   LazLogger,
   SysUtils,
   uzccommandsabstract,uzccommandsimpl,
-  uzccominteractivemanipulators,
   uzcstrconsts,
-  uzbgeomtypes,
   uzccommandsmanager,
   uzeentlwpolyline,uzeentpolyline,uzeentityfactory,
   uzcdrawings,

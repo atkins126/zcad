@@ -17,12 +17,12 @@
 }
 
 unit uzglviewareaabstract;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
-     UGDBOpenArrayOfPV,uzgldrawerabstract,uzeentgenericsubentry,uzbtypesbase,uzbtypes,
+     UGDBOpenArrayOfPV,uzgldrawerabstract,uzeentgenericsubentry,uzbtypes,
      uzglviewareadata,uzgldrawcontext,UGDBPoint3DArray,uzeentitiestree,uzegeometry,uzedrawingabstract,
-     uzbgeomtypes,sysutils,
+     uzegeometrytypes,sysutils,
      ExtCtrls,Controls,Classes,{$IFDEF DELPHI}Types,Messages,Graphics,{$ENDIF}{$IFNDEF DELPHI}LCLType,{$ENDIF}Forms,uzeentity;
 
 type
@@ -50,11 +50,11 @@ type
                 end;
     TCameraChangedNotify=procedure of object;
     TAbstractViewArea=class;
-    TOnWaMouseDown=function (Sender:TAbstractViewArea;Button:TMouseButton;Shift:TShiftState;X,Y:Integer;OnMouseEntity:GDBPointer;var NeedRedraw:Boolean):boolean of object;
+    TOnWaMouseDown=function (Sender:TAbstractViewArea;Button:TMouseButton;Shift:TShiftState;X,Y:Integer;OnMouseEntity:Pointer;var NeedRedraw:Boolean):boolean of object;
     TOnWaMouseMove=procedure (Sender:TAbstractViewArea;Shift:TShiftState;X,Y:Integer) of object;
-    TOnWaMouseSelect=procedure (Sender:TAbstractViewArea;SelectedEntity:GDBPointer) of object;
+    TOnWaMouseSelect=procedure (Sender:TAbstractViewArea;SelectedEntity:Pointer) of object;
     TOnWaKeyPress=procedure (Sender:TAbstractViewArea;var Key: Word; Shift: TShiftState) of object;
-    TOnGetEntsDesc=function (ents:PGDBObjOpenArrayOfPV):GDBString of object;
+    TOnGetEntsDesc=function (ents:PGDBObjOpenArrayOfPV):String of object;
     TOnWaShowCursor=procedure (Sender:TAbstractViewArea;var DC:TDrawContext) of object;
     TAbstractViewArea=class(tcomponent)
                            public
@@ -69,8 +69,8 @@ type
                            MainMouseMove:procedure of object;
                            MainMouseDown:function(Sender:TAbstractViewArea):boolean of object;
                            MainMouseUp:procedure of object;
-                           tocommandmcliccount:GDBInteger;
-                           currentmousemovesnaptogrid:GDBBoolean;
+                           tocommandmcliccount:Integer;
+                           currentmousemovesnaptogrid:Boolean;
                            OnWaMouseDown:TOnWaMouseDown;
                            OnWaMouseSelect:TOnWaMouseSelect;
                            OnWaMouseMove:TOnWaMouseMove;
@@ -88,8 +88,8 @@ type
                            procedure draw;virtual;abstract;
                            procedure DrawOrInvalidate;virtual;abstract;
                            procedure Clear0Ontrackpoint;virtual;abstract;
-                           procedure SetMouseMode(smode:GDBByte);virtual;abstract;
-                           //procedure sendcoordtocommandTraceOn(coord:GDBVertex;key: GDBByte;pos:pos_record);virtual;abstract;
+                           procedure SetMouseMode(smode:Byte);virtual;abstract;
+                           //procedure sendcoordtocommandTraceOn(coord:GDBVertex;key: Byte;pos:pos_record);virtual;abstract;
                            procedure reprojectaxis;virtual;abstract;
                            procedure Project0Axis;virtual;abstract;
                            procedure create0axis;virtual;abstract;
@@ -102,14 +102,14 @@ type
                            procedure RestoreMouse;virtual;abstract;
                            procedure myKeyPress(var Key: Word; Shift: TShiftState);virtual;abstract;
                            procedure finishdraw(var RC:TDrawContext);virtual;abstract;
-                            procedure SetCameraPosZoom(_pos:gdbvertex;_zoom:gdbdouble;finalcalk:gdbboolean);virtual;abstract;
+                            procedure SetCameraPosZoom(_pos:gdbvertex;_zoom:Double;finalcalk:Boolean);virtual;abstract;
 
                            procedure showmousecursor;virtual;abstract;
                            procedure hidemousecursor;virtual;abstract;
                            Procedure Paint; virtual;abstract;
-                           function CreateRC(_maxdetail:GDBBoolean=false):TDrawContext;virtual;abstract;
+                           function CreateRC(_maxdetail:Boolean=false):TDrawContext;virtual;abstract;
                            function CreateFaceRC:TDrawContext;virtual;abstract;
-                           function ProjectPoint(pntx,pnty,pntz:gdbdouble;var wcsLBN,wcsRTF,dcsLBN,dcsRTF: GDBVertex):gdbvertex;virtual;abstract;
+                           function ProjectPoint(pntx,pnty,pntz:Double;var wcsLBN,wcsRTF,dcsLBN,dcsRTF: GDBVertex):gdbvertex;virtual;abstract;
                            procedure mouseunproject(X, Y: integer);virtual;abstract;
                            procedure CalcMouseFrustum;virtual;abstract;
                            procedure ClearOntrackpoint;virtual;abstract;
@@ -118,14 +118,14 @@ type
                            procedure SetOTrackTimer(Sender: TObject);virtual;abstract;
                            procedure KillOHintTimer(Sender: TObject);virtual;abstract;
                            procedure SetOHintTimer(Sender: TObject);virtual;abstract;
-                           procedure getonmouseobjectbytree(var Node:TEntTreeNode;InSubEntry:GDBBoolean);virtual;abstract;
-                           procedure getosnappoint(radius: GDBFloat);virtual;abstract;
+                           procedure getonmouseobjectbytree(var Node:TEntTreeNode;InSubEntry:Boolean);virtual;abstract;
+                           procedure getosnappoint(radius: Single);virtual;abstract;
                            procedure projectaxis;virtual;abstract;
                            procedure AddOntrackpoint;virtual;abstract;
                            procedure CorrectMouseAfterOS;virtual;abstract;
-                           //procedure sendmousecoordwop(key: GDBByte);virtual;abstract;
-                           //procedure sendmousecoord(key: GDBByte);virtual;abstract;
-                           function SelectRelatedObjects(pent:PGDBObjEntity):GDBInteger;virtual;abstract;
+                           //procedure sendmousecoordwop(key: Byte);virtual;abstract;
+                           //procedure sendmousecoord(key: Byte);virtual;abstract;
+                           function SelectRelatedObjects(pent:PGDBObjEntity):Integer;virtual;abstract;
                            procedure doCameraChanged;virtual;abstract;
                            procedure set3dmouse;virtual;abstract;
                            procedure WaMouseMove(sender:tobject;Shift: TShiftState; X, Y: Integer);virtual;abstract;
@@ -137,13 +137,13 @@ type
                            procedure DrawGrid(var DC:TDrawContext); virtual;abstract;
                            procedure showcursor(var DC:TDrawContext); virtual;abstract;
                            procedure render(const Root:GDBObjGenericSubEntry;var DC:TDrawContext); virtual;abstract;
-                           function treerender(var Node:TEntTreeNode;StartTime:TDateTime;var DC:TDrawContext):GDBBoolean;virtual;abstract;
+                           function treerender(var Node:TEntTreeNode;StartTime:TDateTime;var DC:TDrawContext):Boolean;virtual;abstract;
                            procedure partailtreerender(var Node:TEntTreeNode;const part:TBoundingBox; var DC:TDrawContext);virtual;abstract;
                            function startpaint:boolean;virtual;abstract;
                            procedure endpaint;virtual;abstract;
                            procedure asyncupdatemouse(Data: PtrInt);virtual;abstract;
                            function getParam:pointer;virtual;abstract;
-                           function getParamTypeName:GDBString;virtual;abstract;
+                           function getParamTypeName:String;virtual;abstract;
                            procedure setdeicevariable;virtual;abstract;
                            procedure ZoomIn; virtual;abstract;
                            procedure ZoomOut; virtual;abstract;
@@ -151,8 +151,8 @@ type
                            procedure asynczoomall(Data: PtrInt); virtual;abstract;
                       end;
 var
-   otracktimer: GDBInteger;
-procedure copyospoint(out dest:os_record; source:os_record);
+   otracktimer: Integer;
+procedure copyospoint(var dest:os_record; source:os_record);
 function correcttogrid(point:GDBVertex;const grid:GDBSnap2D):GDBVertex;
 function CreateFaceRC:TDrawContext;
 implementation
@@ -197,7 +197,7 @@ begin
   result.y:=round((point.y-grid.Base.y)/grid.Spacing.y)*grid.Spacing.y+grid.Base.y;
   result.z:=point.z;
 end;
-procedure copyospoint(out dest:os_record; source:os_record);
+procedure copyospoint(var dest:os_record; source:os_record);
 begin
        dest.worldcoord:=source.worldcoord;
        dest.dispcoord:=source.dispcoord;

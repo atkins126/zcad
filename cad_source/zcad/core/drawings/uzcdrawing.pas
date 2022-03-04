@@ -17,28 +17,28 @@
 }
 
 unit uzcdrawing;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 uses
     uzctranslations,uzcinterface,uzgldrawcontext,zeundostack,zcchangeundocommand,
     zcobjectchangeundocommand,zebaseundocommands,uzbpaths,uzestylesdim,
     uzcdialogsfiles,LResources,uzcsysvars,uzcstrconsts,uzbstrproc,uzeblockdef,UUnitManager,
-    uzbtypes,varmandef,varman,sysutils, uzbmemman,uzegeometry, uzeconsts,
-    uzbtypesbase,uzedrawingsimple,uzestyleslayers,uzeentity,uzefontmanager,
-    gzctnrvectortypes,uzedimensionaltypes,uzbgeomtypes,UGDBOpenArrayOfByte;
+    uzbtypes,varmandef,varman,sysutils,uzegeometry, uzeconsts,
+    uzedrawingsimple,uzestyleslayers,uzeentity,uzefontmanager,
+    uzedimensionaltypes,uzegeometrytypes,uzctnrVectorBytes,gzctnrvectortypes;
 type
 {EXPORT+}
 PTZCADDrawing=^TZCADDrawing;
 {REGISTEROBJECTTYPE TZCADDrawing}
 TZCADDrawing= object(TSimpleDrawing)
 
-           FileName:GDBString;
-           Changed:GDBBoolean;
-           attrib:GDBLongword;
+           FileName:String;
+           Changed:Boolean;
+           attrib:LongWord;
            UndoStack:TZctnrVectorUndoCommands;
            DWGUnits:TUnitManager;
 
-           constructor init(num:PTUnitManager;preloadedfile1,preloadedfile2:GDBString);
+           constructor init(num:PTUnitManager;preloadedfile1,preloadedfile2:String);
            destructor done;virtual;
            procedure onUndoRedo;
            procedure onUndoRedoDataOwner(PDataOwner:Pointer);
@@ -48,27 +48,27 @@ TZCADDrawing= object(TSimpleDrawing)
            procedure StoreNewCamerapPos(command:Pointer);virtual;
            //procedure SetEntFromOriginal(_dest,_source:PGDBObjEntity;PCD_dest,PCD_source:PTDrawingPreCalcData);
            procedure rtmodifyonepoint(obj:PGDBObjEntity;rtmod:TRTModifyData;wc:gdbvertex);virtual;
-           procedure PushStartMarker(CommandName:GDBString);virtual;
+           procedure PushStartMarker(CommandName:String);virtual;
            procedure PushEndMarker;virtual;
-           procedure SetFileName(NewName:GDBString);virtual;
-           function GetFileName:GDBString;virtual;
-           procedure ChangeStampt(st:GDBBoolean);virtual;
-           function GetChangeStampt:GDBBoolean;virtual;
+           procedure SetFileName(NewName:String);virtual;
+           function GetFileName:String;virtual;
+           procedure ChangeStampt(st:Boolean);virtual;
+           function GetChangeStampt:Boolean;virtual;
            function GetUndoTop:TArrayIndex;virtual;
-           function GetUndoStack:GDBPointer;virtual;
+           function GetUndoStack:Pointer;virtual;
            function CanUndo:boolean;virtual;
            function CanRedo:boolean;virtual;
            function GetDWGUnits:{PTUnitManager}pointer;virtual;
-           procedure AddBlockFromDBIfNeed(name:GDBString);virtual;
+           procedure AddBlockFromDBIfNeed(name:String);virtual;
            function GetUnitsFormat:TzeUnitsFormat;virtual;
            procedure SetUnitsFormat(f:TzeUnitsFormat);virtual;
-           procedure FillDrawingPartRC(out dc:TDrawContext);virtual;
+           procedure FillDrawingPartRC(var dc:TDrawContext);virtual;
      end;
 {EXPORT-}
 //procedure standardization(PEnt:PGDBObjEntity;ObjType:TObjID);
 implementation
  uses uzcdrawings,uzeenttext,uzeentdevice,uzeentblockinsert,uzeffdxf,uzccommandsmanager;
-procedure TZCADDrawing.FillDrawingPartRC(out dc:TDrawContext);
+procedure TZCADDrawing.FillDrawingPartRC(var dc:TDrawContext);
 var
   vd:pvardesk;
 begin
@@ -77,7 +77,7 @@ begin
   if DWGUnit<>nil then
     vd:=DWGUnit.InterfaceVariables.findvardesc('DWG_LTScale');
   if vd<>nil then
-                 dc.DrawingContext.GlobalLTScale:=dc.DrawingContext.GlobalLTScale*PGDBDouble(vd^.data.Instance)^;
+                 dc.DrawingContext.GlobalLTScale:=dc.DrawingContext.GlobalLTScale*PDouble(vd^.data.Addr.Instance)^;
   if commandmanager.pcommandrunning<>nil then
                                                dc.DrawingContext.DrawHeplGeometryProc:=commandmanager.pcommandrunning^.DrawHeplGeometry;
 end;
@@ -164,7 +164,7 @@ begin
      if command<>nil then
                          PTGDBCameraBasePropChangeCommand(command).ComitFromObj;
 end;
-procedure TZCADDrawing.PushStartMarker(CommandName:GDBString);
+procedure TZCADDrawing.PushStartMarker(CommandName:String);
 begin
      self.UndoStack.PushStartMarker(CommandName);
 end;
@@ -172,11 +172,11 @@ procedure TZCADDrawing.PushEndMarker;
 begin
       self.UndoStack.PushEndMarker;
 end;
-procedure TZCADDrawing.SetFileName(NewName:GDBString);
+procedure TZCADDrawing.SetFileName(NewName:String);
 begin
      self.FileName:=NewName;
 end;
-function TZCADDrawing.GetFileName:GDBString;
+function TZCADDrawing.GetFileName:String;
 begin
      result:=FileName;
 end;
@@ -185,7 +185,7 @@ begin
      self.Changed:={true}st;
      inherited;
 end;
-function TZCADDrawing.GetChangeStampt:GDBBoolean;
+function TZCADDrawing.GetChangeStampt:Boolean;
 begin
      result:=self.Changed;
 end;
@@ -193,7 +193,7 @@ function TZCADDrawing.GetUndoTop:TArrayIndex;
 begin
      result:=UndoStack.CurrentCommand;
 end;
-function TZCADDrawing.GetUndoStack:GDBPointer;
+function TZCADDrawing.GetUndoStack:Pointer;
 begin
      result:=@UndoStack;
 end;
@@ -215,7 +215,7 @@ function TZCADDrawing.GetDWGUnits:{PTUnitManager}pointer;
 begin
      result:=@DWGUnits;
 end;
-procedure TZCADDrawing.AddBlockFromDBIfNeed(name:GDBString);
+procedure TZCADDrawing.AddBlockFromDBIfNeed(name:String);
 begin
      drawings.AddBlockFromDBIfNeed(@self,name);
 end;
@@ -232,29 +232,29 @@ begin
   pdwgwarsunit:=pointer(DWGUnits.CreateObject);
   pdwgwarsunit^.init('DrawingVars');
   pdwgwarsunit.InterfaceUses.PushBackIfNotPresent(SysUnit);
-  pdwgwarsunit^.CreateVariable('DWG_DrawMode','GDBBoolean',@LWDisplay);
-  pdwgwarsunit^.CreateVariable('DWG_SnapGrid','GDBBoolean',@SnapGrid);
-  pdwgwarsunit^.CreateVariable('DWG_DrawGrid','GDBBoolean',@DrawGrid);
-  pdwgwarsunit^.CreateVariable('DWG_GridSpacing','GDBvertex2D',@GridSpacing);
-  pdwgwarsunit^.CreateVariable('DWG_Snap','GDBSnap2D',@Snap);
-  pdwgwarsunit^.CreateVariable('DWG_CLayer','PGDBLayerProp',@CurrentLayer);
-  pdwgwarsunit^.CreateVariable('DWG_CLType','PGDBLtypeProp',@CurrentLType);
-  pdwgwarsunit^.CreateVariable('DWG_CTStyle','PGDBTextStyle',@CurrentTextStyle);
-  pdwgwarsunit^.CreateVariable('DWG_CDimStyle','PGDBDimStyle',@CurrentDimStyle);
-  pdwgwarsunit^.CreateVariable('DWG_CLinew','TGDBLineWeight',@CurrentLineW);
-  pdwgwarsunit^.CreateVariable('DWG_CLTScale','GDBDouble',@CLTScale);
-  pdwgwarsunit^.CreateVariable('DWG_CColor','GDBInteger',@CColor);
+  pdwgwarsunit^.CreateFixedVariable('DWG_DrawMode','Boolean',@LWDisplay);
+  pdwgwarsunit^.CreateFixedVariable('DWG_SnapGrid','Boolean',@SnapGrid);
+  pdwgwarsunit^.CreateFixedVariable('DWG_DrawGrid','Boolean',@DrawGrid);
+  pdwgwarsunit^.CreateFixedVariable('DWG_GridSpacing','GDBvertex2D',@GridSpacing);
+  pdwgwarsunit^.CreateFixedVariable('DWG_Snap','GDBSnap2D',@Snap);
+  pdwgwarsunit^.CreateFixedVariable('DWG_CLayer','PGDBLayerProp',@CurrentLayer);
+  pdwgwarsunit^.CreateFixedVariable('DWG_CLType','PGDBLtypeProp',@CurrentLType);
+  pdwgwarsunit^.CreateFixedVariable('DWG_CTStyle','PGDBTextStyle',@CurrentTextStyle);
+  pdwgwarsunit^.CreateFixedVariable('DWG_CDimStyle','PGDBDimStyle',@CurrentDimStyle);
+  pdwgwarsunit^.CreateFixedVariable('DWG_CLinew','TGDBLineWeight',@CurrentLineW);
+  pdwgwarsunit^.CreateFixedVariable('DWG_CLTScale','Double',@CLTScale);
+  pdwgwarsunit^.CreateFixedVariable('DWG_CColor','Integer',@CColor);
 
 
-  pdwgwarsunit^.CreateVariable('DWG_LUnits','TLUnits',@LUnits);
-  pdwgwarsunit^.CreateVariable('DWG_LUPrec','TUPrec',@LUPrec);
-  pdwgwarsunit^.CreateVariable('DWG_AUnits','TAUnits',@AUnits);
-  pdwgwarsunit^.CreateVariable('DWG_AUPrec','TUPrec',@AUPrec);
-  pdwgwarsunit^.CreateVariable('DWG_AngDir','TAngDir',@AngDir);
-  pdwgwarsunit^.CreateVariable('DWG_AngBase','GDBAngleDegDouble',@AngBase);
-  pdwgwarsunit^.CreateVariable('DWG_UnitMode','TUnitMode',@UnitMode);
-  pdwgwarsunit^.CreateVariable('DWG_InsUnits','TInsUnits',@InsUnits);
-  pdwgwarsunit^.CreateVariable('DWG_TextSize','GDBDouble',@TextSize);
+  pdwgwarsunit^.CreateFixedVariable('DWG_LUnits','TLUnits',@LUnits);
+  pdwgwarsunit^.CreateFixedVariable('DWG_LUPrec','TUPrec',@LUPrec);
+  pdwgwarsunit^.CreateFixedVariable('DWG_AUnits','TAUnits',@AUnits);
+  pdwgwarsunit^.CreateFixedVariable('DWG_AUPrec','TUPrec',@AUPrec);
+  pdwgwarsunit^.CreateFixedVariable('DWG_AngDir','TAngDir',@AngDir);
+  pdwgwarsunit^.CreateFixedVariable('DWG_AngBase','GDBAngleDegDouble',@AngBase);
+  pdwgwarsunit^.CreateFixedVariable('DWG_UnitMode','TUnitMode',@UnitMode);
+  pdwgwarsunit^.CreateFixedVariable('DWG_InsUnits','TInsUnits',@InsUnits);
+  pdwgwarsunit^.CreateFixedVariable('DWG_TextSize','Double',@TextSize);
 
   if preloadedfile1<>'' then
   DWGUnits.loadunit(SupportPath,InterfaceTranslate,expandpath({'*rtl/dwg/DrawingDeviceBase.pas')}preloadedfile1),nil);
@@ -268,7 +268,7 @@ begin
   if assigned(pdwgwarsunit) then
                                 pvd:=pdwgwarsunit.InterfaceVariables.findvardesc('camera');
   if pvd<>nil then
-                  pcam:=pvd^.data.Instance;
+                  pcam:=pvd^.data.Addr.Instance;
   inherited init(pcam);
 
 

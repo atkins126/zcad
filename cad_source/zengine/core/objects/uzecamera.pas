@@ -17,10 +17,10 @@
 }
 
 unit uzecamera;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
-uses LCLProc,uzbtypesbase,uzbgeomtypes,uzbtypes,uzegeometry;
+uses LCLProc,uzegeometrytypes,uzbtypes,uzegeometry;
 
 type
 GDBProjectProc=procedure (objcoord:GDBVertex; out wincoord:GDBVertex) of object;
@@ -29,15 +29,15 @@ PGDBObjCamera=^GDBObjCamera;
 {REGISTEROBJECTTYPE GDBObjCamera}
 GDBObjCamera= object(GDBBaseCamera)
                    modelMatrixLCS:DMatrix4D;
-                   zminLCS,zmaxLCS:GDBDouble;
+                   zminLCS,zmaxLCS:Double;
                    frustumLCS:ClipArray;
                    clipLCS:DMatrix4D;
                    projMatrixLCS:DMatrix4D;
-                   notuseLCS:GDBBoolean;
+                   notuseLCS:Boolean;
                    procedure getfrustum(mm,pm:PDMatrix4D;var _clip:DMatrix4D;var _frustum:ClipArray);
-                   procedure RotateInLocalCSXY(ux,uy:GDBDouble);
-                   procedure MoveInLocalCSXY(oldx,oldy:GDBDouble;ax:gdbvertex);
-                   function GetObjTypeName:GDBString;virtual;
+                   procedure RotateInLocalCSXY(ux,uy:Double);
+                   procedure MoveInLocalCSXY(oldx,oldy:Double;ax:gdbvertex);
+                   function GetObjTypeName:String;virtual;
                    constructor initnul;
 
                    procedure NextPosition;virtual;
@@ -63,19 +63,19 @@ begin
 
 end;
 procedure GDBObjCamera.getfrustum;
-//var t:GDBDouble;
+//var t:Double;
 begin
    //t:=sizeof(modelmatrix);
    _clip:=MatrixMultiply(mm^,pm^);
    _frustum:=calcfrustum(@_clip);
 end;
-procedure GDBObjCamera.RotateInLocalCSXY(ux,uy:GDBDouble);
+procedure GDBObjCamera.RotateInLocalCSXY(ux,uy:Double);
 var
   //glmcoord1: gdbpiece;
   tempmatr,{tempmatr2,}rotmatr:DMatrix4D;
   //tv,tv2:gdbvertex4d;
   //ax,ay:gdbvertex;
-  //len:GDBDouble;
+  //len:Double;
 
 begin
       tempmatr:=onematrix;
@@ -94,14 +94,14 @@ begin
       prop.xdir:=NormalizeVertex(prop.xdir);
       prop.ydir := CrossVertex(prop.look,prop.xdir);
 end;
-procedure GDBObjCamera.MoveInLocalCSXY(oldx,oldy:GDBDouble;ax:gdbvertex);
+procedure GDBObjCamera.MoveInLocalCSXY(oldx,oldy:Double;ax:gdbvertex);
 var
   //glmcoord1: gdbpiece;
   tempmatr,{tempmatr2,}rotmatr:DMatrix4D;
   tv,tv2:gdbvertex4d;
   //ay:gdbvertex;
-  //ux,uy:GDBDouble;
-  len,d:GDBDouble;
+  //ux,uy:Double;
+  len,d:Double;
 
 begin
       tempmatr:=onematrix;

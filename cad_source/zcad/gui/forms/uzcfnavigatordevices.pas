@@ -7,15 +7,15 @@ interface
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, ComCtrls,
   StdCtrls, ActnList, laz.VirtualTrees,
-  uzbtypes,gzctnrvectortypes,uzbgeomtypes ,uzegeometry, uzccommandsmanager,
-  uzcinterface,uzeconsts,uzeentity,uzcimagesmanager,uzcdrawings,uzbtypesbase,
+  uzbtypes,gzctnrvectortypes,uzegeometrytypes ,uzegeometry, uzccommandsmanager,
+  uzcinterface,uzeconsts,uzeentity,uzcimagesmanager,uzcdrawings,
   varmandef,uzbstrproc,uzcmainwindow,uzctreenode,
   uzcnavigatorsnodedesk,Varman,uzcstrconsts,uztoolbarsmanager,uzmenusmanager,
   uzccommandsimpl,uzccommandsabstract,uzcutils,uzcenitiesvariablesextender,
   GraphType,generics.collections,uzglviewareaabstract,Menus,
   uzcfnavigatordevicescxmenu,uzbpaths,Toolwin,uzcctrlpartenabler,StrUtils,
   uzctextenteditor,uzcinfoform,uzcsysparams,uzcsysvars,uzetextpreprocessor,
-  Masks,uzelongprocesssupport,uzeentitiestypefilter,uzcuitypes,
+  {Masks,}uzelongprocesssupport,uzeentitiestypefilter,uzcuitypes,
   uzeparserenttypefilter,uzeparserentpropfilter,uzeparsernavparam,uzclog,uzcuidialogs;
 
 resourcestring
@@ -154,13 +154,13 @@ end;
 
 function TNavigatorDevices.EntsFilter(pent:pGDBObjEntity):Boolean;
 var
-  cn,an,entname:string;
-  match:boolean;
-  alreadyinclude:boolean;
-  operation:char;
+  //cn,an{,entname}:string;
+  //match:boolean;
+  //alreadyinclude:boolean;
+  //operation:char;
   propdata:TPropFilterData;
 
-  function processproperty(cn:string):boolean;
+{  function processproperty(cn:string):boolean;
   var
     operpos:integer;
     s1,s2,n1,n2:string;
@@ -177,7 +177,7 @@ var
       exit;
     end;
     result:=false;
-  end;
+  end;}
 
 begin
   {an:=IncludeEntities;
@@ -214,7 +214,7 @@ begin
   end else
     exit(true);
 
-  an:=BP.IncludeProperties;
+  {an:=BP.IncludeProperties;
   if an<>'' then begin
     alreadyinclude:=false;
     repeat
@@ -233,7 +233,7 @@ begin
     until an='';
     exit(alreadyinclude);
   end;
-  exit(true);
+  exit(true);}
 end;
 
 function  TNavigatorDevices.TraceEntity(rootdesk:TBaseRootNodeDesk;pent:pGDBObjEntity;out name:string):PVirtualNode;
@@ -354,7 +354,7 @@ begin
   if assigned(pnd) then
     if pnd^.pent<>nil then
   begin
-   s:='SelectObjectByAddres('+inttostr(GDBPlatformUInt(pnd^.pent))+')';
+   s:='SelectObjectByAddres('+inttostr(PtrUInt(pnd^.pent))+')';
    commandmanager.executecommandsilent(@s[1],drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
   end;
 end;
@@ -372,10 +372,10 @@ begin
   if {nmax<>n}true then begin
     _enabled:=true;
     result:=parts[partstartposition]='+';
-  end else begin
+  end{ else begin
     _enabled:=false;
     result:=false;
-  end;
+  end};
   if nextpartstartposition<>0 then
     _name:=copy(parts,partstartposition+1,nextpartstartposition-partstartposition-2)
   else
@@ -384,7 +384,7 @@ end;
 
 procedure TNavigatorDevices.SetPartState(var parts:string;const n:integer;state:boolean);
 var
-  partstartposition,nextpartstartposition:integer;
+  partstartposition{,nextpartstartposition}:integer;
 begin
   partstartposition:=WordPosition(n,parts,['|']);
   if state then
@@ -395,7 +395,7 @@ end;
 function RunEditor(const cpt,BoundsSaveName:string;var AText:string):boolean;
 var
    modalresult:integer;
-   astring:ansistring;
+   //astring:ansistring;
 begin
   result:=false;
   if not assigned(InfoForm) then begin
@@ -422,7 +422,7 @@ end;
 procedure TNavigatorDevices._onCreate(Sender: TObject);
 var
   po:TVTPaintOptions;
-  i:integer;
+  //i:integer;
 begin
 
    umf:=TmyVariableAction.Create(self);
@@ -605,9 +605,9 @@ procedure TNavigatorDevices.RefreshTree(Sender: TObject);
 var
   pv:pGDBObjEntity;
   ir:itrec;
-  pb:pboolean;
+  //pb:pboolean;
   lpsh:TLPSHandle;
-  dr:TZCMsgDialogResult;
+  //dr:TZCMsgDialogResult;
   HaveErrors:boolean;
 begin
    if not isvisible then exit;
@@ -640,7 +640,7 @@ begin
           programlog.LogOutStr('Error in TNavigatorDevices.RefreshTree '+E.Message,lp_OldPos,LM_Error);
           if NDMsgCtx=nil then
             NDMsgCtx:=TMessagesContext.create('TNavigatorDevices');
-          dr:=zcMsgDlg('Error in TNavigatorDevices.RefreshTree '+E.Message,zcdiError,[],true,NDMsgCtx);
+          {dr:=}zcMsgDlg('Error in TNavigatorDevices.RefreshTree '+E.Message,zcdiError,[],true,NDMsgCtx);
           HaveErrors:=true;
         end;
    end;
@@ -718,9 +718,9 @@ procedure TNavigatorDevices.VTOnContextMenu(Sender: TObject; MousePos: TPoint;
                              var Handled: Boolean);
 var
   pnode:PVirtualNode;
-  pnd:PTNodeData;
-  pc:gdbvertex;
-  bb:TBoundingBox;
+  //pnd:PTNodeData;
+  //pc:gdbvertex;
+  //bb:TBoundingBox;
   PopupMenu:TPopupMenu;
 begin
   Handled:=true;
@@ -894,7 +894,7 @@ var
   psubnode:PVirtualNode;
   pnd:PTNodeData;
   i:integer;
-  s:string;
+  //s:string;
 begin
   if pnode^.ChildCount>0 then begin
     psubnode:=pnode^.FirstChild;

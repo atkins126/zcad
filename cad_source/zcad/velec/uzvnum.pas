@@ -15,15 +15,15 @@
 {
 @author(Vladimir Bobrov)
 }
-{$mode objfpc}
+{$mode objfpc}{$H+}
 
 unit uzvnum;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
 
-{*uzcenitiesvariablesextender,sysutils,UGDBOpenArrayOfPV,uzbtypesbase,uzbtypes,
+{*uzcenitiesvariablesextender,sysutils,UGDBOpenArrayOfPV,uzbtypes,
      uzeentity,varmandef,uzeentsubordinated,
 
 
@@ -51,12 +51,12 @@ uses
   Pointerv,
   Graphs,
    *}
-   sysutils, math,
+   sysutils, //math,
 
   URecordDescriptor,TypeDescriptors,
 
   Forms, //uzcfblockinsert,
-   uzcfarrayinsert,
+   //uzcfarrayinsert,
 
   uzeentblockinsert,      //unit describes blockinsert entity
                        //модуль описывающий примитив вставка блока
@@ -69,7 +69,7 @@ uses
 
   uzeentpolyline,             //unit describes line entity
                        //модуль описывающий примитив трехмерная ПОЛИлиния
-  uzeenttext,             //unit describes line entity
+  uzeentabstracttext,uzeenttext,
                        //модуль описывающий примитив текст
 
   uzeentdimaligned, //unit describes aligned dimensional entity
@@ -82,26 +82,26 @@ uses
   uzeentarc,
   uzeentcircle,
   uzeentity,
-  uzbgeomtypes,
+  uzegeometrytypes,
 
 
-  gvector,garrayutils, // Подключение Generics и модуля для работы с ним
+  gvector,//garrayutils, // Подключение Generics и модуля для работы с ним
 
   uzcentcable,
   uzeentdevice,
-  UGDBOpenArrayOfPV,
+  //UGDBOpenArrayOfPV,
 
   uzegeometry,
-  uzeentitiesmanager,
+  //uzeentitiesmanager,
 
   //uzcmessagedialogs,
   uzeentityfactory,    //unit describing a "factory" to create primitives
                       //модуль описывающий "фабрику" для создания примитивов
   uzcsysvars,        //system global variables
                       //системные переменные
-  uzgldrawcontext,
+  //uzgldrawcontext,
   uzcinterface,
-  uzbtypesbase,uzbtypes, //base types
+  uzbtypes, //base types
                       //описания базовых типов
   uzeconsts, //base constants
                       //описания базовых констант
@@ -109,7 +109,7 @@ uses
   uzccommandsabstract,
   uzccommandsimpl, //Commands manager and related objects
                       //менеджер команд и объекты связанные с ним
-  uzcdrawing,
+  //uzcdrawing,
   uzedrawingsimple,
   uzcdrawings,     //Drawings manager, all open drawings are processed him
                       //"Менеджер" чертежей
@@ -117,13 +117,13 @@ uses
                       //разные функции упрощающие создание примитивов, пока их там очень мало
   varmandef,
   Varman,
-  {UGDBOpenArrayOfUCommands,}zcchangeundocommand,
+  {UGDBOpenArrayOfUCommands,}//zcchangeundocommand,
 
   uzclog,                //log system
                       //<**система логирования
   uzcvariablesutils, // для работы с ртти
 
-   gzctnrvectortypes,                  //itrec
+   //gzctnrvectortypes,                  //itrec
 
   //для работы графа
   ExtType,
@@ -238,7 +238,7 @@ PTDeviceInfoSubGraph=^TDeviceInfoSubGraph;
                          listNumVertexMinWeight:TListNumVertexMinWeight;
                          public
                          constructor Create;
-                         destructor Destroy;virtual;
+                         destructor Destroy;override;
       end;
       TListSubDevice=specialize TVector<TDeviceInfo>;
 
@@ -259,20 +259,20 @@ PTDeviceInfoSubGraph=^TDeviceInfoSubGraph;
                          name:String;
                          public
                          constructor Create;
-                         destructor Destroy;virtual;
+                         destructor Destroy;override;
       end;
       TListHeadGroup=specialize TVector<THeadGroupInfo>;
 
       //** Создания устройств к кому подключаются
       //PTHeadDeviceInfo=^THeadDeviceInfo;//с классами эта байда уже не нужна, т.к. класс сам по себе уже указатель
       THeadDeviceInfo=class
-                         num:GDBInteger;
+                         num:Integer;
                          name:String;
                          shortName:String;
                          listGroup:TListHeadGroup; //список подчиненных устройств
                          public
                          constructor Create;
-                         destructor Destroy;virtual;
+                         destructor Destroy;override;
       end;
       TListHeadDevice=specialize TVector<THeadDeviceInfo>;
 
@@ -313,11 +313,11 @@ PTDeviceInfoSubGraph=^TDeviceInfoSubGraph;
       ////** Создания списка ребер графа для графа анализа групп устройств
       //PTInfoEdgeSubGraph=^TInfoEdgeSubGraph;
       //TInfoEdgeSubGraph=record
-      //                   VIndex1:GDBInteger; //номер 1-й вершниы по списку
-      //                   VIndex2:GDBInteger; //номер 2-й вершниы по списку
+      //                   VIndex1:Integer; //номер 1-й вершниы по списку
+      //                   VIndex2:Integer; //номер 2-й вершниы по списку
       //                   VPoint1:GDBVertex;  //координаты 1й вершниы
       //                   VPoint2:GDBVertex;  //координаты 2й вершниы
-      //                   edgeLength:GDBDouble; // длина ребра
+      //                   edgeLength:Double; // длина ребра
       //end;
       //TListEdgeSubGraph=specialize TVector<TInfoEdgeSubGraph>;
       ////*********************************************
@@ -449,7 +449,7 @@ end;
 //           if listVertex[i].deviceEnt<>nil then
 //           begin
 //               pvd:=FindVariableInEnt(listVertex[i].deviceEnt,'NMO_Name');
-//               if pgdbstring(pvd^.data.Instance)^ = name then
+//               if pString(pvd^.Instance)^ = name then
 //                  result:= i;
 //           end;
 //
@@ -476,7 +476,7 @@ begin
            begin
                pvd:=FindVariableInEnt(listVertex[i].deviceEnt,'NMO_Name');
                if pvd <> nil then
-               if pgdbstring(pvd^.data.Instance)^ = name then begin
+               if pString(pvd^.data.Addr.Instance)^ = name then begin
                   //result:=-1;
                                          //работа с библиотекой Аграф
                   EdgePath:=TClassList.Create;     //Создаем реберный путь
@@ -515,7 +515,7 @@ begin
            begin
                pvd:=FindVariableInEnt(listVertex[i].deviceEnt,'NMO_Name');
                if pvd <> nil then
-               if pgdbstring(pvd^.data.Instance)^ = name then begin
+               if pString(pvd^.data.Addr.Instance)^ = name then begin
                   result:= false;
                end;
            end;
@@ -856,7 +856,7 @@ end;
 
 
 //Визуализация текста его p1-координата, mText-текст, color-цвет, размер
-function visualDrawText(p1:GDBVertex;mText:GDBString;color:integer;heightText:double):TCommandResult;
+function visualDrawText(p1:GDBVertex;mText:String;color:integer;heightText:double):TCommandResult;
 var
     ptext:PGDBObjText;
 begin
@@ -864,7 +864,7 @@ begin
       zcSetEntPropFromCurrentDrawingProp(ptext); //добавляем дефаултные свойства
       ptext^.TXTStyleIndex:=drawings.GetCurrentDWG^.GetCurrentTextStyle; //добавляет тип стиля текста, дефаултные свойства его не добавляют
       ptext^.Local.P_insert:=p1;  // координата
-      ptext^.Template:=mText;     // сам текст
+      ptext^.Template:=TDXFEntsInternalStringType(mText);     // сам текст
       ptext^.vp.LineWeight:=LnWt100;
       ptext^.vp.Color:=color;
       ptext^.vp.Layer:=uzvtestdraw.getTestLayer('systemTempVisualLayer');
@@ -874,7 +874,7 @@ begin
 end;
 
 //Визуализация круга его p1-координата, rr-радиус, color-цвет
-function visualDrawCircle(p1:GDBVertex;rr:GDBDouble;color:integer):TCommandResult;
+function visualDrawCircle(p1:GDBVertex;rr:Double;color:integer):TCommandResult;
 var
     pcircle:PGDBObjCircle;
 begin
@@ -990,44 +990,44 @@ begin
       pvd:=FindVariableInEnt(polyObj,'NMO_Suffix');
        if pvd<>nil then
           begin
-             pgdbstring(pvd^.data.Instance)^:=listHeadDevice[numHead].listGroup[numGroup].name ;
+             pString(pvd^.data.Addr.Instance)^:=listHeadDevice[numHead].listGroup[numGroup].name ;
           end;
 
         pvd:=FindVariableInEnt(polyObj,'GC_HDShortName');
         if pvd<>nil then
            begin
-              pgdbstring(pvd^.data.Instance)^:=listHeadDevice[numHead].shortName;
+              pString(pvd^.data.Addr.Instance)^:=listHeadDevice[numHead].shortName;
            end;
 
 
        pvd:=FindVariableInEnt(polyObj,'GC_HeadDevice');
        if pvd<>nil then
           begin
-             pgdbstring(pvd^.data.Instance)^:=listHeadDevice[numHead].name ;
+             pString(pvd^.data.Addr.Instance)^:=listHeadDevice[numHead].name ;
           end;
 
        pvd:=FindVariableInEnt(polyObj,'CABLE_AutoGen');
               if pvd<>nil then
                  begin
-                    pgdbboolean(pvd^.data.Instance)^:=true;
+                    pBoolean(pvd^.data.Addr.Instance)^:=true;
                  end;
 
        pvd:=FindVariableInEnt(polyObj,'GC_HDGroup');
        if pvd<>nil then
           begin
-             pgdbstring(pvd^.data.Instance)^:=listHeadDevice[numHead].listGroup[numGroup].name ;
+             pString(pvd^.data.Addr.Instance)^:=listHeadDevice[numHead].listGroup[numGroup].name ;
           end;
 
 
       pvd:=FindVariableInEnt(polyObj,'NMO_BaseName');
        if pvd<>nil then
           begin
-             pgdbstring(pvd^.data.Instance)^:=listHeadDevice[numHead].name + '-';
+             pString(pvd^.data.Addr.Instance)^:=listHeadDevice[numHead].name + '-';
           end;
        pvd:=FindVariableInEnt(polyObj,'CABLE_Segment');
        if pvd<>nil then
           begin
-             pgdbinteger(pvd^.data.Instance)^:=numSegment;
+             PInteger(pvd^.data.Addr.Instance)^:=numSegment;
           end;
 
 
@@ -1138,7 +1138,7 @@ end;
 
 function NumPsIzvAndDlina_com(operands:TCommandOperands):TCommandResult;
   begin
-
+          result:=cmd_ok;
   end;
 
 
@@ -1153,13 +1153,13 @@ begin
     if metric then begin
      pvd:=FindVariableInEnt(dev,'NMO_BaseName');
      if pvd<>nil then
-       name:=pgdbstring(pvd^.data.Instance)^;
+       name:=pString(pvd^.data.Addr.Instance)^;
      end;
 
      pvd:=FindVariableInEnt(dev,'GC_InGroup_Metric');
        if pvd<>nil then
         begin
-           pgdbstring(pvd^.data.Instance)^:=name ;
+           pString(pvd^.data.Addr.Instance)^:=name ;
         end;
 end;
 
@@ -1171,7 +1171,7 @@ var
 
    polyObj:PGDBObjPolyLine;
    i,counter1,counter2,counter3:integer;
-   tempName,nameParam:gdbstring;
+   tempName,nameParam:String;
    infoLay:TInfoCableLaying;
    listStr1,listStr2,listStr3:TListString;
 
@@ -1183,7 +1183,7 @@ begin
      pvd:=FindVariableInEnt(nowDev,'SLCABAGEN_HeadDeviceName');
      if pvd<>nil then
         BEGIN
-     tempName:=pgdbstring(pvd^.data.Instance)^;
+     tempName:=pString(pvd^.data.Addr.Instance)^;
      repeat
            GetPartOfPath(nameParam,tempName,';');
            listStr1.PushBack(nameParam);
@@ -1193,7 +1193,7 @@ begin
      pvd:=FindVariableInEnt(nowDev,'SLCABAGEN_NGHeadDevice');
                if pvd<>nil then
         BEGIN
-     tempName:=pgdbstring(pvd^.data.Instance)^;
+     tempName:=pString(pvd^.data.Addr.Instance)^;
      repeat
            GetPartOfPath(nameParam,tempName,';');
            listStr2.PushBack(nameParam);
@@ -1202,7 +1202,7 @@ begin
      pvd:=FindVariableInEnt(nowDev,'SLCABAGEN_SLTypeagen');
           if pvd<>nil then
         BEGIN
-     tempName:=pgdbstring(pvd^.data.Instance)^;
+     tempName:=pString(pvd^.data.Addr.Instance)^;
      repeat
            GetPartOfPath(nameParam,tempName,';');
            listStr3.PushBack(nameParam);
@@ -1325,7 +1325,7 @@ function getGroupDeviceInGraph(ourGraph:TGraphBuilder;Epsilon:double; var listEr
 
                  // Проверяем есть ли у устройсва хозяин
                  // pvd:=FindVariableInEnt(ourGraph.listVertex[i].deviceEnt,'GC_HeadDevice');
-                 //headDevName:=pgdbstring(pvd^.data.Instance)^;
+                 //headDevName:=pString(pvd^.Instance)^;
                  headDevName:=listCableLaying[m].headName;
                  numHeadDev:=getNumHeadDevice(ourGraph.listVertex,headDevName,G,i); // если минус значит нету хозяина
 
@@ -1347,7 +1347,7 @@ function getGroupDeviceInGraph(ourGraph:TGraphBuilder;Epsilon:double; var listEr
                              pvd:=FindVariableInEnt(ourGraph.listVertex[numHeadDev].deviceEnt,'NMO_Suffix');
                              if pvd<>nil then
                                 begin
-                                   shortNameHead:=pgdbstring(pvd^.data.Instance)^;
+                                   shortNameHead:=pString(pvd^.data.Addr.Instance)^;
                                 end;
                              headDeviceInfo:=THeadDeviceInfo.Create;
                              headDeviceInfo.name:=headDevName;
@@ -1597,12 +1597,14 @@ function getGroupDeviceInGraph(ourGraph:TGraphBuilder;Epsilon:double; var listEr
       {
       T:=G.FindMinWeightPath(G[0], G[6], EdgePath);
 
-      {if T <> 11 then begin
+      if T <> 11 then begin
            ZCMsgCallBackInterface.TextMessage('*** Error! ***');
        // write('Error!');
        // readln;
         Exit;
       end;  }
+
+      {
       ZCMsgCallBackInterface.TextMessage('Minimal Length: '+ FloatToStr(T));
       //writeln('Minimal Length: ', T :4:2);
       G.EdgePathToVertexPath(G[0], EdgePath, VertexPath);
@@ -1629,6 +1631,7 @@ function getGroupDeviceInGraph(ourGraph:TGraphBuilder;Epsilon:double; var listEr
 //
 //      ZCMsgCallBackInterface.TextMessage('В полученном грhfjhfjhfафе вершин = ' + IntToStr(ourGraph.listVertex.Size));
 //      ZCMsgCallBackInterface.TextMessage('В полученном графе ребер = ' + IntToStr(ourGraph.listEdge.Size));
+
 
 
 
@@ -1709,7 +1712,7 @@ function getListMasterDev(listVertexEdge:TGraphBuilder;globalGraph: TGraph):TVec
        pvd:pvardesk; //для работы со свойствами устройств
        polyObj:PGDBObjPolyLine;
        i,counter1,counter2,counter3:integer;
-       tempName,nameParam:gdbstring;
+       tempName,nameParam:String;
        infoLay:TCableLaying;
        listStr1,listStr2,listStr3:TVertexofString;
 
@@ -1721,7 +1724,7 @@ function getListMasterDev(listVertexEdge:TGraphBuilder;globalGraph: TGraph):TVec
          pvd:=FindVariableInEnt(nowDev,'SLCABAGEN_HeadDeviceName');
          if pvd<>nil then
             BEGIN
-         tempName:=pgdbstring(pvd^.data.Instance)^;
+         tempName:=pString(pvd^.data.Addr.Instance)^;
          repeat
                GetPartOfPath(nameParam,tempName,';');
                listStr1.PushBack(nameParam);
@@ -1731,7 +1734,7 @@ function getListMasterDev(listVertexEdge:TGraphBuilder;globalGraph: TGraph):TVec
          pvd:=FindVariableInEnt(nowDev,'SLCABAGEN_NGHeadDevice');
                    if pvd<>nil then
             BEGIN
-         tempName:=pgdbstring(pvd^.data.Instance)^;
+         tempName:=pString(pvd^.data.Addr.Instance)^;
          repeat
                GetPartOfPath(nameParam,tempName,';');
                listStr2.PushBack(nameParam);
@@ -1740,7 +1743,7 @@ function getListMasterDev(listVertexEdge:TGraphBuilder;globalGraph: TGraph):TVec
          pvd:=FindVariableInEnt(nowDev,'SLCABAGEN_SLTypeagen');
               if pvd<>nil then
             BEGIN
-         tempName:=pgdbstring(pvd^.data.Instance)^;
+         tempName:=pString(pvd^.data.Addr.Instance)^;
          repeat
                GetPartOfPath(nameParam,tempName,';');
                listStr3.PushBack(nameParam);
@@ -1810,7 +1813,7 @@ function getListMasterDev(listVertexEdge:TGraphBuilder;globalGraph: TGraph):TVec
                              masterDevInfo.shortName:='nil';
                              pvd:=FindVariableInEnt(listVertexEdge.listVertex[numHeadDev].deviceEnt,'NMO_Suffix');
                              if pvd<>nil then
-                                   masterDevInfo.shortName:=pgdbstring(pvd^.data.Instance)^;
+                                   masterDevInfo.shortName:=pString(pvd^.data.Addr.Instance)^;
                              result.PushBack(masterDevInfo);
                              numHead:=result.Size-1;
                              masterDevInfo:=nil;
@@ -2121,7 +2124,7 @@ end;
      EdgePath, VertexPath: TClassList;
      infoGTree:TGraph;
      //tempVertexGraph:TVertex;
-     //tempName,nameParam:gdbstring;
+     //tempName,nameParam:String;
      //infoLay:TCableLaying;
      //listStr1,listStr2,listStr3:TVertexofString;
      tempString:string;
@@ -2366,7 +2369,7 @@ function buildListAllConnectDevice(listVertexEdge:TGraphBuilder;Epsilon:double; 
 
     //listSubDevice := TListSubDevice.Create;
     //listHeadGroup :=  TListHeadGroup.Create;
-    //listHeadDevice := TListHeadDevice.Create;
+    listHeadDevice := TListHeadDevice.Create;
 
     //
     //Epsilon:=0.2;
@@ -2518,13 +2521,13 @@ function buildListAllConnectDevice(listVertexEdge:TGraphBuilder;Epsilon:double; 
 function getListParamDev(nowDev:PGDBObjDevice;nameType:string):TListString;
     var
        pvd:pvardesk; //для работы со свойствами устройств
-       tempName,nameParam:gdbstring;
+       tempName,nameParam:String;
     begin
         result:=TListString.Create;
         pvd:=FindVariableInEnt(nowDev,nameType);
          if pvd<>nil then
             BEGIN
-             tempName:=pgdbstring(pvd^.data.Instance)^;
+             tempName:=pString(pvd^.data.Addr.Instance)^;
              repeat
                    GetPartOfPath(nameParam,tempName,';');
                    result.PushBack(nameParam);
@@ -2535,7 +2538,7 @@ function getListParamDev(nowDev:PGDBObjDevice;nameType:string):TListString;
 procedure addErrorinList(nowDev:PGDBObjDevice;var listError:TListError;textError:string);
     var
        pvd:pvardesk; //для работы со свойствами устройств
-       //tempName,nameParam:gdbstring;
+       //tempName,nameParam:String;
        errorInfo:TErrorInfo;
        //tempstring:string;
        isNotDev:boolean;
@@ -2994,7 +2997,7 @@ var
            zcAddEntToCurrentDrawingWithUndo(polyObj);
       end;
       //Визуализация текста
-      procedure drawText(pt:GDBVertex;mText:GDBString;color:integer);
+      procedure drawText(pt:GDBVertex;mText:String;color:integer);
       var
           ptext:PGDBObjText;
       begin
@@ -3003,7 +3006,7 @@ var
           ptext^.TXTStyleIndex:=drawings.GetCurrentDWG^.GetCurrentTextStyle; //добавляет тип стиля текста, дефаултные свойства его не добавляют
           ptext^.Local.P_insert:=pt;  // координата
           ptext^.textprop.justify:=jsmc;
-          ptext^.Template:=mText;     // сам текст
+          ptext^.Template:=TDXFEntsInternalStringType(mText);     // сам текст
           ptext^.vp.LineWeight:=LnWt100;
           ptext^.vp.Color:=color;
           //ptext^.vp.Layer:=uzvtestdraw.getTestLayer('systemTempVisualLayer');
@@ -3014,7 +3017,7 @@ var
 
       ////
       //Визуализация многострочный текст
-      procedure drawMText(pt:GDBVertex;mText:GDBString;color:integer;rotate:double);
+      procedure drawMText(pt:GDBVertex;mText:String;color:integer;rotate:double);
       var
           pmtext:PGDBObjMText;
       begin
@@ -3026,8 +3029,8 @@ var
           pmtext^.Local.P_insert:=pt;  // координата
           pmtext^.textprop.justify:=jsml;
           //ptext^.Template:=mText;     // сам текст
-          pmtext^.Template:=mText;
-          pmtext^.Content:=mText;
+          pmtext^.Template:=TDXFEntsInternalStringType(mText);
+          pmtext^.Content:=TDXFEntsInternalStringType(mText);
           pmtext^.vp.LineWeight:=LnWt100;
           pmtext^.linespacef:=1;
           //pmtext^.textprop.aaaangle:=rotate;
@@ -3352,6 +3355,7 @@ function TDummyComparer.CompareEdges (Edge1, Edge2: Pointer): Integer;
 var
   e1,e2:TAttrSet;
 begin
+
    ////result:=1;
    //e1:=TAttrSet(Edge1);
    //e2:=TAttrSet(Edge2);
@@ -3378,6 +3382,7 @@ begin
 
    //тут e1 и e2 надо както сравнить по какомуто критерию и вернуть -1 0 1
    //в зависимости что чего меньше-больше
+   result:=cmd_ok;
 end;
 
 
@@ -3386,7 +3391,9 @@ initialization
   CreateCommandFastObjectPlugin(@TestTREEUses_com,'test222',CADWG,0);
   CreateCommandFastObjectPlugin(@TestTREEUses_com2,'test333',CADWG,0);
   DummyComparer:=TDummyComparer.Create;
+  SortTreeLengthComparer:=TSortTreeLengthComparer.Create;
 finalization
   DummyComparer.free;
+  SortTreeLengthComparer.free;
 end.
 

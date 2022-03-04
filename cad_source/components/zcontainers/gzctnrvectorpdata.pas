@@ -16,15 +16,14 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
 
-unit gzctnrvectorpdata;
-{$INCLUDE def.inc}
+unit gzctnrVectorPData;
+
 interface
-uses {uzbtypesbase,}gzctnrvectorp,
-     gzctnrvectortypes,uzbtypes,uzbmemman;
+uses gzctnrVectorP,gzctnrvectortypes;
 type
 {Export+}
 {--------REGISTEROBJECTTYPE GZVectorPData}
-GZVectorPData{-}<PTData,TData>{//}=object
+GZVectorPData{-}<PTData>{//}=object
                                          (GZVectorP{-}<PTData>{//})
                                        procedure cleareraseobjfrom(n:Integer);virtual;
                                        procedure cleareraseobjfrom2(n:Integer);virtual;
@@ -36,36 +35,36 @@ GZVectorPData{-}<PTData,TData>{//}=object
                                  end;
 {Export-}
 implementation
-destructor GZVectorPData<PTData,TData>.done;
+destructor GZVectorPData<PTData>.done;
 var
-  p:PGDBaseObject;
+  p:PTData;
   ir:itrec;
 begin
   p:=beginiterate(ir);
   if p<>nil then
   repeat
        p.done;
-       GDBFreeMem(Pointer(p));
+       Freemem(Pointer(p));
        p:=iterate(ir);
   until p=nil;
   count:=0;
   inherited;
 end;
-procedure GZVectorPData<PTData,TData>.free;
+procedure GZVectorPData<PTData>.free;
 var
-  p:PGDBaseObject;
+  p:PTData;
   ir:itrec;
 begin
   p:=beginiterate(ir);
   if p<>nil then
   repeat
        p^.done;
-       GDBFreeMem(Pointer(p));
+       Freemem(Pointer(p));
        p:=iterate(ir);
   until p=nil;
   count:=0;
 end;
-procedure GZVectorPData<PTData,TData>.RemoveData(const data:PTData);
+procedure GZVectorPData<PTData>.RemoveData(const data:PTData);
 //procedure TZctnrVectorPObj<T,TObj>.eraseobj;
 var
   p:PTData;
@@ -78,13 +77,13 @@ begin
                          begin
                               p.done;
                               pointer(ir.itp^):=nil;
-                              GDBFreeMem(Pointer(p));
+                              Freemem(Pointer(p));
                               exit;
                          end;
        p:=iterate(ir);
   until p=nil;
 end;
-procedure GZVectorPData<PTData,TData>.pack;
+procedure GZVectorPData<PTData>.pack;
 var
 pnew,pold:{ppointer}^PTData;
 nc,c:integer;
@@ -100,10 +99,10 @@ begin
            if pnew^<>nil then
                             begin
                                  inc(nc);
-                                 //inc(GDBPlatformint(pnew),SizeOfData);
+                                 //inc(PtrInt(pnew),SizeOfData);
                                  inc(pnew);
                             end;
-           //inc(GDBPlatformint(pold),SizeOfData);
+           //inc(PtrInt(pold),SizeOfData);
            inc(pold);
            inc(c);
      until c=count;
@@ -111,7 +110,7 @@ begin
      deleted:=0;
      end;
 end;
-function GZVectorPData<PTData,TData>.getDataMutable;
+function GZVectorPData<PTData>.getDataMutable;
 var pp:ppointer;
 begin
      pp:=pointer(inherited getDataMutable(index));
@@ -123,9 +122,9 @@ end;
 {begin
   result:=pointer(getDataMutable(index)^);
 end;}
-procedure GZVectorPData<PTData,TData>.cleareraseobjfrom;
+procedure GZVectorPData<PTData>.cleareraseobjfrom;
 var
-  p:PGDBaseObject;
+  p:PTData;
       ir:itrec;
 begin
   p:=beginiterate(ir);
@@ -133,14 +132,14 @@ begin
   repeat
        p^.done;
        if ir.itc>n then
-                       GDBFreeMem(Pointer(p));
+                       Freemem(Pointer(p));
        p:=iterate(ir);
   until p=nil;
   count:=0;
 end;
-procedure GZVectorPData<PTData,TData>.cleareraseobjfrom2(n:Integer);
+procedure GZVectorPData<PTData>.cleareraseobjfrom2(n:Integer);
 var
-  p:PGDBaseObject;
+  p:PTData;
       ir:itrec;
 begin
   p:=beginiterate(ir);
@@ -149,7 +148,7 @@ begin
        if ir.itc>=n then
                        begin
                        p^.done;
-                       GDBFreeMem(Pointer(p));
+                       Freemem(Pointer(p));
                        end;
        p:=iterate(ir);
   until p=nil;

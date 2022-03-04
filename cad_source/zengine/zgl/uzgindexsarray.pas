@@ -17,16 +17,16 @@
 }
 
 unit uzgindexsarray;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
-uses uzbtypesbase,gzctnrvectordata,sysutils,uzbtypes,uzbmemman,
+uses gzctnrVector,sysutils,
      gzctnrvectortypes,uzegeometry;
 type
 {Export+}
 PZGLIndexsArray=^ZGLIndexsArray;
 {REGISTEROBJECTTYPE ZGLIndexsArray}
-ZGLIndexsArray= object(GZVectorData{-}<TArrayIndex>{//})(*OpenArrayOfData=TArrayIndex*)
-                constructor init({$IFDEF DEBUGBUILD}ErrGuid:pansichar;{$ENDIF}m:GDBInteger);
+ZGLIndexsArray= object(GZVector{-}<TArrayIndex>{//})(*OpenArrayOfData=TArrayIndex*)
+                constructor init(m:Integer);
                 constructor initnul;
              end;
 {Export-}
@@ -34,7 +34,7 @@ implementation
 //uses {glstatemanager,}log;
 constructor ZGLIndexsArray.init;
 begin
-  inherited init({$IFDEF DEBUGBUILD}ErrGuid,{$ENDIF}m{,sizeof(TArrayIndex)});
+  inherited init(m);
 end;
 constructor ZGLIndexsArray.initnul;
 begin

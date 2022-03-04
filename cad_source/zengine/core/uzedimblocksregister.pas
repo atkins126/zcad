@@ -17,15 +17,15 @@
 }
 
 unit uzedimblocksregister;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 
 interface
 uses uzeutils,uzestyleslayers,uzestyleslinetypes,uzeconsts,uzeentitiesmanager,
      UGDBObjBlockdefArray,uzeblockdefsfactory,uzeblockdef,uzedrawingdef,
-     uzbmemman,uzcsysvars,uzbtypesbase,uzbtypes,uzeentgenericsubentry,uzeentity,LazLogger;
+     uzcsysvars,uzeentgenericsubentry,uzeentity,LazLogger;
 implementation
-function CreateClosedFilledBlock(var dwg:PTDrawingDef;const BlockName,BlockDependsOn,BlockDeffinedIn:GDBString):PGDBObjBlockdef;
+function CreateClosedFilledBlock(var dwg:PTDrawingDef;const BlockName,BlockDependsOn,BlockDeffinedIn:String):PGDBObjBlockdef;
 var
    BlockDefArray:PGDBObjBlockdefArray;
    layertable:PGDBLayerArray;
@@ -45,7 +45,7 @@ begin
      zeSetEntityProp(pentity,layertable^.GetSystemLayer,lttable^.GetSystemLT(TLTByLayer),ClByLayer,LnWtByLayer);
    end;
 end;
-function CreateArchTickBlock(var dwg:PTDrawingDef;const BlockName,BlockDependsOn,BlockDeffinedIn:GDBString):PGDBObjBlockdef;
+function CreateArchTickBlock(var dwg:PTDrawingDef;const BlockName,BlockDependsOn,BlockDeffinedIn:String):PGDBObjBlockdef;
 var
    BlockDefArray:PGDBObjBlockdefArray;
    layertable:PGDBLayerArray;

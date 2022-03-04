@@ -17,19 +17,19 @@
 }
 
 unit uzeentitiesmanager;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 
 interface
 uses LCLProc,uzeconsts,uzepalette,uzestyleslinetypes,uzeentityfactory,
-     uzeutils,uzestyleslayers,sysutils,uzbtypesbase,uzbtypes,UGDBVisibleOpenArray,
-     uzbgeomtypes,uzeentgenericsubentry,uzeentity,uzbmemman;
+     uzeutils,uzestyleslayers,sysutils,uzbtypes,UGDBVisibleOpenArray,
+     uzegeometrytypes,uzeentgenericsubentry,uzeentity;
 function ENTF_CreateLine(owner:PGDBObjGenericSubEntry;ownerarray:PGDBObjEntityOpenArray;args:array of const): PGDBObjEntity;
 function ENTF_CreateCircle(owner:PGDBObjGenericSubEntry;ownerarray:PGDBObjEntityOpenArray;args:array of const): PGDBObjEntity;
 function ENTF_CreateSolid(owner:PGDBObjGenericSubEntry;ownerarray:PGDBObjEntityOpenArray;args:array of const): PGDBObjEntity;
 function ENTF_CreateBlockInsert(owner:PGDBObjGenericSubEntry;ownerarray: PGDBObjEntityOpenArray;
                                 layeraddres:PGDBLayerProp;LTAddres:PGDBLtypeProp;color:TGDBPaletteColor;LW:TGDBLineWeight;
-                                point: gdbvertex; scale, angle: GDBDouble; s: pansichar):PGDBObjEntity;
+                                point: gdbvertex; scale, angle: Double; s: pansichar):PGDBObjEntity;
 var
    p:gdbvertex;
 implementation
@@ -37,10 +37,10 @@ implementation
 //    log;
 function ENTF_CreateBlockInsert(owner:PGDBObjGenericSubEntry;ownerarray: PGDBObjEntityOpenArray;
                                 layeraddres:PGDBLayerProp;LTAddres:PGDBLtypeProp;color:TGDBPaletteColor;LW:TGDBLineWeight;
-                                point: gdbvertex; scale, angle: GDBDouble; s: pansichar):PGDBObjEntity;
+                                point: gdbvertex; scale, angle: Double; s: pansichar):PGDBObjEntity;
 var
   pb:PGDBObjEntity;
-  nam:gdbstring;
+  nam:String;
   CreateProc:TAllocAndInitAndSetGeomPropsFunc;
 begin
   result:=nil;

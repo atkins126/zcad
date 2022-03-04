@@ -17,21 +17,20 @@
 }
 
 unit uzccomdb;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 
 interface
 uses
   gzctnrvectortypes,uzbpaths,uzcsysvars,uzctranslations,uzcdrawing,uzeconsts,uzcstrconsts,
   uzccommandsabstract,
   uzccommandsimpl,
-  uzbtypes,
   uzcdrawings,
   sysutils,
   varmandef,
   varman,
-  UGDBOpenArrayOfByte,
+  uzctnrVectorBytes,
   uzeentity,
-  uzcdevicebaseabstract,UUnitManager,uzbtypesbase,strutils,forms,Controls,uzcinterface,uzedrawingdef,uzctnrvectorgdbstring,strmy,uzbmemman,
+  uzcdevicebaseabstract,UUnitManager,strutils,forms,Controls,uzcinterface,uzedrawingdef,uzctnrvectorstrings,strmy,
   uzcenitiesvariablesextender,uzcfsinglelinetexteditor,UObjectDescriptor,uzcfprojecttree,uzccommandsmanager,uzclog,uzeentsubordinated,
   uzcuitypes;
 
@@ -44,20 +43,20 @@ var //t:PUserTypeDescriptor;
     p:pointer;
     pu:ptunit;
     pvd:pvardesk;
-    vn:GDBString;
+    vn:String;
 begin
      if commandmanager.ContextCommandParams<>nil then
      begin
            pu:=PTZCADDrawing(drawings.GetCurrentDWG).DWGUnits.findunit(SupportPath,InterfaceTranslate,DrawingDeviceBaseUnitName);
            pvd:=pu^.FindVariable('DBCounter');
-           vn:=inttostr(GDBInteger(pvd.data.Instance^));
+           vn:=inttostr(Integer(pvd.data.Addr.Instance^));
            vn:='_EQ'+dupestring('0',6-length(vn))+vn;
-           pu.createvariable(vn,PUserTypeDescriptor(PTTypedData(commandmanager.ContextCommandParams).ptd)^.TypeName);
-           p:=pu.FindVariable(vn).data.Instance;
-           PObjectDescriptor(PTTypedData(commandmanager.ContextCommandParams)^.ptd)^.RunMetod('initnul',p);
-           PUserTypeDescriptor(PTTypedData(commandmanager.ContextCommandParams)^.ptd)^.CopyInstanceTo(PTTypedData(commandmanager.ContextCommandParams)^.Instance,p);
+           pu.CreateVariable(vn,PUserTypeDescriptor(PTHardTypedData(commandmanager.ContextCommandParams).ptd)^.TypeName);
+           p:=pu.FindVariable(vn).data.Addr.Instance;
+           PObjectDescriptor(PTHardTypedData(commandmanager.ContextCommandParams)^.ptd)^.RunMetod('initnul',p);
+           PUserTypeDescriptor(PTHardTypedData(commandmanager.ContextCommandParams)^.ptd)^.CopyInstanceTo(PTHardTypedData(commandmanager.ContextCommandParams)^.Instance,p);
            //PObjectDescriptor(PTTypedData(commandmanager.ContextCommandParams)^.ptd)^.RunMetod('format',p);
-           inc(GDBInteger(pvd.data.Instance^));
+           inc(Integer(pvd.data.Addr.Instance^));
      end
         else
             ZCMsgCallBackInterface.TextMessage(rscmCommandOnlyCTXMenu,TMWOHistoryOut);
@@ -67,15 +66,15 @@ function DBaseRename_com(operands:TCommandOperands):TCommandResult;
 var
     pdbv:pvardesk;
     pu:ptunit;
-    s,s1:gdbstring;
-    parseresult:PTZctnrVectorGDBString;
+    s,s1:String;
+    parseresult:PTZctnrVectorStrings;
     parseerror:boolean;
     renamed:boolean;
 begin
      if commandmanager.ContextCommandParams<>nil then
      begin
            pu:=PTZCADDrawing(drawings.GetCurrentDWG).DWGUnits.findunit(SupportPath,InterfaceTranslate,DrawingDeviceBaseUnitName);
-           pdbv:=pu.InterfaceVariables.findvardescbyinst(PTTypedData(commandmanager.ContextCommandParams)^.Instance);
+           pdbv:=pu.InterfaceVariables.findvardescbyinst(PTHardTypedData(commandmanager.ContextCommandParams)^.Instance);
            if pdbv<>nil then
            begin
                  if SingleLineTextEditorForm=nil then
@@ -97,7 +96,7 @@ begin
                       else
                       begin
                       parseresult:=runparser('_sym'#0'[{_symordig'#0'}',s1,parseerror);
-                      if parseresult<>nil then begin parseresult^.Done;GDBfreeMem(gdbpointer(parseresult));end;
+                      if parseresult<>nil then begin parseresult^.Done;Freemem(Pointer(parseresult));end;
                       if parseerror and (s1='') then
                                         begin
                                              ZCMsgCallBackInterface.TextMessage(format(rsRenamedTo,['Entry',pdbv.name,s]),TMWOHistoryOut);
@@ -135,17 +134,17 @@ begin
             pdbu:=pum^.findunit(SupportPath,InterfaceTranslate,DrawingDeviceBaseUnitName);
             if pdbu<>nil then
             begin
-              pdbv:=pdbu^.FindVariable(pstring(pvn.data.Instance)^);
+              pdbv:=pdbu^.FindVariable(pstring(pvn.data.Addr.Instance)^);
               if pdbv<>nil then
-                               pstring(pvnt.data.Instance)^:=PDbBaseObject(pdbv.data.Instance)^.Name
+                               pstring(pvnt.data.Addr.Instance)^:=PDbBaseObject(pdbv.data.Addr.Instance)^.Name
                            else
-                               pstring(pvnt.data.Instance)^:='Error!!!';
+                               pstring(pvnt.data.Addr.Instance)^:='Error!!!';
               exit;
             end;
           end;
      end;
      if pvnt<>nil then
-                      pstring(pvnt.data.Instance)^:='Error!!!'
+                      pstring(pvnt.data.Addr.Instance)^:='Error!!!'
 end;
 function DBaseLink_com(operands:TCommandOperands):TCommandResult;
 var //t:PUserTypeDescriptor;
@@ -157,13 +156,13 @@ var //t:PUserTypeDescriptor;
 
     //p:pointer;
     pu:ptunit;
-    //vn:GDBString;
+    //vn:String;
     pentvarext:TVariablesExtender;
 begin
      if commandmanager.ContextCommandParams<>nil then
      begin
            pu:=PTZCADDrawing(drawings.GetCurrentDWG).DWGUnits.findunit(SupportPath,InterfaceTranslate,DrawingDeviceBaseUnitName);
-           pdbv:=pu.InterfaceVariables.findvardescbyinst(PTTypedData(commandmanager.ContextCommandParams)^.Instance);
+           pdbv:=pu.InterfaceVariables.findvardescbyinst(PTHardTypedData(commandmanager.ContextCommandParams)^.Instance);
            if pdbv<>nil then
            begin
                  c:=0;
@@ -176,7 +175,7 @@ begin
                                                pvd:=pentvarext.entityunit.FindVariable('DB_link');
                                                if pvd<>nil then
                                                begin
-                                                    PGDBString(pvd^.data.Instance)^:=pdbv^.name;
+                                                    PString(pvd^.data.Addr.Instance)^:=pdbv^.name;
                                                     DBLinkProcess(pv,drawings.GetCurrentDWG^);
                                                     inc(c);
                                                end;

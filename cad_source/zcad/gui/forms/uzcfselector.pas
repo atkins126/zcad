@@ -1,9 +1,9 @@
 unit uzcfselector;
-{$INCLUDE def.inc}
+{$INCLUDE zcadconfig.inc}
 interface
 
 uses
-  uzbstrproc,uzcdrawings,uzbtypes,Classes, SysUtils, FileUtil, LResources, Forms, Controls, Graphics,
+  uzbstrproc,Classes, SysUtils, FileUtil, LResources, Forms, Controls, Graphics,
   ButtonPanel, types, lclintf,lcltype, ComCtrls, uzcuilcl2zc;
 
 type
