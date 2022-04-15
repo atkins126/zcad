@@ -21,7 +21,7 @@ unit uzebeziersolver;
 interface
 uses uzgprimitivescreator,uzgprimitives,uzglvectorobject,uzegluinterface,gvector,
      uzegeometrytypes,uzctnrVectorBytes,
-     sysutils,uzegeometry,gzctnrSTL,LazLogger,gzctnrvectortypes;
+     sysutils,uzegeometry,gzctnrSTL,LazLogger,gzctnrVectorTypes;
 type
 TPointAttr=(TPA_OnCurve,TPA_NotOnCurve);
 TSolverMode=(TSM_WaitStartCountur,TSM_WaitStartPoint,TSM_WaitPoint);
@@ -31,7 +31,8 @@ TDummyData=record
                  attr:TPointAttr;
                  index:TArrayIndex;
            end;
-TMyVectorArrayGDBFontVertex2D=TMyVectorArray<{GDBFontVertex2D}TDummyData>;
+TDummyDataVec=TMyVector<TDummyData>;
+TMyVectorArrayGDBFontVertex2D=TMyVectorArray<TDummyData,TDummyDataVec>;
 TBezierSolver2D=class
                      FArray:TVector2D;
                      FMode:TSolverMode;

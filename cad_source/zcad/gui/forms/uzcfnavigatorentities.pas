@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, ComCtrls,
   ActnList, laz.VirtualTrees,
-  uzbtypes,gzctnrvectortypes,uzegeometrytypes ,uzegeometry, uzccommandsmanager,
+  uzbtypes,gzctnrVectorTypes,uzegeometrytypes ,uzegeometry, uzccommandsmanager,
   uzcinterface,uzeentity,uzcimagesmanager,uzcdrawings,
   varmandef,uzbstrproc,uzcnavigatorsnodedesk;
 
@@ -41,6 +41,8 @@ type
     EntitiesNodeStates:TNodesStates;
     NavMX,NavMy:integer;
   public
+    CurrentSel:TNodeData;
+    LastAutoselectedEnt:PGDBObjEntity;
     procedure CreateRoots;
     procedure EraseRoots;
     procedure FreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
@@ -70,11 +72,13 @@ var
   s:ansistring;
 begin
   pnd := Sender.GetNodeData(Node);
-  if assigned(pnd) then
-    if pnd^.pent<>nil then
-  begin
-   s:='SelectObjectByAddres('+inttostr(PtrUInt(pnd^.pent))+')';
-   commandmanager.executecommandsilent(@s[1],drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
+  if assigned(pnd) then begin
+    CurrentSel:=pnd^;
+    if (pnd^.Ident.pent<>nil)and(pnd^.Ident.pent<>LastAutoselectedEnt) then begin
+       LastAutoselectedEnt:=pnd^.Ident.pent;
+       s:='SelectObjectByAddres('+inttostr(PtrUInt(pnd^.Ident.pent))+')';
+       commandmanager.executecommandsilent(@s[1],drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
+    end;
   end;
 end;
 procedure TNavigatorEntities._onCreate(Sender: TObject);
@@ -117,7 +121,7 @@ begin
 
    if assigned(EntitiesNodeStates) then
    begin
-   EntitiesNode.RestoreState(EntitiesNodeStates);
+   EntitiesNode.RestoreState(EntitiesNodeStates,0);
    freeandnil(EntitiesNodeStates);
    end;
    NavTree.EndUpdate;
@@ -142,11 +146,11 @@ begin
   begin
     pnd:=NavTree.GetNodeData(pnode);
     if pnd<>nil then
-    if pnd^.pent<>nil then
+    if pnd^.Ident.pent<>nil then
     begin
-      pc:=Vertexmorph(pnd^.pent^.vp.BoundingBox.LBN,pnd^.pent^.vp.BoundingBox.RTF,0.5);
-      bb.LBN:=VertexAdd(pc,VertexMulOnSc(VertexSub(pc,pnd^.pent^.vp.BoundingBox.LBN),scale));
-      bb.RTF:=VertexAdd(pc,VertexMulOnSc(VertexSub(pc,pnd^.pent^.vp.BoundingBox.RTF),scale));
+      pc:=Vertexmorph(pnd^.Ident.pent^.vp.BoundingBox.LBN,pnd^.Ident.pent^.vp.BoundingBox.RTF,0.5);
+      bb.LBN:=VertexAdd(pc,VertexMulOnSc(VertexSub(pc,pnd^.Ident.pent^.vp.BoundingBox.LBN),scale));
+      bb.RTF:=VertexAdd(pc,VertexMulOnSc(VertexSub(pc,pnd^.Ident.pent^.vp.BoundingBox.RTF),scale));
       drawings.GetCurrentDWG.wa.ZoomToVolume(bb);
     end;
   end;
@@ -194,7 +198,7 @@ var
   pnd:PTNodeData;
 begin
   pnd := Sender.GetNodeData(Node);
-  celltext:=pnd^.name
+  celltext:=pnd^.Ident.name
 end;
 procedure TNavigatorEntities.NavGetImage(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
                                  var Ghosted: Boolean; var ImageIndex: Integer);
@@ -217,9 +221,9 @@ else
           TNMGroup:ImageIndex:=NavGroupIconIndex;
           TNMAutoGroup:ImageIndex:=NavAutoGroupIconIndex;
           TNMData:begin
-                    if pnd^.pent<>nil then
+                    if pnd^.Ident.pent<>nil then
                                           begin
-                                           ImageIndex:=ImagesManager.GetImageIndex(GetEntityVariableValue(pnd^.pent,'ENTID_Representation','bug'));
+                                           ImageIndex:=ImagesManager.GetImageIndex(GetEntityVariableValue(pnd^.Ident.pent,'ENTID_Representation','bug'));
                                           end
                     else
                       ImageIndex:=3;
@@ -244,7 +248,7 @@ procedure TNavigatorEntities.EraseRoots;
 begin
   if assigned(EntitiesNode) then
   begin
-    EntitiesNodeStates:=EntitiesNode.SaveState;
+    EntitiesNodeStates:=EntitiesNode.SaveState(CurrentSel);
     FreeAndNil(EntitiesNode);
   end;
 end;

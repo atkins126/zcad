@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, ComCtrls,
   StdCtrls, ActnList, laz.VirtualTrees,
-  uzbtypes,gzctnrvectortypes,uzegeometrytypes ,uzegeometry, uzccommandsmanager,
+  uzbtypes,gzctnrVectorTypes,uzegeometrytypes ,uzegeometry, uzccommandsmanager,
   uzcinterface,uzeconsts,uzeentity,uzcimagesmanager,uzcdrawings,
   varmandef,uzbstrproc,uzcmainwindow,uzctreenode,
   uzcnavigatorsnodedesk,Varman,uzcstrconsts,uztoolbarsmanager,uzmenusmanager,
@@ -15,47 +15,93 @@ uses
   GraphType,generics.collections,uzglviewareaabstract,Menus,
   uzcfnavigatordevicescxmenu,uzbpaths,Toolwin,uzcctrlpartenabler,StrUtils,
   uzctextenteditor,uzcinfoform,uzcsysparams,uzcsysvars,uzetextpreprocessor,
-  {Masks,}uzelongprocesssupport,uzeentitiestypefilter,uzcuitypes,
-  uzeparserenttypefilter,uzeparserentpropfilter,uzeparsernavparam,uzclog,uzcuidialogs;
+  uzelongprocesssupport,uzeentitiestypefilter,uzcuitypes,
+  uzeparserenttypefilter,uzeparserentpropfilter,uzeparsernavparam,uzclog,uzcuidialogs,
+  XMLConf,XMLPropStorage, EditBtn,LazConfigStorage,uzcdialogsfiles,
+  Masks,garrayutils,LCLType,LCLIntf,
+  gzctnrSTL;
 
 resourcestring
   rsStandaloneDevices='Standalone devices';
+  rsNavigatorParamsFileFilter='This navigator params files (*.%0:s)|*.%0:s|Xml files (*.xml)|*.xml|All files (*.*)|*.*';
 
 const
+  AllFilesWithExt='*.%s';
   TreeBuildMapSaveVarSuffix='_TreeBuildMap';
   IncludeEntitiesSaveVarSuffix='_IncludeEntities';
   IncludePropertiesSaveVarSuffix='_IncludeProperties';
   TreePropertiesSaveVarSuffix='_TreeProperties';
+  TreeCreateRootNode='_TreeProperties';
+
+  RefreshEqualy=0;
+  RefreshSimilar=1;
 
 type
+  TCfgFileDesk=record
+    FileName,FilePath:string;
+  end;
+  TCfgFilesDesks=TMyVector<TCfgFileDesk>;
+  TCfgFileDeskCompare=class
+    class function c(a,b:TCfgFileDesk):boolean;inline;
+  end;
+  TCfgFilesDesksSorter=TOrderingArrayUtils<TCfgFilesDesks,TCfgFileDesk,TCfgFileDeskCompare>;
+
+  TCrutchForTEditButton=class helper for TEditButton
+    procedure SetupEditButtonBorderStyle(bs:TBorderStyle);
+  end;
+
+  TMenuItemWithFileDesk=class(TMenuItem)
+    public
+      FilePath:string;
+  end;
+
   TBuildParam=record
     TreeBuildMap:ansistring;
-    IncludeEntities,IncludeProperties:ansistring;
+    IncludeEntities:ansistring;
+    IncludeProperties:ansistring;
     TreeProperties:ansistring;
     UseMainFunctions:Boolean;
+    NodeNameFormat:ansistring;
+    CreateRootNode:Boolean;
   end;
+
   TStringPartEnabler=TPartEnabler<String>;
   TEnt2NodeMap=TDictionary<pGDBObjEntity,PVirtualNode>;
+
   { TNavigatorDevices }
   TNavigatorDevices = class(TForm)
+    FilterBtn: TEditButton;
+    SaveToFile: TAction;
+    LoadFromFile: TAction;
     CoolBar1: TCoolBar;
     NavTree: TVirtualStringTree;
     Ent2NodeMap:TEnt2NodeMap;
     RefreshToolButton: TToolButton;
     UMFToolButton: TToolButton;
-    {ToolButton1: TToolButton;
-    ToolButton3: TToolButton;}
     ActionList1:TActionList;
     Refresh:TAction;
     IncludeEnts:TAction;
     IncludeProps:TAction;
     TreeProps:TAction;
     function CreateEntityNode(Tree: TVirtualStringTree;basenode:PVirtualNode;pent:pGDBObjEntity;Name:string):PVirtualNode;virtual;
+    procedure Filter(Sender: TObject);
+    function Match(node:PVirtualNode;pattern:AnsiString):boolean;
+    function DoFilter(tree:TVirtualStringTree;node:PVirtualNode;pattern:AnsiString):boolean;
+    procedure AsyncLoadParamsFromFile(Data: PtrInt);
+    procedure TEMenuPopUpClick(Sender: TObject);
+    procedure TEMenuPopUp(Sender: TObject);
+    procedure LoadFromFileProc(Sender: TObject);
+    procedure PurgeFilter(Sender: TObject);
+    procedure InternalRefreshTree(Dist:Integer);
     procedure RefreshTree(Sender: TObject);
+    procedure SimilarRefreshTree(Sender: TObject);
+    procedure PostProcessTree;virtual;
     procedure EditIncludeEnts(Sender: TObject);
     procedure EditIncludeProperties(Sender: TObject);
     procedure EditTreeProperties(Sender: TObject);
     procedure AutoRefreshTree(sender:TObject;GUIAction:TZMessageID);
+    procedure AutoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure SaveToFileProc(Sender: TObject);
     procedure TVDblClick(Sender: TObject);
     procedure TVOnMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure VTOnContextMenu(Sender: TObject; MousePos: TPoint;
@@ -68,7 +114,7 @@ type
                          TextType: TVSTTextType; var CellText: String);virtual;
     procedure NavGetImage(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
                           var Ghosted: Boolean; var ImageIndex: Integer);
-    procedure getImageindex;
+    procedure SetDefaultImagesIndex;
     procedure AfterCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
     Column: TColumnIndex; const CellRect: TRect);
     procedure DrawText(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
@@ -76,7 +122,7 @@ type
     procedure MeasureTextWidth(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
     Column: TColumnIndex; const CellText: String; var Extent: Integer);
   private
-    CombinedNode:TBaseRootNodeDesk;//удаляем ее, ненужно!!!
+    //CombinedNode:TBaseRootNodeDesk;//удаляем ее, ненужно!!!
     CombinedNodeStates:TNodesStates;
     StandaloneNode:TBaseRootNodeDesk;
     StandaloneNodeStates:TNodesStates;
@@ -90,8 +136,11 @@ type
     EntityIncluder:ParserEntityPropFilter.TGeneralParsedText;
 
   public
+    CurrentSel:TNodeData;
+    LastAutoselectedEnt:PGDBObjEntity;
     BP:TBuildParam;
     ExtTreeParam:TExtTreeParam;
+    FileExt:String;
     {TreeBuildMap:string;
     IncludeEntities,IncludeProperties:string;
     UseMainFunctions:Boolean;}
@@ -103,15 +152,24 @@ type
     procedure SetTreeProp;
     procedure VTFocuschanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
 
+    procedure AsyncRunCommand(Data: PtrInt);
+
     function EntsFilter(pent:pGDBObjEntity):Boolean;virtual;
     function TraceEntity(rootdesk:TBaseRootNodeDesk;pent:pGDBObjEntity;out name:string):PVirtualNode;virtual;
 
     function GetPartsCount(const parts:string):integer;
     function GetPartState(const parts:string;const nmax,n:integer; out _name:string;out _enabled:boolean):boolean;
     procedure SetPartState(var parts:string;const n:integer;state:boolean);
+    procedure ReorganizeParts(var parts:string;const AFrom,ATo:integer;ABefore:boolean);
     function PartsEditor(var parts:string):boolean;
 
     destructor Destroy; override;
+
+    procedure LoadAndSetParamsFromFile(Filename:string);
+    procedure LoadParamsFromFile(Filename:string);
+    procedure LoadParamsFromConfig(Config: TConfigStorage);
+    procedure SaveParamsToFile(FileName:string);
+    procedure SaveParamsToConfig(Config: TConfigStorage);
 
   end;
 
@@ -120,13 +178,89 @@ var
   NavGroupIconIndex,NavAutoGroupIconIndex:integer;
   NDMsgCtx:TMessagesContext=nil;
 
-
   UseMainFunction:Boolean=false;
   //DevicesTreeBuildMap:string='+NMO_Prefix|+NMO_BaseName|+@@[NMO_Name]';
 
 implementation
 
 {$R *.lfm}
+
+procedure TNavigatorDevices.LoadParamsFromConfig(Config: TConfigStorage);
+begin
+  BP.TreeBuildMap:=Config.GetValue('TreeBuildMap','');
+  BP.IncludeEntities:=Config.GetValue('IncludeEntities','');
+  BP.IncludeProperties:=Config.GetValue('IncludeProperties','');
+  BP.TreeProperties:=Config.GetValue('TreeProperties','');
+  BP.UseMainFunctions:=Config.GetValue('UseMainFunctions',false);
+  BP.CreateRootNode:=Config.GetValue('CreateRootNode',false);
+  BP.NodeNameFormat:=Config.GetValue('NodeNameFormat','');
+  BP.TreeProperties:=Config.GetValue('TreeProperties','');
+end;
+
+procedure TNavigatorDevices.LoadAndSetParamsFromFile(Filename:string);
+begin
+  LoadParamsFromFile(FileName);
+  TreeEnabler.setup(BP.TreeBuildMap);
+  if assigned(EntityIncluder) then
+    FreeAndNil(EntityIncluder);
+  EntityIncluder:=ParserEntityPropFilter.GetTokens(BP.IncludeProperties);
+  SetTreeProp;
+  InternalRefreshTree(RefreshEqualy);
+end;
+
+procedure TNavigatorDevices.LoadParamsFromFile(Filename:string);
+var
+  Config: TXMLConfigStorage;
+begin
+  try
+    Config:=TXMLConfigStorage.Create(Filename,True);
+    try
+      Config.AppendBasePath('NavigatorParams/');
+      LoadParamsFromConfig(Config);
+      Config.UndoAppendBasePath;
+    finally
+      Config.Free;
+    end;
+  except
+    on E: Exception do
+      ZCMsgCallBackInterface.TextMessage('Error loading navigator params from file '+Filename+':'#13+E.Message,TMWOShowError);
+  end;
+end;
+
+procedure TNavigatorDevices.SaveParamsToConfig(Config: TConfigStorage);
+begin
+  Config.SetDeleteValue('TreeBuildMap',BP.TreeBuildMap,'');
+  Config.SetDeleteValue('IncludeEntities',BP.IncludeEntities,'');
+  Config.SetDeleteValue('IncludeProperties',BP.IncludeProperties,'');
+  Config.SetDeleteValue('TreeProperties',BP.TreeProperties,'');
+  Config.SetDeleteValue('UseMainFunctions',BP.UseMainFunctions,false);
+  Config.SetDeleteValue('CreateRootNode',BP.CreateRootNode,false);
+  Config.SetDeleteValue('NodeNameFormat',BP.NodeNameFormat,'');
+  Config.SetDeleteValue('TreeProperties',BP.TreeProperties,'');
+end;
+
+procedure TNavigatorDevices.SaveParamsToFile(Filename: string);
+var
+  XMLConfig: TXMLConfig;
+  Config: TXMLConfigStorage;
+begin
+  XMLConfig:=TXMLConfig.Create(nil);
+  try
+    XMLConfig.StartEmpty:=true;
+    XMLConfig.Filename:=Filename;
+    Config:=TXMLConfigStorage.Create(XMLConfig);
+    try
+      Config.AppendBasePath('NavigatorParams/');
+      SaveParamsToConfig(Config);
+      Config.UndoAppendBasePath;
+    finally
+      Config.Free;
+    end;
+    XMLConfig.Flush;
+  finally
+    XMLConfig.Free;
+  end;
+end;
 
 destructor TNavigatorDevices.Destroy;
 var
@@ -279,7 +413,7 @@ begin
       if cn<>'' then
         if cn[1]<>'-'then begin
           cn:=copy(cn,2,length(cn)-1);
-          BaseName:=GetEntityVariableValue(pent,cn,rsPrefixAbsent);
+          BaseName:=GetEntityVariableValue(pent,cn,rsTagMissingt);
           basenode:=rootdesk.find(BaseName,basenode);
         end;
     end else if cn<>'' then begin
@@ -345,18 +479,37 @@ begin
   end;
 end;
 
+procedure TNavigatorDevices.AsyncRunCommand(Data: PtrInt);
+var
+  s:string;
+begin
+    PtrInt(s):=Data;
+    commandmanager.executecommandsilent(@s[1],drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
+end;
+
 procedure TNavigatorDevices.VTFocuschanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
 var
   pnd:PTNodeData;
-  s:ansistring;
+  s:string;
 begin
   pnd := Sender.GetNodeData(Node);
-  if assigned(pnd) then
-    if pnd^.pent<>nil then
-  begin
-   s:='SelectObjectByAddres('+inttostr(PtrUInt(pnd^.pent))+')';
-   commandmanager.executecommandsilent(@s[1],drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
-  end;
+  if assigned(pnd) then begin
+    if pnd^.Ident.pent<>nil then
+      begin
+       CurrentSel:=pnd^;
+       if LastAutoselectedEnt<>pnd^.Ident.pent then begin
+         s:='SelectObjectByAddres('+inttostr(PtrUInt(pnd^.Ident.pent))+')';
+         //commandmanager.executecommandsilent(@s[1],drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
+         Application.QueueAsyncCall(AsyncRunCommand,PtrInt(@s[1]));
+         pointer(s):=nil;
+         LastAutoselectedEnt:=pnd^.Ident.pent;
+       end else begin
+         //if not LastAutoselectedEnt^.Selected then
+         //  LastAutoselectedEnt:=nil;
+       end;
+      end else
+        CurrentSel.Ident.pent:=nil;
+  end
 end;
 function TNavigatorDevices.GetPartsCount(const parts:string):integer;
 begin
@@ -392,6 +545,45 @@ begin
   else
     parts[partstartposition]:='-';
 end;
+procedure TNavigatorDevices.ReorganizeParts(var parts:string;const AFrom,ATo:integer;ABefore:boolean);
+var
+  i,c,add:integer;
+  partsarray:TMyVector<string>;
+  name:string;
+  en,state:boolean;
+begin
+  c:=GetPartsCount(parts);
+  partsarray:=TMyVector<string>.create;
+  for i:=1 to c do begin
+    state:=GetPartState(parts,c,i,name,en);
+    if state then
+      partsarray.pushback('+'+name)
+    else
+      partsarray.pushback('-'+name)
+  end;
+  name:=partsarray[AFrom-1];
+  partsarray.erase(AFrom-1);
+
+  if AFrom<ATo then
+    add:=-1
+  else
+    add:=0;
+
+  if ABefore then
+    add:=add-1;
+
+  partsarray.Insert(ATo+Add,name);
+
+
+  for i:=0 to partsarray.size-1 do begin
+    if i=0 then
+      parts:=partsarray[i]
+    else
+      parts:=parts+'|'+partsarray[i]
+  end;
+  parts:=parts;
+end;
+
 function RunEditor(const cpt,BoundsSaveName:string;var AText:string):boolean;
 var
    modalresult:integer;
@@ -418,13 +610,18 @@ begin
   result:=RunEditor('Parts editor','PartsEdWND',parts);
 end;
 
+procedure TCrutchForTEditButton.SetupEditButtonBorderStyle(bs:TBorderStyle);
+begin
+  Edit.BorderStyle:=bs;
+end;
 
 procedure TNavigatorDevices._onCreate(Sender: TObject);
 var
   po:TVTPaintOptions;
   //i:integer;
 begin
-
+  if FileExt='' then
+    FileExt:='xml';
    umf:=TmyVariableAction.Create(self);
    umf.ActionList:=ZCADMainWindow.StandartActions;
    umf.AssignToVar('DSGN_NavigatorsUseMainFunction',0);
@@ -435,16 +632,25 @@ begin
    Refresh.ImageIndex:=ImagesManager.GetImageIndex('Refresh');
    CoolBar1.AutoSize:=true;
 
+  FilterBtn.Button.Images:=ImagesManager.IconList;
+  FilterBtn.Button.ImageIndex:=ImagesManager.GetImageIndex('purge');
+  FilterBtn.SetupEditButtonBorderStyle(bsNone);
+  FilterBtn.Spacing:=4;
+  FilterBtn.TextHint:=rsFilterHint;
+
+
    TreeEnabler:=TStringPartEnabler.Create(self);
    TreeEnabler.EdgeBorders:=[{ebLeft,ebTop,ebRight,ebBottom}];
    TreeEnabler.AutoSize:=true;
-   TreeEnabler.actns:=[umf,IncludeEnts,IncludeProps,TreeProps,Refresh];
+   TreeEnabler.actns:=[PEMenuSubMenu,PEMenuSeparator,umf,PEMenuSeparator,IncludeEnts,IncludeProps,TreeProps,Refresh,nil,LoadFromFile,SaveToFile];
 
-   TreeEnabler.OnPartChanged:=RefreshTree;
+   TreeEnabler.OnMenuPopup:=TEMenuPopUp;
+   TreeEnabler.OnPartChanged:=SimilarRefreshTree;
    TreeEnabler.GetCountFunc:=GetPartsCount;
    TreeEnabler.GetStateFunc:=GetPartState;
    TreeEnabler.SetStateProc:=SetPartState;
    TreeEnabler.PartsEditFunc:=PartsEditor;
+   TreeEnabler.ReorganizeParts:=ReorganizeParts;
 
    TreeEnabler.setup(BP.TreeBuildMap);
    TreeEnabler.Parent:=CoolBar1;
@@ -468,6 +674,10 @@ begin
    MainFunctionIconIndex:=-1;
    BuggyIconIndex:=-1;
 
+   bp.NodeNameFormat:='%0:s(%1:d,%2:d)';
+   //bp.NodeNameFormat:='%0:s(%1:d,%2:d,%3:d)';
+   //BP.NodeNameFormat:='%0:s';
+
    SetTreeProp;
 
    {NavTree.Header.AutoSizeIndex := 0;
@@ -482,6 +692,7 @@ begin
    NavTree.EndUpdate;
 
    ZCMsgCallBackInterface.RegisterHandler_GUIAction(AutoRefreshTree);
+   ZCMsgCallBackInterface.RegisterHandler_KeyDown(AutoKeyDown);
 end;
 procedure TNavigatorDevices.AfterCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
     Column: TColumnIndex; const CellRect: TRect);
@@ -493,20 +704,20 @@ begin
   if Column>0 then exit;
   pnd:=Sender.GetNodeData(Node);
   if pnd<>nil then
-  if pnd^.pent<>nil then
+  if pnd^.Ident.pent<>nil then
   begin
-    pentvarext:=pnd^.pent^.GetExtension<TVariablesExtender>;
+    pentvarext:=pnd^.Ident.pent^.GetExtension<TVariablesExtender>;
     if pentvarext<>nil then begin
 
-    getImageIndex;
+    SetDefaultImagesIndex;
 
     //if CellPaintMode=cpmPaint then begin
       myContentRect:=CellRect;
       myContentRect.Left:=SaveCellRectLeft;
 
-      ImagesManager.IconList.Draw(TargetCanvas,myContentRect.Left,(myContentRect.Bottom-ImagesManager.IconList.Width) div 2,ImagesManager.GetImageIndex(GetEntityVariableValue(pnd^.pent,'ENTID_Function','bug'),BuggyIconIndex),gdeNormal);
+      ImagesManager.IconList.Draw(TargetCanvas,myContentRect.Left,(myContentRect.Bottom-ImagesManager.IconList.Width) div 2,ImagesManager.GetImageIndex(GetEntityVariableValue(pnd^.Ident.pent,'ENTID_Function','bug'),BuggyIconIndex),gdeNormal);
       myContentRect.Left:=myContentRect.Left+ImagesManager.IconList.Width;
-      ImagesManager.IconList.Draw(TargetCanvas,myContentRect.Left,(myContentRect.Bottom-ImagesManager.IconList.Width) div 2,ImagesManager.GetImageIndex(GetEntityVariableValue(pnd^.pent,'ENTID_Representation','bug'),BuggyIconIndex),gdeNormal);
+      ImagesManager.IconList.Draw(TargetCanvas,myContentRect.Left,(myContentRect.Bottom-ImagesManager.IconList.Width) div 2,ImagesManager.GetImageIndex(GetEntityVariableValue(pnd^.Ident.pent,'ENTID_Representation','bug'),BuggyIconIndex),gdeNormal);
       myContentRect.Left:=myContentRect.Left+ImagesManager.IconList.Width;
     //end;
     end;
@@ -521,9 +732,9 @@ var
 begin
   pnd:=Sender.GetNodeData(Node);
   if pnd<>nil then
-  if pnd^.pent<>nil then
+  if pnd^.Ident.pent<>nil then
   begin
-    pentvarext:=pnd^.pent^.GetExtension<TVariablesExtender>;
+    pentvarext:=pnd^.Ident.pent^.GetExtension<TVariablesExtender>;
     if pentvarext<>nil then begin
       SaveCellRectLeft:=CellRect.Left;
       myCellRect:=CellRect;
@@ -545,9 +756,9 @@ var
 begin
   pnd:=Sender.GetNodeData(Node);
   if pnd<>nil then
-  if pnd^.pent<>nil then
+  if pnd^.Ident.pent<>nil then
   begin
-    pentvarext:=pnd^.pent^.GetExtension<TVariablesExtender>;
+    pentvarext:=pnd^.Ident.pent^.GetExtension<TVariablesExtender>;
     if pentvarext<>nil then
       Extent:=Extent+2*ImagesManager.IconList.Width;
   end;
@@ -576,11 +787,65 @@ begin
   end;
 end;
 
+function TNavigatorDevices.Match(node:PVirtualNode;pattern:AnsiString):boolean;
+var
+  i:integer;
+  ColumnText:string;
+begin
+  for i:=low(ExtTreeParam.ExtColumnsParams) to high(ExtTreeParam.ExtColumnsParams) do begin
+    NavGetText(NavTree,node,i,ttNormal,ColumnText);
+    if MatchesMask(ColumnText,pattern) then
+      exit(true);
+  end;
+  Result:=false;
+end;
+
+function TNavigatorDevices.DoFilter(tree:TVirtualStringTree;node:PVirtualNode;pattern:AnsiString):boolean;
+var
+  SubNode:PVirtualNode;
+  MatchInChildren:boolean;
+begin
+  result:=false;
+  exit;
+  repeat
+    SubNode := node.FirstChild;
+    if assigned(SubNode) then
+      MatchInChildren:=DoFilter(tree,SubNode,pattern)
+    else
+      MatchInChildren:=false;
+    if MatchInChildren then
+      Tree.Expanded[Node]:=true;
+      //node.States:=node.States+[vsExpanded];
+    if pattern='' then
+      node.States:=node.States-[vsFiltered]
+    else begin
+      if MatchInChildren or Match(node,pattern) then begin
+        node.States:=node.States-[vsFiltered];
+        result:=true;
+      end else
+        node.States:=node.States+[vsFiltered]
+    end;
+    node:=node.NextSibling;
+  until (node=nil)or(node=node.NextSibling);
+end;
+
+procedure TNavigatorDevices.Filter(Sender: TObject);
+var
+  pattern:AnsiString;
+begin
+  pattern:=TEditButton(sender).Text;
+  if pattern<>'' then
+    if (pos('*',pattern)=0)and(pos('?',pattern)=0) then
+      pattern:='*'+pattern+'*';
+  DoFilter(NavTree,NavTree.RootNode,pattern);
+  NavTree.Invalidate;
+end;
+
 procedure TNavigatorDevices.EditIncludeEnts(Sender: TObject);
 begin
  if not isvisible then exit;
  if RunEditor('Included entities editor','IncludeEntsEdWND',BP.IncludeEntities) then begin
-   RefreshTree(nil);
+   InternalRefreshTree(RefreshEqualy);
  end;
 end;
 procedure TNavigatorDevices.EditIncludeProperties(Sender: TObject);
@@ -590,7 +855,7 @@ begin
    if assigned(EntityIncluder) then
      FreeAndNil(EntityIncluder);
    EntityIncluder:=ParserEntityPropFilter.GetTokens(BP.IncludeProperties);
-   RefreshTree(nil);
+   InternalRefreshTree(RefreshEqualy);
  end;
 end;
 procedure TNavigatorDevices.EditTreeProperties(Sender: TObject);
@@ -598,17 +863,16 @@ begin
  if not isvisible then exit;
  if RunEditor('Tree properties editor','TreePropertiesEdWND',BP.TreeProperties) then begin
    SetTreeProp;
-   RefreshTree(nil);
+   InternalRefreshTree(RefreshEqualy);;
  end;
 end;
-procedure TNavigatorDevices.RefreshTree(Sender: TObject);
+procedure TNavigatorDevices.InternalRefreshTree(Dist:Integer);
 var
   pv:pGDBObjEntity;
   ir:itrec;
-  //pb:pboolean;
   lpsh:TLPSHandle;
-  //dr:TZCMsgDialogResult;
   HaveErrors:boolean;
+  NScrollInfo:TScrollInfo;
 begin
    if not isvisible then exit;
    HaveErrors:=false;
@@ -650,12 +914,75 @@ begin
 
    if assigned(StandaloneNodeStates) then
    begin
-     StandaloneNode.RestoreState(StandaloneNodeStates);
+     StandaloneNode.RestoreState(StandaloneNodeStates,Dist);
+     NavTree.OffsetXY:=StandaloneNodeStates.SaveOffset;
      FreeAndNil(StandaloneNodeStates);
    end;
-
+   PostProcessTree;
+   Filter(FilterBtn);
    LPS.EndLongProcess(lpsh);
    NavTree.EndUpdate;
+end;
+procedure TNavigatorDevices.RefreshTree(Sender: TObject);
+begin
+  InternalRefreshTree(RefreshEqualy);
+end;
+procedure TNavigatorDevices.SimilarRefreshTree(Sender: TObject);
+begin
+  InternalRefreshTree(RefreshSimilar);
+end;
+procedure TNavigatorDevices.PostProcessTree;
+
+  procedure CountLeaf(Leaf:PVirtualNode;MainFunction:Boolean);
+  var
+    CurrentParent:PVirtualNode;
+    pnd:PTNodeData;
+  begin
+    if Leaf<>NavTree.RootNode then begin
+      CurrentParent:=Leaf.Parent;
+      while CurrentParent<>NavTree.RootNode do
+      begin
+        pnd:=NavTree.GetNodeData(CurrentParent);
+        if pnd<>nil then begin
+          inc(pnd^.ppp.subLeafCounter);
+          if MainFunction then
+            inc(pnd^.ppp.subLeafCounterWithMainFubction);
+        end;
+        CurrentParent:=CurrentParent.Parent;
+      end;
+    end;
+  end;
+
+  procedure ProcessChild(Node:PVirtualNode);
+  var
+    child:PVirtualNode;
+    pnd:PTNodeData;
+    mf:Boolean;
+    entvarext:TVariablesExtender;
+  begin
+    pnd:=NavTree.GetNodeData(Node);
+    child:=Node.FirstChild;
+    if child=nil then begin
+      mf:=false;
+      if pnd<>nil then
+        if pnd^.Ident.pent<>nil then begin
+         entvarext:=pnd^.Ident.pent^.GetExtension<TVariablesExtender>;
+         if entvarext<>nil then
+           mf:=entvarext.isMainFunction;
+        end;
+      CountLeaf(Node,mf)
+    end else
+      while child<>nil do begin
+        if pnd<>nil then
+          inc(pnd.ppp.subNodesCounter);
+        ProcessChild(child);
+        child:=child^.NextSibling;
+      end;
+  end;
+
+begin
+  if assigned(StandaloneNode)then
+    ProcessChild(StandaloneNode.RootNode);
 end;
 
 procedure TNavigatorDevices.AutoRefreshTree(sender:TObject;GUIAction:TZMessageID);
@@ -664,26 +991,128 @@ var
   devnode:PVirtualNode;
 begin
   if GUIAction=ZMsgID_GUIActionRebuild then
-    RefreshTree(sender);
+    InternalRefreshTree(RefreshEqualy);
   if (sender is (TAbstractViewArea))and(GUIAction=ZMsgID_GUIActionSelectionChanged) then begin
     sender_wa:=sender as TAbstractViewArea;
     if sender_wa.param.SelDesc.LastSelectedObject<>nil then begin
       if (pGDBObjEntity(sender_wa.param.SelDesc.LastSelectedObject)^.GetObjType=GDBDeviceID)and(assigned(Ent2NodeMap)) then begin
         if Ent2NodeMap.TryGetValue(sender_wa.param.SelDesc.LastSelectedObject,devnode) then begin
           NavTree.Selected[devnode]:=true;
+          NavTree.FocusedNode:=devnode;
           NavTree.VisiblePath[devnode]:=true;
           NavTree.ScrollIntoView(devnode,false);
         end;
-      end;
+      end
     end else begin
+      LastAutoselectedEnt:=nil;
+      CurrentSel.Ident.pent:=nil;
       NavTree.ClearSelection;
       if assigned (StandaloneNodeStates) then
         FreeAndNil(StandaloneNodeStates);
       if assigned (StandaloneNode) then
-      StandaloneNodeStates:=StandaloneNode.SaveState;
+      StandaloneNodeStates:=StandaloneNode.SaveState(CurrentSel);
     end;
   end;
 end;
+procedure TNavigatorDevices.AutoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if key=VK_ESCAPE then
+    begin
+      LastAutoselectedEnt:=nil;
+      CurrentSel.Ident.pent:=nil;
+    end;
+end;
+
+class function TCfgFileDeskCompare.c(a,b:TCfgFileDesk):boolean;
+begin
+  c:=a.FileName<b.FileName;
+end;
+
+procedure EnumerateCfgs(filename:String;pdata:pointer);
+var
+  fd:TCfgFileDesk;
+begin
+  fd.FilePath:=filename;
+  fd.FileName:=ChangeFileExt(ExtractFileName(filename),'');
+  TCfgFilesDesks(pdata).PushBack(fd);
+end;
+
+procedure TNavigatorDevices.AsyncLoadParamsFromFile(Data: PtrInt);
+var
+  FilePath:string;
+begin
+  PtrInt(FilePath):=Data;
+  LoadAndSetParamsFromFile(FilePath);
+end;
+
+procedure TNavigatorDevices.TEMenuPopUpClick(Sender: TObject);
+var
+  FilePath:string;
+begin
+  if (sender is TMenuItemWithFileDesk) then begin
+    FilePath:=(sender as TMenuItemWithFileDesk).FilePath;
+    Application.QueueAsyncCall(AsyncLoadParamsFromFile,PtrInt(@FilePath[1]));
+    Pointer(FilePath):=nil;
+  end;
+end;
+
+procedure TNavigatorDevices.TEMenuPopUp(Sender: TObject);
+var
+  presets:TMenuItem;
+  CfgFilesDesks:TCfgFilesDesks;
+  CfgFileDesk:TCfgFileDesk;
+  CreatedMenuItem:TMenuItemWithFileDesk;
+begin
+  if sender is TStringPartEnabler then
+    if assigned(TStringPartEnabler(sender).submenus) then
+      if TStringPartEnabler(sender).submenus.count>0 then begin
+        presets:=TStringPartEnabler(sender).submenus.Items[0];
+        presets.caption:='Presets';
+        presets.Clear;
+        CfgFilesDesks:=TCfgFilesDesks.Create;
+        FromDirsIterator(SysVar.PATH.Program_Run^,format(AllFilesWithExt,[FileExt]),'',EnumerateCfgs,nil,CfgFilesDesks);
+        if CfgFilesDesks.Size>0 then begin
+          if CfgFilesDesks.Size>1 then
+            TCfgFilesDesksSorter.Sort(CfgFilesDesks,CfgFilesDesks.Size-1);
+          presets.Enabled:=True;
+          for CfgFileDesk in CfgFilesDesks do begin
+            CreatedMenuItem:=TMenuItemWithFileDesk.Create(presets);
+            CreatedMenuItem.Caption:=CfgFileDesk.FileName;
+            CreatedMenuItem.FilePath:=CfgFileDesk.FilePath;
+            CreatedMenuItem.OnClick:=TEMenuPopUpClick;
+            presets.add(CreatedMenuItem);
+          end;
+        end else begin
+          presets.Enabled:=False;
+        end;
+        CfgFilesDesks.Free;
+  end;
+end;
+
+procedure TNavigatorDevices.LoadFromFileProc(Sender: TObject);
+var
+  FileName,FileFilter:String;
+begin
+  FileFilter:=format(rsNavigatorParamsFileFilter,[FileExt]);
+  if OpenFileDialog(FileName,1,FileExt,FileFilter,'',rsOpenSomething) then begin
+    LoadAndSetParamsFromFile(FileName);
+  end;
+end;
+
+procedure TNavigatorDevices.SaveToFileProc(Sender: TObject);
+var
+  FileName,FileFilter:String;
+begin
+  FileFilter:=format(rsNavigatorParamsFileFilter,[FileExt]);
+  if SaveFileDialog(FileName,FileExt,FileFilter,'',rsSaveSomething) then
+    SaveParamsToFile(FileName);
+end;
+
+procedure TNavigatorDevices.PurgeFilter(Sender: TObject);
+begin
+  FilterBtn.Text:='';
+end;
+
 procedure TNavigatorDevices.TVDblClick(Sender: TObject);
 var
   pnode:PVirtualNode;
@@ -698,11 +1127,11 @@ begin
   begin
     pnd:=NavTree.GetNodeData(pnode);
     if pnd<>nil then
-    if pnd^.pent<>nil then
+    if pnd^.Ident.pent<>nil then
     begin
-      pc:=Vertexmorph(pnd^.pent^.vp.BoundingBox.LBN,pnd^.pent^.vp.BoundingBox.RTF,0.5);
-      bb.LBN:=VertexAdd(pc,VertexMulOnSc(VertexSub(pc,pnd^.pent^.vp.BoundingBox.LBN),scale));
-      bb.RTF:=VertexAdd(pc,VertexMulOnSc(VertexSub(pc,pnd^.pent^.vp.BoundingBox.RTF),scale));
+      pc:=Vertexmorph(pnd^.Ident.pent^.vp.BoundingBox.LBN,pnd^.Ident.pent^.vp.BoundingBox.RTF,0.5);
+      bb.LBN:=VertexAdd(pc,VertexMulOnSc(VertexSub(pc,pnd^.Ident.pent^.vp.BoundingBox.LBN),scale));
+      bb.RTF:=VertexAdd(pc,VertexMulOnSc(VertexSub(pc,pnd^.Ident.pent^.vp.BoundingBox.RTF),scale));
       drawings.GetCurrentDWG.wa.ZoomToVolume(bb);
     end;
   end;
@@ -718,9 +1147,6 @@ procedure TNavigatorDevices.VTOnContextMenu(Sender: TObject; MousePos: TPoint;
                              var Handled: Boolean);
 var
   pnode:PVirtualNode;
-  //pnd:PTNodeData;
-  //pc:gdbvertex;
-  //bb:TBoundingBox;
   PopupMenu:TPopupMenu;
 begin
   Handled:=true;
@@ -775,16 +1201,19 @@ begin
   if assigned(pnd) then
   begin
     //celltext:=pnd^.name;
-  if pnd^.pent=nil then begin
-    if Column=0 then
-      celltext:=pnd^.name
-    else
+  if pnd^.Ident.pent=nil then begin
+    if Column=0 then begin
+      if pnd^.ppp.subLeafCounter>0 then
+        celltext:=format(BP.NodeNameFormat,[pnd^.Ident.name,pnd^.ppp.subNodesCounter,pnd^.ppp.subLeafCounterWithMainFubction,pnd^.ppp.subLeafCounter])
+      else
+        celltext:=pnd^.Ident.name;
+    end else
       celltext:='';
   end else
-    celltext:=textformat(ExtTreeParam.ExtColumnsParams[Column].Pattern,pnd^.pent);//GetEntityVariableValue(pnd^.pent,'NMO_Name',rsNameAbsent);
+    celltext:=textformat(ExtTreeParam.ExtColumnsParams[Column].Pattern,pnd^.Ident.pent);//GetEntityVariableValue(pnd^.pent,'NMO_Name',rsNameAbsent);
   end;
 end;
-procedure TNavigatorDevices.getImageIndex;
+procedure TNavigatorDevices.SetDefaultImagesIndex;
 begin
   if MainFunctionIconIndex=-1 then
     MainFunctionIconIndex:=ImagesManager.GetImageIndex('basket');
@@ -807,10 +1236,10 @@ begin
     exit;
   end;
 
-  getImageIndex;
-     if (assigned(CombinedNode))and(node=CombinedNode.RootNode) then
+  SetDefaultImagesIndex;
+     {if (assigned(CombinedNode))and(node=CombinedNode.RootNode) then
                                        ImageIndex:=CombinedNode.ficonindex
-else if (assigned(StandaloneNode))and(node=StandaloneNode.RootNode) then
+else} if (assigned(StandaloneNode))and(node=StandaloneNode.RootNode) then
                                        ImageIndex:=StandaloneNode.ficonindex
 else
   begin
@@ -821,9 +1250,9 @@ else
           TNMGroup:ImageIndex:=NavGroupIconIndex;
           TNMAutoGroup:ImageIndex:=NavAutoGroupIconIndex;
           TNMData,TNMHardGroup:begin
-                    if pnd^.pent<>nil then
+                    if pnd^.Ident.pent<>nil then
                                           begin
-                                           pentvarext:=pnd^.pent^.GetExtension<TVariablesExtender>;
+                                           pentvarext:=pnd^.Ident.pent^.GetExtension<TVariablesExtender>;
                                            if pentvarext<>nil then
                                            begin
                                              if pentvarext.isMainFunction then
@@ -871,16 +1300,17 @@ end;
 
 procedure TNavigatorDevices.EraseRoots;
 begin
-  if assigned(CombinedNode) then
+  {if assigned(CombinedNode) then
   begin
-    CombinedNodeStates:=CombinedNode.SaveState;
+    CombinedNodeStates:=CombinedNode.SaveState(CurrentSel);
     FreeAndNil(CombinedNode);
-  end;
+  end;}
   if assigned(StandaloneNode) then
   begin
     if Assigned(StandaloneNodeStates)then
       FreeAndNil(StandaloneNodeStates);
-    StandaloneNodeStates:=StandaloneNode.SaveState;
+    StandaloneNodeStates:=StandaloneNode.SaveState(CurrentSel);
+    StandaloneNodeStates.SaveOffset:=NavTree.OffsetXY;
     FreeAndNil(StandaloneNode);
   end;
   if assigned(Ent2NodeMap) then
@@ -902,8 +1332,8 @@ begin
       SelectSubNodes(nav,psubnode);
       pnd:=nav.GetNodeData(psubnode);
       if pnd<>nil then
-        if ((pnd.NodeMode=TNMData)or(pnd.NodeMode=TNMHardGroup))and(pnd^.pent<>nil) then
-          zcSelectEntity(pnd^.pent);
+        if ((pnd.NodeMode=TNMData)or(pnd.NodeMode=TNMHardGroup))and(pnd^.Ident.pent<>nil) then
+          zcSelectEntity(pnd^.Ident.pent);
       psubnode:=psubnode^.NextSibling;
     end;
   end;

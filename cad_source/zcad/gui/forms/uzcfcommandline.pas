@@ -25,7 +25,7 @@ uses
  menus,Forms,fileutil,graphics, uzbtypes,uzccommandsmanager,
  varman,varmandef,
  uzegeometry,uzctnrvectorstrings,uzcinterface,uzctreenode,uzclog,strmy,
- uzccommandlineutil,uztoolbarsmanager,uzmenusmanager,uzccommandsabstract,gzctnrvectortypes,
+ uzccommandlineutil,uztoolbarsmanager,uzmenusmanager,uzccommandsabstract,gzctnrVectorTypes,
  uzcctrlcommandlineprompt,uzeparsercmdprompt;
 
 const
@@ -264,6 +264,8 @@ begin
     sbutton.parent:=panel;
 
     cmdedit:=TComboBox.create(panel);
+    cmdedit.Name:='MainCommandLine';
+    cmdedit.Caption:='';
     cmdedit.Style:=csOwnerDrawEditableVariable;
     clist.init(200);
     p:=commandmanager.beginiterate(ir);

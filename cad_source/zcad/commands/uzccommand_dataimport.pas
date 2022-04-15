@@ -22,7 +22,7 @@ unit uzccommand_dataimport;
 interface
 uses
   LazLogger,SysUtils,LazUTF8,
-  gzctnrvectortypes,uzelongprocesssupport,
+  gzctnrVectorTypes,uzelongprocesssupport,
   uzeentity,
   uzccommandsabstract,uzccommandsimpl,
   uzcdialogsfiles,
@@ -166,7 +166,7 @@ var
   DC:TDrawContext;
 begin
   if length(operands)=0 then begin
-    isload:=OpenFileDialog(FileName,1,'csv',CSVFileFilter,'','Open something...');
+    isload:=OpenFileDialog(FileName,1,'csv',CSVFileFilter,'',rsOpenSomething);
     if not isload then
       exit(cmd_cancel);
   end else begin

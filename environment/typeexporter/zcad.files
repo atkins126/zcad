@@ -24,13 +24,11 @@ zengine/containers/UGDBControlPointArray.pas
 zengine/containers/UGDBOutbound2DIArray.pas
 zengine/containers/UGDBPoint3DArray.pas
 zengine/containers/UGDBPolyLine2DArray.pas
-zengine/containers/UGDBPolyPoint2DArray.pas
 zengine/containers/UGDBSelectedObjArray.pas
 zengine/containers/uzctnrvectorpgdbaseobjects.pas
 zengine/fonts/uzefontbase.pas
 zengine/fonts/uzefontshx.pas
 zengine/fonts/uzefont.pas
-zengine/containers/UGDBXYZWStringArray.pas
 zengine/containers/UGDBVectorSnapArray.pas
 zengine/containers/UGDBNamedObjectsArray.pas
 zengine/styles/uzestylestexts.pas
@@ -38,7 +36,6 @@ zengine/styles/uzestyleslayers.pas
 zengine/styles/uzestyleslinetypes.pas
 zengine/styles/uzestylesdim.pas
 zengine/styles/uzestylestables.pas
-zengine/containers/UGDBTable.pas
 zcad/uzcsysvars.pas
 components/zscriptbase/uabstractunit.pas
 components/zscriptbase/varmandef.pas
