@@ -17,20 +17,91 @@
 }
 
 unit uzegeometrytypes;
+{$Mode delphi}{$ModeSwitch advancedrecords}{$H+}
+{$Macro on}
+
 interface
+const
+  EPSILON  : Single = 1e-40;
+  EPSILON2 : Single = 1e-30;
+  eps=1e-14;
+  floateps=1e-6;
+  sqreps=1e-7;
+  bigeps=1e-10;
 type
+  GVector4<T;TT:record>=record
+    const
+      ArrS=4;
+    {$Define VectorTypeName := GVector4}
+    {$Include gvectorintf.inc}
+    {$UnDef VectorTypeName}
+    var
+      case Integer of
+        0:(x,y,z,w:TT);
+        1:(v:TCoordArray);
+  end;
+  GVector3<T;TT:record>=record
+    const
+      ArrS=3;
+    {$Define VectorTypeName := GVector3}
+    {$Include gvectorintf.inc}
+    {$UnDef VectorTypeName}
+    var
+      case Integer of
+        0:(x,y,z:TT);
+        1:(v:TCoordArray);
+  end;
+  GVector2<T;TT:record>=record
+    const
+      ArrS=2;
+    {$Define VectorTypeName := GVector2}
+    {$Include gvectorintf.inc}
+    {$UnDef VectorTypeName}
+    var
+      case Integer of
+        0:(v:TCoordArray);
+        1:(x,y:TT);
+  end;
+  GVector4i<T;TT:record>=record
+    const
+      ArrS=4;
+    {$Define VectorTypeName := GVector4i}
+    {$Define IntParam}
+    {$Include gvectorintf.inc}
+    {$UnDef IntParam}
+    {$UnDef VectorTypeName}
+    var
+      case Integer of
+        0:(x,y,z,w:TT);
+        1:(v:TCoordArray);
+  end;
+  GVector3i<T;TT:record>=record
+    const
+      ArrS=3;
+    {$Define VectorTypeName := GVector3i}
+    {$Define IntParam}
+    {$Include gvectorintf.inc}
+    {$UnDef IntParam}
+    {$UnDef VectorTypeName}
+    var
+      case Integer of
+        0:(x,y,z:TT);
+        1:(v:TCoordArray);
+  end;
+  GVector2i<T;TT:record>=record
+    const
+      ArrS=2;
+    {$Define VectorTypeName := GVector2i}
+    {$Define IntParam}
+    {$Include gvectorintf.inc}
+    {$UnDef IntParam}
+    {$UnDef VectorTypeName}
+    var
+      case Integer of
+        0:(v:TCoordArray);
+        1:(x,y:TT);
+  end;
 {EXPORT+}
-  PIMatrix4=^IMatrix4;
-  IMatrix4=packed array[0..3]of Integer;
-  DVector4D=packed array[0..3]of Double;
-  DVector3D=packed array[0..2]of Double;
-  DVector4F=packed array[0..3]of Single;
-  PDMatrix4D=^DMatrix4D;
-  DMatrix4D=packed array[0..3]of DVector4D;
-  DMatrix3D=packed array[0..2]of DVector3D;
-  ClipArray=packed array[0..5]of DVector4D;
-  PDMatrix4F=^DMatrix4F;
-  DMatrix4F=packed array[0..3]of DVector4F;
 
   FontFloat=Single;
   PFontFloat=^FontFloat;
@@ -40,13 +111,82 @@ type
   GDBYCoordinate=Double;
   PGDBZCoordinate=^GDBZCoordinate;
   GDBZCoordinate=Double;
+
+
   PGDBvertex=^GDBvertex;
   {REGISTERRECORDTYPE GDBvertex}
-  GDBvertex=record
-                  x:GDBXCoordinate;(*saved_to_shd*)
-                  y:GDBYCoordinate;(*saved_to_shd*)
-                  z:GDBZCoordinate;(*saved_to_shd*)
-            end;
+  {-}GDBvertex=GVector3<Double,Double>;{//}
+  {-}{/GDBvertex=record/}
+    {-}{/x:GDBXCoordinate;/}
+    {-}{/y:GDBYCoordinate;/}
+    {-}{/z:GDBZCoordinate;/}
+  {-}{/end;/}
+
+  PGDBvertex3S=^GDBvertex3S;
+  {REGISTERRECORDTYPE GDBvertex3S}
+  {-}GDBvertex3S=GVector3<Single,Single>;{//}
+  {-}{/GDBvertex3S=record/}
+    {-}{/x:Single;/}
+    {-}{/y:Single;/}
+    {-}{/z:Single;/}
+  {-}{/end;/}
+
+  PGDBvertex2D=^GDBvertex2D;
+  {REGISTERRECORDTYPE GDBvertex2D}
+  {-}GDBvertex2D=GVector2<Double,Double>;{//}
+  {-}{/GDBvertex2D=record/}
+    {-}{/x:Double;/}
+    {-}{/y:Double;/}
+  {-}{/end;/}
+
+  //DVector4F=packed array[0..3]of Single;
+  PDVector4F=^DVector4F;
+  {REGISTERRECORDTYPE DVector4F}
+  {-}DVector4F=GVector4<Single,Single>;{//}
+  {-}{/DVector4F=record/}
+    {-}{/x:Single;/}
+    {-}{/y:Single;/}
+    {-}{/z:Single;/}
+    {-}{/w:Single;/}
+  {-}{/end;/}
+
+  PIMatrix4=^IMatrix4;
+  //IMatrix4=packed array[0..3]of Integer;
+  {REGISTERRECORDTYPE IMatrix4}
+  {-}IMatrix4=GVector4i<Integer,Integer>;{//}
+  {-}{/IMatrix4=record/}
+    {-}{/x:Integer;/}
+    {-}{/y:Integer;/}
+    {-}{/z:Integer;/}
+    {-}{/w:Integer;/}
+  {-}{/end;/}
+
+  //DVector4D=packed array[0..3]of Double;
+  {REGISTERRECORDTYPE DVector4D}
+  {-}DVector4D=GVector4<Double,Double>;{//}
+  {-}{/DVector4D=record/}
+    {-}{/x:Double;/}
+    {-}{/y:Double;/}
+    {-}{/z:Double;/}
+    {-}{/w:Double;/}
+  {-}{/end;/}
+
+  //DVector3D=packed array[0..2]of Double;
+  {REGISTERRECORDTYPE DVector3D}
+  {-}DVector3D=GVector3<Double,Double>;{//}
+  {-}{/DVector3D=record/}
+    {-}{/x:Double;/}
+    {-}{/y:Double;/}
+    {-}{/z:Double;/}
+  {-}{/end;/}
+
+  PDMatrix4D=^DMatrix4D;
+  DMatrix4D=packed array[0..3]of DVector4D;
+  DMatrix3D=packed array[0..2]of DVector3D;
+  ClipArray=packed array[0..5]of DVector4D;
+  PDMatrix4F=^DMatrix4F;
+  DMatrix4F=packed array[0..3]of DVector4F;
+
   PGDBCoordinates3D=^GDBCoordinates3D;
   GDBCoordinates3D=GDBvertex;
   PGDBLength=^GDBLength;
@@ -62,13 +202,6 @@ type
                   ox:GDBvertex;(*'OX Axis'*)(*saved_to_shd*)
                   oy:GDBvertex;(*'OY Axis'*)(*saved_to_shd*)
                   oz:GDBvertex;(*'OZ Axis'*)(*saved_to_shd*)
-            end;
-  PGDBvertex3S=^GDBvertex3S;
-  {REGISTERRECORDTYPE GDBvertex3S}
-  GDBvertex3S=record
-                  x:Single;(*saved_to_shd*)
-                  y:Single;(*saved_to_shd*)
-                  z:Single;(*saved_to_shd*)
             end;
   PGDBvertex4S=^GDBvertex4S;
   {REGISTERRECORDTYPE GDBvertex4S}
@@ -93,12 +226,6 @@ type
   GDBvertex4F=record
                   x,y,z,w:Single;
               end;
-  PGDBvertex2D=^GDBvertex2D;
-  {REGISTERRECORDTYPE GDBvertex2D}
-  GDBvertex2D=record
-                  x:Double;(*saved_to_shd*)
-                  y:Double;(*saved_to_shd*)
-              end;
   PGDBSnap2D=^GDBSnap2D;
   {REGISTERRECORDTYPE GDBSnap2D}
   GDBSnap2D=record
@@ -107,10 +234,11 @@ type
               end;
   PGDBFontVertex2D=^GDBFontVertex2D;
   {REGISTERRECORDTYPE GDBFontVertex2D}
-  GDBFontVertex2D=record
-                  x:FontFloat;(*saved_to_shd*)
-                  y:FontFloat;(*saved_to_shd*)
-              end;
+  {-}GDBFontVertex2D=GVector2<FontFloat,FontFloat>;{//}
+  {-}{/GDBFontVertex2D=record/}
+    {-}{/x:FontFloat;/}
+    {-}{/y:FontFloat;/}
+  {-}{/end;/}
   PGDBPolyVertex2D=^GDBPolyVertex2D;
   {REGISTERRECORDTYPE GDBPolyVertex2D}
   GDBPolyVertex2D=record
@@ -126,14 +254,17 @@ type
                   end;
   PGDBvertex2S=^GDBvertex2S;
   {REGISTERRECORDTYPE GDBvertex2S}
-  GDBvertex2S=record
-                     x,y:Single;
-               end;
+  {-}GDBvertex2S=GVector2<Single,Single>;{//}
+  {-}{/GDBvertex2S=record/}
+    {-}{/x:Single;/}
+    {-}{/y:Single;/}
+  {-}{/end;/}
   {REGISTERRECORDTYPE GDBvertex2DI}
-  GDBvertex2DI=record
-                     x,y:Integer;
-               end;
-
+  {-}GDBvertex2DI=GVector2i<Integer,Integer>;{//}
+  {-}{/GDBvertex2DI=record/}
+    {-}{/x:Integer;/}
+    {-}{/y:Integer;/}
+  {-}{/end;/}
   {REGISTERRECORDTYPE GDBCameraBaseProp}
   GDBCameraBaseProp=record
                           point:GDBvertex;
@@ -195,4 +326,33 @@ type
   end;
 {EXPORT-}
 implementation
+{$Define VectorTypeName := GVector4}
+{$Include gvectorimpl.inc}
+{$UnDef VectorTypeName}
+
+{$Define VectorTypeName := GVector3}
+{$Include gvectorimpl.inc}
+{$UnDef VectorTypeName}
+
+{$DEFINE VectorTypeName := GVector2}
+{$Include gvectorimpl.inc}
+{$UnDef VectorTypeName}
+
+{$Define VectorTypeName := GVector4i}
+{$Define IntParam}
+{$Include gvectorimpl.inc}
+{$UnDef IntParam}
+{$UnDef VectorTypeName}
+
+{$Define VectorTypeName := GVector3i}
+{$Define IntParam}
+{$Include gvectorimpl.inc}
+{$UnDef IntParam}
+{$UnDef VectorTypeName}
+
+{$DEFINE VectorTypeName := GVector2i}
+{$Define IntParam}
+{$Include gvectorimpl.inc}
+{$UnDef IntParam}
+{$UnDef VectorTypeName}
 end.
