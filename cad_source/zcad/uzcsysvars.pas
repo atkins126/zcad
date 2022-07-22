@@ -59,7 +59,6 @@ type
         end;
   {REGISTERRECORDTYPE tpath}
   tpath=record
-             Device_Library:PString;(*'Device base'*)
              Support_Path:PString;(*'Support files'*)
              Fonts_Path:PString;(*'Fonts'*)
              Alternate_Font:PString;(*'Alternate font file'*)
@@ -68,6 +67,7 @@ type
              LayoutFile:PString;(*'Current layout'*)
              Program_Run:PString;(*'Program'*)(*oi_readonly*)
              Temp_files:PString;(*'Temporary files'*)(*oi_readonly*)
+             Device_Library:PString;(*'Device base'*)
         end;
   PTCanvasData=^TCanvasData;
   {REGISTERRECORDTYPE TCanvasData}
@@ -76,19 +76,15 @@ type
       end;
   {REGISTERRECORDTYPE trd}
   trd=record
-            RD_RendererBackEnd:PTEnumData;(*'Render backend'*)
-            RD_CurrentWAParam:TFaceTypedData;
+            RD_RendererBackEnd:PTEnumData;(*'Graphic device'*)
+            RD_CurrentWAParam:TFaceTypedData;(*'Current graphic device params'*)
             RD_GLUVersion:PString;(*'GLU Version'*)(*oi_readonly*)
             RD_GLUExtensions:PString;(*'GLU Extensions'*)(*oi_readonly*)
-            RD_UseStencil:PBoolean;(*'Use STENCIL buffer'*)
             RD_LastRenderTime:PInteger;(*'Last render time'*)(*oi_readonly*)
             RD_LastUpdateTime:PInteger;(*'Last update time'*)(*oi_readonly*)
             RD_LastCalcVisible:PInteger;(*'Last visible calculation time'*)(*oi_readonly*)
             RD_MaxRenderTime:PInteger;(*'Maximum single pass time'*)
             RD_DrawInsidePaintMessage:PTGDB3StateBool;(*'Draw inside paint message'*)
-            RD_RemoveSystemCursorFromWorkArea:PBoolean;(*'Remove system cursor from work area'*)
-            RD_Light:PBoolean;(*'Light'*)
-            RD_LineSmooth:PBoolean;(*'Line smoothing'*)
             RD_ImageDegradation:TImageDegradation;(*'Image degradation'*)
             RD_PanObjectDegradation:PBoolean;(*'Degradation while pan'*)
             RD_SpatialNodesDepth:PInteger;(*'Spatial index nodes depth'*)(*hidden_in_objinsp*)
@@ -121,8 +117,8 @@ type
              SYS_RunTime:PInteger;(*'Uptime'*)(*oi_readonly*)
              SYS_UniqueInstance:PBoolean;(*'Unique instance'*)
              SYS_NoSplash:PBoolean;(*'No splash screen'*)
-             SYS_NoLoadLayout:PBoolean;(*'No load layout'*)
-             SYS_UpdatePO:PBoolean;(*'Update PO file'*)
+             SYS_NoLoadLayout:PBoolean;(*'No load layout'*)(*oi_readonly*)
+             SYS_UpdatePO:PBoolean;(*'Update PO file'*)(*oi_readonly*)
 
        end;
   {REGISTERRECORDTYPE tdwg}
@@ -140,23 +136,23 @@ type
              DWG_RotateTextInLT:PBoolean;(*'Rotate text in line type'*)
              DWG_CTStyle:{-}PPointer{/PPGDBTextStyleObjInsp/};(*'Text style'*)
 
-             DWG_LUnits:PTLUnits;
-             DWG_LUPrec:PTUPrec;
-             DWG_AUnits:PTAUnits;
-             DWG_AUPrec:PTUPrec;
-             DWG_AngDir:PTAngDir;
-             DWG_AngBase:PGDBAngleDegDouble;
-             DWG_UnitMode:PTUnitMode;
-             DWG_InsUnits:PTInsUnits;
-             DWG_TextSize:PDouble;
-
-             DWG_EditInSubEntry:PBoolean;(*'SubEntities edit'*)
-             DWG_AdditionalGrips:PBoolean;(*'Additional grips'*)
-             DWG_HelpGeometryDraw:PBoolean;(*'Help geometry'*)
+             DWG_LUnits:PTLUnits;(*'LUnits (linear units format)'*)
+             DWG_LUPrec:PTUPrec;(*'LUPrec (linear units precision)'*)
+             DWG_AUnits:PTAUnits;(*'AUnits (angular units format)'*)
+             DWG_AUPrec:PTUPrec;(*'AUPrec (angular units precision)'*)
+             DWG_AngDir:PTAngDir;(*'AngDir (direction of positive angles)'*)
+             DWG_AngBase:PGDBAngleDegDouble;(*'AngBase (zero base angle)'*)
+             DWG_UnitMode:PTUnitMode;(*'UnitMode (display format for units)'*)
+             DWG_InsUnits:PTInsUnits;(*'InsUnits (value for automatic scaling of blocks)'*)
+             DWG_TextSize:PDouble;(*'TextSize (size of new crreated text ents)'*)
              DWG_Snap:PGDBSnap2D;(*'Snap settings'*)
              DWG_GridSpacing:PGDBvertex2D;(*'Grid spacing'*)
              DWG_DrawGrid:PBoolean;(*'Display grid'*)
              DWG_SnapGrid:PBoolean;(*'Snap'*)
+
+             DWG_EditInSubEntry:PBoolean;(*'SubEntities edit'*)
+             DWG_AdditionalGrips:PBoolean;(*'Additional grips'*)
+             DWG_HelpGeometryDraw:PBoolean;(*'Help geometry'*)
              DWG_SelectedObjToInsp:PBoolean;(*'Selected object to inspector'*)
        end;
   {REGISTERRECORDTYPE TLayerControls}
@@ -212,6 +208,7 @@ type
              DISP_OSSize:PDouble;(*'Snap aperture size'*)
              DISP_CursorSize:PInteger;(*'Cursor size'*)
              DISP_CrosshairSize:PDouble;(*'Crosshair size'*)
+             DISP_RemoveSystemCursorFromWorkArea:PBoolean;(*'Remove system cursor from work area'*)
              DISP_DrawZAxis:PBoolean;(*'Show Z axis'*)
              DISP_ColorAxis:PBoolean;(*'Colored cursor'*)
              DISP_GripSize:PInteger;(*'Grip size'*)
@@ -219,20 +216,20 @@ type
              DISP_UnSelectedGripColor:PTGDBPaletteColor;(*'Unselected grip color'*)
              DISP_SelectedGripColor:PTGDBPaletteColor;(*'Selected grip color'*)
              DISP_HotGripColor:PTGDBPaletteColor;(*'Hot grip color'*)
-             DISP_LWDisplayScale:PInteger;(*'LWDisplayScale'*)
-             DISP_DefaultLW:PTGDBLineWeight;(*'DefaultLW'*)
+             DISP_LWDisplayScale:PInteger;(*'Display line weight scale'*)
+             DISP_DefaultLW:PTGDBLineWeight;(*'Default line weight'*)
         end;
   pgdbsysvariable=^gdbsysvariable;
   {REGISTERRECORDTYPE gdbsysvariable}
   gdbsysvariable=record
     PATH:tpath;(*'Paths'*)
-    RD:trd;(*'Render'*)
+    RD:trd;(*'Graphics'*)
     DISP:tdisp;(*'Display'*)
     SYS:tsys;(*'System'*)
     SAVE:tsave;(*'Saving'*)
     DWG:tdwg;(*'Drawing'*)
     DSGN:tdesigning;(*'Design'*)
-    debug:tdebug;(*'Debug'*)
+    debug:tdebug;(*'Debug'*)(*hidden_in_objinsp*)
     INTF:tinterface;(*'Interface'*)
   end;
 {EXPORT-}
