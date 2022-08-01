@@ -3,7 +3,7 @@
 *                                                                           *
 *  This file is part of the ZCAD                                            *
 *                                                                           *
-*  See the file COPYING.modifiedLGPL.txt, included in this distribution,    *
+*  See the file COPYING.txt, included in this distribution,                 *
 *  for details about the copyright.                                         *
 *                                                                           *
 *  This program is distributed in the hope that it will be useful,          *
@@ -166,7 +166,7 @@ var
   DC:TDrawContext;
 begin
   if length(operands)=0 then begin
-    isload:=OpenFileDialog(FileName,1,'csv',CSVFileFilter,'',rsOpenSomething);
+    isload:=OpenFileDialog(FileName,'csv',CSVFileFilter,'',rsOpenSomething);
     if not isload then
       exit(cmd_cancel);
   end else begin

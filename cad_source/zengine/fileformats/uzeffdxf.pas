@@ -3,7 +3,7 @@
 *                                                                           *
 *  This file is part of the ZCAD                                            *
 *                                                                           *
-*  See the file COPYING.modifiedLGPL.txt, included in this distribution,    *
+*  See the file COPYING.txt, included in this distribution,                 *
 *  for details about the copyright.                                         *
 *                                                                           *
 *  This program is distributed in the hope that it will be useful,          *
@@ -2856,6 +2856,7 @@ end;
 begin
      //i2:=0;
      FOC:=0;
-     Ext2LoadProcMap.RegisterExt('dxf','AutoCAD DXF files (*.dxf)',@addfromdxf,true);
+     Ext2LoadProcMap.RegisterExt('dxf','AutoCAD DXF files via zengine (*.dxf)',@addfromdxf,true);
+     Ext2LoadProcMap.DefaultExt:='dxf';
      DefaultFormatSettings.DecimalSeparator:='.';
 end.

@@ -3,7 +3,7 @@
 *                                                                           *
 *  This file is part of the ZCAD                                            *
 *                                                                           *
-*  See the file COPYING.modifiedLGPL.txt, included in this distribution,    *
+*  See the file COPYING.txt, included in this distribution,                 *
 *  for details about the copyright.                                         *
 *                                                                           *
 *  This program is distributed in the hope that it will be useful,          *
@@ -47,6 +47,7 @@ type
    destructor done;virtual;
    procedure RegisterHandleName(Handle:GHandleType;HandleName:GNameType);virtual;
    function GetPLincedData(Handle:GHandleType):PGLincedData;
+   function GetDataIndex(Handle:GHandleType):SizeInt;
    function GetHandleName(Handle:GHandleType):GNameType;
    function CreateOrGetHandleAndSetData(HandleName:GNameType;data:GLincedData):GHandleType;
  end;
@@ -104,6 +105,10 @@ end;
 function GTNamedHandlesWithData<GHandleType,GHandleManipulator,GNameType,GNameManipulator,GLincedData>.GetPLincedData(Handle:GHandleType):PGLincedData;
 begin
   result:=@HandleDataVector.Mutable[GHandleManipulator.GetIndex(Handle)]^.D;
+end;
+function GTNamedHandlesWithData<GHandleType,GHandleManipulator,GNameType,GNameManipulator,GLincedData>.GetDataIndex(Handle:GHandleType):SizeInt;
+begin
+  result:=GHandleManipulator.GetIndex(Handle);
 end;
 function GTNamedHandlesWithData<GHandleType,GHandleManipulator,GNameType,GNameManipulator,GLincedData>.GetHandleName(Handle:GHandleType):GNameType;
 begin

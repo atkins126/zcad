@@ -3,7 +3,7 @@
 *                                                                           *
 *  This file is part of the ZCAD                                            *
 *                                                                           *
-*  See the file COPYING.modifiedLGPL.txt, included in this distribution,    *
+*  See the file COPYING.txt, included in this distribution,                 *
 *  for details about the copyright.                                         *
 *                                                                           *
 *  This program is distributed in the hope that it will be useful,          *
@@ -35,7 +35,7 @@ TControlPointAttrs=set of TControlPointAttr;
 (*varcategoryforoi OBJFUNC='Function:object'*)
 (*varcategoryforoi NMO='Name'*)
 
-(*varcategoryforoi SLCABAGEN='vELEC'*)
+(*varcategoryforoi SLCABAGEN1='Подключение №1'*)
 (*varcategoryforoi DB='Data base'*)
 (*varcategoryforoi GC='Group connection'*)
 (*varcategoryforoi LENGTH='Length params'*)
