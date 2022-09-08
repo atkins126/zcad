@@ -16,8 +16,7 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
 
-unit uzcLog;
-{$INCLUDE zengineconfig.inc}
+unit log;
 {$mode objfpc}{$H+}
 
 interface
@@ -25,12 +24,7 @@ interface
 uses
   sysutils,LazUTF8,
   uzbLogTypes,uzblog,uzbLogDecorators,uzbLogFileBackend,
-  uzbCommandLineParser,uzcCommandLineParser;
-
-const
-  {$IFDEF LINUX}filelog='../../log/zcad_linux.log';{$ENDIF}
-  {$IFDEF WINDOWS}filelog='../../log/zcad_windows.log';{$ENDIF}
-  {$IFDEF DARWIN}filelog='../../log/zcad_darwin.log';{$ENDIF}
+  uzbCommandLineParser,commandline;
 
 var
 //LM_Trace,     //уже определен в uzbLog.TLog // — вывод всего подряд. На тот случай, если Debug не позволяет локализовать ошибку.
@@ -42,24 +36,25 @@ var
   LM_Necessarily// — Вывод в любом случае
   :TLogLevel;
 
-
+  M1,M2:TModuleDesk;
   ProgramLog:TLog;
-  UnitsInitializeLMId,UnitsFinalizeLMId:TModuleDesk;
+
+var
+   TimeDecorator:TTimeDecorator;
+   PositionDecorator:TPositionDecorator;
 
 implementation
 
 var
    FileLogBackend:TLogFileBackend;
-   TimeDecorator:TTimeDecorator;
-   PositionDecorator:TPositionDecorator;
    i:integer;
    mn:TCLStringType;
    ll:TLogLevel;
    LogFileName:string;
-
+   disabledefaultmodule:boolean;
 
 initialization
-  ProgramLog.init; //эти значения теперь по дефолту ('LM_Trace','T');
+  ProgramLog.init;
 
   LM_Debug:=ProgramLog.RegisterLogLevel('LM_Debug','D',LLTInfo);
   LM_Info:=ProgramLog.RegisterLogLevel('LM_Info','I',LLTInfo);
@@ -70,15 +65,9 @@ initialization
 
   ProgramLog.EnterMsgOpt:=lp_IncPos;
   ProgramLog.ExitMsgOpt:=lp_DecPos;
-  ProgramLog.addMsgOptAlias('+',lp_IncPos);
-  ProgramLog.addMsgOptAlias('-',lp_DecPos);
-
 
   ProgramLog.SetDefaultLogLevel(LM_Debug);
   ProgramLog.SetCurrentLogLevel(LM_Warning);
-
-  UnitsInitializeLMId:=ProgramLog.RegisterModule('UnitsInitialization');
-  UnitsFinalizeLMId:=ProgramLog.RegisterModule('UnitsFinalization');
 
   TimeDecorator.init;
   ProgramLog.addDecorator(TimeDecorator);
@@ -87,28 +76,52 @@ initialization
   ProgramLog.addDecorator(PositionDecorator);
 
 
-  LogFileName:=SysToUTF8(ExtractFilePath(paramstr(0)))+filelog;
-  if CommandLineParser.HasOption(LOGFILEHDL)then
-  for i:=0 to CommandLineParser.OptionOperandsCount(LOGFILEHDL)-1 do
-    LogFileName:=CommandLineParser.OptionOperand(LOGFILEHDL,i);
+  LogFileName:=SysToUTF8(ExtractFilePath(paramstr(0)))+'log.txt';
+  if CommandLineParser.HasOption(logfileCLOH)then
+  for i:=0 to CommandLineParser.OptionOperandsCount(logfileCLOH)-1 do
+    LogFileName:=CommandLineParser.OptionOperand(logfileCLOH,i);
 
   FileLogBackend.init(LogFileName);
   ProgramLog.addBackend(FileLogBackend,'%1:s%2:s%0:s',[@TimeDecorator,@PositionDecorator]);
 
   ProgramLog.LogStart;
-  programlog.LogOutFormatStr('Unit "%s" initialization finish, log created',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
 
-  if CommandLineParser.HasOption(LCLHDL)then
-  for i:=0 to CommandLineParser.OptionOperandsCount(LCLHDL)-1 do begin
-    mn:=CommandLineParser.OptionOperand(LCLHDL,i);
+  if CommandLineParser.HasOption(lclCLOH)then
+  for i:=0 to CommandLineParser.OptionOperandsCount(lclCLOH)-1 do begin
+    mn:=CommandLineParser.OptionOperand(lclCLOH,i);
     if programlog.TryGetLogLevelHandle(mn,ll)then
       programlog.SetCurrentLogLevel(ll)
     else
       programlog.LogOutFormatStr('Unable find log level="%s"',[mn],LM_Error);
   end;
 
+  M1:=programlog.RegisterModule('Module1',EDisable);
+  M2:=programlog.RegisterModule('Module2',EDisable);
+  disabledefaultmodule:=false;
+
+  if CommandLineParser.HasOption(dmCLOH)then
+    for i:=0 to CommandLineParser.OptionOperandsCount(dmCLOH)-1 do begin
+      mn:=CommandLineParser.OptionOperand(dmCLOH,i);
+      if uppercase(mn)<>'DEFAULT'then
+        programlog.DisableModule(mn)
+      else
+        disabledefaultmodule:=true;
+    end;
+
+
+  if CommandLineParser.HasOption(emCLOH)then
+    for i:=0 to CommandLineParser.OptionOperandsCount(emCLOH)-1 do begin
+      mn:=CommandLineParser.OptionOperand(emCLOH,i);
+      if uppercase(mn)<>'DEFAULT'then
+        programlog.EnableModule(mn)
+      else
+        disabledefaultmodule:=false;
+    end;
+
+  if disabledefaultmodule then
+    programlog.DisableModule('DEFAULT');
+
 finalization
-  ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
   ProgramLog.LogEnd;
   ProgramLog.done;
   FileLogBackend.done;
