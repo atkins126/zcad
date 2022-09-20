@@ -702,7 +702,7 @@ procedure TZCADMainWindow.ZcadException(Sender: TObject; E: Exception);
 var
   crashreportfilename,errmsg:string;
 begin
-  ProcessException (Sender,ExceptAddr,ExceptFrameCount,ExceptFrames);
+  ProcessException(Sender,RaiseList);
 
   crashreportfilename:=GetCrashReportFilename;
   errmsg:=programname+' raised exception class "'+E.Message+'"'#13#10#13#10'A crash report generated (stack trace and latest log).'#13#10'Please send "'
@@ -2042,19 +2042,12 @@ begin
      ShowAnchorDockOptions(DockMaster);
      result:=cmd_ok;
 end;
-function RaiseException_com(Operands:pansichar):Integer;
-begin
-     raise EExternal.Create('Exception test');
-     result:=cmd_ok;
-end;
 initialization
 begin
   LMD:=programlog.RegisterModule('zcad\gui\uzcmainwindow-gui');
-  CreateCommandFastObjectPlugin(pointer($100),'dbgGetAV',0,0);
-  CreateCommandFastObjectPlugin(@RaiseException_com,'dbgRaiseException',0,0);
   CreateCommandFastObjectPlugin(@DockingOptions_com,'DockingOptions',0,0);
 end
 finalization
-  debugln('{I}[UnitsFinalization] Unit "',{$INCLUDE %FILE%},'" finalization');
+  ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
 end.
 

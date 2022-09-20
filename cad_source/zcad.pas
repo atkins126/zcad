@@ -138,6 +138,7 @@ uses
   uzccomdraw,
   uzccommand_copy,
   uzccommand_move,
+  uzccommand_mirror,
   uzccommand_3dpoly,
   uzccommand_print,
   uzccommand_blockpreviewexport,
@@ -168,7 +169,7 @@ uses
   uzccommand_regen,
   uzccommand_updatepo,
   uzccommand_treestat,
-  uzccommand_copyclip,
+  uzccommand_copyclip,uzccommand_CopyBase,uzccommand_PasteClip,
   uzccommand_multiselect2objinsp,
   uzccommand_selobjchangelayertocurrent,uzccommand_selobjchangelwtocurrent,
   uzccommand_selobjchangecolortocurrent,uzccommand_selobjchangeltypetocurrent,
@@ -232,6 +233,9 @@ uses
   uzccommand_DevDefSync,
   uzccommand_VariablesAdd,
 
+  uzccommand_dbgRaiseException,uzccommand_dbgGetAV,uzccommand_dbgGetOutOfMem,uzccommand_dbgGetStackOverflow,
+  uzccommand_dbgPlaceAllBlocks,
+
   uzcenitiesvariablesextender,uzcExtdrLayerControl,uzcExtdrSmartTextEnt,
 
   {$IFNDEF DARWIN}
@@ -260,8 +264,6 @@ uses
   uzccomops,
   //uzccommaps,
   {$ENDIF}
-  uzcplugins,
-  //zcregisterobjectinspector,
   uzcmainwindow,
   uzcuidialogs,
   uzcstrconsts,
@@ -318,7 +320,6 @@ begin
   {if sysvar.SYS.SYS_IsHistoryLineCreated<>nil then
                                                   sysvar.SYS.SYS_IsHistoryLineCreated^:=true;}
   ZCMsgCallBackInterface.TextMessage(format(rsZCADStarted,[programname,sysvar.SYS.SYS_Version^]),TMWOHistoryOut);
-  gdbplugins.loadplugins(ProgramPath+'PLUGINS\');
 
   SplashForm.TXTOut(rsStartAutorun,false);commandmanager.executefile('*components/autorun.cmd',drawings.GetCurrentDWG,nil);
   if sysparam.notsaved.preloadedfile<>'' then
@@ -326,7 +327,7 @@ begin
                                          commandmanager.executecommand('Load('+sysparam.notsaved.preloadedfile+')',drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
                                          sysparam.notsaved.preloadedfile:='';
                                     end;
-  //убираем срлэш
+  //убираем сплэш
   ZCMsgCallBackInterface.Do_SetNormalFocus;
   removesplash;
 
