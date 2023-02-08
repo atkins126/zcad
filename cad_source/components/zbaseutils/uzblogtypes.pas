@@ -18,32 +18,37 @@
 
 unit uzbLogTypes;
 {$mode objfpc}{$H+}
-{$modeswitch TypeHelpers}{$modeswitch advancedrecords}
 interface
-
-uses
-  gvector,strutils,sysutils{$IFNDEF DELPHI},LazUTF8{$ENDIF},
-  Generics.Collections,uzbnamedhandles,uzbnamedhandleswithdata;
 
 type
   TMsgOpt=LongWord;
   TLogMsg=AnsiString;
-  TModuleDesk=LongInt;
+  TModuleDesk=SizeUInt;
   TModuleDeskNameType=AnsiString;
   TLogLevelType=(LLTInfo,LLTWarning,LLTError);
-  TLogLevel=Byte;
+  TLogLevel=Integer;
   TLogLevelHandleNameType=AnsiString;
+  TLogExtHandle=SizeInt;
   PTLogerBaseBackend=^TLogerBaseBackend;
   TLogerBaseBackend=object
-    procedure doLog(msg:TLogMsg;MsgOptions:TMsgOpt;LogMode:TLogLevel;LMDI:TModuleDesk);virtual;abstract;
-    procedure endLog;virtual;abstract;
+    procedure DoLog(msg:TLogMsg;MsgOptions:TMsgOpt;LogMode:TLogLevel;LMDI:TModuleDesk);virtual;abstract;
+    destructor Done;virtual;
   end;
   PTLogerBaseDecorator=^TLogerBaseDecorator;
   TLogerBaseDecorator=object
     function GetDecor(msg:TLogMsg;MsgOptions:TMsgOpt;LogMode:TLogLevel;LMDI:TModuleDesk):TLogMsg;virtual;abstract;
+    destructor Done;virtual;
   end;
 
 implementation
+
+destructor TLogerBaseDecorator.Done;
+begin
+end;
+
+destructor TLogerBaseBackend.Done;
+begin
+end;
 
 begin
 end.

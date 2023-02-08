@@ -315,16 +315,15 @@ begin
   tempplane.v[3]:=(tempplane.v[3]-param.mousefrustumLCS[4].v[3])/2;
   {курсор фрустума выделения}
   if param.md.mousein then
-  if (param.md.mode and MGetSelectObject) <> 0 then
-  begin
-  _NotUseLCS:=NotUseLCS;
-  NotUseLCS:=true;
-  drawfrustustum(param.mousefrustumLCS,dc);
-  NotUseLCS:=_NotUseLCS;
+  if (param.md.mode and MGetSelectObject) <> 0 then begin
+    dc.drawer.DisableLCS(dc.DrawingContext.matrixs);
+    drawfrustustum(param.mousefrustumLCS,dc);
+    dc.drawer.EnableLCS(dc.DrawingContext.matrixs);
   end;
   {оси курсора}
-  _NotUseLCS:=NotUseLCS;
-  NotUseLCS:=true;
+  {_NotUseLCS:=LCS.NotUseLCS;
+  LCS.NotUseLCS:=true;}
+  dc.drawer.DisableLCS(dc.DrawingContext.matrixs);
   if param.md.mousein then
   if ((param.md.mode)and(MGet3DPoint or MGet3DPointWoOP or MGetControlpoint))<> 0 then
   begin
@@ -531,7 +530,8 @@ begin
   showsnap(DC);
 
  //{$ENDREGION}
- NotUseLCS:=_NotUseLCS;
+ dc.drawer.EnableLCS(dc.DrawingContext.matrixs);
+ //LCS.NotUseLCS:=_NotUseLCS;
   //oglsm.myglMatrixMode(GL_PROJECTION);
   //glLoadIdentity;
   //gdb.GetCurrentDWG.pcamera^.projMatrix:=onematrix;
@@ -563,36 +563,71 @@ end;
 procedure TGeneralViewArea.DrawCSAxis(var DC:TDrawContext);
 var
   td,td2,td22:Double;
+  d2dx,d2dy,d2d:GDBvertex2D;
 begin
   dc.drawer.SetDrawMode(TDM_Normal);
-  CalcOptimalMatrix;
-  if param.CSIcon.axislen<>0 then {переделать}
-  begin
-  td:=param.CSIcon.axislen;
-  td2:=td/5;
-  td22:=td2/3;
 
-  dc.drawer.SetColor(255, 0, 0,255);
-  dc.drawer.DrawLine3DInModelSpace(param.CSIcon.CSIconCoord,param.CSIcon.CSIconX,dc.DrawingContext.matrixs);
-  dc.drawer.DrawLine3DInModelSpace(param.CSIcon.CSIconX,createvertex(param.CSIcon.CSIconCoord.x + td-td2, param.CSIcon.CSIconCoord.y-td22 , param.CSIcon.CSIconCoord.z),dc.DrawingContext.matrixs);
-  dc.drawer.DrawLine3DInModelSpace(param.CSIcon.CSIconX,createvertex(param.CSIcon.CSIconCoord.x + td-td2, param.CSIcon.CSIconCoord.y+td22 , param.CSIcon.CSIconCoord.z),dc.DrawingContext.matrixs);
+  // новая ревлизация в экранных координатах, плывет на мелких объектах
+  {if param.CSIcon.axislen<>0 then begin
+    dc.drawer.startrender(TRM_DisplaySpace,dc.DrawingContext.matrixs);
+    d2dx:=(param.CSIcon.CSX-param.CSIcon.CS0)*0.075;
+    d2dy:=(param.CSIcon.CSY-param.CSIcon.CS0)*0.075;
+    dc.drawer.SetColor(255, 0, 0,255);
+    dc.drawer.DrawLine2DInDCS(param.CSIcon.CS0.x,param.CSIcon.CS0.y,param.CSIcon.CSX.x,param.CSIcon.CSX.Y);
+    d2d:=param.CSIcon.CSX-d2dx*4;
+    dc.drawer.DrawLine2DInDCS(param.CSIcon.CSX.x,param.CSIcon.CSX.y,d2d.x+d2dy.x,d2d.y+d2dy.y);
+    dc.drawer.DrawLine2DInDCS(param.CSIcon.CSX.x,param.CSIcon.CSX.y,d2d.x-d2dy.x,d2d.y-d2dy.y);
 
-  dc.drawer.SetColor(0, 255, 0,255);
-  dc.drawer.DrawLine3DInModelSpace(param.CSIcon.CSIconCoord,param.CSIcon.CSIconY,dc.DrawingContext.matrixs);
-  dc.drawer.DrawLine3DInModelSpace(param.CSIcon.CSIconY,createvertex(param.CSIcon.CSIconCoord.x-td22, param.CSIcon.CSIconCoord.y + td-td2, param.CSIcon.CSIconCoord.z),dc.DrawingContext.matrixs);
-  dc.drawer.DrawLine3DInModelSpace(param.CSIcon.CSIconY,createvertex(param.CSIcon.CSIconCoord.x+td22, param.CSIcon.CSIconCoord.y + td-td2, param.CSIcon.CSIconCoord.z),dc.DrawingContext.matrixs);
+    dc.drawer.SetColor(0, 255, 0,255);
+    dc.drawer.DrawLine2DInDCS(param.CSIcon.CS0.x,param.CSIcon.CS0.y,param.CSIcon.CSY.x,param.CSIcon.CSY.Y);
+    d2d:=param.CSIcon.CSY-d2dy*4;
+    dc.drawer.DrawLine2DInDCS(param.CSIcon.CSY.x,param.CSIcon.CSY.y,d2d.x+d2dx.x,d2d.y+d2dx.y);
+    dc.drawer.DrawLine2DInDCS(param.CSIcon.CSY.x,param.CSIcon.CSY.y,d2d.x-d2dx.x,d2d.y-d2dx.y);
+    dc.drawer.ClearStatesMachine;
 
-  dc.drawer.SetColor(0, 0, 255,255);
-  dc.drawer.DrawLine3DInModelSpace(param.CSIcon.CSIconCoord,param.CSIcon.CSIconZ,dc.DrawingContext.matrixs);
+    dc.drawer.SetColor(0, 0, 255,255);
+    dc.drawer.DrawLine2DInDCS(param.CSIcon.CS0.x,param.CSIcon.CS0.y,param.CSIcon.CSZ.x,param.CSIcon.CSZ.Y);
+    dc.drawer.ClearStatesMachine;
 
-  if IsVectorNul(vectordot(pdwg.GetPcamera.prop.look,ZWCS)) then
-  begin
+    if IsVectorNul(vectordot(pdwg.GetPcamera.prop.look,ZWCS)) then begin
+      d2dx:=(param.CSIcon.CSX-param.CSIcon.CS0)*0.25;
+      d2dy:=(param.CSIcon.CSY-param.CSIcon.CS0)*0.25;
+      d2d:=param.CSIcon.CS0+d2dx+d2dy;
       dc.drawer.SetColor(255, 255, 255,255);
-      dc.drawer.DrawLine3DInModelSpace(createvertex(param.CSIcon.CSIconCoord.x + td2, param.CSIcon.CSIconCoord.y , param.CSIcon.CSIconCoord.z),createvertex(param.CSIcon.CSIconCoord.x + td2, param.CSIcon.CSIconCoord.y+ td2 , param.CSIcon.CSIconCoord.z),dc.DrawingContext.matrixs);
-      dc.drawer.DrawLine3DInModelSpace(createvertex(param.CSIcon.CSIconCoord.x + td2, param.CSIcon.CSIconCoord.y+ td2 , param.CSIcon.CSIconCoord.z),createvertex(param.CSIcon.CSIconCoord.x, param.CSIcon.CSIconCoord.y+ td2 , param.CSIcon.CSIconCoord.z),dc.DrawingContext.matrixs);
-  end;
+      dc.drawer.DrawLine2DInDCS(param.CSIcon.CS0.x+d2dx.x,param.CSIcon.CSX.y+d2dx.y,d2d.x,d2d.y);
+      dc.drawer.DrawLine2DInDCS(param.CSIcon.CS0.x+d2dy.x,param.CSIcon.CSX.y+d2dy.y,d2d.x,d2d.y);
+    end;
+    dc.drawer.ClearStatesMachine;
+  end;}
+
+  // старая ревлизация в модельных координатах, плывет при большом увеличении
+  CalcOptimalMatrix;
+  if param.CSIcon.axislen<>0 then begin
+    td:=param.CSIcon.axislen;
+    td2:=td/5;
+    td22:=td2/3;
+
+    dc.drawer.SetColor(255, 0, 0,255);
+    dc.drawer.DrawLine3DInModelSpace(param.CSIcon.CSIconCoord,param.CSIcon.CSIconX,dc.DrawingContext.matrixs);
+    dc.drawer.DrawLine3DInModelSpace(param.CSIcon.CSIconX,createvertex(param.CSIcon.CSIconCoord.x + td-td2, param.CSIcon.CSIconCoord.y-td22 , param.CSIcon.CSIconCoord.z),dc.DrawingContext.matrixs);
+    dc.drawer.DrawLine3DInModelSpace(param.CSIcon.CSIconX,createvertex(param.CSIcon.CSIconCoord.x + td-td2, param.CSIcon.CSIconCoord.y+td22 , param.CSIcon.CSIconCoord.z),dc.DrawingContext.matrixs);
+
+    dc.drawer.SetColor(0, 255, 0,255);
+    dc.drawer.DrawLine3DInModelSpace(param.CSIcon.CSIconCoord,param.CSIcon.CSIconY,dc.DrawingContext.matrixs);
+    dc.drawer.DrawLine3DInModelSpace(param.CSIcon.CSIconY,createvertex(param.CSIcon.CSIconCoord.x-td22, param.CSIcon.CSIconCoord.y + td-td2, param.CSIcon.CSIconCoord.z),dc.DrawingContext.matrixs);
+    dc.drawer.DrawLine3DInModelSpace(param.CSIcon.CSIconY,createvertex(param.CSIcon.CSIconCoord.x+td22, param.CSIcon.CSIconCoord.y + td-td2, param.CSIcon.CSIconCoord.z),dc.DrawingContext.matrixs);
+
+    dc.drawer.SetColor(0, 0, 255,255);
+    dc.drawer.DrawLine3DInModelSpace(param.CSIcon.CSIconCoord,param.CSIcon.CSIconZ,dc.DrawingContext.matrixs);
+
+    if IsVectorNul(vectordot(pdwg.GetPcamera.prop.look,ZWCS)) then begin
+        dc.drawer.SetColor(255, 255, 255,255);
+        dc.drawer.DrawLine3DInModelSpace(createvertex(param.CSIcon.CSIconCoord.x + td2, param.CSIcon.CSIconCoord.y , param.CSIcon.CSIconCoord.z),createvertex(param.CSIcon.CSIconCoord.x + td2, param.CSIcon.CSIconCoord.y+ td2 , param.CSIcon.CSIconCoord.z),dc.DrawingContext.matrixs);
+        dc.drawer.DrawLine3DInModelSpace(createvertex(param.CSIcon.CSIconCoord.x + td2, param.CSIcon.CSIconCoord.y+ td2 , param.CSIcon.CSIconCoord.z),createvertex(param.CSIcon.CSIconCoord.x, param.CSIcon.CSIconCoord.y+ td2 , param.CSIcon.CSIconCoord.z),dc.DrawingContext.matrixs);
+    end;
   end;
   dc.drawer.ClearStatesMachine;
+
   dc.drawer.SetDrawMode(TDM_Normal);
 end;
 procedure TGeneralViewArea.DrawGrid(var DC:TDrawContext);
@@ -733,9 +768,6 @@ begin
   LPTime:=now;
   needredraw:=param.firstdraw{ or true};
   zTraceLn('{T}TOGLWnd.draw');
-  //programlog.logoutstr('TOGLWnd.draw',0,LM_Trace);
-  //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.draw',lp_IncPos);{$ENDIF}
-
   //-----------------------------------MakeCurrent;{не забыть что обычный контекст не делает себя текущим сам!}
 
   if (sysvarDISPBackGroundColor.r<ClCanalMin)and(sysvarDISPBackGroundColor.g<ClCanalMin)
@@ -890,12 +922,6 @@ begin
                          //if assigned(sysvarRDLastUpdateTime)then
                          sysvarRDLastUpdateTime:=tick*msec;
                     end;
-  {$IFDEF PERFOMANCELOG}
-                       //if needredraw then
-                       //                       log.programlog.LogOutStrFast('Draw time='+inttostr(sysvarRDLastRenderTime),0)
-                       //                   else
-                       //                       log.programlog.LogOutStrFast('ReDraw time='+inttostr(sysvarRDLastUpdateTime),0);
-  {$ENDIF}
   if needredraw then
   //if assigned(SysVarRDImageDegradationEnabled)then
   if SysVarRDImageDegradationEnabled then
@@ -911,7 +937,6 @@ begin
                                                  SysVarRDImageDegradationCurrentDegradationFactor:=0;
   end;
   param.firstdraw := false;
-  //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.draw---{end}',lp_DecPos);{$ENDIF}
 end;
 procedure TGeneralViewArea.showsnap(var DC:TDrawContext);
 var
@@ -1196,7 +1221,6 @@ var
   pucommand:pointer;
 //  fv1: GDBVertex;
 begin
-  //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.DISP_ZoomFactor',lp_incPos);{$ENDIF}
   //gdb.GetCurrentDWG.UndoStack.PushChangeCommand(@gdb.GetCurrentDWG.pcamera^.prop,sizeof(GDBCameraBaseProp));
   //with gdb.GetCurrentDWG.UndoStack.PushCreateTGChangeCommand(gdb.GetCurrentDWG.pcamera^.prop)^ do
   pucommand:=PDWG^.StoreOldCamerapPos;
@@ -1232,7 +1256,6 @@ begin
         //ComitFromObj;
   end;
   doCameraChanged;
-  //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.DISP_ZoomFactor----{end}',lp_decPos);{$ENDIF}
 end;
 
 procedure TGeneralViewArea.SetCameraPosZoom(_pos:gdbvertex;_zoom:Double;finalcalk:Boolean);
@@ -1331,7 +1354,6 @@ var
 //  msg : TMsg;
 
 begin
-  //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.DoMouseWheel',lp_incPos);{$ENDIF}
   smallwheel:=1+(sysvarDISPZoomFactor-1)/10;
   //mpoint := point(mousepos.x - clientorigin.X, mousepos.y - clientorigin.y);
   if {mousein(mpoint)}true then
@@ -1384,7 +1406,6 @@ begin
   inherited;
   handled:=true;
   WaMouseMove(self,[],param.md.mouse.x,param.md.mouse.y);
-  //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.DoMouseWheel----{end}',lp_decPos);{$ENDIF}
 end;
 
 procedure TGeneralViewArea.WaMouseMove(sender:tobject;Shift: TShiftState; X, Y: Integer);
@@ -1395,7 +1416,6 @@ var
   key: Byte;
   //f:TzeUnitsFormat;
 begin
-  //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.Pre_MouseMove',lp_IncPos);{$ENDIF}
   if assigned(mainmousemove)then
                                 mainmousemove;
   KillOHintTimer(self);
@@ -1867,7 +1887,6 @@ var
   //inr:TINRect;
   DC:TDrawContext;
 begin
-  //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.getonmouseobjectbytree',lp_IncPos);{$ENDIF}
   i := 0;
   PDWG.GetOnMouseObj.clear;
   param.SelDesc.OnMouseObject := nil;
@@ -1894,8 +1913,6 @@ begin
   {gdb.GetCurrentDWG.OnMouseObj.clear;
   param.SelDesc.OnMouseObject := nil;
   param.lastonmouseobject:=nil;}
-
-  //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.getonmouseobjectbytree------{end}',lp_DecPos);{$ENDIF}
 end;
 
 procedure TGeneralViewArea.findonmobj(pva: PGDBObjEntityOpenArray; var i: Integer;InSubEntry:Boolean);
@@ -1904,7 +1921,6 @@ var
   ir:itrec;
   _total,_visible,_isonmouse:integer;
 begin
-  //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.findonmobj',lp_IncPos);{$ENDIF}
   if not param.scrollmode then
   begin
   _total:=0;
@@ -1929,10 +1945,8 @@ begin
        end;
   pp:=pva^.iterate(ir);
   until pp=nil;
-  //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('Total:='+inttostr(_total)+'; Visible:='+inttostr(_visible)+'; IsOnMouse:='+inttostr(_isonmouse),0);{$ENDIF}
   end
-  else ;//{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('wa.param.scrollmode=true. exit',0);{$ENDIF}
-  //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.findonmobj-----{end}',lp_DecPos);{$ENDIF}
+  else ;
 end;
 procedure TGeneralViewArea.findonmobjTree(var Node:TEntTreeNode; var i: Integer;InSubEntry:Boolean);
 var
@@ -1940,7 +1954,6 @@ var
   ir:itrec;
   _total,_visible,_isonmouse:integer;
 begin
-  //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.findonmobj',lp_IncPos);{$ENDIF}
   if not param.scrollmode then
   begin
   _total:=0;
@@ -1965,10 +1978,8 @@ begin
        end;
   pp:=Node.nuliterate(ir);
   until pp=nil;
-  //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('Total:='+inttostr(_total)+'; Visible:='+inttostr(_visible)+'; IsOnMouse:='+inttostr(_isonmouse),0);{$ENDIF}
   end
-  else ;//{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('wa.param.scrollmode=true. exit',0);{$ENDIF}
-  //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.findonmobj-----{end}',lp_DecPos);{$ENDIF}
+  else ;
 end;
 procedure TGeneralViewArea.getonmouseobject;
 var
@@ -1977,7 +1988,6 @@ var
   ir:itrec;
   DC:TDrawContext;
 begin
-  //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.getonmouseobject',lp_IncPos);{$ENDIF}
   i := 0;
   PDWG.GetOnMouseObj.clear;
   param.SelDesc.OnMouseObject := nil;
@@ -1999,8 +2009,6 @@ begin
   {gdb.GetCurrentDWG.OnMouseObj.clear;
   wa.param.SelDesc.OnMouseObject := nil;
   wa.param.lastonmouseobject:=nil;}
-
-  //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.getonmouseobject------{end}',lp_DecPos);{$ENDIF}
 end;
 function GetFoctOSnapMode(pv:PGDBObjSubordinated):TOSnapModeControl;
 var
@@ -2297,7 +2305,6 @@ var ccsLBN,ccsRTF:GDBVertex;
     td:Double;
     dc:TDrawContext;
 begin
-  //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.CalcOptimalMatrix',lp_IncPos);{$ENDIF}
   {Если нет примитивов выходим}
   //pdwg:=gdb.GetCurrentDWG;
   //self.MakeCurrent;
@@ -2473,6 +2480,13 @@ begin
   ccsLBN:=InfinityVertex;
   ccsRTF:=MinusInfinityVertex;
   tbb:=proot.VisibleOBJBoundingBox;
+  if IsBBNul(tbb) then
+  begin
+       concatBBandPoint(tbb,param.CSIcon.CSIconCoord);
+       concatBBandPoint(tbb,param.CSIcon.CSIconX);
+       concatBBandPoint(tbb,param.CSIcon.CSIconY);
+       concatBBandPoint(tbb,param.CSIcon.CSIconZ);
+  end;
   //pdwg.ConstructObjRoot.calcbb;
   tbb2:=pdwg.getConstructObjRoot.vp.BoundingBox;
   ConcatBB(tbb,tbb2);
@@ -2553,46 +2567,44 @@ begin
                                       end;
   if param.projtype = ProjParalel then
                                       begin
-                                           if uzegeometry.oneVertexlength(pcamera^.CamCSOffset)>1000000 then
+                                           if {uzegeometry.oneVertexlength(pcamera^.CamCSOffset)>1000000}true then
                                            begin
-                                                CurrentCamCSOffset:=pcamera^.CamCSOffset;
-                                                CurrentCamCSOffsetS:=VertexD2S(CurrentCamCSOffset);
-                                                notuseLCS:=pcamera^.notuseLCS;
+                                                LCS.CurrentCamCSOffset:=pcamera^.CamCSOffset;
+                                                LCS.CurrentCamCSOffsetS:=VertexD2S(LCS.CurrentCamCSOffset);
+                                                LCS.notuseLCS:=pcamera^.notuseLCS;
                                            end
-                                           else notuseLCS:=true;
+                                           else LCS.notuseLCS:=true;
                                       end
                                   else
                                       begin
-                                           notuseLCS:=true;
+                                           LCS.notuseLCS:=true;
                                       end;
-  if notuseLCS then
+  if LCS.notuseLCS then
   begin
         pcamera^.projMatrixLCS:=pcamera^.projMatrix;
         pcamera^.modelMatrixLCS:=pcamera^.modelMatrix;
         pcamera^.frustumLCS:=pcamera^.frustum;
         pcamera^.CamCSOffset:=NulVertex;
-        CurrentCamCSOffset:=nulvertex;
+        LCS.CurrentCamCSOffset:=nulvertex;
   end;
 
 
-  if {pdwg.pcamera^.notuseLCS}notuseLCS then
+  {if LCS.notuseLCS then
   begin
         pcamera^.projMatrixLCS:=pcamera^.projMatrix;
         pcamera^.modelMatrixLCS:=pcamera^.modelMatrix;
         pcamera^.frustumLCS:=pcamera^.frustum;
         pcamera^.CamCSOffset:=NulVertex;
-        CurrentCamCSOffset:=nulvertex;
-  end;
+        LCS.CurrentCamCSOffset:=nulvertex;
+  end;}
+  LCSSave:=LCS;
   SetOGLMatrix;
   end;
-    //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.CalcOptimalMatrix----{end}',lp_DecPos);{$ENDIF}
-  //gdb.GetCurrentDWG.pcamera.getfrustum(@gdb.GetCurrentDWG.pcamera^.modelMatrixLCS,@gdb.GetCurrentDWG.pcamera^.projMatrixLCS,gdb.GetCurrentDWG.pcamera^.clipLCS,gdb.GetCurrentDWG.pcamera^.frustumLCS);
 end;
 procedure TGeneralViewArea.SetOGLMatrix;
 var
     pcam:PGDBObjCamera;
 begin
-  //{$IFDEF PERFOMANCELOG}log.programlog.LogOutStrFast('TOGLWnd.SetOGLMatrix',0);{$ENDIF}
   pcam:=pdwg.GetPcamera;
   pcam^.viewport.v[0]:=0;
   pcam^.viewport.v[1]:=0;
@@ -3218,12 +3230,15 @@ begin
 
 
      pdwg^.myGluProject2(NulVertex,param.CSIcon.CSIconCoord);
+     param.CSIcon.CS0.x:=param.CSIcon.CSIconCoord.x;
+     param.CSIcon.CS0.y:=param.CSIcon.CSIconCoord.y;
 
      if (param.CSIcon.CSIconCoord.x>0)and(param.CSIcon.CSIconCoord.y>0)and(param.CSIcon.CSIconCoord.x<getviewcontrol.clientwidth)and(param.CSIcon.CSIconCoord.y<getviewcontrol.clientheight)
      then
      begin
           pdwg^.myGluProject2(x_Y_zVertex,
                                   cav);
+
           cav.x:=param.CSIcon.CSIconCoord.x-cav.x;
           cav.y:=param.CSIcon.CSIconCoord.y-cav.y;
           param.CSIcon.axislen:=sqrt(cav.x*cav.x+cav.y*cav.y);
@@ -3240,6 +3255,8 @@ begin
                      cav);
           cav.x:=40-cav.x;
           cav.y:=40-cav.y;
+          param.CSIcon.CS0.x:=40;
+          param.CSIcon.CS0.y:=40;
           param.CSIcon.axislen:=sqrt(cav.x*cav.x+cav.y*cav.y);
 
      end;
@@ -3253,15 +3270,15 @@ begin
      param.CSIcon.CSIconZ.z:=param.CSIcon.CSIconZ.z+param.CSIcon.axislen;
 
 
-     pdwg^.myGluProject2(CreateVertex(param.CSIcon.CSIconCoord.x + sizeaxis * pdwg.getpcamera^.prop.zoom, param.CSIcon.CSIconCoord.y, param.CSIcon.CSIconCoord.z),
+     pdwg^.myGluProject2(CreateVertex(param.CSIcon.CSIconCoord.x + param.CSIcon.axislen, param.CSIcon.CSIconCoord.y, param.CSIcon.CSIconCoord.z),
                 CAV);
-     param.CSIcon.csx.x := round(cav.x);
-     param.CSIcon.csx.y := round(cav.y);
-     pdwg^.myGluProject2(CreateVertex(param.CSIcon.CSIconCoord.x, param.CSIcon.CSIconCoord.y + sizeaxis * pdwg.getpcamera^.prop.zoom, param.CSIcon.CSIconCoord.z),
+     param.CSIcon.csx.x := cav.x;
+     param.CSIcon.csx.y := cav.y;
+     pdwg^.myGluProject2(CreateVertex(param.CSIcon.CSIconCoord.x, param.CSIcon.CSIconCoord.y + param.CSIcon.axislen, param.CSIcon.CSIconCoord.z),
                 CAV);
      param.CSIcon.csy.x := round(cav.x);
      param.CSIcon.csy.y := round(cav.y);
-     pdwg^.myGluProject2(CreateVertex(param.CSIcon.CSIconCoord.x, param.CSIcon.CSIconCoord.y, param.CSIcon.CSIconCoord.z + sizeaxis * pdwg.getpcamera^.prop.zoom),
+     pdwg^.myGluProject2(CreateVertex(param.CSIcon.CSIconCoord.x, param.CSIcon.CSIconCoord.y, param.CSIcon.CSIconCoord.z + param.CSIcon.axislen),
                 CAV);
      param.CSIcon.csz.x := round(cav.x);
      param.CSIcon.csz.y := round(cav.y);

@@ -21,7 +21,8 @@ unit uzefont;
 interface
 uses math,uzgldrawerabstract,uzgprimitivescreator,uzgprimitives,
      uzbstrproc,uzctnrVectorBytes,sysutils,uzbtypes,
-     uzefontbase,uzegeometrytypes,uzegeometry,uzglvectorobject,gzctnrVectorTypes;
+     uzefontbase,uzegeometrytypes,uzegeometry,uzglvectorobject,
+     gzctnrVectorTypes,uzeNamedObject;
 type
 {EXPORT+}
 PGDBfont=^GDBfont;
@@ -297,7 +298,7 @@ begin
   PLLPsymbol^.ExternalLLPOffset:=VDCopyParam.LLPrimitivesStartIndex;
   PLLPsymbol^.ExternalLLPCount:=psyminfo.LLPrimitiveCount;
   PLLPsymbol^.SymCode:=_symbol;
-  PLLPsymbol^.SymMatr:=uzegeometry.MatrixMultiplyF(matr,objmatrix);
+  PLLPsymbol^.SymMatr:=uzegeometry.MatrixMultiply{F}(matr,objmatrix);
   VDCopyParam:=font.FontData.GetCopyParam(psyminfo.LLPrimitiveStartIndex,psyminfo.LLPrimitiveCount);
   if VDCopyParam.EID.IndexsIndexMax>0 then
                                           PLLPsymbol^.Attrib:=LLAttrNeedSolid

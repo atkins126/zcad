@@ -14,7 +14,7 @@ uses
   uzeentabstracttext,uzeenttext,uzctnrvectorstrings,uzeentityfactory,uzcsysvars,uzbstrproc,
   uzcinterface,uzccommandsmanager,
   uzccommandsabstract,uzccommandsimpl,uzbtypes,uzcdrawings,uzeutils,uzcutils,sysutils,
-  varmandef,uzctnrVectorBytes,uzeffdxf,uzegeometry,uzeconsts,
+  varmandef,uzctnrVectorBytes,uzegeometry,uzeconsts,
   uzccomdraw,UGDBVisibleOpenArray,uzeentline,uzbpaths,uzeentblockinsert,
   uzegeometrytypes,varman,uzccablemanager,uzeentdevice,uzeentmtext,math,
   uzcenitiesvariablesextender,uzeroot,uzglviewareadata,uzcentcable,UUnitManager,
@@ -1014,7 +1014,7 @@ begin
                         if pvd<>nil then
                         begin
                             //endmat:=pstring(pvd^.Instance)^;
-                            endmat:=pvd^.data.PTD.GetValueAsString(pvd^.data.Addr.Instance);
+                            endmat:=nodeend^.Name+pvd^.data.PTD.GetValueAsString(pvd^.data.Addr.Instance);
                             if isfirst then
                                            begin
                                                 isfirst:=false;

@@ -13,7 +13,7 @@ unit uzccomelectrical;
 
 interface
 uses
-  gzctnrVectorTypes,uzglviewareageneral,uzctranslations,zcobjectchangeundocommand2,
+  gzctnrVectorTypes,uzglviewareageneral,uzcTranslations,gzundoCmdChgMethods,
   zcmultiobjectcreateundocommand,uzeentitiesmanager,uzedrawingdef,
   uzcenitiesvariablesextender,uzgldrawcontext,uzcdrawing,uzcvariablesutils,
   uzcstrconsts,UGDBSelectedObjArray,uzeentityfactory,uzcsysvars,
@@ -144,6 +144,7 @@ var
 {procedure startup;
 procedure finalize;}
 procedure Cable2CableMark(pcd:PTCableDesctiptor;pv:pGDBObjDevice);
+function RegenZEnts_com(operands:TCommandOperands):TCommandResult;
 implementation
 function GetCableMaterial(pcd:PTCableDesctiptor):String;
 var
@@ -1643,7 +1644,7 @@ begin
 
     PTZCADDrawing(drawings.GetCurrentDWG).UndoStack.PushStartMarker('Create cable');
     SetObjCreateManipulator(domethod,undomethod);
-    with PushMultiObjectCreateCommand(PTZCADDrawing(drawings.GetCurrentDWG).UndoStack,tmethod(domethod),tmethod(undomethod),1)^ do
+    with PushMultiObjectCreateCommand(PTZCADDrawing(drawings.GetCurrentDWG).UndoStack,tmethod(domethod),tmethod(undomethod),1) do
     begin
          AddObject(p3dpl);
          comit;
@@ -1846,7 +1847,7 @@ begin
          tmethod(domethod).Data:=p3dpl;
          tmethod(undomethod).Code:=pointer(p3dpl.DeleteVertex);
          tmethod(undomethod).Data:=p3dpl;
-         with PushCreateTGObjectChangeCommand2(PTZCADDrawing(drawings.GetCurrentDWG).UndoStack,polydata,tmethod(domethod),tmethod(undomethod))^ do
+         with GUCmdChgMethods<TPolyData>.CreateAndPush(polydata,domethod,undomethod,(PTZCADDrawing(drawings.GetCurrentDWG).UndoStack),drawings.AfterAutoProcessGDB) do
          begin
               comit;
          end;
@@ -2055,7 +2056,7 @@ begin
                                   else
                                       nodeend:=nodestart;
           puredevstart:=devstart;
-                {$ifndef GenericsContainerNotFinished}psl:=pointer(pt^.tbl.CreateObject);{$endif}
+                psl:=pt^.tbl.CreateObject;
                 psl.init(12);
           repeat
                 devend:='Не присоединено';
@@ -2268,7 +2269,7 @@ begin
   repeat
   if currentgroup^[1]='!' then
               begin
-                   {$ifndef GenericsContainerNotFinished}psl:=pointer(pt^.tbl.CreateObject);{$endif}
+                   psl:=pt^.tbl.CreateObject;
                    //psl:=pointer(pt^.tbl.CreateObject);
                    psl.init(2);
 
@@ -2296,8 +2297,7 @@ begin
 
                    begin
                    PBOMITEM.processed:=true;
-                   {$ifndef GenericsContainerNotFinished}psl:=pointer(pt^.tbl.CreateObject);{$endif}
-                   //psl:=pointer(pt^.tbl.CreateObject);
+                   psl:=pt^.tbl.CreateObject;
                    psl.init(9);
 
                    s:=pdbi^.Position;
@@ -2810,7 +2810,7 @@ begin
 
 
   SetObjCreateManipulator(domethod,undomethod);
-  with PushMultiObjectCreateCommand(PTZCADDrawing(drawings.GetCurrentDWG).UndoStack,tmethod(domethod),tmethod(undomethod),1)^ do
+  with PushMultiObjectCreateCommand(PTZCADDrawing(drawings.GetCurrentDWG).UndoStack,tmethod(domethod),tmethod(undomethod),1) do
   begin
        AddObject(pleader);
        comit;
@@ -3317,14 +3317,13 @@ var
     gr:TGetResult;
 begin
      ZCMsgCallBackInterface.TextMessage('Тест производительности. запасаемя терпением',TMWOHistoryOut);
-     {$IFDEF PERFOMANCELOG}programlog.LogOutStrFast('тест производительности - getonmouseobject*10000',lp_IncPos);{$ENDIF}
      //ts:='$<"йцу",Keys[1],Id[1]> Let $<"&[S]ave (&[v])",Keys[S,V],Id[100]> or $<"&[Q]uit",Keys[Q],Id[101]>';
      //ts:='$<"123",Keys[1],Id[1]>';
      pet:=CMDLinePromptParser.GetTokens('<$<"Команда&[1]",Keys[1],Id[1]>/$<"Команда&[2]",Keys[2],Id[2]>/$<"Команда&[3]",Keys[3],Id[3]>> [$<"&[М]олча𤭢123",Keys[М],Id[4]>]');
      //pet:=CMDLinePromptParser.GetTokens('$<"12&[3]",Keys[1],Id[1]>');
      //pet:=CMDLinePromptParser.GetTokens('фs "ёба" йs "2ёба2" йцу12');
      commandmanager.SetPrompt(pet);
-     commandmanager.ChangeInputMode([GPIempty],[]);
+     commandmanager.ChangeInputMode([IPEmpty],[]);
      pet.Free;
      repeat
        gr:=commandmanager.Get3DPoint('ага',p);
@@ -3337,7 +3336,6 @@ begin
      until gr=GRCancel;
      //for i:=0 to 10000 do
      //       drawings.GetCurrentDWG.wa.getonmouseobject(@drawings.GetCurrentROOT.ObjArray);
-     {$IFDEF PERFOMANCELOG}programlog.LogOutStrFast('тест производительности',lp_DecPos);{$ENDIF}
      ZCMsgCallBackInterface.TextMessage('Конец теста. выходим, смотрим результаты в конце лога.',TMWOHistoryOut);
      //quit_com('');
      result:=cmd_ok;

@@ -25,8 +25,14 @@ uses
   sysutils,
   gvector,
   Generics.Collections,Generics.Defaults,
+  Masks,
   uzbLogTypes,
   uzbHandles,uzbNamedHandles,uzbNamedHandlesWithData,uzbSets;
+
+resourcestring
+  rsLogModuleState='Log module name "%s" state: %s';
+  rsEnabled='Enabled';
+  rsDisabled='Disabled';
 
 const
   MsgDefaultOptions=0;
@@ -37,53 +43,49 @@ type
 
   TMsgOptions=specialize GTSet<TMsgOpt,TMsgOpt>;
 
-  TEntered=record
-    Entered:Boolean;
-    EnteredTo:TLogMsg;
-    LogLevel:TLogLevel;
-    LMDI:TModuleDesk;
-    MsgOptions:TMsgOpt;
-  end;
-
-  TDoEnteredHelper = type helper for TEntered
-    function IfEntered:TEntered;
-  end;
-
-  PTTLogLevelData=^TLogLevelData;
-  TLogLevelData=record
-    LogLevelType:TLogLevelType;
-  end;
-
-  TLogLevelsHandles=specialize GTNamedHandlesWithData<TLogLevel,specialize GTLinearIncHandleManipulator<TLogLevel>,TLogLevelHandleNameType,specialize GTStringNamesUPPERCASE<TLogLevelHandleNameType>,TLogLevelData>;
-
-  TLogLevelAliasDic=specialize TDictionary<AnsiChar,TLogLevel>;
-  TTMsgOptAliasDic=specialize TDictionary<AnsiChar,TMsgOpt>;
-
-  TBackendHandle=Integer;
-
-  TFmtData=record
-    msgFmt:TLogMsg;
-    argsI:array of Integer;
-    argsP:array of PTLogerBaseDecorator
-  end;
-  TLogStampt=LongInt;
-  TFmtResultData=record
-    Fmt:TFmtData;
-    Res:TLogMsg;
-    Stampt:TLogStampt;
-  end;
-
-  IFmtDataComparer=specialize IEqualityComparer<TFmtData>;
-  TFmtDataComparer=class(TInterfacedObject,IFmtDataComparer)
-      function Equals(constref ALeft, ARight: TFmtData): Boolean;
-      function GetHashCode(constref AValue: TFmtData): UInt32;
-    end;
-
-  TEnable=(EEnable,EDisable,EDefault);
-
   TLog=object
     private
       type
+
+        TEntered=record
+          Entered:Boolean;
+          EnteredTo:TLogMsg;
+          LogLevel:TLogLevel;
+          LMDI:TModuleDesk;
+          MsgOptions:TMsgOpt;
+        end;
+
+        PTTLogLevelData=^TLogLevelData;
+        TLogLevelData=record
+          LogLevelType:TLogLevelType;
+        end;
+
+        TLogLevelsHandles=specialize GTNamedHandlesWithData<TLogLevel,specialize GTLinearIncHandleManipulator<TLogLevel>,TLogLevelHandleNameType,specialize GTStringNamesUPPERCASE<TLogLevelHandleNameType>,TLogLevelData>;
+        TLogStampt=LongInt;
+
+        TFmtData=record
+          msgFmt:TLogMsg;
+          argsI:array of Integer;
+          argsP:array of PTLogerBaseDecorator
+        end;
+
+        IFmtDataComparer=specialize IEqualityComparer<TFmtData>;
+        TFmtDataComparer=class(TInterfacedObject,IFmtDataComparer)
+          {todo: убрать $IF когда const попадет в релиз fpc}
+          function Equals({$IF FPC_FULlVERSION>30202}const{$ELSE}constref{$ENDIF}ALeft, ARight: TFmtData): Boolean;
+          function GetHashCode({$IF FPC_FULlVERSION>30202}const{$ELSE}constref{$ENDIF}AValue: TFmtData): UInt32;
+        end;
+
+        TFmtResultData=record
+          Fmt:TFmtData;
+          Res:TLogMsg;
+          Stampt:TLogStampt;
+        end;
+
+        TEnable=(EEnable,EDisable,EDefault);
+        TLogLevelAliasDic=specialize TDictionary<AnsiChar,TLogLevel>;
+        TTMsgOptAliasDic=specialize TDictionary<AnsiChar,TMsgOpt>;
+
         TLogStampter=specialize GTSimpleHandles<TLogStampt,specialize GTHandleManipulator<TLogStampt>>;
         TModuleDeskData=record
           enabled:boolean;
@@ -96,6 +98,8 @@ type
           Stampt:TLogStampt;
           constructor CreateRec(PDD:PTLogerBaseDecorator;s:TLogStampt);
         end;
+
+        TMasks=specialize TVector<TModuleDeskNameType>;
 
         TFmtDatas=specialize TVector<TFmtResultData>;
         TFmtDatasDic=specialize TDictionary<TFmtData,Integer>;
@@ -114,6 +118,7 @@ type
         DefaultLogLevel:TLogLevel;
 
         LogLevelAliasDic:TLogLevelAliasDic;
+        EnabledMasks,DisabledMasks:TMasks;
         ModulesDesks:TModulesDeskHandles;
         NewModuleDesk:TModuleDeskData;
         DefaultModuleDeskIndex:TModuleDesk;
@@ -141,10 +146,11 @@ type
 
       procedure addMsgOptAlias(const ch:AnsiChar;const opt:TMsgOpt);
 
-      function addBackend(var BackEnd:TLogerBaseBackend;fmt:TLogMsg;const args:array of PTLogerBaseDecorator):TBackendHandle;
-      procedure removeBackend(BackEndH:TBackendHandle);
+      function addBackend(var BackEnd:TLogerBaseBackend;fmt:TLogMsg;const args:array of PTLogerBaseDecorator):TLogExtHandle;
+      procedure removeBackend(BackEndH:TLogExtHandle);
 
-      procedure addDecorator(var Decorator:TLogerBaseDecorator);
+      function addDecorator(var Decorator:TLogerBaseDecorator):TLogExtHandle;
+      procedure removeDecorator(DecoratorH:TLogExtHandle);
 
       procedure LogStart;
       procedure LogEnd;
@@ -165,16 +171,23 @@ type
       procedure ZDebugLN(const S: TLogMsg);
       function isTraceEnabled:boolean;
 
+      procedure AddEnableModuleMask(Mask:TModuleDeskNameType);
+      procedure AddDisableModuleMask(Mask:TModuleDeskNameType);
+
       procedure EnableModule(ModuleName:TModuleDeskNameType);overload;
       procedure DisableModule(ModuleName:TModuleDeskNameType);overload;
       procedure EnableModule(LMDI:TModuleDesk);overload;
       procedure DisableModule(LMDI:TModuleDesk);overload;
-      function isModuleEnabled(LMDI:TModuleDesk):Boolean;
       procedure EnableAllModules;
 
       function TryGetLogLevelHandle(LogLevelName:TLogLevelHandleNameType;out LogLevel:TLogLevel):Boolean;
       function GetMutableLogLevelData(LL:TLogLevel):PTTLogLevelData;
       function LogMode2String(LogMode:TLogLevel):TLogLevelHandleNameType;
+      function isModuleEnabled(LMDI:TModuleDesk):Boolean;
+  end;
+
+  TDoEnteredHelper = type helper for TLog.TEntered
+    function IfEntered:TLog.TEntered;
   end;
 
 var
@@ -182,7 +195,7 @@ var
 
 implementation
 
-function TFmtDataComparer.Equals(constref ALeft, ARight: TFmtData): Boolean;
+function TLog.TFmtDataComparer.Equals({$if FPC_FULlVERSION>30202}const{$ELSE}constref{$ENDIF}ALeft, ARight: TFmtData): Boolean;
 var
   i:integer;
 begin
@@ -201,7 +214,7 @@ begin
   Result:=True;
 end;
 
-function TFmtDataComparer.GetHashCode(constref AValue: TFmtData): UInt32;
+function TLog.TFmtDataComparer.GetHashCode({$if FPC_FULlVERSION>30202}const{$ELSE}constref{$ENDIF}AValue: TFmtData): UInt32;
 begin
   Result := BobJenkinsHash(AValue.msgFmt[1],length(AValue.msgFmt)*SizeOf(AValue.msgFmt[1]),0);
   Result := BobJenkinsHash(AValue.argsP[0],length(AValue.argsP)*SizeOf(AValue.argsP[1]),Result);
@@ -214,17 +227,13 @@ begin
   msgFmtIndex:=Index;
 end;
 
-function TDoEnteredHelper.IfEntered:TEntered;
+function TDoEnteredHelper.IfEntered:TLog.TEntered;
 begin
   result.Entered:=Entered;
   Result.EnteredTo:=EnteredTo;
   Result.LogLevel:=LogLevel;
   Result.LMDI:=LMDI;
   Result.MsgOptions:=MsgOptions;
-end;
-function LLD(_LLD:TLogLevelType):TLogLevelData;
-begin
-  result.LogLevelType:=_LLD;
 end;
 function TLog.TryGetLogLevelHandle(LogLevelName:TLogLevelHandleNameType;out LogLevel:TLogLevel):Boolean;
 begin
@@ -318,6 +327,10 @@ begin
   end;
 end;
 function TLog.RegisterLogLevel(LogLevelName:TLogLevelHandleNameType;LLAlias:AnsiChar;_LLD:TLogLevelType):TLogLevel;
+  function LLD(_LLD:TLogLevelType):TLogLevelData;
+  begin
+    result.LogLevelType:=_LLD;
+  end;
 var
   data:TLogLevelData;
 begin
@@ -328,6 +341,8 @@ begin
 end;
 
 function TLog.registermodule(modulename:TModuleDeskNameType;Enbl:TEnable=EDefault):TModuleDesk;
+var
+  i:integer;
 begin
   if not ModulesDesks.TryGetHandle(modulename,result) then
   begin
@@ -336,10 +351,46 @@ begin
       case Enbl of
         EEnable:enabled:=True;
         EDisable:enabled:=False;
-        EDefault:enabled:=NewModuleDesk.enabled;
+        EDefault:begin
+          for i:=0 to DisabledMasks.size-1 do
+            if MatchesMask(modulename,DisabledMasks[i])then begin
+              enabled:=False;
+              exit;
+            end;
+          for i:=0 to EnabledMasks.size-1 do
+            if MatchesMask(modulename,EnabledMasks[i])then begin
+              enabled:=True;
+              exit;
+            end;
+          enabled:=NewModuleDesk.enabled;
+       end;
       end;
     end;
   end;
+end;
+procedure TLog.AddEnableModuleMask(Mask:TModuleDeskNameType);
+var
+  i:integer;
+begin
+  for i:=0 to ModulesDesks.HandleDataVector.Size-1 do
+  if not ModulesDesks.HandleDataVector[i].D.Enabled then
+    if MatchesMask(ModulesDesks.HandleDataVector[I].N,Mask) then begin
+      ModulesDesks.HandleDataVector.Mutable[i]^.D.Enabled:=True;
+      processMsg(format(rsLogModuleState,[ModulesDesks.HandleDataVector[I].N,rsEnabled]),LogModeDefault,LMDIDefault,MsgDefaultOptions)
+    end;
+  EnabledMasks.PushBack(Mask);
+end;
+procedure TLog.AddDisableModuleMask(Mask:TModuleDeskNameType);
+var
+  i:integer;
+begin
+  for i:=0 to ModulesDesks.HandleDataVector.Size-1 do
+  if ModulesDesks.HandleDataVector[i].D.Enabled then
+    if MatchesMask(ModulesDesks.HandleDataVector[I].N,Mask) then begin
+      ModulesDesks.HandleDataVector.Mutable[i]^.D.Enabled:=False;
+      processMsg(format(rsLogModuleState,[ModulesDesks.HandleDataVector[I].N,rsDisabled]),LogModeDefault,LMDIDefault,MsgDefaultOptions)
+    end;
+  DisabledMasks.PushBack(Mask);
 end;
 procedure TLog.enablemodule(modulename:TModuleDeskNameType);
 begin
@@ -380,26 +431,34 @@ begin
 end;
 
 
-procedure TLog.addDecorator(var Decorator:TLogerBaseDecorator);
+function TLog.addDecorator(var Decorator:TLogerBaseDecorator):TLogExtHandle;
 var
   DD:TDecoratorData;
   i:Integer;
 begin
   for i:=0 to Decorators.Size-1 do
     if Decorators.Mutable[i]^.PDecorator=@Decorator then
-      exit;
+      exit(-i);
   DD.CreateRec(@Decorator,LogStampter.GetInitialHandleValue);
+  result:=Decorators.Size;
   Decorators.PushBack(DD);
 end;
 
+procedure TLog.removeDecorator(DecoratorH:TLogExtHandle);
+begin
+  if DecoratorH>=0 then begin
+    if Decorators.Mutable[DecoratorH]^.PDecorator<>nil then
+      Decorators.Mutable[DecoratorH]^.PDecorator:=nil;
+  end
+end;
 
-function TLog.addBackend(var BackEnd:TLogerBaseBackend;fmt:TLogMsg;const args:array of PTLogerBaseDecorator):TBackendHandle;
+function TLog.addBackend(var BackEnd:TLogerBaseBackend;fmt:TLogMsg;const args:array of PTLogerBaseDecorator):TLogExtHandle;
 var
   BD:TLogerBackendData;
   i,j,k:Integer;
   FmtData:TFmtData;
   FmtRData:TFmtResultData;
-  num:integer;
+  num:Integer;
 begin
   if fmt<>'' then begin
     FmtData.msgFmt:=fmt;
@@ -437,18 +496,22 @@ begin
     for i:=0 to Backends.Size-1 do
       if Backends.Mutable[i]^.PBackend=nil then begin
         Backends.Mutable[i]^:=BD;
-        result:=i;
+        result:=-i;
       end;
   end;
   inc(TotalBackendsCount);
 end;
 
-procedure TLog.removeBackend(BackEndH:TBackendHandle);
+procedure TLog.removeBackend(BackEndH:TLogExtHandle);
 begin
-  if Backends.Mutable[BackEndH]^.PBackend<>nil then begin
-    Backends.Mutable[BackEndH]^.PBackend:=nil;
+  if BackEndH>=0 then begin
+    if Backends.Mutable[BackEndH]^.PBackend<>nil then begin
+      Backends.Mutable[BackEndH]^.PBackend:=nil;
+      dec(TotalBackendsCount);
+    end
+  end else
+  if Backends.Mutable[-BackEndH]^.PBackend<>nil then
     dec(TotalBackendsCount);
-  end;
 end;
 
 procedure TLog.processDecoratorData(var DD:TDecoratorData;Stampt:TLogStampt;msg:TLogMsg;LogMode:TLogLevel;LMDI:TModuleDesk;MsgOptions:TMsgOpt);
@@ -499,6 +562,8 @@ constructor TLog.init(TraceModeName:TLogLevelHandleNameType;TraceModeAlias:AnsiC
 begin
   MsgOptAliasDic:=TTMsgOptAliasDic.Create;
   LogLevels.init;
+  EnabledMasks:=TMasks.Create;
+  DisabledMasks:=TMasks.Create;
   ModulesDesks.init;
   LogLevelAliasDic:=TLogLevelAliasDic.create;
   LogStampter.init;
@@ -527,8 +592,15 @@ begin
 end;
 
 procedure TLog.LogEnd;
+var
+  i:integer;
 begin
   processMsg('-------------------------Log ended-------------------------',LogModeDefault,LMDIDefault,MsgDefaultOptions);
+  for i:=0 to ModulesDesks.HandleDataVector.Size-1 do
+  if ModulesDesks.HandleDataVector[i].D.enabled then
+    processMsg(format(rsLogModuleState,[ModulesDesks.HandleDataVector[I].N,rsEnabled]),LogModeDefault,LMDIDefault,MsgDefaultOptions)
+  else
+    processMsg(format(rsLogModuleState,[ModulesDesks.HandleDataVector[I].N,rsDisabled]),LogModeDefault,LMDIDefault,MsgDefaultOptions);
 end;
 
 function TLog.isTraceEnabled:boolean;
@@ -590,11 +662,6 @@ destructor TLog.done;
 var
   i:integer;
 begin
-  for i:=0 to ModulesDesks.HandleDataVector.Size-1 do
-  if ModulesDesks.HandleDataVector[i].D.enabled then
-    processMsg(format('Log module name "%s" state: Enabled',[ModulesDesks.HandleDataVector[I].N]),LogModeDefault,LMDIDefault,MsgDefaultOptions)
-  else
-    processMsg(format('Log module name "%s" state: Disabled',[ModulesDesks.HandleDataVector[I].N]),LogModeDefault,LMDIDefault,MsgDefaultOptions);
   //processMsg('-------------------------Log ended-------------------------',LogModeDefault,LMDIDefault,MsgDefaultOptions);
   LogLevels.done;
   ModulesDesks.done;
@@ -611,6 +678,10 @@ begin
     FreeAndNil(FmtDatasDic);
   if assigned(FmtDatas)then
     FreeAndNil(FmtDatas);
+  if assigned(EnabledMasks)then
+    FreeAndNil(EnabledMasks);
+  if assigned(DisabledMasks)then
+    FreeAndNil(DisabledMasks);
 end;
 
 initialization

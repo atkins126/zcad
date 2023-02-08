@@ -30,7 +30,6 @@ resourcestring
   rsFoundCLOption='Found command line option "%s"';
   rsFoundCLOperand='Found command line operand "%s"';
 const
-  zcaduniqueinstanceid='zcad unique instance';
   zcadgitversion = {$include zcadversion.inc};
 var
   SysDefaultFormatSettings:TFormatSettings;
@@ -124,6 +123,12 @@ begin
         else
           disabledefaultmodule:=true;
       end;
+    if CommandLineParser.HasOption(LEMMHDL)then
+      for i:=0 to CommandLineParser.OptionOperandsCount(LEMMHDL)-1 do
+        programlog.AddEnableModuleMask(CommandLineParser.OptionOperand(LEMMHDL,i));
+    if CommandLineParser.HasOption(LDMMHDL)then
+      for i:=0 to CommandLineParser.OptionOperandsCount(LDMMHDL)-1 do
+        programlog.AddDisableModuleMask(CommandLineParser.OptionOperand(LDMMHDL,i));
 
     //операнды из комстроки, если есть - ищем файл для загрузки
     for i:=0 to CommandLineParser.OperandsCount-1 do begin

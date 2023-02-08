@@ -22,11 +22,11 @@ unit uzccmdinfoform;
 interface
 uses
   uzcLog,Forms,
-  uzcinfoform,
+  uzcSynForm,
   uzcstrconsts;
 
 var
-  InfoFormVar:TInfoForm=nil;
+  InfoFormVar:TSynForm=nil;
 
 procedure createInfoFormVar;
 
@@ -36,7 +36,7 @@ procedure createInfoFormVar;
 begin
   if not assigned(InfoFormVar) then
   begin
-  InfoFormVar:=TInfoForm.create(application.MainForm);
+  InfoFormVar:=TSynForm.create(application.MainForm);
   InfoFormVar.DialogPanel.HelpButton.Hide;
   InfoFormVar.DialogPanel.CancelButton.Hide;
   InfoFormVar.caption:=(rsCAUTIONnoSyntaxCheckYet);

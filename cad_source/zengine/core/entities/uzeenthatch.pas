@@ -23,7 +23,7 @@ uses
   math,
     uzeentityfactory,uzeentsubordinated,uzgldrawcontext,uzedrawingdef,gzctnrVectorTypes,
     uzestyleslayers,uzehelpobj,UGDBSelectedObjArray,
-    uzegeometrytypes,uzeentity,UGDBOutbound2DIArray,UGDBPoint3DArray,uzctnrVectorBytes,
+    uzegeometrytypes,uzeentity,UGDBPoint3DArray,uzctnrVectorBytes,
     uzbtypes,uzeentwithlocalcs,uzeconsts,uzegeometry,uzeffdxfsupport,uzecamera,
     UGDBPolyLine2DArray,uzglviewareadata,uzeTriangulator,
     uzeBoundaryPath,uzeStylesHatchPatterns,gvector,garrayutils;
@@ -146,8 +146,11 @@ begin
     Freemem(pointer(pprojpoint));
   end;
   Path.done;
-  if PPattern<>nil then
+  if PPattern<>nil then begin
     PPattern^.done;
+    Freemem(PPattern);
+  end;
+  PatternName:='';
 end;
 function GDBObjHatch.ObjToString(prefix,sufix:String):String;
 begin
@@ -292,7 +295,7 @@ var
   newdrawlen:Double;
 begin
   if Strokes.Count=0 then
-    Representation.DrawLineWithLT(DC,CreateVertex(p1.x,p1.y,0),CreateVertex(p2.x,p2.y,0),vp)
+    Representation.DrawLineWithoutLT(DC,VectorTransform3D(CreateVertex(p1.x,p1.y,0),ObjMatrix),VectorTransform3D(CreateVertex(p2.x,p2.y,0),ObjMatrix))
   else begin
     dir:=(p2-p1).NormalizeVertex;
     t:=Scale*normalizeT(st*Strokes.LengthFact,Strokes.LengthFact);
@@ -320,11 +323,11 @@ begin
         if newdrawlen<=l then begin
           pp.x:=p.x+dir.x*abs(d);
           pp.y:=p.y+dir.y*abs(d);
-          Representation.DrawLineWithoutLT(DC,VectorTransform3D(CreateVertex(p.x,p.y,0),ObjMatrix),CreateVertex(pp.x,pp.y,0))
+          Representation.DrawLineWithoutLT(DC,VectorTransform3D(CreateVertex(p.x,p.y,0),ObjMatrix),VectorTransform3D(CreateVertex(pp.x,pp.y,0),ObjMatrix))
         end else begin
           pp.x:=p.x+dir.x*(d-(newdrawlen-l));
           pp.y:=p.y+dir.y*(d-(newdrawlen-l));
-          Representation.DrawLineWithoutLT(DC,VectorTransform3D(CreateVertex(p.x,p.y,0),ObjMatrix),CreateVertex(pp.x,pp.y,0));
+          Representation.DrawLineWithoutLT(DC,VectorTransform3D(CreateVertex(p.x,p.y,0),ObjMatrix),VectorTransform3D(CreateVertex(pp.x,pp.y,0),ObjMatrix));
         end;
       end else begin
         pp.x:=p.x-dir.x*d;
@@ -657,15 +660,14 @@ end;
 
 function GDBObjHatch.CalcTrueInFrustum;
 var
-pv1,pv2:pgdbvertex;
+  pv1,pv2:pgdbvertex;
 begin
-      result:=Vertex3D_in_WCS_Array.CalcTrueInFrustum(frustum);
-      if (result=IREmpty)and(Vertex3D_in_WCS_Array.count>3) then
-                                          begin
-                                               pv1:=Vertex3D_in_WCS_Array.getDataMutable(0);
-                                               pv2:=Vertex3D_in_WCS_Array.getDataMutable(Vertex3D_in_WCS_Array.Count-1);
-                                               result:=uzegeometry.CalcTrueInFrustum(pv1^,pv2^,frustum);
-                                          end;
+  result:=Vertex3D_in_WCS_Array.CalcTrueInFrustum(frustum);
+  if (result=IREmpty)and(Vertex3D_in_WCS_Array.count>3) then begin
+    pv1:=Vertex3D_in_WCS_Array.getDataMutable(0);
+    pv2:=Vertex3D_in_WCS_Array.getDataMutable(Vertex3D_in_WCS_Array.Count-1);
+    result:=uzegeometry.CalcTrueInFrustum(pv1^,pv2^,frustum);
+  end;
 end;
 procedure GDBObjHatch.remaponecontrolpoint(pdesc:pcontrolpointdesc);
 var vertexnumber:Integer;

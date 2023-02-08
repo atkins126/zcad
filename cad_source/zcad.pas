@@ -53,7 +53,7 @@ uses
   uzcsysvars,
 
   uzcsysparams,uzcSysInfo,uzcPathMacros,
-  uzbpaths,
+  uzbpaths,uzbCommandLineParser,uzcCommandLineParser,
 
   varman,
   //
@@ -199,7 +199,8 @@ uses
   uzccommand_executefile,
   uzccommand_dbgClipboard,
   uzccommand_import,
-  uzccommand_dbgCmdList,uzccommand_entslist,
+  uzccommand_dbgCmdList,uzccommand_dbgBlocksList,
+  uzccommand_entslist,
   uzccommand_saveoptions,
   uzccommand_showpage,
   uzccommand_options,
@@ -223,6 +224,7 @@ uses
 
   uzccommand_exampleinsertdevice,uzccommand_examplecreatelayer,
   uzccommand_ExampleVarManipulation,
+  uzccommand_exampleconstructtomodalspace,
 
   uzccommand_VarsLink,
 
@@ -235,6 +237,12 @@ uses
 
   uzccommand_dbgRaiseException,uzccommand_dbgGetAV,uzccommand_dbgGetOutOfMem,uzccommand_dbgGetStackOverflow,
   uzccommand_dbgPlaceAllBlocks,
+  uzccommand_Insert,uzccommand_BlockReplace,
+
+  uzccommand_NumDevices,
+
+  uzccommand_tstCmdLinePrompt,
+
 
   uzcenitiesvariablesextender,uzcExtdrLayerControl,uzcExtdrSmartTextEnt,
 
@@ -249,6 +257,8 @@ uses
   uzvelscheme, //создание электрической схемы
   uzvaddconnection, //добавить подключение к устройству
   uzvremoveconnection, //удаление подключения к устройству
+  uzvmanemcom, //управления и обработка полученой электрической модели
+  uzvmanemschemalevelone, //создание одноуровневой схемы
   //**//
   {$ENDIF}
   {$ENDIF}
@@ -288,6 +298,8 @@ resourcestring
 
 var
   lpsh:TLPSHandle;
+  i:integer;
+  scrfile:string;
 
 
 {$R *.res}
@@ -322,11 +334,17 @@ begin
   ZCMsgCallBackInterface.TextMessage(format(rsZCADStarted,[programname,sysvar.SYS.SYS_Version^]),TMWOHistoryOut);
 
   SplashForm.TXTOut(rsStartAutorun,false);commandmanager.executefile('*components/autorun.cmd',drawings.GetCurrentDWG,nil);
-  if sysparam.notsaved.preloadedfile<>'' then
-                                    begin
-                                         commandmanager.executecommand('Load('+sysparam.notsaved.preloadedfile+')',drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
-                                         sysparam.notsaved.preloadedfile:='';
-                                    end;
+  //*components/blockpreviewexport.cmd
+  if CommandLineParser.HasOption(RunScript)then
+    for i:=0 to CommandLineParser.OptionOperandsCount(RunScript)-1 do begin
+      scrfile:=CommandLineParser.OptionOperand(RunScript,i);
+      commandmanager.executefile(scrfile,drawings.GetCurrentDWG,nil);
+    end;
+
+  if sysparam.notsaved.preloadedfile<>'' then begin
+    commandmanager.executecommand('Load('+sysparam.notsaved.preloadedfile+')',drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
+    sysparam.notsaved.preloadedfile:='';
+  end;
   //убираем сплэш
   ZCMsgCallBackInterface.Do_SetNormalFocus;
   removesplash;

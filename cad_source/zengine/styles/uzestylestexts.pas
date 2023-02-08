@@ -20,7 +20,7 @@ unit uzestylestexts;
 {$INCLUDE zengineconfig.inc}
 interface
 uses LCLProc,uzbpaths,uzefontmanager,sysutils,uzbtypes,uzegeometry,
-     uzbstrproc,uzefont,uzestrconsts,UGDBNamedObjectsArray;
+     uzbstrproc,uzefont,uzestrconsts,UGDBNamedObjectsArray,uzeNamedObject;
 type
   //ptextstyle = ^textstyle;
 {EXPORT+}
@@ -56,16 +56,26 @@ GDBTextStyleArray= object(GDBNamedObjectsArray{-}<PGDBTextStyle,GDBTextStyle>{//
                     procedure freeelement(PItem:PT);virtual;
               end;
 {EXPORT-}
+  TTextStyle = class(TNamedObject)
+    public
+      FontFile:String;(*saved_to_shd*)
+      FontFamily:String;(*saved_to_shd*)
+      pfont: PGDBfont;
+      prop:GDBTextStyleProp;(*saved_to_shd*)
+      UsedInLTYPE:Boolean;
+  end;
 implementation
 destructor GDBTextStyle.Done;
 begin
      inherited;
      FontFile:='';
+     FontFamily:='';
 end;
 procedure GDBTextStyleArray.freeelement;
 begin
   PGDBTextStyle(PItem).name:='';
   PGDBTextStyle(PItem).FontFile:='';
+  PGDBTextStyle(PItem).FontFamily:='';
 end;
 constructor GDBTextStyleArray.initnul;
 begin
