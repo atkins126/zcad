@@ -202,15 +202,20 @@ begin
          self.ObjMatrix:=onematrix;
          if pvc^.IsHaveLCS then
                                begin
+                               pvc^.State:=pv^.State+[ESCalcWithoutOwner];
                                pvc^.FormatEntity(drawing,dc);
+                               pvc^.State:=pv^.State-[ESCalcWithoutOwner];
                                end;
          pvc^.transform(m4);
+         pvc^.State:=pv^.State+[ESCalcWithoutOwner];
          pvc^.FormatEntity(drawing,dc);
+         pvc^.State:=pv^.State-[ESCalcWithoutOwner];
 
 
          //pvc^.DXFOut(handle, outhandle);
               pv.rtsave(pvc2);
               pvc.rtsave(pv);
+              pv^.State:=pv^.State+[ESCalcWithoutOwner,ESTemp];
               //pvc^.SaveToDXF(outhandle,drawing,IODXFContext);
 
               //if pv^.IsHaveLCS then
@@ -225,6 +230,7 @@ begin
 
          pvc^.done;
          pvc2.rtsave(pv);
+         pv^.State:=pv^.State-[ESCalcWithoutOwner];
          //pv^.FormatEntity(drawing,dc);
          Freemem(pointer(pvc));
          Freemem(pointer(pvc2));

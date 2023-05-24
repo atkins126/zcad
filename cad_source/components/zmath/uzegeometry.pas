@@ -176,8 +176,10 @@ function CreateReflectionMatrix(plane:DVector4D): DMatrix4D;
 //**Создать 3D вершину
 function CreateVertex(const x,y,z:Double):GDBVertex;inline;
 function CreateVertexFromArray(var counter:integer;const args:array of const):GDBVertex;
-function  CreateDoubleFromArray(var counter:integer;const args:array of const):Double;
-function  CreateStringFromArray(var counter:integer;const args:array of const):String;
+function CreateVertex2DFromArray(var counter:integer;const args:array of const):GDBVertex2D;
+function CreateDoubleFromArray(var counter:integer;const args:array of const):Double;
+function CreateStringFromArray(var counter:integer;const args:array of const):String;
+function CreateBooleanFromArray(var counter:integer;const args:array of const):Boolean;
 //**Создать 2D вершину
 function CreateVertex2D(const x,y:Double):GDBVertex2D;inline;
 function IsPointInBB(const point:GDBvertex; var fistbb:TBoundingBox):Boolean;inline;
@@ -193,10 +195,11 @@ function scalardot(const v1,v2:GDBVertex):Double;//inline;
 function vertexeq(const v1,v2:gdbvertex):Boolean;inline;
 function SQRdist_Point_to_Segment(const p:GDBVertex;const s0,s1:GDBvertex):Double;inline;
 function NearestPointOnSegment(const p:GDBVertex;const s0,s1:GDBvertex):GDBvertex;inline;
-function IsPointEqual(const p1,p2:gdbvertex):boolean;inline;
+function IsPointEqual(const p1,p2:gdbvertex;const _eps:Double=eps):boolean;inline;
 function IsPoint2DEqual(const p1,p2:gdbvertex2D):boolean;inline;
 function IsVectorNul(const p2:gdbvertex):boolean;inline;
 function IsDoubleNotEqual(const d1,d2:Double;const _eps:Double=eps):boolean;inline;
+function IsDoubleEqual(const d1,d2:Double;const _eps:Double=eps):boolean;inline;
 function IsFloatNotEqual(const d1,d2:Single;const _floateps:Single=floateps):boolean;inline;
 
 procedure _myGluProject(const objx,objy,objz:Double;const modelMatrix,projMatrix:PDMatrix4D;const viewport:PIMatrix4; out winx,winy,winz:Double);inline;
@@ -348,9 +351,9 @@ begin
      normalizevertex(oz);
 end;
 
-function IsPointEqual(const p1,p2:gdbvertex):boolean;
+function IsPointEqual(const p1,p2:gdbvertex;const _eps:Double):boolean;
 begin
-     if SqrVertexlength(p1,p2)>sqreps then
+     if SqrVertexlength(p1,p2)>_eps then
                                           result:=false
                                       else
                                           result:=true;
@@ -378,6 +381,14 @@ begin
                        else
                            result:=false;
 end;
+function IsDoubleEqual(const d1,d2:Double;const _eps:Double=eps):boolean;
+begin
+     if abs(d1-d2)>=_eps then
+                           result:=false
+                       else
+                           result:=true;
+end;
+
 function IsFloatNotEqual(const d1,d2:Single;const _floateps:Single=floateps):boolean;
 begin
      if abs(d1-d2)>_floateps then
@@ -1026,7 +1037,7 @@ begin
      y:=p2.y-p1.y;
      result:=x*x+y*y;
 end;
-function MatrixDetInternal(a1, a2, a3, b1, b2, b3, c1, c2, c3:Double):Double;
+function MatrixDetInternal(var a1, a2, a3, b1, b2, b3, c1, c2, c3:Double):Double;
 begin
   Result := a1 * (b2 * c3 - b3 * c2) -
             b1 * (a2 * c3 - a3 * c2) +
@@ -2123,22 +2134,35 @@ begin
      result.y:=y;
      result.z:=z;
 end;
-function  CreateDoubleFromArray(var counter:integer;const args:array of const):Double;
+function CreateDoubleFromArray(var counter:integer;const args:array of const):Double;
 begin
-     case args[counter].VType of
-                       vtInteger:result:=args[counter].VInteger;
-                      vtExtended:result:=args[counter].VExtended^;
-     end;{case}
-     inc(counter);
+  case args[counter].VType of
+    vtInteger:result:=args[counter].VInteger;
+    vtExtended:result:=args[counter].VExtended^;
+  else
+      DebugLn('{E}CreateDoubleFromArray: not Integer, not Extended');
+  end;{case}
+  inc(counter);
 end;
-function  CreateStringFromArray(var counter:integer;const args:array of const):String;
+function CreateBooleanFromArray(var counter:integer;const args:array of const):Boolean;
 begin
-     case args[counter].VType of
-                       vtString:result:=args[counter].VString^;
-                   vtAnsiString:result:=ansistring(args[counter].VAnsiString);
-                //vtUnicodeString:result:=args[counter].VUnicodeString^;
-     end;{case}
-     inc(counter);
+  case args[counter].VType of
+    vtBoolean:result:=args[counter].VBoolean;
+  else
+    DebugLn('{E}CreateStrinBooleanFromArray: not boolean');
+  end;{case}
+  inc(counter);
+end;
+
+function CreateStringFromArray(var counter:integer;const args:array of const):String;
+begin
+  case args[counter].VType of
+    vtString:result:=args[counter].VString^;
+    vtAnsiString:result:=ansistring(args[counter].VAnsiString);
+  else
+    DebugLn('{E}CreateStringFromArray: not String');
+  end;{case}
+  inc(counter);
 end;
 function CreateVertexFromArray(var counter:integer;const args:array of const):GDBVertex;
 var
@@ -2157,6 +2181,19 @@ begin
                                       //programlog.LogOutStr('CreateVertexFromArray: no enough params in args',lp_OldPos,LM_Error);
                                  end;
 
+end;
+
+function CreateVertex2DFromArray(var counter:integer;const args:array of const):GDBVertex2D;
+var
+  len:integer;
+begin
+  len:=high(args);
+  if (counter+1)<=(high(args)) then begin
+    result.x:=CreateDoubleFromArray(counter,args);
+    result.y:=CreateDoubleFromArray(counter,args);
+  end else begin
+    DebugLn('{E}CreateVertex2DFromArray: no enough params in args');
+  end;
 end;
 
 function CreateVertex2D(const x,y:Double):GDBVertex2D;

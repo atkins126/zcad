@@ -30,6 +30,8 @@ taddotrac=procedure (var posr:os_record;const axis:GDBVertex) of object;
 PGDBObjEntity=^GDBObjEntity;
 {-}TSelect2Stage=procedure(PEntity,PGripsCreator:PGDBObjEntity;var SelectedObjCount:Integer)of object;{//}
 {-}TDeSelect2Stage=procedure(PV:PGDBObjEntity;var SelectedObjCount:Integer)of object;{//}
+TEntityState=(ESCalcWithoutOwner,ESTemp);
+{-}TEntityStates=set of TEntityState;{/TEntityStates=Integer;/}
 PTExtAttrib=^TExtAttrib;
 {REGISTERRECORDTYPE TExtAttrib}
 TExtAttrib=record
@@ -48,6 +50,7 @@ GDBObjEntity= object(GDBObjSubordinated)
                     infrustum:TActulity;(*'In frustum'*)(*oi_readonly*)(*hidden_in_objinsp*)
                     PExtAttrib:PTExtAttrib;(*hidden_in_objinsp*)
                     Representation:TZEntityRepresentation;
+                    State:TEntityStates;
                     destructor done;virtual;
                     constructor init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt);
                     constructor initnul(owner:PGDBObjGenericWithSubordinated);
@@ -163,6 +166,7 @@ GDBObjEntity= object(GDBObjSubordinated)
                     procedure correctsublayers(var la:GDBLayerArray);virtual;
                     procedure CopyVPto(var toObj:GDBObjEntity);virtual;
                     function CanSimplyDrawInWCS(const DC:TDrawContext;const ParamSize,TargetSize:Double):Boolean;inline;
+                    function SqrCanSimplyDrawInWCS(const DC:TDrawContext;const ParamSize,TargetSize:Double):Boolean;//inline;
                     procedure FormatAfterDXFLoad(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
                     procedure IterateCounter(PCounted:Pointer;var Counter:Integer;proc:TProcCounter);virtual;
                     class function GetDXFIOFeatures:TDXFEntIODataManager;static;
@@ -201,6 +205,20 @@ begin
                         else
                             exit(false);
 end;
+
+function GDBObjEntity.SqrCanSimplyDrawInWCS(const DC:TDrawContext;const ParamSize,TargetSize:Double):Boolean;
+var
+   templod:Double;
+begin
+     if dc.maxdetail then
+                         exit(true);
+  templod:=(ParamSize)/(dc.DrawingContext.zoom*dc.DrawingContext.zoom);
+  if templod>TargetSize then
+                            exit(true)
+                        else
+                            exit(false);
+end;
+
 
 procedure GDBObjEntity.CopyVPto(var toObj:GDBObjEntity);
 begin
@@ -307,6 +325,7 @@ begin
      self.PExtAttrib:=nil;
      vp.LastCameraPos:=-1;
      vp.color:=ClByLayer;
+     State:=[];
 end;
 function GDBObjEntity.CalcOwner(own:Pointer):Pointer;
 begin
@@ -686,6 +705,9 @@ begin
 end;
 procedure GDBObjEntity.SaveToDXFfollow;
 begin
+  if assigned(EntExtensions) then
+    EntExtensions.RunSaveToDXFfollow(@self,outhandle,drawing,IODXFContext);
+  inherited;
 end;
 procedure GDBObjEntity.SaveToDXFObjXData(var outhandle:TZctnrVectorBytes;var IODXFContext:TIODXFContext);
 begin

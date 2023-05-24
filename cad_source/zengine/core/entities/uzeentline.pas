@@ -241,7 +241,8 @@ begin
   calcbb(dc);
 
   Representation.Clear;
-  Representation.DrawLineWithLT(dc,CoordInWCS.lBegin,CoordInWCS.lEnd,vp);
+  if not (ESTemp in State) then
+    Representation.DrawLineWithLT(dc,CoordInWCS.lBegin,CoordInWCS.lEnd,vp);
   if assigned(EntExtensions)then
     EntExtensions.RunOnAfterEntityFormat(@self,drawing,DC);
 end;
@@ -599,7 +600,7 @@ begin
 end;
 procedure GDBObjLine.SaveToDXF;
 begin
-  SaveToDXFObjPrefix(outhandle,'LINE','AcDbLine',IODXFContext);
+  SaveToDXFObjPrefix(outhandle,dxfName_Line,dxfName_AcDbLine,IODXFContext);
   dxfvertexout(outhandle,10,CoordInOCS.lbegin);
   dxfvertexout(outhandle,11,CoordInOCS.lend);
 end;

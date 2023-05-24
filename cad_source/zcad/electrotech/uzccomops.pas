@@ -225,13 +225,13 @@ begin
      if d.PlaceFirst then
      begin
           old_ENTF_CreateBlockInsert(drawings.GetCurrentROOT,pva,
-                                     drawings.GetCurrentDWG.GetCurrentLayer,drawings.GetCurrentDWG.GetCurrentLType,sysvar.DWG.DWG_CColor^,sysvar.DWG.DWG_CLinew^,
+                                     drawings.GetCurrentDWG.GetCurrentLayer,drawings.GetCurrentDWG.GetCurrentLType,sysvar.DWG.DWG_CLinew^,sysvar.DWG.DWG_CColor^,
                                      docorrecttogrid(Vertexdmorph(basepoint, dir, d.PlaceFirstOffset),norm), scaleblock, angle, name)
      end;
      if d.PlaceLast then
      begin
           old_ENTF_CreateBlockInsert(drawings.GetCurrentROOT,pva,
-                                     drawings.GetCurrentDWG.GetCurrentLayer,drawings.GetCurrentDWG.GetCurrentLType,sysvar.DWG.DWG_CColor^,sysvar.DWG.DWG_CLinew^,
+                                     drawings.GetCurrentDWG.GetCurrentLayer,drawings.GetCurrentDWG.GetCurrentLType,sysvar.DWG.DWG_CLinew^,sysvar.DWG.DWG_CColor^,
                                      docorrecttogrid(Vertexdmorph(basepoint, dir, d.PlaceLastOffset),norm), scaleblock, angle, name)
      end;
      if count>2 then
@@ -241,7 +241,7 @@ begin
          begin
              d.PlaceFirstOffset:=d.PlaceFirstOffset+d.OtherStep;
              old_ENTF_CreateBlockInsert(drawings.GetCurrentROOT,pva,
-                                        drawings.GetCurrentDWG.GetCurrentLayer,drawings.GetCurrentDWG.GetCurrentLType,sysvar.DWG.DWG_CColor^,sysvar.DWG.DWG_CLinew^,
+                                        drawings.GetCurrentDWG.GetCurrentLayer,drawings.GetCurrentDWG.GetCurrentLType,sysvar.DWG.DWG_CLinew^,sysvar.DWG.DWG_CColor^,
                                         docorrecttogrid(Vertexdmorph(basepoint, dir, d.PlaceFirstOffset),norm), scaleblock, angle, name)
          end;
      end;
@@ -429,7 +429,9 @@ begin
   result:=mclick;
   drawings.GetCurrentDWG.ConstructObjRoot.ObjArray.free;
 
-  pl := PGDBObjLine(ENTF_CreateLine(@drawings.GetCurrentDWG.ConstructObjRoot,@drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray,[t3dp.x,t3dp.y,t3dp.z,wc.x,wc.y,wc.z]));
+  pl := PGDBObjLine(ENTF_CreateLine(@drawings.GetCurrentDWG.ConstructObjRoot,@drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray,
+                    drawings.GetCurrentDWG^.GetCurrentLayer,drawings.GetCurrentDWG^.GetCurrentLType,LnWtByLayer,ClByLayer,
+                    t3dp,wc));
   zcSetEntPropFromCurrentDrawingProp(pl);
 
   //pl := pointer(drawings.GetCurrentDWG.ConstructObjRoot.ObjArray.CreateObj(GDBLineID{,drawings.GetCurrentROOT}));
@@ -680,7 +682,7 @@ begin
   UManager.init;
 
   defaultunit.init(DefNumMetric);
-  units.loadunit(SupportPath,InterfaceTranslate,expandpath('*rtl/objcalc/opsmarkdef.pas'),(@defaultunit));
+  units.loadunit(GetSupportPath,InterfaceTranslate,expandpath('*rtl/objcalc/opsmarkdef.pas'),(@defaultunit));
   pcabledesk:=cman.beginiterate(ir);
   if pcabledesk<>nil then
   repeat
@@ -757,7 +759,7 @@ begin
                          p:=@pptnownervarext.entityunit;
                          currentunit.InterfaceUses.PushBackIfNotPresent(p);
 
-                         units.loadunit(SupportPath,InterfaceTranslate,expandpath('*rtl/objcalc/opsmark.pas'),(currentunit));
+                         units.loadunit(GetSupportPath,InterfaceTranslate,expandpath('*rtl/objcalc/opsmark.pas'),(currentunit));
 
                          ProcessedDevices.PushBackData(ptn^.bp.ListPos.Owner);
 
@@ -817,8 +819,8 @@ begin
 
      drawings.AddBlockFromDBIfNeed(drawings.GetCurrentDWG,datname);
      pointer(pv):=old_ENTF_CreateBlockInsert(drawings.GetCurrentROOT,@{drawings.GetCurrentROOT}root.ObjArray,
-                                         drawings.GetCurrentDWG.GetCurrentLayer,drawings.GetCurrentDWG.GetCurrentLType,sysvar.DWG.DWG_CColor^,sysvar.DWG.DWG_CLinew^,
-                                         currentcoord, 1, 0,@datname[1]);
+                                         drawings.GetCurrentDWG.GetCurrentLayer,drawings.GetCurrentDWG.GetCurrentLType,sysvar.DWG.DWG_CLinew^,sysvar.DWG.DWG_CColor^,
+                                         currentcoord, 1, 0,datname);
      dc:=drawings.GetCurrentDWG^.CreateDrawingRC;
      zcSetEntPropFromCurrentDrawingProp(pv);
      pv^.formatentity(drawings.GetCurrentDWG^,dc);
@@ -965,7 +967,7 @@ begin
 
                   drawings.AddBlockFromDBIfNeed(drawings.GetCurrentDWG,'DEVICE_CABLE_MARK');
                   pointer(pv):=old_ENTF_CreateBlockInsert(@drawings.GetCurrentDWG.ConstructObjRoot,@{drawings.GetCurrentROOT.ObjArray}drawings.GetCurrentDWG.ConstructObjRoot.ObjArray,
-                                                      drawings.GetCurrentDWG.GetCurrentLayer,drawings.GetCurrentDWG.GetCurrentLType,sysvar.DWG.DWG_CColor^,sysvar.DWG.DWG_CLinew^,
+                                                      drawings.GetCurrentDWG.GetCurrentLayer,drawings.GetCurrentDWG.GetCurrentLType,sysvar.DWG.DWG_CLinew^,sysvar.DWG.DWG_CColor^,
                                                       currentcoord, 1, 0,'DEVICE_CABLE_MARK');
                   zcSetEntPropFromCurrentDrawingProp(pv);
 
@@ -1233,7 +1235,9 @@ begin
   drawings.GetCurrentDWG.ConstructObjRoot.ObjArray.free;
 
 
-  pl := PGDBObjLine(ENTF_CreateLine(@drawings.GetCurrentDWG.ConstructObjRoot,@drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray,[t3dp.x,t3dp.y,t3dp.z,wc.x,wc.y,wc.z]));
+  pl := PGDBObjLine(ENTF_CreateLine(@drawings.GetCurrentDWG.ConstructObjRoot,@drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray,
+                                    drawings.GetCurrentDWG^.GetCurrentLayer,drawings.GetCurrentDWG^.GetCurrentLType,LnWtByLayer,ClByLayer,
+                                    t3dp,wc));
   zcSetEntPropFromCurrentDrawingProp(pl);
   //pl := pointer(drawings.GetCurrentDWG.ConstructObjRoot.ObjArray.CreateObj(GDBLineID{,drawings.GetCurrentROOT}));
   //GDBObjLineInit(drawings.GetCurrentROOT,pl, drawings.GetCurrentDWG.LayerTable.GetCurrentLayer,sysvar.dwg.DWG_CLinew^, t3dp, wc);

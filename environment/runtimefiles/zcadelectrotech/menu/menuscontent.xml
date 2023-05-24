@@ -6,8 +6,6 @@
       <Separator/>
       <Action Name="ACN_LOAD"/>
       <Action Name="ACN_LOADQS"/>
-      <Separator/>
-      <Action Name="ACN_IMPORT"/>
       <IFONE Сonditions="ActiveDrawing">
         <Separator/>
         <Action Name="ACN_QSAVE"/>
@@ -357,7 +355,9 @@
         <InsertMenu Name="Plan"/>
         <InsertMenu Name="Info"/>
         <InsertMenu Name="Model"/>
+      </IFONE>
         <InsertMenu Name="Settings"/>
+      <IFONE Сonditions="ActiveDrawing">
         <InsertMenu Name="DB"/>
         <InsertMenu Name="Window"/>
       </IFONE>

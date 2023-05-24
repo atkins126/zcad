@@ -164,6 +164,7 @@ begin
     IconOptions.AutoArrange:=True;
     DragMode:=dmAutomatic;
     Parent:=result;
+    BorderStyle:=bsNone;
     OnDblClick:=ZPalettevsIconDoubleClick;
   end;
 end;
@@ -286,8 +287,10 @@ begin
     ImagesWidth:=getAttrValue(TBNode,'ImagesWidth',64);
     Images:=ImagesManager.IconList;
     align:=alClient;
+    BorderSpacing.Top:=4;
     DragMode:=dmAutomatic;
     Parent:=result;
+    BorderStyle:=bsNone;
     OnDblClick:=ZPalettevsIconDoubleClick;
   end;
   PaletteTreeViewFilter.tree:=TZPaletteTreeView(PaletteControl);

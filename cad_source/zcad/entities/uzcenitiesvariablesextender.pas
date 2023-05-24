@@ -24,7 +24,7 @@ uses sysutils,UGDBObjBlockdefArray,uzedrawingdef,uzeentityextender,
      uzbtypes,uzeentsubordinated,uzeentity,uzeblockdef,
      varmandef,Varman,UUnitManager,URecordDescriptor,UBaseTypeDescriptor,
      uzeentitiestree,usimplegenerics,uzeffdxfsupport,uzbpaths,uzcTranslations,
-     gzctnrVectorTypes,uzeBaseExtender,uzgldrawcontext;
+     gzctnrVectorTypes,uzeBaseExtender,uzeconsts,uzgldrawcontext;
 const
   VariablesExtenderName='extdrVariables';
 type
@@ -33,6 +33,7 @@ TBaseVariablesExtender=class(TBaseEntityExtender)
 TVariablesExtender=class(TBaseVariablesExtender)
     entityunit:TObjectUnit;
     pMainFuncEntity:PGDBObjEntity;
+
     DelegatesArray:TEntityArray;
     pThisEntity:PGDBObjEntity;
     class function getExtenderName:string;override;
@@ -52,6 +53,12 @@ TVariablesExtender=class(TBaseVariablesExtender)
     procedure PostLoad(var context:TIODXFLoadContext);override;
 
     function isMainFunction:boolean;
+
+    // возвращает сам себя если
+    function getMainFuncEntity:PGDBObjEntity;
+    //**Если примитив - устройство, тогда возвращает ссылку на устройство. Если примитив - не устройство, тогда возвращает ноль
+    function getMainFuncDevice:PGDBObjDevice;
+
     procedure addDelegate(pDelegateEntity:PGDBObjEntity;pDelegateEntityVarext:TVariablesExtender);
     procedure removeDelegate(pDelegateEntity:PGDBObjEntity;pDelegateEntityVarext:TVariablesExtender);
 
@@ -62,7 +69,7 @@ TVariablesExtender=class(TBaseVariablesExtender)
     class function EntIOLoadUSES(_Name,_Value:String;ptu:PExtensionData;const drawing:TDrawingDef;PEnt:pointer):boolean;
     class function EntIOLoadMainFunction(_Name,_Value:String;ptu:PExtensionData;const drawing:TDrawingDef;PEnt:pointer):boolean;
 
-    procedure SaveToDxf(var outhandle:TZctnrVectorBytes;PEnt:Pointer;var IODXFContext:TIODXFContext);override;
+    procedure SaveToDxfObjXData(var outhandle:TZctnrVectorBytes;PEnt:Pointer;var IODXFContext:TIODXFContext);override;
   end;
 
 var
@@ -72,6 +79,22 @@ implementation
 function TVariablesExtender.isMainFunction:boolean;
 begin
   result:=pMainFuncEntity=nil;
+end;
+
+function TVariablesExtender.getMainFuncEntity:PGDBObjEntity;
+begin
+  if isMainFunction then
+     result:=pThisEntity
+  else
+     result:=pMainFuncEntity;
+end;
+
+//**Если примитив - устройство, тогда возвращает ссылку на устройство. Если примитив - не устройство, тогда возвращает ноль
+function TVariablesExtender.getMainFuncDevice:PGDBObjDevice;
+begin
+  result:=nil;
+  if getMainFuncEntity^.GetObjType=GDBDeviceID then
+     result:=PGDBObjDevice(getMainFuncEntity);
 end;
 
 procedure TVariablesExtender.addDelegate(pDelegateEntity:PGDBObjEntity;pDelegateEntityVarext:TVariablesExtender);
@@ -324,7 +347,7 @@ var
     vardata:TVariablesExtender;
 begin
      vardata:=PGDBObjEntity(PEnt)^.GetExtension<TVariablesExtender>;
-     usedunit:=pointer(units.findunit(SupportPath,InterfaceTranslate,_Value));
+     usedunit:=pointer(units.findunit(GetSupportPath,InterfaceTranslate,_Value));
      if vardata=nil then
      begin
           vardata:=addvariablestoentity(PEnt);
@@ -348,7 +371,7 @@ begin
   result:=true;
 end;
 
-procedure TVariablesExtender.SaveToDxf(var outhandle:TZctnrVectorBytes;PEnt:Pointer;var IODXFContext:TIODXFContext);
+procedure TVariablesExtender.SaveToDxfObjXData(var outhandle:TZctnrVectorBytes;PEnt:Pointer;var IODXFContext:TIODXFContext);
 var
    ishavevars:boolean;
    pvd:pvardesk;

@@ -32,13 +32,13 @@ implementation
 var
   mem:TZctnrVectorBytes;
 initialization;
-  units.loadunit(SupportPath,InterfaceTranslate,expandpath('*rtl/sysvar.pas'),nil);
-  units.loadunit(SupportPath,InterfaceTranslate,expandpath('*rtl/savedvar.pas'),nil);
-  units.loadunit(SupportPath,InterfaceTranslate,expandpath('*rtl/devicebase.pas'),nil);
+  units.loadunit(GetSupportPath,InterfaceTranslate,expandpath('*rtl/sysvar.pas'),nil);
+  units.loadunit(GetSupportPath,InterfaceTranslate,expandpath('*rtl/savedvar.pas'),nil);
+  units.loadunit(GetSupportPath,InterfaceTranslate,expandpath('*rtl/devicebase.pas'),nil);
 
-  SysVarUnit:=units.findunit(SupportPath,InterfaceTranslate,'sysvar');
-  SavedUnit:=units.findunit(SupportPath,InterfaceTranslate,'savedvar');
-  DBUnit:=units.findunit(SupportPath,InterfaceTranslate,'devicebase');
+  SysVarUnit:=units.findunit(GetSupportPath,InterfaceTranslate,'sysvar');
+  SavedUnit:=units.findunit(GetSupportPath,InterfaceTranslate,'savedvar');
+  DBUnit:=units.findunit(GetSupportPath,InterfaceTranslate,'devicebase');
 
   if SysVarUnit<>nil then
   begin
@@ -95,6 +95,7 @@ initialization;
   SysVarUnit.AssignToSymbol(SysVar.INTF.INTF_ThemedLeftToolbars,'INTF_ThemedLeftToolbars');
   SysVarUnit.AssignToSymbol(SysVar.INTF.INTF_ShowDwgTabCloseBurron,'INTF_ShowDwgTabCloseBurron');
   SysVarUnit.AssignToSymbol(SysVar.INTF.INTF_DefaultControlHeight,'INTF_DefaultControlHeight');
+  SysVarUnit.AssignToSymbol(SysVar.INTF.INTF_AppMode,'INTF_AppMode');
 
   SysVarUnit.AssignToSymbol(SysVar.INTF.INTF_OBJINSP_Properties.INTF_ObjInsp_ShowHeaders,'INTF_ObjInsp_ShowHeaders');
   SysVarUnit.AssignToSymbol(SysVar.INTF.INTF_OBJINSP_Properties.INTF_ObjInsp_OldStyleDraw,'INTF_ObjInsp_OldStyleDraw');
@@ -185,6 +186,8 @@ initialization;
   SysVarUnit.AssignToSymbol(SysVar.PATH.Template_File,'PATH_Template_File');
   //s:=SysVar.PATH.Template_File^;
 
+  SysVarUnit.AssignToSymbol(SysVar.PATH.Preload_Path,'PATH_Preload_Path');
+
   SysVarUnit.AssignToSymbol(SysVar.PATH.LayoutFile,'PATH_LayoutFile');
 
   //SysVarUnit.AssignToSymbol(SysVar.PATH.Fonts_Path,'PATH_Fonts');
@@ -196,10 +199,10 @@ initialization;
   end;
 
 
-  units.loadunit(SupportPath,InterfaceTranslate,expandpath('*rtl/cables.pas'),nil);
-  units.loadunit(SupportPath,InterfaceTranslate,expandpath('*rtl/devices.pas'),nil);
-  units.loadunit(SupportPath,InterfaceTranslate,expandpath('*rtl/connectors.pas'),nil);
-  units.loadunit(SupportPath,InterfaceTranslate,expandpath('*rtl/styles/styles.pas'),nil);
+  units.loadunit(GetSupportPath,InterfaceTranslate,expandpath('*rtl/cables.pas'),nil);
+  units.loadunit(GetSupportPath,InterfaceTranslate,expandpath('*rtl/devices.pas'),nil);
+  units.loadunit(GetSupportPath,InterfaceTranslate,expandpath('*rtl/connectors.pas'),nil);
+  units.loadunit(GetSupportPath,InterfaceTranslate,expandpath('*rtl/styles/styles.pas'),nil);
 
   //units.loadunit(expandpath('*rtl\objdefunits\objname.pas'),nil);
   //units.loadunit(expandpath('*rtl\objdefunits\blocktype.pas'),nil);

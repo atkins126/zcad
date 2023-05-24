@@ -43,7 +43,7 @@ TZCADDrawing= object(TSimpleDrawing)
            procedure onUndoRedo;
            procedure onUndoRedoDataOwner(PDataOwner:Pointer);
 
-           //procedure SetCurrentDWG;virtual;
+           procedure SetCurrentDWG;virtual;
            function StoreOldCamerapPos:Pointer;virtual;
            procedure StoreNewCamerapPos(command:Pointer);virtual;
            //procedure SetEntFromOriginal(_dest,_source:PGDBObjEntity;PCD_dest,PCD_source:PTDrawingPreCalcData);
@@ -136,10 +136,10 @@ begin
                                             sysvar.DWG.DWG_UnitMode^:=f.umode;
 end;
 
-{procedure TZCADDrawing.SetCurrentDWG();
+procedure TZCADDrawing.SetCurrentDWG();
 begin
   drawings.SetCurrentDWG(@self);
-end;}
+end;
 function TZCADDrawing.StoreOldCamerapPos:Pointer;
 begin
      result:=TGDBCameraBasePropChangeCommand.CreateAndPushIfNeed(UndoStack,GetPcamera^.prop,nil,nil)
@@ -257,14 +257,14 @@ begin
   pdwgwarsunit^.CreateFixedVariable('DWG_TextSize','Double',@TextSize);
 
   if preloadedfile1<>'' then
-  DWGUnits.loadunit(SupportPath,InterfaceTranslate,expandpath({'*rtl/dwg/DrawingDeviceBase.pas')}preloadedfile1),nil);
+  DWGUnits.loadunit(GetSupportPath,InterfaceTranslate,expandpath({'*rtl/dwg/DrawingDeviceBase.pas')}preloadedfile1),nil);
   if preloadedfile2<>'' then
-  DWGUnits.loadunit(SupportPath,InterfaceTranslate,expandpath({'*rtl/dwg/DrawingVars.pas'}preloadedfile2),nil);
-  DWGDBUnit:=DWGUnits.findunit(SupportPath,InterfaceTranslate,DrawingDeviceBaseUnitName);
+  DWGUnits.loadunit(GetSupportPath,InterfaceTranslate,expandpath({'*rtl/dwg/DrawingVars.pas'}preloadedfile2),nil);
+  DWGDBUnit:=DWGUnits.findunit(GetSupportPath,InterfaceTranslate,DrawingDeviceBaseUnitName);
 
   pcam:=nil;
   pvd:=nil;
-  pdwgwarsunit:=DWGUnits.findunit(SupportPath,InterfaceTranslate,'DrawingVars');
+  pdwgwarsunit:=DWGUnits.findunit(GetSupportPath,InterfaceTranslate,'DrawingVars');
   if assigned(pdwgwarsunit) then
                                 pvd:=pdwgwarsunit.InterfaceVariables.findvardesc('camera');
   if pvd<>nil then

@@ -17,27 +17,17 @@
 }
 
 program zcad;
-//файл с объявлениями директив компилятора - должен быть подключен во все файлы проекта
-{$INCLUDE zengineconfig.inc}
-
-{$IFDEF FPC}
-  {$CODEPAGE UTF8}
-{$endif}
-
-{$IFDEF WINDOWS}
-  {$IFDEF FPC}
-    {$ifdef cpu32}
-      {$setpeflags $20} //winnt.h:#define IMAGE_FILE_LARGE_ADDRESS_AWARE       0x0020  // App can handle >2gb addresses
-    {$endif}
-  {$ENDIF}
-{$ENDIF}
 
 {$IFNDEF LINUX}
   {$APPTYPE GUI}
 {$ENDIF}
 
-{$ifdef WIN64} {$imagebase $400000} {$endif}
+//файл с объявлениями директив компилятора - должен быть подключен во все файлы проекта
+{$INCLUDE zengineconfig.inc}
 
+//zcad/zcadelectrotech compile mode
+//если он отсутствует см. https://github.com/zamtmn/zcad/blob/master/cad_source/docs/userguide/locale/ru/for_developers/building_from_sources.adoc
+//if missing see https://github.com/zamtmn/zcad/blob/master/BUILD_FROM_SOURCES.md
 {$INCLUDE buildmode.inc}
 
 uses
@@ -76,6 +66,9 @@ uses
   uzcregsystempas,//loading rtl/system.pas
   {$INCLUDE allgeneratedfiles.inc}//correct defs in system.pas
   uzcregother,//setup SysVar
+
+  uMetaDarkStyle,uDarkStyleSchemes,uDarkStyleSchemesLoader,
+
   UUnitManager,
   uzefontmanager,
   uzeffshx,uzeffttf,uzeffLibreDWG,uzeffLibreDWG2Ents,
@@ -198,7 +191,6 @@ uses
   uzccommand_dbgmemsummary,
   uzccommand_executefile,
   uzccommand_dbgClipboard,
-  uzccommand_import,
   uzccommand_dbgCmdList,uzccommand_dbgBlocksList,
   uzccommand_entslist,
   uzccommand_saveoptions,
@@ -231,7 +223,7 @@ uses
   uzccommand_text,
   uzccommand_exporttexttocsv,
   uzccommand_dataexport,uzccommand_dataimport,
-  uzccommand_extdrentslist,uzccommand_extdralllist,uzccommand_extdradd,
+  uzccommand_extdrentslist,uzccommand_extdralllist,uzccommand_extdrAdd,uzccommand_extdrRemove,
   uzccommand_DevDefSync,
   uzccommand_VariablesAdd,
 
@@ -242,6 +234,9 @@ uses
   uzccommand_NumDevices,
 
   uzccommand_tstCmdLinePrompt,
+  uzccommand_explDbCheck,
+
+  uzccommand_cfgAddSupportPath,
 
 
   uzcenitiesvariablesextender,uzcExtdrLayerControl,uzcExtdrSmartTextEnt,
@@ -259,6 +254,7 @@ uses
   uzvremoveconnection, //удаление подключения к устройству
   uzvmanemcom, //управления и обработка полученой электрической модели
   uzvmanemschemalevelone, //создание одноуровневой схемы
+  uzvmanemdialogcom,//запуск генератора схемы через диалоговое окно
   //**//
   {$ENDIF}
   {$ENDIF}
@@ -290,7 +286,6 @@ uses
 
   uzcinterface,
   uzccommand_dbgappexplorer,
-  {$IFDEF WINDOWS}{$IFDEF LCLQT5}uDarkStyle,{$ENDIF}{$ENDIF}
   uzelongprocesssupport;
 
 resourcestring
@@ -300,7 +295,6 @@ var
   lpsh:TLPSHandle;
   i:integer;
   scrfile:string;
-
 
 {$R *.res}
 
@@ -326,14 +320,18 @@ begin
     Application.MainFormOnTaskBar:=true;
   {$ENDIF}
   //создание окна программы
-  {$IFDEF WINDOWS}{$IFDEF LCLQT5}uDarkStyle.ApplyDarkStyle;{$ENDIF}{$ENDIF}
+  {$IF DEFINED(MSWINDOWS)}
+  ApplyMetaDarkStyle(DefaultDark);
+  {$ENDIF}
   Application.CreateForm(TZCADMainWindow,ZCADMainWindow);
   ZCADMainWindow.show;
   {if sysvar.SYS.SYS_IsHistoryLineCreated<>nil then
                                                   sysvar.SYS.SYS_IsHistoryLineCreated^:=true;}
   ZCMsgCallBackInterface.TextMessage(format(rsZCADStarted,[programname,sysvar.SYS.SYS_Version^]),TMWOHistoryOut);
+  application.ProcessMessages;
 
-  SplashForm.TXTOut(rsStartAutorun,false);commandmanager.executefile('*components/autorun.cmd',drawings.GetCurrentDWG,nil);
+  //SplashForm.TXTOut(rsStartAutorun,false);commandmanager.executefile('*components/autorun.cmd',drawings.GetCurrentDWG,nil);
+  FromDirsIterator(sysvar.PATH.Preload_Path^,'*.cmd','autorun.cmd',RunCmdFile,nil);
   //*components/blockpreviewexport.cmd
   if CommandLineParser.HasOption(RunScript)then
     for i:=0 to CommandLineParser.OptionOperandsCount(RunScript)-1 do begin

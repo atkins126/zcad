@@ -710,7 +710,7 @@ begin
     //создаем матрицу для перемещения по оси У на +15
     t_matrix:=uzegeometry.CreateTranslationMatrix(createvertex(0,15,0));
     //ищем модуль с переменными дефолтными переменными для представителя устройства
-    pu:=units.findunit(SupportPath,InterfaceTranslate,'uentrepresentation');
+    pu:=units.findunit(GetSupportPath,InterfaceTranslate,'uentrepresentation');
     //эта команда работает после указания пользователем точки вставки
     //смещение первого вставляемого элемента nulvertex
     currentcoord:=nulvertex;
@@ -1358,7 +1358,9 @@ begin
   begin
   dc:=drawings.GetCurrentDWG^.CreateDrawingRC;
     Prompt('Вторая точка:');
-    New_line := PGDBObjLine(ENTF_CreateLine(@drawings.GetCurrentDWG^.ConstructObjRoot,@drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray,[wc.x,wc.y,wc.z,wc.x,wc.y,wc.z]));
+    New_line := PGDBObjLine(ENTF_CreateLine(@drawings.GetCurrentDWG^.ConstructObjRoot,@drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray,
+                                            drawings.GetCurrentDWG^.GetCurrentLayer,drawings.GetCurrentDWG^.GetCurrentLType,LnWtByLayer,ClByLayer,
+                                            wc,wc));
     zcSetEntPropFromCurrentDrawingProp(New_line);
     //New_line := Pointer(drawings.GetCurrentDWG.ConstructObjRoot.ObjArray.CreateObj(GDBLineID{,drawings.GetCurrentROOT}));
     //GDBObjLineInit(drawings.GetCurrentROOT,New_line,drawings.GetCurrentDWG.LayerTable.GetCurrentLayer,sysvar.dwg.DWG_CLinew^,wc,wc);
@@ -1431,7 +1433,7 @@ begin
                  zcSetEntPropFromCurrentDrawingProp(TempNet);
                  drawings.standardization(TempNet,GDBNetID);
                  ptempnetvarext:=TempNet^.GetExtension<TVariablesExtender>;
-                 ptempnetvarext.entityunit.copyfrom(units.findunit(SupportPath,InterfaceTranslate,'trace'));
+                 ptempnetvarext.entityunit.copyfrom(units.findunit(GetSupportPath,InterfaceTranslate,'trace'));
                  pvd:=ptempnetvarext.entityunit.FindVariable('NMO_Suffix');
                  pstring(pvd^.data.Addr.Instance)^:=inttostr(drawings.GetCurrentDWG.numerator.getnumber(UNNAMEDNET,SysVar.DSGN.DSGN_TraceAutoInc^));
                  pvd:=ptempnetvarext.entityunit.FindVariable('NMO_Prefix');
@@ -1622,7 +1624,7 @@ begin
 
     //uunitmanager.units.loadunit(expandpath('*blocks\el\cable.pas'),@p3dpl^.ou);
     pcablevarext:=p3dpl^.GetExtension<TVariablesExtender>;
-    pcablevarext.entityunit.copyfrom(units.findunit(SupportPath,InterfaceTranslate,'cable'));
+    pcablevarext.entityunit.copyfrom(units.findunit(GetSupportPath,InterfaceTranslate,'cable'));
     //pvd:=p3dpl^.ou.FindVariable('DB_link');
     //pstring(pvd^.Instance)^:='Кабель ??';
 
@@ -1706,11 +1708,11 @@ begin
                  begin
                       if addfirstpoint then
                         cable^.AddVertex(firstpoint);
-                      if not IsPointEqual(tw1,firstpoint) then
+                      if not IsPointEqual(tw1,firstpoint,sqreps) then
                         AddPolySegmentFromConnIfZnotMatch(firstpoint,tw1,cable);
                       tw2:=NearestPointOnSegment(lastpoint,l1.CoordInWCS.lBegin,l1.CoordInWCS.lEnd);
                       cable^.AddVertex(tw2);
-                      if not IsPointEqual(tw2,lastpoint) then
+                      if not IsPointEqual(tw2,lastpoint,sqreps) then
                         AddPolySegmentToConnIfZnotMatch(tw2,lastpoint,cable);
                  end
              else
@@ -1721,14 +1723,14 @@ begin
                       PTrace.graf.FindPath(tw1,tw2,l1,l2,pa);
                       if addfirstpoint then
                       cable^.AddVertex(firstpoint);
-                      if not IsPointEqual(tw1,firstpoint) then
+                      if not IsPointEqual(tw1,firstpoint,sqreps) then
                         AddPolySegmentFromConnIfZnotMatch(firstpoint,tw1,cable);
                                                           //cable^.AddVertex(tw1);
                       pa.copyto(cable.VertexArrayInOCS);
                       //firstpoint:=pgdbvertex(cable^.VertexArrayInWCS.getDataMutable(cable^.VertexArrayInWCS.Count-1))^;
                       //if not IsPointEqual(tw2,firstpoint) then
                         cable^.AddVertex(tw2);
-                      if not IsPointEqual(tw2,lastpoint) then
+                      if not IsPointEqual(tw2,lastpoint,sqreps) then
                         AddPolySegmentToConnIfZnotMatch(tw2,lastpoint,cable);
                                                      //cable^.AddVertex(lastpoint);
                       pa.done;
@@ -1763,11 +1765,11 @@ begin
                begin
                  if addfirstpoint then
                    cable^.AddVertex(firstpoint);
-                 if not IsPointEqual(tw1,firstpoint) then
+                 if not IsPointEqual(tw1,firstpoint,sqreps) then
                    AddPolySegmentFromConnIfZnotMatch(firstpoint,tw1,cable);
                  tw2:=NearestPointOnSegment(lastpoint,l1.CoordInWCS.lBegin,l1.CoordInWCS.lEnd);
                  cable^.AddVertex(tw2);
-                 if not IsPointEqual(tw2,lastpoint) then
+                 if not IsPointEqual(tw2,lastpoint,sqreps) then
                    AddPolySegmentToConnIfZnotMatch(tw2,lastpoint,cable);
                end
            else
@@ -1778,7 +1780,7 @@ begin
                     PTrace.graf.FindPath(tw1,tw2,l1,l2,pa);
                     if addfirstpoint then
                     cable^.AddVertex(firstpoint);
-                    if not IsPointEqual(tw1,firstpoint) then
+                    if not IsPointEqual(tw1,firstpoint,sqreps) then
                       AddPolySegmentFromConnIfZnotMatch(firstpoint,tw1,cable);
 
                     //pa.copyto(@cable.VertexArrayInOCS);
@@ -1811,7 +1813,7 @@ begin
                     //firstpoint:=pgdbvertex(cable^.VertexArrayInWCS.getDataMutable(cable^.VertexArrayInWCS.Count-1))^;
                     //if not IsPointEqual(tw2,firstpoint) then
                       tcable^.AddVertex(tw2);
-                    if not IsPointEqual(tw2,lastpoint) then
+                    if not IsPointEqual(tw2,lastpoint,sqreps) then
                       AddPolySegmentToConnIfZnotMatch(tw2,lastpoint,tcable);
                     pa.done;
                end;
@@ -2262,7 +2264,7 @@ begin
                      pt^.ptablestyle:=drawings.GetCurrentDWG.TableStyleTable.getAddres('Spec');
                      pt^.tbl.free;
 
-  pdbu:=PTZCADDrawing(drawings.GetCurrentDWG).DWGUnits.findunit(SupportPath,InterfaceTranslate,DrawingDeviceBaseUnitName);
+  pdbu:=PTZCADDrawing(drawings.GetCurrentDWG).DWGUnits.findunit(GetSupportPath,InterfaceTranslate,DrawingDeviceBaseUnitName);
   currentgroup:=MainSpecContentFormat.beginiterate(ir_inscf);
   if currentgroup<>nil then
   if length(currentgroup^)>1 then
@@ -2801,7 +2803,7 @@ begin
 
   pcablevarext:=pleader^.GetExtension<TVariablesExtender>;
   if pcablevarext<>nil then
-    pcablevarext.entityunit.copyfrom(units.findunit(SupportPath,InterfaceTranslate,'elleader'));
+    pcablevarext.entityunit.copyfrom(units.findunit(GetSupportPath,InterfaceTranslate,'elleader'));
 
   zcSetEntPropFromCurrentDrawingProp(pleader);
   drawings.standardization(pleader,GDBELleaderID);
@@ -2944,7 +2946,7 @@ begin
   result.init(drawings.GetCurrentROOT,nil,0);
   //result := Pointer(drawings.GetCurrentROOT.ObjArray.CreateInitObj(GDBCableID,drawings.GetCurrentROOT));
   pentvarext:=result^.GetExtension<TVariablesExtender>;
-  pentvarext.entityunit.copyfrom(units.findunit(SupportPath,InterfaceTranslate,'cable'));
+  pentvarext.entityunit.copyfrom(units.findunit(GetSupportPath,InterfaceTranslate,'cable'));
   pvd:=pentvarext.entityunit.FindVariable('NMO_Suffix');
   pstring(pvd^.data.Addr.Instance)^:='';
   pvd:=pentvarext.entityunit.FindVariable('NMO_Prefix');
@@ -3026,7 +3028,7 @@ begin
         repeat
               pointer(nline):=net.GetNearestLine(riser.P_insert_in_WCS);
               np:=NearestPointOnSegment(riser.P_insert_in_WCS,nline.CoordInWCS.lBegin,nline.CoordInWCS.lEnd);
-              if IsPointEqual(np,riser.P_insert_in_WCS)then
+              if IsPointEqual(np,riser.P_insert_in_WCS,sqreps)then
               begin
                    net.riserarray.PushBackData(riser);
               end;
@@ -3057,7 +3059,7 @@ begin
                  begin
                                            begin
                                            s:=ExpandPath(operands);
-                                           s:=FindInSupportPath(SupportPath,operands);
+                                           s:=FindInSupportPath(GetSupportPath,operands);
                                            end;
                  end;
   isload:=FileExists(utf8tosys(s));
@@ -3156,12 +3158,14 @@ begin
                                                                  processednets.PushBackData(net2);
                                                             end;
 
-                                                                New_line:=PGDBObjLine(ENTF_CreateLine(drawings.GetCurrentROOT,{@drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray}nil,[riser.P_insert_in_WCS.x,riser.P_insert_in_WCS.y,riser.P_insert_in_WCS.z,riser2.P_insert_in_WCS.x,riser2.P_insert_in_WCS.y,riser2.P_insert_in_WCS.z]));
+                                                                New_line:=PGDBObjLine(ENTF_CreateLine(drawings.GetCurrentROOT,nil,
+                                                                                                      drawings.GetCurrentDWG^.GetCurrentLayer,drawings.GetCurrentDWG^.GetCurrentLType,LnWtByLayer,ClByLayer,
+                                                                                                      riser.P_insert_in_WCS,riser2.P_insert_in_WCS));
                                                                 zcSetEntPropFromCurrentDrawingProp(New_line);
                                                                 plinevarext:=New_line^.GetExtension<TVariablesExtender>;
                                                                 if plinevarext=nil then
                                                                                        plinevarext:=AddVariablesToEntity(New_line);
-                                                                plinevarext.entityunit.copyfrom(units.findunit(SupportPath,InterfaceTranslate,'_riserlink'));
+                                                                plinevarext.entityunit.copyfrom(units.findunit(GetSupportPath,InterfaceTranslate,'_riserlink'));
                                                                 vd:=plinevarext.entityunit.FindVariable('LengthOverrider');
 
                                                                 pvn :=FindVariableInEnt(riser,'Elevation');
@@ -3460,7 +3464,7 @@ procedure startup;
   // s:String;
 begin
   MainSpecContentFormat.init(100);
-  MainSpecContentFormat.loadfromfile(FindInSupportPath(SupportPath,'main.sf'));
+  MainSpecContentFormat.loadfromfile(FindInSupportPath(GetSupportPath,'main.sf'));
   CreateCommandFastObjectPlugin(@RegenZEnts_com,'RegenZEnts',CADWG,0);
   Wire.init('El_Wire',0,0);
   commandmanager.CommandRegister(@Wire);

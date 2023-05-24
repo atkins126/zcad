@@ -41,6 +41,8 @@ const
   vGInfoVertex='infoVertex';
   vGLength='length';
   vGInfoEdge='infoEdge';
+  vGCableName='vGCableName';
+  vGCableNameDefault='-';
   vGLengthFromEnd='lengthfromend';
   vTempLayerName='systemTempVisualLayer';
   vpTVertexTree='TVertexTree';
@@ -96,6 +98,7 @@ const
   velec_VarNameForConnectAfter_DevConnectMethod ='DevConnectMethod';
   velec_VarNameForConnectAfter_CabConnectAddLength='CabConnectAddLength';
   velec_VarNameForConnectAfter_CabConnectMountingMethod='CabConnectMountingMethod';
+  velec_VarNameForConnectAfter_CableName='CableName';
 
 
   velec_cableMountingNon='-';
@@ -103,7 +106,12 @@ const
   //***КОНСТАНТЫ В РАСЧЕТАХ ЭЛЕКТРИЧЕСКОЙ МОДЕЛИ***//
   velec_EM_vSumChildVertex='vSumChildVertex';
   velec_EM_vEMGCHDGroup='vEMGCHDGroup';
-  velec_EM_Diagram_InOutGroup='DEVICE_EL_VELEC_DIAGRAM_INOUTGROUP';
+  velec_EM_Diagram_InOutGroup='EL_VELEC_DIAGRAM_INOUTGROUP';
+  velec_EL_EMSPLITTERBOX='EL_EMSPLITTERBOX';
+
+  velec_GC_HeadDevice='GC_HeadDevice';
+  velec_GC_HDGroup='GC_HDGroup';
+  velec_ANALYSISEM_icanbeheadunit='ANALYSISEM_icanbeheadunit';
 
 
 implementation

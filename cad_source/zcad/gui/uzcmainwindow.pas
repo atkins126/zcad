@@ -46,6 +46,11 @@ uses
        uzcmenucontextcheckfuncs,uzctbextmenus,uzmenusdefaults,uzmenusmanager,uztoolbarsmanager,uzctextenteditor,uzcfcommandline,uzctreenode,uzcctrlcontextmenu,
        uzcimagesmanager,usupportgui,uzcuidialogs,
        uzcActionsManager,
+
+       //это разделять нельзя, иначе загрузятся невыровенные рекорды
+       {$INCLUDE allgeneratedfiles.inc}uzcregother,
+
+       uzcguiDarkStyleSetup,uMetaDarkStyle,
   {}
        uzgldrawcontext,uzglviewareaabstract,uzcguimanager,uzcinterfacedata,
        uzcenitiesvariablesextender,uzglviewareageneral,UniqueInstanceRaw,
@@ -164,6 +169,7 @@ var
   ProcessBar:TProgressBar;
   //StoreBackTraceStrFunc:TBackTraceStrFunc;//this unneed after fpc rev 31026 see http://bugs.freepascal.org/view.php?id=13518
   function IsRealyQuit:Boolean;
+  procedure RunCmdFile(filename:String;pdata:pointer);
 
 implementation
 {$R *.lfm}
@@ -686,6 +692,7 @@ begin
   {Делаем AnchorDockPanel1 докабельной}
   DockMaster.MakeDockPanel(AnchorDockPanel1,admrpChild);
   DockMaster.OnShowOptions:=ShowAnchorDockOptions;
+  HardcodedButtonSize:=21;
   {Грузим раскладку окон}
   if not sysparam.saved.noloadlayout then
     LoadLayout_com(EmptyCommandOperands);
@@ -857,6 +864,12 @@ begin
     UniqueInstanceBase.FIPCServer.StartServer;
   SetupFIPCServer;
 end;
+
+procedure RunCmdFile(filename:String;pdata:pointer);
+begin
+  commandmanager.executefile(filename,drawings.GetCurrentDWG,nil);
+end;
+
 procedure TZCADMainWindow._onCreate(Sender: TObject);
 begin
   with programlog.Enter('TZCADMainWindow._onCreate',LM_Debug,LMD) do begin try
@@ -909,7 +922,8 @@ begin
   toolbars.Sorted:=true;
   CreateInterfaceLists;
 
-  commandmanager.executefile('*components/stage0.cmd',drawings.GetCurrentDWG,nil);
+  //commandmanager.executefile('*components/stage0.cmd0',drawings.GetCurrentDWG,nil);
+  FromDirsIterator(sysvar.PATH.Preload_Path^,'*.cmd0','stage0.cmd0',RunCmdFile,nil);
 
   CreateAnchorDockingInterface;
   ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIActionRedraw);
@@ -1779,10 +1793,10 @@ var
 begin
   if ThemeServices.ThemesEnabled then begin
     rect:=TToolBar(Sender).ClientRect;
-    det:=ThemeServices.GetElementDetails(tsStatusRoot);
-    ThemeServices.DrawElement(TToolBar(Sender).Canvas.Handle,det,rect);
+    {det:=ThemeServices.GetElementDetails(tsStatusRoot);
+    ThemeServices.DrawElement(TToolBar(Sender).Canvas.Handle,det,rect);}
     det:=ThemeServices.GetElementDetails(tsGripper);
-    rect.Left:=rect.Right-16;
+    rect.Left:=rect.Right-24;
     ThemeServices.DrawElement(TToolBar(Sender).Canvas.Handle,det,rect);
   end;
 end;
@@ -1863,6 +1877,9 @@ begin
   newmenu:=TMainMenu(MenusManager.GetMainMenu('MAINMENU',application));
   if IsDifferentMenu(oldmenu,newmenu) then begin
     self.Menu:=newmenu;
+
+    MetaDarkFormChanged(self);
+
     if assigned(oldmenu) then
       Application.QueueAsyncCall(AsyncFree,PtrInt(oldmenu));
   end else

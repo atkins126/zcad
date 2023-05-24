@@ -60,6 +60,8 @@ type
   {REGISTERRECORDTYPE tpath}
   tpath=record
              Support_Path:PString;(*'Support files'*)
+             AdditionalSupport_Path:PString;(*'Additional support files'*)(*oi_readonly*)
+             Preload_Path:PString;(*'Preload files'*)
              Fonts_Path:PString;(*'Fonts'*)
              Alternate_Font:PString;(*'Alternate font file'*)
              Template_Path:PString;(*'Templates'*)
@@ -199,6 +201,7 @@ type
               INTF_DefaultControlHeight:PInteger;(*'Default control height'*)(*oi_readonly*)
               INTF_DefaultEditorFontHeight:PInteger;(*'Default editor font height'*)
               INTF_OBJINSP_Properties:tobjinspinterface;(*'Object inspector properties'*)
+              INTF_AppMode:PTAppMode;(*'Application mode'*)
              end;
   {REGISTERRECORDTYPE tdisp}
   tdisp=record
