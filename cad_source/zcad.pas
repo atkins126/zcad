@@ -170,7 +170,7 @@ uses
   uzccommand_polydiv,
   uzccommand_selectobjectbyaddres,
   uzccommand_selectonmouseobjects,
-  uzccommand_VarsEdSel,uzccommand_VarsED,uzccommand_VarsEdBD,
+  uzccommand_VarsEdSel,uzccommand_VarsED,uzccommand_VarsEdBD,uzccommand_VarsEdUnit,
   uzccommand_unitsman,
   uzccommand_rebuildtree,
   uzccommand_changeprojtype,
@@ -240,6 +240,7 @@ uses
 
 
   uzcenitiesvariablesextender,uzcExtdrLayerControl,uzcExtdrSmartTextEnt,
+  uzcExtdrIncludingVolume,
 
   {$IFNDEF DARWIN}
   {$IFDEF ELECTROTECH}
