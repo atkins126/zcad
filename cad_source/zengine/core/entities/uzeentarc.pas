@@ -48,7 +48,7 @@ GDBObjArc= object(GDBObjPlain)
                  procedure DrawGeometry(lw:Integer;var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
                  procedure addcontrolpoints(tdesc:Pointer);virtual;
                  procedure remaponecontrolpoint(pdesc:pcontrolpointdesc);virtual;
-                 procedure CalcObjMatrix;virtual;
+                 procedure CalcObjMatrix(pdrawing:PTDrawingDef=nil);virtual;
                  procedure precalc;
                  procedure FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
                  procedure createpoints(var DC:TDrawContext);virtual;
@@ -310,7 +310,7 @@ begin
   calcbb(dc);
   createpoints(dc);
   Representation.Clear;
-  if not (ESTemp in State) then
+  if not (ESTemp in State)and(DCODrawable in DC.Options) then
     Representation.DrawPolyLineWithLT(dc,Vertex3D_in_WCS_Array,vp,false,false);
   if assigned(EntExtensions)then
     EntExtensions.RunOnAfterEntityFormat(@self,drawing,DC);

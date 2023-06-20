@@ -50,7 +50,7 @@ GDBObjCircle= object(GDBObjWithLocalCS)
                  constructor initnul;
                  procedure LoadFromDXF(var f:TZctnrVectorBytes;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
 
-                 procedure CalcObjMatrix;virtual;
+                 procedure CalcObjMatrix(pdrawing:PTDrawingDef=nil);virtual;
                  function calcinfrustum(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
                  function CalcTrueInFrustum(frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
                  procedure RenderFeedback(pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;
@@ -308,7 +308,7 @@ begin
   //getoutbound;
   calcbb(dc);
   Representation.Clear;
-  if not (ESTemp in State) then
+  if not (ESTemp in State)and(DCODrawable in DC.Options) then
     Representation.DrawPolyLineWithLT(dc,Vertex3D_in_WCS_Array,vp,true,true);
   if assigned(EntExtensions)then
     EntExtensions.RunOnAfterEntityFormat(@self,drawing,DC);
