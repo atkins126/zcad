@@ -113,6 +113,7 @@ type
 
                           function GetLastId:TTag;
                           function GetLastInput:AnsiString;
+                          function GetLastPoint:GDBVertex;
 
                           function ChangeInputMode(incl,excl:TGetInputMode):TGetInputMode;
                           function SetInputMode(NewMode:TGetInputMode):TGetInputMode;
@@ -284,12 +285,12 @@ begin
                                                  key:=key and (not MZW_SHIFT);
                                                  tv:=Vertexmorphabs(sender.param.lastpoint,sender.param.ospoint.worldcoord,1);
                                             end;
-              if (key and MZW_CONTROL)<>0 then
+              if (key and MZW_ALT)<>0 then
                                             begin
                                                  key:=key and (not MZW_CONTROL);
                                                  tv:=Vertexmorphabs(sender.param.lastpoint,sender.param.ospoint.worldcoord,-1);
                                             end;
-              key:=key and (not MZW_CONTROL);
+              key:=key and (not MZW_ALT);
               key:=key and (not MZW_SHIFT);
 
               {if key=MZW_LBUTTON then
@@ -362,10 +363,11 @@ begin
   pcommandrunning^.IData.PInteractiveData:=PInteractiveData;
   pcommandrunning^.IData.PInteractiveProc:=InteractiveProc;
 
-  while (pcommandrunning^.IData.GetPointMode=TGPMWait)and(not Application.Terminated) do
-  begin
-       Application.HandleMessage;
-       //Application.ProcessMessages;
+  while (pcommandrunning^.IData.GetPointMode=TGPMWait)and(not Application.Terminated) do begin
+    Application.HandleMessage;
+    //Application.ProcessMessages;
+    if pcommandrunning=nil then
+      exit(GRCancel);
   end;
 
   if (pcommandrunning^.IData.GetPointMode=TGPMPoint)and(not Application.Terminated) then begin
@@ -434,6 +436,13 @@ begin
   else
     result:='';
 end;
+function GDBcommandmanager.GetLastPoint:GDBVertex;
+begin
+  if pcommandrunning<>nil then
+    result:=pcommandrunning^.IData.GetPointValue
+  else
+    result:=NulVertex;
+end;
 function GDBcommandmanager.ChangeInputMode(incl,excl:TGetInputMode):TGetInputMode;
 begin
   if pcommandrunning<>nil then begin
@@ -469,10 +478,11 @@ begin
   pcommandrunning^.IData.GetPointMode:=TGPMWaitInput;
   pcommandrunning^.IData.PInteractiveData:=nil;
   pcommandrunning^.IData.PInteractiveProc:=nil;
-  while (pcommandrunning^.IData.GetPointMode=TGPMWaitInput)and(not Application.Terminated) do
-  begin
-       Application.HandleMessage;
-       //Application.ProcessMessages;
+  while (pcommandrunning^.IData.GetPointMode=TGPMWaitInput)and(not Application.Terminated) do begin
+    Application.HandleMessage;
+    //Application.ProcessMessages;
+    if pcommandrunning=nil then
+      exit(GRCancel);
   end;
   if (pcommandrunning^.IData.GetPointMode=TGPMInput)and(not Application.Terminated) then begin
     Input:=pcommandrunning^.IData.Input;
@@ -512,12 +522,11 @@ begin
   pcommandrunning^.IData.GetPointMode:=TGPMWaitEnt;
   pcommandrunning^.IData.PInteractiveData:=nil;
   pcommandrunning^.IData.PInteractiveProc:=nil;
-  while (pcommandrunning^.IData.GetPointMode=TGPMWaitEnt)and(not Application.Terminated) do
-  begin
-       Application.HandleMessage;
-       //Application.ProcessMessages;
+  while (pcommandrunning^.IData.GetPointMode=TGPMWaitEnt)and(not Application.Terminated) do begin
+    Application.HandleMessage;
+    //Application.ProcessMessages;
   end;
-  if (pcommandrunning^.IData.GetPointMode=TGPMEnt)and(not Application.Terminated) then
+  if (pcommandrunning<>nil)and(pcommandrunning^.IData.GetPointMode=TGPMEnt)and(not Application.Terminated) then
                                                                                  begin
                                                                                  p:=PTSimpleDrawing(pcommandrunning.pdwg)^.wa.param.SelDesc.LastSelectedObject;
                                                                                  result:=true;
@@ -678,7 +687,7 @@ begin
      end
      else if pcommandrunning^.IData.GetPointMode=TGPMWait then
                                       begin
-                                           if mode=MZW_LBUTTON then
+                                           if (mode and MZW_LBUTTON)<>0 then
                                            begin
                                                 if assigned(pcommandrunning^.IData.PInteractiveProc) then
                                                 pcommandrunning^.IData.PInteractiveProc(pcommandrunning^.IData.PInteractiveData,p3d,true);

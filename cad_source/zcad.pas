@@ -237,6 +237,8 @@ uses
   uzccommand_explDbCheck,
 
   uzccommand_cfgAddSupportPath,
+  uzccommand_DockingOptions,
+  uzcCommand_MoveEntsByMouse,
 
 
   uzcenitiesvariablesextender,uzcExtdrLayerControl,uzcExtdrSmartTextEnt,

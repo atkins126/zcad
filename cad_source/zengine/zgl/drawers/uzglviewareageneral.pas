@@ -92,6 +92,7 @@ type
                            procedure asynczoomsel(Data: PtrInt);override;
                            procedure asynczoomall(Data: PtrInt);override;
                            procedure asyncupdatemouse(Data: PtrInt);override;
+                           procedure asyncsendmouse(Data: PtrInt);override;
                            procedure set3dmouse;override;
                            procedure SetCameraPosZoom(_pos:gdbvertex;_zoom:Double;finalcalk:Boolean);override;
                            procedure DISP_ZoomFactor(x: double{; MousePos: TPoint});
@@ -1631,6 +1632,10 @@ procedure TGeneralViewArea.asyncupdatemouse(Data: PtrInt);
 begin
      WaMouseMove(nil,[],param.md.mouse.x,param.md.mouse.y);
 end;
+procedure TGeneralViewArea.asyncsendmouse(Data: PtrInt);
+begin
+  WaMouseDown(nil,mbLeft,[ssLeft],Data and $ffff,(Data and $ffff0000) shr 16);
+end;
 destructor TGeneralViewArea.Destroy;
 begin
   Drawer.delmyscrbuf;
@@ -1701,9 +1706,13 @@ function MouseButton2ZKey(Shift: TShiftState):Byte;
 begin
   result := 0;
   if (ssLeft in shift) then
-                           result := result or MZW_LBUTTON;
-  if (ssShift in shift) then result := result or MZW_SHIFT;
-  if (ssCtrl in shift) then result := result or MZW_CONTROL;
+    result := result or MZW_LBUTTON;
+  if (ssShift in shift) then
+    result := result or MZW_SHIFT;
+  if (ssCtrl in shift) then
+    result := result or MZW_CONTROL;
+  if (ssAlt in shift) then
+    result := result or MZW_ALT;
 end;
 function TGeneralViewArea.getviewcontrol:TCADControl;
 begin
@@ -1773,6 +1782,8 @@ begin
   end;
   if assigned(MainMouseUp) then
                                MainMouseUp;
+  if assigned(OnWaMouseDown) then
+    OnWaMouseUp(self,Button,Shift,X, Y,param.SelDesc.OnMouseObject);
 end;
 function TGeneralViewArea.CreateRC(_maxdetail:Boolean=false):TDrawContext;
 begin
