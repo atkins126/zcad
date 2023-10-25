@@ -15,7 +15,7 @@
 {
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
-unit uzcenitiesvariablesextender;
+unit uzcEnitiesVariablesExtender;
 {$INCLUDE zengineconfig.inc}
 
 interface
@@ -31,7 +31,7 @@ type
 TBaseVariablesExtender=class(TBaseEntityExtender)
   end;
 TVariablesExtender=class(TBaseVariablesExtender)
-    entityunit:TObjectUnit;
+    EntityUnit:TEntityUnit;
     pMainFuncEntity:PGDBObjEntity;
 
     DelegatesArray:TEntityArray;
@@ -51,6 +51,9 @@ TVariablesExtender=class(TBaseVariablesExtender)
     procedure CopyExt2Ent(pSourceEntity,pDestEntity:pointer);override;
     procedure ReorganizeEnts(OldEnts2NewEntsMap:TMapPointerToPointer);override;
     procedure PostLoad(var context:TIODXFLoadContext);override;
+    procedure onRemoveFromArray(pEntity:Pointer;const drawing:TDrawingDef);override;
+
+    procedure onEntityBeforeConnect(pEntity:Pointer;const drawing:TDrawingDef;var DC:TDrawContext);override;
 
     function isMainFunction:boolean;
 
@@ -70,12 +73,29 @@ TVariablesExtender=class(TBaseVariablesExtender)
     class function EntIOLoadMainFunction(_Name,_Value:String;ptu:PExtensionData;const drawing:TDrawingDef;PEnt:pointer):boolean;
 
     procedure SaveToDxfObjXData(var outhandle:TZctnrVectorBytes;PEnt:Pointer;var IODXFContext:TIODXFContext);override;
+    class procedure DisableVariableContentReplace;
+    class procedure EnableVariableContentReplace;
+    class function isVariableContentReplaceEnabled:Boolean;
   end;
 
 var
    PFCTTD:Pointer=nil;
 function AddVariablesToEntity(PEnt:PGDBObjEntity):TVariablesExtender;
 implementation
+var
+  DisableVariableContentReplaceCounter:Integer=0;
+class procedure TVariablesExtender.DisableVariableContentReplace;
+begin
+  inc(DisableVariableContentReplaceCounter);
+end;
+class procedure TVariablesExtender.EnableVariableContentReplace;
+begin
+  dec(DisableVariableContentReplaceCounter);
+end;
+class function TVariablesExtender.isVariableContentReplaceEnabled:Boolean;
+begin
+  result:=DisableVariableContentReplaceCounter<=0;
+end;
 function TVariablesExtender.isMainFunction:boolean;
 begin
   result:=pMainFuncEntity=nil;
@@ -240,10 +260,15 @@ begin
      pbdunit:=pblockdef^.EntExtensions.GetExtension<TVariablesExtender>;
      if pbdunit<>nil then
        pbdunit.entityunit.CopyTo(@self.entityunit);
-     //PTObjectUnit(pblockdef^.ou.Instance)^.copyto(PTObjectUnit(ou.Instance));
+     //PTEntityUnit(pblockdef^.ou.Instance)^.copyto(PTEntityUnit(ou.Instance));
 end;
 procedure TVariablesExtender.onBeforeEntityFormat(pEntity:Pointer;const drawing:TDrawingDef;var DC:TDrawContext);
 begin
+  entityunit.ConnectedUses.Clear;
+end;
+procedure TVariablesExtender.onEntityBeforeConnect(pEntity:Pointer;const drawing:TDrawingDef;var DC:TDrawContext);
+begin
+  //entityunit.ConnectedUses.Clear;
 end;
 procedure TVariablesExtender.onAfterEntityFormat(pEntity:Pointer;const drawing:TDrawingDef;var DC:TDrawContext);
 begin
@@ -273,8 +298,21 @@ procedure TVariablesExtender.PostLoad(var context:TIODXFLoadContext);
 var
  PMF:PGDBObjEntity;
  pbdunit:TVariablesExtender;
+ pvd:pvardesk;
+ uou:PTEntityUnit;
 begin
-  if pThisEntity<>nil then
+  if pThisEntity<>nil then begin
+    if isVariableContentReplaceEnabled then begin
+      pvd:=EntityUnit.FindVariable('VariablesContentReplaceFrom',true);
+      if pvd<>nil then
+        if pvd^.data.PTD=@FundamentalStringDescriptorObj then begin
+          uou:=pointer(units.findunit(GetSupportPath,InterfaceTranslate,pvd^.GetValueAsString));
+          if uou<>nil then begin
+            EntityUnit.free;
+            EntityUnit.CopyFrom(uou);
+          end;
+        end;
+    end;
     if pThisEntity.PExtAttrib<>nil then
       if pThisEntity.PExtAttrib^.MainFunctionHandle<>0 then begin
         if context.h2p.TryGetValue(pThisEntity.PExtAttrib^.MainFunctionHandle,pmf)then begin
@@ -283,6 +321,7 @@ begin
             pbdunit.addDelegate(pThisEntity,self);
         end;
       end;
+  end;
 end;
 
 class function TVariablesExtender.getExtenderName:string;
@@ -335,15 +374,15 @@ begin
      end;
      vardata.entityunit.setvardesc(vd,vn,vun,vt);
      vardata.entityunit.InterfaceVariables.createvariable(vd.name,vd);
-     //PTObjectUnit(PEnt^.ou.Instance)^.setvardesc(vd,vn,vun,vt);
-     //PTObjectUnit(PEnt^.ou.Instance)^.InterfaceVariables.createvariable(vd.name,vd);
+     //PTEntityUnit(PEnt^.ou.Instance)^.setvardesc(vd,vn,vun,vt);
+     //PTEntityUnit(PEnt^.ou.Instance)^.InterfaceVariables.createvariable(vd.name,vd);
      PBaseTypeDescriptor(vd.data.PTD)^.SetValueFromString(vd.data.Addr.Instance,vv);
      result:=true;
 end;
 
 class function TVariablesExtender.EntIOLoadUSES(_Name,_Value:String;ptu:PExtensionData;const drawing:TDrawingDef;PEnt:pointer):boolean;
 var
-    usedunit:PTObjectUnit;
+    usedunit:PTEntityUnit;
     vardata:TVariablesExtender;
 begin
      vardata:=PGDBObjEntity(PEnt)^.GetExtension<TVariablesExtender>;
@@ -384,6 +423,8 @@ var
    vardata:TVariablesExtender;
    th: TDWGHandle;
 begin
+  //сохранять переменные определений блоков ненадо, берем их из внешних файлов
+  if not IsIt(typeof(PGDBObjEntity(PEnt)^),typeof(GDBObjBlockdef))then begin
      ishavevars:=false;
      vardata:=PGDBObjEntity(PEnt)^.GetExtension<TVariablesExtender>;
      if vardata<>nil then
@@ -393,7 +434,7 @@ begin
        pvu:=vardata.entityunit.InterfaceUses.beginiterate(ir);
        if pvu<>nil then
        repeat
-         if typeof(pvu^)<>typeof(TObjectUnit) then begin
+         if typeof(pvu^)<>typeof(TEntityUnit) then begin
            str:='USES='+pvu^.Name;
            dxfStringout(outhandle,1000,str);
          end;
@@ -438,8 +479,12 @@ begin
          pvd:=vardata.entityunit.InterfaceVariables.vardescarray.iterate(ir);
          until pvd=nil;
      end;
+  end;
 end;
 
+procedure TVariablesExtender.onRemoveFromArray(pEntity:Pointer;const drawing:TDrawingDef);
+begin
+end;
 
 initialization
   EntityExtenders.RegisterKey(uppercase(VariablesExtenderName),TVariablesExtender);

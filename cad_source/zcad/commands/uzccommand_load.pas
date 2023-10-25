@@ -35,6 +35,8 @@ uses
   uzcinterface,
   uzccmdload;
 
+function Load_com(operands:TCommandOperands):TCommandResult;
+
 implementation
 
 var
@@ -86,7 +88,7 @@ end;
 
 procedure startup;
 begin
-  CreateCommandFastObjectPlugin(@Load_com,'Load',0,0).CEndActionAttr:=CEDWGNChanged;
+  CreateCommandFastObjectPlugin(@Load_com,'Load',0,0).CEndActionAttr:=[CEDWGNChanged];
 end;
 procedure finalize;
 begin

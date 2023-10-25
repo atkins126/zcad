@@ -368,14 +368,15 @@ begin
                                 begin
                                 if (newowner<>owner) then
                                 begin
+                                     PGDBObjEntity(newowner)^.CalcObjMatrix(@drawing);
                                      m4:=PGDBObjEntity(newowner)^.getmatrix^;
                                      MatrixInvert(m4);
                                      //pobj^.Format;
-                                     pobj^.CalcObjMatrix;
+                                     pobj^.CalcObjMatrix(@drawing);
                                      pobj^.transform(m4);
                                 end
                                 else
-                                    pobj^.CalcObjMatrix;
+                                    pobj^.CalcObjMatrix(@drawing);
                                 end;
                                 if not trash then
                                 begin
@@ -1770,7 +1771,7 @@ begin
                 outstream.TXTAddStringEOL(dxfGroupCode(1));
                 outstream.TXTAddStringEOL('');
 
-                saveentitiesdxf2000(@PBlockdefArray({p}drawing.BlockDefArray.parray)^[i].ObjArray, outstream,drawing,IODXFContext);
+                saveentitiesdxf2000(@PBlockdefArray(drawing.BlockDefArray.parray)^[i].ObjArray, outstream,drawing,IODXFContext);
 
                 outstream.TXTAddStringEOL(dxfGroupCode(0));
                 outstream.TXTAddStringEOL('ENDBLK');
@@ -1783,6 +1784,14 @@ begin
                 outstream.TXTAddStringEOL('0');
                 outstream.TXTAddStringEOL(dxfGroupCode(100));
                 outstream.TXTAddStringEOL('AcDbBlockEnd');
+
+                dxfStringout(outstream,1001,ZCADAppNameInDXF);
+                dxfStringout(outstream,1002,'{');
+                if assigned(PBlockdefArray(drawing.BlockDefArray.parray)^[i].EntExtensions) then
+                  PBlockdefArray(drawing.BlockDefArray.parray)^[i].EntExtensions.RunSaveToDxf(outstream,@PBlockdefArray(drawing.BlockDefArray.parray)^[i],IODXFContext);
+                dxfStringout(outstream,1002,'}');
+
+
               end;
 
               outstream.TXTAddStringEOL(dxfGroupCode(0));

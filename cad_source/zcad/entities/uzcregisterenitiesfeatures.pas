@@ -196,18 +196,30 @@ var
    pvn,pvnt:pvardesk;
    pentvarext:TVariablesExtender;
 begin
-     pentvarext:=pEntity^.GetExtension<TVariablesExtender>;
-     pvn:=pentvarext.entityunit.FindVariable('NMO_Name');
-     pvnt:=pentvarext.entityunit.FindVariable('NMO_Template');
+  pentvarext:=pEntity^.GetExtension<TVariablesExtender>;
+  if pentvarext<>nil then begin
+    pvn:=pentvarext.entityunit.FindVariable('NMO_Name',true);
+    pvnt:=pentvarext.entityunit.FindVariable('NMO_Template',true);
+    if (pvnt<>nil)and(pvnt<>nil) then
+      DeviceNameSubProcess(pvn,pstring(pvnt^.data.Addr.Instance)^,pEntity);
 
-     if (pvnt<>nil) then
-     DeviceNameSubProcess(pvn,pstring(pvnt^.data.Addr.Instance)^,pEntity);
+    pvn:=pentvarext.entityunit.FindVariable('NMO_TerminalName',true);
+    pvnt:=pentvarext.entityunit.FindVariable('NMO_TerminalNameTemplate',true);
+    if (pvnt<>nil)and(pvnt<>nil) then
+      DeviceNameSubProcess(pvn,pstring(pvnt^.data.Addr.Instance)^,pEntity);
 
-     pvnt:=pentvarext.entityunit.FindVariable('RiserName');
-     if (pvnt<>nil)and(pvn<>nil)then
-       pstring(pvnt^.data.Addr.Instance)^:=pstring(pvn^.data.Addr.Instance)^;
+    pvn:=pentvarext.entityunit.FindVariable('NMO_NetName',true);
+    pvnt:=pentvarext.entityunit.FindVariable('NMO_NetNameTemplate',true);
+    if (pvnt<>nil)and(pvnt<>nil) then
+      DeviceNameSubProcess(pvn,pstring(pvnt^.data.Addr.Instance)^,pEntity);
 
-     DBLinkProcess(pentity,drawing);
+
+    pvnt:=pentvarext.entityunit.FindVariable('RiserName',true);
+    if (pvnt<>nil)and(pvn<>nil)then
+      pstring(pvnt^.data.Addr.Instance)^:=pstring(pvn^.data.Addr.Instance)^;
+  end;
+
+  DBLinkProcess(pentity,drawing);
 end;
 procedure DeviceSilaProcess(pEntity:PGDBObjEntity;const drawing:TDrawingDef);
 var
@@ -356,21 +368,21 @@ procedure ConstructorFeature(pEntity:PGDBObjEntity);
 begin
      //if PFCTTD=nil then
      //                  PFCTTD:=sysunit.TypeName2PTD('PTObjectUnit');
-     //memman.Getmem(PGDBObjEntity(pEntity).OU.Instance,sizeof(TObjectUnit));
-     //PTObjectUnit(PGDBObjEntity(pEntity).OU.Instance).init('Entity');
-     //PTObjectUnit(PGDBObjEntity(pEntity).OU.Instance).InterfaceUses.add(@SysUnit);
+     //memman.Getmem(PGDBObjEntity(pEntity).OU.Instance,sizeof(TEntityUnit));
+     //PTEntityUnit(PGDBObjEntity(pEntity).OU.Instance).init('Entity');
+     //PTEntityUnit(PGDBObjEntity(pEntity).OU.Instance).InterfaceUses.add(@SysUnit);
      //PGDBObjEntity(pEntity).OU.PTD:=PFCTTD;
 end;
 
 procedure DestructorFeature(pEntity:PGDBObjEntity);
 begin
-     //PTObjectUnit(PGDBObjEntity(pEntity).OU.Instance).done;
+     //PTEntityUnit(PGDBObjEntity(pEntity).OU.Instance).done;
      //memman.Freemem(PGDBObjEntity(pEntity).OU.Instance);
 end;
 
 procedure GDBObjBlockDefLoadVarsFromFile(pEntity:PGDBObjBlockDef);
 var
-  uou:PTObjectUnit;
+  uou:PTEntityUnit;
   pentvarext:TVariablesExtender;
   //p:PTUnitManager;
   //S:string;

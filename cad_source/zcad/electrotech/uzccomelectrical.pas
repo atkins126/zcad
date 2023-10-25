@@ -688,7 +688,7 @@ begin
        if psd^.objaddr^.GetObjType=GDBDeviceID then
        begin
             entvarext:=psd^.objaddr^.GetExtension<TVariablesExtender>;
-            //pvd:=PTObjectUnit(psd^.objaddr^.ou.Instance)^.FindVariable('DESC_MountingSite');
+            //pvd:=PTEntityUnit(psd^.objaddr^.ou.Instance)^.FindVariable('DESC_MountingSite');
             pvd:=entvarext.entityunit.FindVariable({'DESC_MountingSite'}'NMO_Name');
             if pvd<>nil then
                             dn.name:=pvd.data.PTD.GetValueAsString(pvd.data.Addr.Instance)
@@ -816,7 +816,7 @@ begin
            if psd^.objaddr^.GetObjType=GDBDeviceID then
            begin
                 pentvarext:=psd^.objaddr^.GetExtension<TVariablesExtender>;
-                //pvd:=PTObjectUnit(psd^.objaddr^.ou.Instance)^.FindVariable('DESC_MountingSite');
+                //pvd:=PTEntityUnit(psd^.objaddr^.ou.Instance)^.FindVariable('DESC_MountingSite');
                 pvd:=pentvarext.entityunit.FindVariable({'DESC_MountingSite'}'NMO_Name');
                 if pvd<>nil then
                                 dn.name:=pvd.data.PTD.GetValueAsString(pvd.data.Addr.Instance)
@@ -963,7 +963,7 @@ begin
     if pobj.GetObjType=GDBDeviceID then
     begin
          pentvarext:=pobj^.GetExtension<TVariablesExtender>;
-         //pvd:=PTObjectUnit(pobj^.ou.Instance)^.FindVariable('Device_Type');
+         //pvd:=PTEntityUnit(pobj^.ou.Instance)^.FindVariable('Device_Type');
          pvd:=pentvarext.entityunit.FindVariable('Device_Type');
          if pvd<>nil then
          if PTDeviceType(pvd^.data.Addr.Instance)^=TDT_SilaIst then
@@ -3291,7 +3291,7 @@ begin
   repeat
     if (pv^.GetObjType=GDBCableID) then
     begin
-         //pvd:=PTObjectUnit(pv^.ou.Instance)^.FindVariable('CABLE_AutoGen');
+         //pvd:=PTEntityUnit(pv^.ou.Instance)^.FindVariable('CABLE_AutoGen');
          pvd:=FindVariableInEnt(pv,'CABLE_AutoGen');
          if pvd<>nil then
                          begin
@@ -3479,7 +3479,7 @@ begin
   CreateCommandFastObjectPlugin(@_Cable_com_Legend,'El_Cable_Legend',CADWG,0);
   CreateCommandFastObjectPlugin(@_Cable_com_Join,'El_Cable_Join',CADWG,0);
   csel:=CreateCommandFastObjectPlugin(@_Cable_com_Select,'El_Cable_Select',CADWG,0);
-  csel.CEndActionAttr:=0;
+  csel.CEndActionAttr:=[];
   CreateCommandFastObjectPlugin(@_Material_com_Legend,'El_Material_Legend',CADWG,0);
   CreateCommandFastObjectPlugin(@_Cable_mark_com,'KIP_Cable_Mark',CADWG,0);
 
@@ -3499,7 +3499,7 @@ begin
 
   CreateCommandRTEdObjectPlugin(@ElLeaser_com_CommandStart,@Line_com_CommandEnd,nil,nil,@Line_com_BeforeClick,@El_Leader_com_AfterClick,nil,nil,'El_Leader',0,0);
   pfindcom:=CreateCommandRTEdObjectPlugin(@Find_com,nil,nil,@commformat,nil,nil,nil,nil,'El_Find',0,0);
-  pfindcom.CEndActionAttr:=0;
+  pfindcom.CEndActionAttr:=[];
   pfindcom^.SetCommandParam(@FindDeviceParam,'PTFindDeviceParam');
 
   FindDeviceParam.FindType:=tft_obozn;

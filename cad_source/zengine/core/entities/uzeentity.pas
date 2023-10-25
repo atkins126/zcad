@@ -27,6 +27,11 @@ uses uzepalette,uzeobjectextender,uzgldrawerabstract,uzgldrawcontext,uzedrawingd
 type
 taddotrac=procedure (var posr:os_record;const axis:GDBVertex) of object;
 {Export+}
+TEFStage=(EFCalcEntityCS,EFDraw);
+{-}TEFStages=set of TEFStage;{/TEFStages=Integer;/}
+{-}const{//}
+{-}EFAllStages=[EFCalcEntityCS,EFDraw];{//}
+{-}type{//}
 PGDBObjEntity=^GDBObjEntity;
 {-}TSelect2Stage=procedure(PEntity,PGripsCreator:PGDBObjEntity;var SelectedObjCount:Integer)of object;{//}
 {-}TDeSelect2Stage=procedure(PV:PGDBObjEntity;var SelectedObjCount:Integer)of object;{//}
@@ -59,6 +64,7 @@ GDBObjEntity= object(GDBObjSubordinated)
                     function ProcessFromDXFObjXData(_Name,_Value:String;ptu:PExtensionData;const drawing:TDrawingDef):Boolean;virtual;
                     function FromDXFPostProcessBeforeAdd(ptu:PExtensionData;const drawing:TDrawingDef):PGDBObjSubordinated;virtual;
                     procedure FromDXFPostProcessAfterAdd;virtual;
+                    procedure postload(var context:TIODXFLoadContext);virtual;
                     function IsHaveObjXData:Boolean;virtual;
 
 
@@ -71,10 +77,11 @@ GDBObjEntity= object(GDBObjSubordinated)
                     procedure SaveToDXFfollow(var outhandle:{Integer}TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
                     procedure SaveToDXFPostProcess(var handle:TZctnrVectorBytes;var IODXFContext:TIODXFContext);
                     procedure SaveToDXFObjXData(var outhandle:TZctnrVectorBytes;var IODXFContext:TIODXFContext);virtual;
-                    procedure FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
+                    function IsStagedFormatEntity:boolean;virtual;
+                    procedure FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext;Stage:TEFStages=EFAllStages);virtual;
                     procedure FormatFeatures(var drawing:TDrawingDef);virtual;
                     procedure FormatFast(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
-                    procedure FormatAfterEdit(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
+                    procedure FormatAfterEdit(var drawing:TDrawingDef;var DC:TDrawContext;Stage:TEFStages=EFAllStages);virtual;
                     procedure FormatAfterFielfmod(PField,PTypeDescriptor:Pointer);virtual;
 
                     procedure DrawWithAttrib(var DC:TDrawContext{visibleactualy:TActulity;subrender:Integer});virtual;
@@ -172,12 +179,22 @@ GDBObjEntity= object(GDBObjSubordinated)
                     class function GetDXFIOFeatures:TDXFEntIODataManager;static;
                     function GetNameInBlockTable:String;virtual;
                     procedure addtoconnect2(pobj:pgdbobjEntity;var ConnectedArray:TZctnrVectorPGDBaseObjects);
+                    function CheckState(AStates:TEntityStates):Boolean;
               end;
 {Export-}
 var onlygetsnapcount:Integer;
     GDBObjEntityDXFFeatures:TDXFEntIODataManager;
 implementation
 uses usimplegenerics,uzeentityfactory{,UGDBSelectedObjArray};
+function GDBObjEntity.CheckState(AStates:TEntityStates):Boolean;
+begin
+  result:=(AStates*State)<>[];
+  if not result then
+    if bp.ListPos.Owner<>nil then
+      if IsIt(typeof(bp.ListPos.Owner^),typeof(GDBObjEntity)) then
+        result:=PGDBObjEntity(bp.ListPos.Owner)^.CheckState(AStates);
+end;
+
 procedure GDBObjEntity.addtoconnect2(pobj:pgdbobjEntity;var ConnectedArray:TZctnrVectorPGDBaseObjects);
 begin
   ConnectedArray.PushBackIfNotPresent(pobj);
@@ -354,6 +371,11 @@ begin
 end;
 procedure GDBObjEntity.FromDXFPostProcessAfterAdd;
 begin
+end;
+procedure  GDBObjEntity.postload(var context:TIODXFLoadContext);
+begin
+  if assigned(EntExtensions) then
+    EntExtensions.RunPostload(context);
 end;
 function GDBObjEntity.FromDXFPostProcessBeforeAdd;
 var
@@ -665,7 +687,11 @@ procedure GDBObjEntity.FormatFast;
 begin
      FormatEntity(drawing,dc);
 end;
-procedure GDBObjEntity.FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext);
+function GDBObjEntity.IsStagedFormatEntity:boolean;
+begin
+  result:=false;
+end;
+procedure GDBObjEntity.FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext;Stage:TEFStages=EFAllStages);
 begin
 end;
 procedure GDBObjEntity.FormatFeatures(var drawing:TDrawingDef);
@@ -676,7 +702,7 @@ end;
 
 procedure GDBObjEntity.FormatAfterEdit;
 begin
-     formatentity(drawing,dc);
+     formatentity(drawing,dc,Stage);
      //AddObjectToObjArray
 end;
 procedure GDBObjEntity.FormatAfterFielfmod;

@@ -23,7 +23,8 @@ interface
 Uses
    uzgldrawcontext,uzedrawingdef,uzecamera,uzeentitiestree,uzbtypes,
    uzeconsts,uzeentity,uzeentgenericsubentry,uzeentconnected,uzeentsubordinated,
-   gzctnrVectorTypes,uzegeometrytypes,uzegeometry;
+   gzctnrVectorTypes,uzegeometrytypes,uzegeometry,UGDBOpenArrayOfPV,
+   uzelongprocesssupport;
 type
 {Export+}
 PGDBObjRoot=^GDBObjRoot;
@@ -32,10 +33,9 @@ GDBObjRoot= object(GDBObjGenericSubEntry)
                  constructor initnul;
                  destructor done;virtual;
                  //function ImEdited(pobj:PGDBObjSubordinated;pobjinarray:Integer):Integer;virtual;
-                 procedure FormatAfterEdit(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
+                 procedure FormatAfterEdit(var drawing:TDrawingDef;var DC:TDrawContext;Stage:TEFStages=EFAllStages);virtual;
                  procedure AfterDeSerialize(SaveFlag:Word; membuf:Pointer);virtual;
                  function getowner:PGDBObjSubordinated;virtual;
-                 function GetMainOwner:PGDBObjSubordinated;virtual;
                  procedure getoutbound(var DC:TDrawContext);virtual;
                  //function FindVariable(varname:String):pvardesk;virtual;
                  function GetHandle:PtrInt;virtual;
@@ -51,13 +51,10 @@ GDBObjRoot= object(GDBObjGenericSubEntry)
            end;
 
 {Export-}
+procedure DoFormat(var ConnectedArea:GDBObjGenericSubEntry;var ents,ents2Connected:GDBObjOpenArrayOfPV;var drawing:TDrawingDef;var DC:TDrawContext;lpsh:TLPSHandle;Stage:TEFStages{=EFAllStages});
 implementation
 //uses
 //    log;
-function GDBObjRoot.GetMainOwner:PGDBObjSubordinated;
-begin
-     result:=@self;
-end;
 {function GDBObjRoot.FindShellByClass(_type:TDeviceClass):PGDBObjSubordinated;
 begin
      result:=nil;
@@ -149,47 +146,98 @@ function GDBObjRoot.GetObjType;
 begin
      result:=GDBRootId;
 end;
+
+procedure DoFormat(var ConnectedArea:GDBObjGenericSubEntry;var ents,ents2Connected:GDBObjOpenArrayOfPV;var drawing:TDrawingDef;var DC:TDrawContext;lpsh:TLPSHandle;Stage:TEFStages{=EFAllStages});
+var
+  p:pGDBObjEntity;
+  ir:itrec;
+  c:integer;
+  bb:TBoundingBox;
+  HaveNewBB:boolean;
+begin
+  c:=ents.count;
+  HaveNewBB:=False;
+  p:=ents.beginiterate(ir);
+  if p<>nil then repeat
+    p^.Formatafteredit(drawing,dc,[EFCalcEntityCS]);
+    if HaveNewBB then
+      ConcatBB(bb,p^.vp.BoundingBox)
+    else begin
+      bb:=p^.vp.BoundingBox;
+      HaveNewBB:=True;
+    end;
+    if lpsh<>LPSHEmpty then
+      lps.ProgressLongProcess(lpsh,ir.itc);
+    p:=ents.iterate(ir);
+  until p=nil;
+
+  if @ConnectedArea<>nil then
+    if HaveNewBB then begin
+      ConcatBB(ConnectedArea.vp.BoundingBox,bb);
+      ConcatBB(ConnectedArea.ObjArray.ObjTree.BoundingBox,bb);
+    end;
+
+  p:=ents2Connected.beginiterate(ir);
+  if p<>nil then repeat
+    if assigned(p^.EntExtensions)then
+      p^.EntExtensions.RunOnBeforeConnect(p,drawing,DC);
+    p:=ents2Connected.iterate(ir);
+  until p=nil;
+
+
+  p:=ents2Connected.beginiterate(ir);
+  if p<>nil then repeat
+      if IsIt(TypeOf(p^),typeof(GDBObjConnected)) then
+        PGDBObjConnected(p)^.connectedtogdb(@ConnectedArea,drawing);
+      p^.EntExtensions.RunOnConnect(p,drawing,DC);
+      p:=ents2Connected.iterate(ir);
+  until p=nil;
+
+  if ConnectedArea.EntExtensions<>nil then begin
+    p:=ents.beginiterate(ir);
+    if p<>nil then repeat
+      ConnectedArea.EntExtensions.RunConnectFormattedEntsToRoot(@ConnectedArea,p,drawing,DC);
+      p:=ents.iterate(ir);
+    until p=nil;
+  end;
+
+  p:=ents2Connected.beginiterate(ir);
+  if p<>nil then repeat
+    p^.EntExtensions.RunOnAfterConnect(p,drawing,DC);
+    p:=ents2Connected.iterate(ir);
+  until p=nil;
+
+  ents2Connected.clear;
+
+  p:=ents.beginiterate(ir);
+  if p<>nil then repeat
+    if p^.IsStagedFormatEntity then
+      p^.Formatafteredit(drawing,dc,[EFDraw]);
+    if lpsh<>LPSHEmpty then
+      lps.ProgressLongProcess(lpsh,c+ir.itc);
+    p:=ents.iterate(ir);
+  until p=nil;
+
+end;
+
 procedure GDBObjRoot.formatafteredit;
 var
   p:pGDBObjEntity;
   ir:itrec;
 begin
+  DoFormat(self,ObjCasheArray,ObjToConnectedArray,drawing,DC,LPSHEmpty,Stage);
+  p:=ObjCasheArray.beginiterate(ir);
+  if p<>nil then
+  repeat
+    if p^.bp.TreePos.Owner<>nil then begin
+            self.ObjArray.RemoveFromTree(p);
+            self.ObjArray.ObjTree.AddObjectToNodeTree(p^);
+    end;
+    p:=ObjCasheArray.iterate(ir);
+  until p=nil;
 
-     //inherited formatafteredit;
-       ObjCasheArray.Formatafteredit(drawing,dc);
-
-       p:=ObjCasheArray.beginiterate(ir);
-       if p<>nil then
-       repeat
-             if p^.bp.TreePos.Owner<>nil then
-             begin
-                  self.ObjArray.RemoveFromTree(p);
-                  self.ObjArray.ObjTree.AddObjectToNodeTree(p^);
-             end;
-            p:=ObjCasheArray.iterate(ir);
-       until p=nil;
-
-       ObjCasheArray.clear;
-       calcbb(dc);
-
-
-     p:=self.ObjToConnectedArray.beginiterate(ir);
-     if p<>nil then
-       repeat
-         if IsIt(TypeOf(p^),typeof(GDBObjConnected)) then
-           PGDBObjConnected(p)^.connectedtogdb(@self,drawing);
-
-         p^.EntExtensions.RunOnConnect(p,drawing,DC);
-
-         p:=self.ObjToConnectedArray.iterate(ir);
-       until p=nil;
-     self.ObjToConnectedArray.clear;
-
-
-  {ObjCasheArray.Format;
   ObjCasheArray.clear;
-  vp.BoundingBox:=objarray.calcbb;
-  restructure;}
+  calcbb(dc);
 end;
 begin
 end.
