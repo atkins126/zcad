@@ -29,6 +29,7 @@
       <Action Name="ACN_COPYCLIP"/>
       <Action Name="ACN_COPYCLIPBASE"/>
       <Action Name="ACN_PASTE"/>
+      <Action Name="ACN_DUPLICATE"/>
       <Action Name="ACN_ERASE"/>
       <Separator/>
       <Action Name="ACN_SELECTALL"/>
@@ -36,7 +37,10 @@
       <Action Name="ACN_INVERSESELECTED"/>
       <Action Name="ACN_SELSIM"/>
       <Separator/>
-      <Action Name="ACN_El_FIND"/>
+      <Action Name="ACN_FIND"/>
+      <Action Name="ACN_FINDNEXT"/>
+      <Action Name="ACN_FINDPREV"/>
+      <Action Name="ACN_FINDPARAMS"/>
     </Menu>
     <Menu Name="View">
       <Action Name="ACN_REGEN"/>
@@ -111,6 +115,9 @@
       <Command Caption="Numerators (objinsp)" Command="SetObjInsp(NUMERATORS)"/> 
       <Command Caption="Layouts (not impl)" Command="fuckoff"/> 
     </Menu>
+    <Menu Name="Tools">
+      <Action Name="ACN_SPELLCHECK"/>
+    </Menu>
     <Menu Name="Draw">
       <Action Name="ACN_LINE"/>
       <Action Name="ACN_3DPOLY"/>
@@ -162,6 +169,18 @@
         <Action Name="ACN_smtextarea"/>
       </SubMenu>
     <Separator/>
+      <SubMenu Name="Extenders">
+        <Action Name="ACN_EXTDRALLLIST"/>
+        <Action Name="ACN_EXTDRENTLIST"/>
+      <Separator/>
+        <Command Caption="Add extdrVariables" Command="extdrAdd(extdrVariables)"/>
+        <Command Caption="Add extdrIncludingVolume" Command="extdrAdd(extdrIncludingVolume)"/>
+        <Command Caption="Add extdrLayerControl" Command="extdrAdd(extdrLayerControl)"/>
+        <Command Caption="Add extdrReport" Command="extdrAdd(extdrReport)"/>
+        <Command Caption="Add extdrSCHConnection" Command="extdrAdd(extdrSCHConnection)"/>
+        <Command Caption="Add extdrSCHConnector" Command="extdrAdd(extdrSCHConnector)"/>
+        <Command Caption="Add extdrSmartTextEnt" Command="extdrAdd(extdrSmartTextEnt)"/>
+      </SubMenu>
       <Action Name="ACN_VARSED"/>
       <Action Name="ACN_VARSEDSEL"/>
     </Menu>
@@ -208,10 +227,15 @@
         <Command Caption="PlaceAllBlocks" Command="PlaceAllBlocks"/>
         <Command Caption="BlocksList" Command="BlocksList"/>
         <Command Caption="Check clipboard" Command="dbgClipboard"/>
-        <Command Caption="Report on memory allocation(for debugbuild)" Command="dbgMemSummary"/>
-        <Command Caption="BlockPreviewExport" Command="ExecuteFile(*components\blockpreviewexport.cmd)"/>
+        <Command Caption="Report on memory allocation(debug mode)" Command="dbgMemSummary"/>
+        <Command Caption="BlockPreviewExport" Command="ExecuteFile($(ZCADPath)\components\blockpreviewexport.cmd)"/>
         <Action Name="ACN_TREESTAT"/>
         <Command Caption="AppExplorer" Command="DbgAppExplorer"/>
+        <SubMenu Name="**dbgMemProfiler">
+          <Command Caption="dbgMemProfiler(on)" Command="dbgMemProfiler(on)"/>
+          <Command Caption="dbgMemProfiler" Command="dbgMemProfiler"/>
+          <Command Caption="dbgMemProfiler(off)" Command="dbgMemProfiler(off)"/>
+        </SubMenu>
       </SubMenu>
       <SubMenu Name="Inspector">
         <Command Caption="**Fix the current" Command="SetObjInsp(CURRENT)"/>
@@ -289,7 +313,7 @@
       <Action Name="ACN_OS_TANGENT"/>
       <Action Name="ACN_OS_NEAREST"/>
       <Action Name="ACN_OS_APARENTINTERSECTION"/>
-      <Action Name="ACN_OS_PARALEL"/>
+      <Action Name="ACN_OS_PARALLEL"/>
     </Menu>
     <Menu Name="VIEWAREACXMENU">
       <IFONE Сonditions="EntsSelected">
@@ -348,6 +372,7 @@
         <InsertMenu Name="View"/>
       <IFONE Сonditions="ActiveDrawing">
         <InsertMenu Name="Format"/>
+        <InsertMenu Name="Tools"/>
         <InsertMenu Name="Draw"/>
         <InsertMenu Name="Dimension"/>
         <InsertMenu Name="Modify"/>

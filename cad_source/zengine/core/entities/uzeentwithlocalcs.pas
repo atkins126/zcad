@@ -17,36 +17,35 @@
 }
 
 unit uzeentwithlocalcs;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 
 interface
 uses uzepalette,uzgldrawcontext,uzedrawingdef,uzecamera,uzeentity,
      uzegeometrytypes,UGDBOutbound2DIArray,uzctnrVectorBytes,uzeentwithmatrix,uzbtypes,
-     uzegeometry,uzeffdxfsupport,sysutils,uzeentsubordinated,uzestyleslayers;
+     uzegeometry,uzeffdxfsupport,sysutils,uzeentsubordinated,uzestyleslayers,
+     uzMVReader;
 type
-//pprojoutbound:{-}PGDBOOutbound2DIArray{/Pointer/};
-{EXPORT+}
+
 PGDBObj2dprop=^GDBObj2dprop;
-{REGISTERRECORDTYPE GDBObj2dprop}
 GDBObj2dprop=record
-                   Basis:GDBBasis;(*'Basis'*)(*saved_to_shd*)
-                   P_insert:GDBCoordinates3D;(*'Insertion point OCS'*)(*saved_to_shd*)
+                   Basis:GDBBasis;(*'Basis'*)
+                   P_insert:GDBCoordinates3D;(*'Insertion point OCS'*)
              end;
 PGDBObjWithLocalCS=^GDBObjWithLocalCS;
-{REGISTEROBJECTTYPE GDBObjWithLocalCS}
 GDBObjWithLocalCS= object(GDBObjWithMatrix)
-               Local:GDBObj2dprop;(*'Object orientation'*)(*saved_to_shd*)
+               Local:GDBObj2dprop;
 
                //**получить на чтение координаты в мировой системе координат
-               P_insert_in_WCS:GDBvertex;(*'Insertion point WCS'*)(*saved_to_shd*)(*oi_readonly*)(*hidden_in_objinsp*)
-               ProjP_insert:GDBvertex;(*'Insertion point DCS'*)(*oi_readonly*)(*hidden_in_objinsp*)
-               PProjOutBound:PGDBOOutbound2DIArray;(*'Bounding box DCS'*)(*oi_readonly*)(*hidden_in_objinsp*)
-               lod:Byte;(*'Level of detail'*)(*oi_readonly*)(*hidden_in_objinsp*)
+               P_insert_in_WCS:GDBvertex;
+               ProjP_insert:GDBvertex;
+               PProjOutBound:PGDBOOutbound2DIArray;
+               lod:Byte;
                constructor init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt);
                constructor initnul(owner:PGDBObjGenericWithSubordinated);
                destructor done;virtual;
                procedure SaveToDXFObjPostfix(var outhandle:{Integer}TZctnrVectorBytes);{todo: проверить использование, выкинуть нах}
-               function LoadFromDXFObjShared(var f:TZctnrVectorBytes;dxfcod:Integer;ptu:PExtensionData;var drawing:TDrawingDef):Boolean;
+               function LoadFromDXFObjShared(var f:TZMemReader;DXFCode:Integer;ptu:PExtensionData;var drawing:TDrawingDef):Boolean;
 
                procedure FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext;Stage:TEFStages=EFAllStages);virtual;
                procedure CalcObjMatrix(pdrawing:PTDrawingDef=nil);virtual;
@@ -63,9 +62,9 @@ GDBObjWithLocalCS= object(GDBObjWithMatrix)
                function IsHaveLCS:Boolean;virtual;
                function CanSimplyDrawInOCS(const DC:TDrawContext;const ParamSize,TargetSize:Double):Boolean;inline;
          end;
-{EXPORT-}
+
 implementation
-//uses log;
+
 function GDBObjWithLocalCS.CanSimplyDrawInOCS(const DC:TDrawContext;const ParamSize,TargetSize:Double):Boolean;
 var
    templod:Double;
@@ -305,8 +304,8 @@ end;
 function GDBObjWithLocalCS.LoadFromDXFObjShared;
 //var s:String;
 begin
-     result:=inherited LoadFromDXFObjShared(f,dxfcod,ptu,drawing);
-     if not result then result:=dxfvertexload(f,210,dxfcod,Local.basis.oz);
+     result:=inherited LoadFromDXFObjShared(f,DXFCode,ptu,drawing);
+     if not result then result:=dxfvertexload(f,210,DXFCode,Local.basis.oz);
 end;
 destructor GDBObjWithLocalCS.done;
 begin

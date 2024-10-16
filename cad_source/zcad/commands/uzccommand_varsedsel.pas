@@ -40,7 +40,7 @@ uses
 
 implementation
 
-function VarsEdSel_com(operands:TCommandOperands):TCommandResult;
+function VarsEdSel_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var
   mem:TZctnrVectorBytes;
   pobj:PGDBObjEntity;
@@ -69,10 +69,12 @@ begin
     repeat
     if pobj^.Selected then begin
       pentvarext:=pobj^.GetExtension<TVariablesExtender>;
-      pentvarext.entityunit.free;
-      units.parseunit(GetSupportPath,InterfaceTranslate,mem,@pentvarext.entityunit);
-      mem.Seek(0);
-      inc(counter);
+      if pentvarext<>nil then begin
+        pentvarext.entityunit.free;
+        units.parseunit(GetSupportPath,InterfaceTranslate,mem,@pentvarext.entityunit);
+        mem.Seek(0);
+        inc(counter);
+      end;
     end;
     pobj:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
     until pobj=nil;
@@ -86,7 +88,7 @@ end;
 
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-  CreateCommandFastObjectPlugin(@VarsEdSel_com,'VarsEdSel',CADWG or CASelEnts,0);
+  CreateZCADCommand(@VarsEdSel_com,'VarsEdSel',CADWG or CASelEnts,0);
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
 end.

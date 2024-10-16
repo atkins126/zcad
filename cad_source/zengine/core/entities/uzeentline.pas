@@ -17,6 +17,7 @@
 }
 
 unit uzeentline;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 
 interface
@@ -24,19 +25,17 @@ uses LCLProc,uzeentityfactory,uzgldrawcontext,uzedrawingdef,uzecamera,
      uzestyleslayers,uzeentsubordinated,
      UGDBSelectedObjArray,uzeent3d,uzeentity,uzctnrVectorBytes,uzbtypes,uzeconsts,
      uzegeometrytypes,uzglviewareadata,uzegeometry,uzeffdxfsupport,
-     uzctnrvectorpgdbaseobjects,uzeSnap;
+     uzeSnap,uzMVReader,uzCtnrVectorpBaseEntity;
 type
-{Export+}
 PGDBObjLine=^GDBObjLine;
-{REGISTEROBJECTTYPE GDBObjLine}
 GDBObjLine= object(GDBObj3d)
-                 CoordInOCS:GDBLineProp;(*'Coordinates OCS'*)(*saved_to_shd*)
-                 CoordInWCS:GDBLineProp;(*'Coordinates WCS'*)(*hidden_in_objinsp*)
-                 PProjPoint:PGDBLineProj;(*'Coordinates DCS'*)(*hidden_in_objinsp*)
+                 CoordInOCS:GDBLineProp;
+                 CoordInWCS:GDBLineProp;
+                 PProjPoint:PGDBLineProj;
 
                  constructor init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt;p1,p2:GDBvertex);
                  constructor initnul(owner:PGDBObjGenericWithSubordinated);
-                 procedure LoadFromDXF(var f: TZctnrVectorBytes;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
+                 procedure LoadFromDXF(var f:TZMemReader;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
 
                  procedure SaveToDXF(var outhandle:{Integer}TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
                  function IsStagedFormatEntity:boolean;virtual;
@@ -47,8 +46,8 @@ GDBObjLine= object(GDBObj3d)
                   function Clone(own:Pointer):PGDBObjEntity;virtual;
                  procedure rtsave(refp:Pointer);virtual;
                  procedure TransformAt(p:PGDBObjEntity;t_matrix:PDMatrix4D);virtual;
-                  function onmouse(var popa:TZctnrVectorPGDBaseObjects;const MF:ClipArray;InSubEntry:Boolean):Boolean;virtual;
-                  function onpoint(var objects:TZctnrVectorPGDBaseObjects;const point:GDBVertex):Boolean;virtual;
+                  function onmouse(var popa:TZctnrVectorPGDBaseEntity;const MF:ClipArray;InSubEntry:Boolean):Boolean;virtual;
+                  function onpoint(var objects:TZctnrVectorPGDBaseEntity;const point:GDBVertex):Boolean;virtual;
                  //procedure feedbackinrect;virtual;
                  //function InRect:TInRect;virtual;
                   function getsnap(var osp:os_record; var pdata:Pointer; const param:OGLWndtype; ProjectProc:GDBProjectProc;SnapMode:TGDBOSMode):Boolean;virtual;
@@ -63,21 +62,20 @@ GDBObjLine= object(GDBObj3d)
                  procedure transform(const t_matrix:DMatrix4D);virtual;
                   function jointoline(pl:pgdbobjline;var drawing:TDrawingDef):Boolean;virtual;
 
-                  function ObjToString(prefix,sufix:String):String;virtual;
+                  function ObjToString(const prefix,sufix:String):String;virtual;
                   function GetObjTypeName:String;virtual;
                   function GetCenterPoint:GDBVertex;virtual;
                   procedure getoutbound(var DC:TDrawContext);virtual;
-                  function CalcInFrustum(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
-                  function CalcTrueInFrustum(frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
+                  function CalcInFrustum(const frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
+                  function CalcTrueInFrustum(const frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
 
                   function IsIntersect_Line(lbegin,lend:gdbvertex):Intercept3DProp;virtual;
                   procedure AddOnTrackAxis(var posr:os_record;const processaxis:taddotrac);virtual;
-                  function GetTangentInPoint(point:GDBVertex):GDBVertex;virtual;
+                  function GetTangentInPoint(const point:GDBVertex):GDBVertex;virtual;
 
                   class function CreateInstance:PGDBObjLine;static;
                   function GetObjType:TObjID;virtual;
            end;
-{Export-}
 ptlinertmodify=^tlinertmodify;
 tlinertmodify=record
                     lbegin,lmidle,lend:Boolean;
@@ -85,7 +83,7 @@ tlinertmodify=record
 function AllocAndInitLine(owner:PGDBObjGenericWithSubordinated):PGDBObjLine;
 implementation
 //uses log;
-function GDBObjLine.GetTangentInPoint(point:GDBVertex):GDBVertex;
+function GDBObjLine.GetTangentInPoint(const point:GDBVertex):GDBVertex;
 begin
      result:=normalizevertex(VertexSub(CoordInWCS.lEnd,CoordInWCS.lBegin));
 end;
@@ -164,7 +162,7 @@ begin
      pl^.YouDeleted(drawing);
      result:=true;
 end;
-function GDBObjLine.ObjToString(prefix,sufix:String):String;
+function GDBObjLine.ObjToString(const prefix,sufix:String):String;
 begin
      result:=prefix+inherited ObjToString('GDBObjLine (addr:',')')+sufix;
 end;
@@ -194,13 +192,13 @@ procedure GDBObjLine.LoadFromDXF;
 var //s: String;
   byt: Integer;
 begin
-  byt:=readmystrtoint(f);
+  byt:=f.ParseInteger;
   while byt <> 0 do
   begin
     if not LoadFromDXFObjShared(f,byt,ptu,drawing) then
        if not dxfvertexload(f,10,byt,CoordInOCS.lBegin) then
-          if not dxfvertexload(f,11,byt,CoordInOCS.lEnd) then {s := }f.readString;
-    byt:=readmystrtoint(f);
+          if not dxfvertexload(f,11,byt,CoordInOCS.lEnd) then {s := }f.SkipString;
+    byt:=f.ParseInteger;
   end;
 end;
 destructor GDBObjLine.done;
@@ -285,7 +283,7 @@ function GDBObjLine.CalcTrueInFrustum;
 begin
       result:=Representation.CalcTrueInFrustum(frustum,true);
 end;
-function GDBObjLine.onpoint(var objects:TZctnrVectorPGDBaseObjects;const point:GDBVertex):Boolean;
+function GDBObjLine.onpoint(var objects:TZctnrVectorPGDBaseEntity;const point:GDBVertex):Boolean;
 begin
      if {distance2piece}SQRdist_Point_to_Segment(point,self.CoordInWCS.lBegin,self.CoordInWCS.lEnd)<bigeps then
                                                                                   begin
@@ -770,7 +768,7 @@ begin
   result.initnul(owner);
   result.bp.ListPos.Owner:=owner;
 end;
-procedure SetLineGeomProps(Pline:PGDBObjLine;args:array of const);
+procedure SetLineGeomProps(Pline:PGDBObjLine; const args:array of const);
 var
    counter:integer;
 begin
@@ -778,7 +776,7 @@ begin
   Pline.CoordInOCS.lBegin:=CreateVertexFromArray(counter,args);
   Pline.CoordInOCS.lEnd:=CreateVertexFromArray(counter,args);
 end;
-function AllocAndCreateLine(owner:PGDBObjGenericWithSubordinated;args:array of const):PGDBObjLine;
+function AllocAndCreateLine(owner:PGDBObjGenericWithSubordinated; const args:array of const):PGDBObjLine;
 begin
   result:=AllocAndInitLine(owner);
   //owner^.AddMi(@result);

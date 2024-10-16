@@ -17,6 +17,7 @@
 }
 
 unit uzedrawingsimple;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 interface
 uses uzedrawingdef,uzeblockdefsfactory,uzestylesdim,
@@ -25,16 +26,19 @@ uses uzedrawingdef,uzeblockdefsfactory,uzestylesdim,
      uzestyleslayers,uzestyleslinetypes,uzeentity,UGDBSelectedObjArray,uzestylestexts,
      uzedimensionaltypes,uzegeometrytypes,uzecamera,UGDBOpenArrayOfPV,uzeroot,uzefont,
      uzglviewareaabstract,uzglviewareageneral,uzgldrawcontext,UGDBControlPointArray,
-     uzglviewareadata;
+     uzglviewareadata,uzeExtdrAbstractDrawingExtender,uzCtnrVectorPBaseEntity;
 type
 TMainBlockCreateProc=procedure (_to:PTDrawingDef;name:String) of object;
 {EXPORT+}
 PTSimpleDrawing=^TSimpleDrawing;
 {REGISTEROBJECTTYPE TSimpleDrawing}
 TSimpleDrawing= object(TAbstractDrawing)
+                     type
+                       TSelector=procedure(PEntity,PGripsCreator:PGDBObjEntity;var SelectedObjCount:Integer)of object;
+                     var
                        pObjRoot:PGDBObjGenericSubEntry;
-                       mainObjRoot:GDBObjRoot;(*saved_to_shd*)
-                       LayerTable:GDBLayerArray;(*saved_to_shd*)
+                       mainObjRoot:GDBObjRoot;
+                       LayerTable:GDBLayerArray;
                        ConstructObjRoot:GDBObjRoot;
                        SelObjArray:GDBSelectedObjArray;
                        pcamera:PGDBObjCamera;
@@ -44,17 +48,18 @@ TSimpleDrawing= object(TAbstractDrawing)
                        //OGLwindow1:toglwnd;
                        wa:TAbstractViewArea;
 
-                       TextStyleTable:GDBTextStyleArray;(*saved_to_shd*)
-                       BlockDefArray:GDBObjBlockdefArray;(*saved_to_shd*)
-                       Numerator:GDBNumerator;(*saved_to_shd*)
-                       TableStyleTable:GDBTableStyleArray;(*saved_to_shd*)
+                       TextStyleTable:GDBTextStyleArray;
+                       BlockDefArray:GDBObjBlockdefArray;
+                       Numerator:GDBNumerator;
+                       TableStyleTable:GDBTableStyleArray;
                        LTypeStyleTable:GDBLtypeArray;
                        DimStyleTable:GDBDimStyleArray;
+                       DrawingExtensions:TDrawingExtensions;
                        function GetLastSelected:PGDBObjEntity;virtual;
                        constructor init(pcam:PGDBObjCamera);
                        destructor done;virtual;
                        procedure myGluProject2(objcoord:GDBVertex; out wincoord:GDBVertex);virtual;
-                       procedure myGluUnProject(win:GDBVertex;out obj:GDBvertex);virtual;
+                       procedure myGluUnProject(const win:GDBVertex;out obj:GDBvertex);virtual;
                        function GetPcamera:PGDBObjCamera;virtual;
                        function GetCurrentROOT:PGDBObjGenericSubEntry;virtual;
                        function GetCurrentRootSimple:Pointer;virtual;
@@ -92,7 +97,7 @@ TSimpleDrawing= object(TAbstractDrawing)
                        function SetMouseEditorMode(mode:Byte):Byte;virtual;
                        procedure FreeConstructionObjects;virtual;
                        function GetChangeStampt:Boolean;virtual;
-                       function CreateDrawingRC(_maxdetail:Boolean=false):TDrawContext;virtual;
+                       function CreateDrawingRC(_maxdetail:Boolean=false;ExcludeOpts:TDContextOptions=[]):TDrawContext;virtual;
                        procedure FillDrawingPartRC(var dc:TDrawContext);virtual;
                        function GetUnitsFormat:TzeUnitsFormat;virtual;
                        procedure CreateBlockDef(name:String);virtual;
@@ -101,14 +106,68 @@ TSimpleDrawing= object(TAbstractDrawing)
                        function GetCurrentLType:PGDBLtypeProp;
                        function GetCurrentTextStyle:PGDBTextStyle;
                        function GetCurrentDimStyle:PGDBDimStyle;
-                       procedure Selector(PEntity,PGripsCreator:PGDBObjEntity;var SelectedObjCount:Integer);virtual;
-                       procedure DeSelector(PV:PGDBObjEntity;var SelectedObjCount:Integer);virtual;
+                       procedure Selector(PEntity,PGripsCreator:PGDBObjEntity;var SelectedObjCount:Integer);
+                       procedure SelectorWOGrips(PEntity,PGripsCreator:PGDBObjEntity;var SelectedObjCount:Integer);
+                       procedure DeSelector(PV:PGDBObjEntity;var SelectedObjCount:Integer);
+                       procedure DeSelectAll;virtual;
+                       procedure SelectEnts(constref Ents:TZctnrVectorPGDBaseEntity);
                  end;
 {EXPORT-}
 function CreateSimpleDWG:PTSimpleDrawing;
 var
     MainBlockCreateProc:TMainBlockCreateProc=nil;
 implementation
+procedure TSimpleDrawing.SelectEnts(constref Ents:TZctnrVectorPGDBaseEntity);
+var
+  pv:PGDBObjEntity;
+  ir:itrec;
+  TrueSel:Boolean;
+  SelProc:TSimpleDrawing.TSelector;
+begin
+  TrueSel:=Ents.GetRealCount<=sysvarDSGNMaxSelectEntsCountWithGrips;
+
+  if TrueSel then
+    SelProc:=Selector
+  else
+    SelProc:=SelectorWOGrips;
+
+  pv:=Ents.beginiterate(ir);
+  if pv<>nil then
+    repeat
+      pv^.select(wa.param.SelDesc.Selectedobjcount,SelProc);
+      pv:=Ents.iterate(ir);
+    until pv=nil;
+end;
+
+procedure TSimpleDrawing.DeSelectAll;
+var tdesc:pselectedobjdesc;
+    i:Integer;
+    pv:PGDBObjEntity;
+    ir:itrec;
+begin
+  if SelObjArray.count<>0 then begin
+    tdesc:=SelObjArray.GetParrayAsPointer;
+    for i:=0 to SelObjArray.count-1 do begin
+      tdesc.objaddr.selected:=false;
+      SelObjArray.freeelement(tdesc);
+      inc(tdesc);
+    end;
+    SelObjArray.Clear;
+  end;
+  pv:=GetCurrentROOT^.ObjArray.beginiterate(ir);
+  if pv<>nil then
+    repeat
+      pv^.Selected:=false;
+      pv:=GetCurrentROOT^.ObjArray.iterate(ir);
+    until pv=nil;
+end;
+
+
+procedure TSimpleDrawing.SelectorWOGrips(PEntity,PGripsCreator:PGDBObjEntity;var SelectedObjCount:Integer);
+begin
+  SelObjArray.pushobject(PEntity);
+  inc(Selectedobjcount);
+end;
 procedure TSimpleDrawing.Selector;
 var tdesc:pselectedobjdesc;
 begin
@@ -214,7 +273,7 @@ begin
      result.RemoveTrailingZeros:=true;
 end;
 
-function TSimpleDrawing.CreateDrawingRC(_maxdetail:Boolean=false):TDrawContext;
+function TSimpleDrawing.CreateDrawingRC(_maxdetail:Boolean=false;ExcludeOpts:TDContextOptions=[]):TDrawContext;
 begin
   if assigned(wa)then
                      result:=wa.CreateRC(_maxdetail)
@@ -223,6 +282,7 @@ begin
        result:=CreateFaceRC;
        FillDrawingPartRC(result);
   end;
+  Result.Options:=Result.Options-ExcludeOpts;
 end;
 procedure TSimpleDrawing.FillDrawingPartRC(var dc:TDrawContext);
 begin
@@ -427,8 +487,8 @@ begin
      begin
           if point.selected then
           begin
-               if save then
-                           save:=save;
+//               if save then
+//                           save:=save;
                {учет СК владельца}
                m:=PSelectedObjDesc(md).objaddr^.getownermatrix^;
                MatrixInvert(m);
@@ -643,7 +703,7 @@ begin
       objcoord:=vertexadd(objcoord,pcamera^.CamCSOffset);
      _myGluProject(objcoord.x,objcoord.y,objcoord.z,@pcamera^.modelMatrixLCS,@pcamera^.projMatrixLCS,@pcamera^.viewport,wincoord.x,wincoord.y,wincoord.z);
 end;
-procedure TSimpleDrawing.myGluUnProject(win:GDBVertex;out obj:GDBvertex);
+procedure TSimpleDrawing.myGluUnProject(const win:GDBVertex;out obj:GDBvertex);
 begin
      _myGluUnProject(win.x,win.y,win.z,@pcamera^.modelMatrixLCS,@pcamera^.projMatrixLCS,@pcamera^.viewport, obj.x,obj.y,obj.z);
      OBJ:=vertexsub(OBJ,pcamera^.CamCSOffset);
@@ -672,6 +732,7 @@ begin
                                 pcamera^.done;
                                 Freemem(pointer(pcamera));
                            end;
+     DrawingExtensions.Free;
 end;
 constructor TSimpleDrawing.init;
 var {tp:GDBTextStyleProp;}
@@ -975,6 +1036,8 @@ begin
      cs.TextWidth:=cs.Width-2;
      cs.cf:=jcc;
      ts.tblformat.PushBackData(cs);
+
+     DrawingExtensions:=TDrawingExtensions.create;
 
 end;
 

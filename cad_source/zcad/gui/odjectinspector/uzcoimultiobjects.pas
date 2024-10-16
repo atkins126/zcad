@@ -27,7 +27,9 @@ uses
   uzcenitiesvariablesextender,uzgldrawcontext,usimplegenerics,gzctnrSTL,
   gzctnrVectorTypes,uzbtypes,uzcdrawings,varmandef,uzeentity,
   Varman,uzctnrvectorstrings,UGDBSelectedObjArray,uzcoimultipropertiesutil,
-  uzeentityextender,uzelongprocesssupport,uzbLogIntf;
+  uzeExtdrAbstractEntityExtender,uzelongprocesssupport,uzbLogIntf,uzcutils,
+  zUndoCmdChgVariable,uzcdrawing,zUndoCmdChgTypes,//uzeBaseExtender,
+  uzCtnrVectorPBaseEntity,uzglviewareageneral;
 type
   TObjIDWithExtender2Counter=TMyMapCounter<TObjIDWithExtender>;
 {Export+}
@@ -52,6 +54,8 @@ type
   TMSEntsLayersDetector=TEnumDataWithOtherPointers;
   {REGISTERRECORDTYPE TMSEntsLinetypesDetector}
   TMSEntsLinetypesDetector=TEnumDataWithOtherPointers;
+  {REGISTERRECORDTYPE TMSEntsExtendersDetector}
+  TMSEntsExtendersDetector=TEnumDataWithOtherPointers;
   {REGISTEROBJECTTYPE TMSEditor}
   TMSEditor= object(TWrapper2ObjInsp)
                 TxtEntType:TMSPrimitiveDetector;(*'Process primitives'*)
@@ -78,10 +82,10 @@ type
                 procedure CheckMultiPropertyUse;
                 procedure CreateMultiPropertys(const f:TzeUnitsFormat);
 
-                procedure SetVariables(PSourceVD:pvardesk;NeededObjType:TObjID);
-                procedure SetRelatedVariables(PSourceVD:pvardesk;NeededObjType:TObjID);
-                procedure SetMultiProperty(pu:PTEntityUnit;PSourceVD:pvardesk;NeededObjType:TObjID);
-                procedure processProperty(const ID:TObjID; const pdata: pointer; const pentity: pGDBObjEntity; const PMultiPropertyDataForObjects:PTMultiPropertyDataForObjects; const pu:PTEntityUnit; const PSourceVD:PVarDesk;const mp:TMultiProperty; var DC:TDrawContext);
+                procedure SetVariables(var UMPlaced:boolean;PSourceVD:pvardesk;NeededObjType:TObjID);
+                procedure SetRelatedVariables(var UMPlaced:boolean;PSourceVD:pvardesk;NeededObjType:TObjID);
+                procedure SetMultiProperty(var UMPlaced:boolean;pu:PTEntityUnit;PSourceVD:pvardesk;NeededObjType:TObjID);
+                procedure processProperty(var UMPlaced:boolean;const ID:TObjID; const pdata: pointer; const pentity: pGDBObjEntity; const PMultiPropertyDataForObjects:PTMultiPropertyDataForObjects; const pu:PTEntityUnit; const PSourceVD:PVarDesk;const mp:TMultiProperty; var DC:TDrawContext);
                 procedure ClearErrorRange;
             end;
   PMSEditor=^TMSEditor;
@@ -92,10 +96,12 @@ procedure DeselectBlocsByName(PInstance:Pointer);
 procedure DeselectTextsByStyle(PInstance:Pointer);
 procedure DeselectEntsByLayer(PInstance:Pointer);
 procedure DeselectEntsByLinetype(PInstance:Pointer);
+procedure DeselectEntsByExtender(PInstance:Pointer);
 procedure SelectOnlyThisBlocsByName(PInstance:Pointer);
 procedure SelectOnlyThisTextsByStyle(PInstance:Pointer);
 procedure SelectOnlyThisEntsByLayer(PInstance:Pointer);
 procedure SelectOnlyThisEntsByLinetype(PInstance:Pointer);
+procedure SelectOnlyThisEntsByExtender(PInstance:Pointer);
 var
    MSEditor:TMSEditor;
    i:integer;
@@ -132,30 +138,35 @@ begin
      ObjIDVector.Free;
      ObjIDWithExtenderCounter.Free;
 end;
-function SetVariable(pentity: pGDBObjEntity;pentvarext: TVariablesExtender;PSourceVD:pvardesk):boolean;
+function SetVariable(var UMPlaced:boolean;pentity: pGDBObjEntity;pentvarext: TVariablesExtender;PSourceVD:pvardesk):boolean;
 var
   PDestVD: pvardesk;
+  cp:UCmdChgVariable;
 begin
   result:=false;
-    if pentvarext<>nil then
-    begin
-         PDestVD:=pentvarext.entityunit.InterfaceVariables.findvardesc(PSourceVD^.name);
-         if PDestVD<>nil then
-           if PSourceVD^.data.PTD=PDestVD^.data.PTD then
-           begin
-                PDestVD.data.PTD.CopyInstanceTo(PSourceVD.data.Addr.Instance,PDestVD.data.Addr.Instance);
+    if pentvarext<>nil then begin
+      PDestVD:=pentvarext.entityunit.InterfaceVariables.findvardesc(PSourceVD^.name);
+      if PDestVD<>nil then
+        if PSourceVD^.data.PTD=PDestVD^.data.PTD then begin
+          zcPlaceUndoStartMarkerIfNeed(UMPlaced,'Variable changed');
 
-                pentity^.YouChanged(drawings.GetCurrentDWG^);
-                result:=true;
-
-                if PSourceVD^.data.PTD.GetValueAsString(PSourceVD^.data.Addr.Instance)<>PDestVD^.data.PTD.GetValueAsString(PDestVD^.data.Addr.Instance) then
-                PSourceVD.attrib:=PSourceVD.attrib or vda_different;
-           end;
+          cp:=UCmdChgVariable.CreateAndPush(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,
+                                            TChangedVariableDesc.CreateRec(PDestVD^.data.PTD,PDestVD^.data.Addr.GetInstance,PDestVD^.name),
+                                            TSharedPEntityData.CreateRec(pentity),
+                                            TAfterChangePDrawing.CreateRec(drawings.GetCurrentDWG));
+          //cp.ChangedData.StoreUndoData(PDestVD^.data.Addr.GetInstance);
+          PDestVD.data.PTD.CopyInstanceTo(PSourceVD.data.Addr.Instance,PDestVD.data.Addr.Instance);
+          //cp.ChangedData.StoreDoData(PDestVD^.data.Addr.GetInstance);
+          pentity^.YouChanged(drawings.GetCurrentDWG^);
+          result:=true;
+          if PSourceVD^.data.PTD.GetValueAsString(PSourceVD^.data.Addr.Instance)<>PDestVD^.data.PTD.GetValueAsString(PDestVD^.data.Addr.Instance) then
+            PSourceVD.attrib:=PSourceVD.attrib or vda_different;
+        end;
     end;
 
 end;
 
-procedure TMSEditor.SetVariables(PSourceVD:pvardesk;NeededObjType:TObjID);
+procedure TMSEditor.SetVariables(var UMPlaced:boolean;PSourceVD:pvardesk;NeededObjType:TObjID);
 var
   pentvarext,pmainentvarext: TVariablesExtender;
   EntIterator: itrec;
@@ -173,18 +184,18 @@ begin
         if pentvarext.pMainFuncEntity<>nil then begin
           pmainentity:=pentvarext.pMainFuncEntity;
           pmainentvarext:=pmainentity^.GetExtension<TVariablesExtender>;
-          SetVariable(pmainentity,pmainentvarext,PSourceVD);
+          SetVariable(UMPlaced,pmainentity,pmainentvarext,PSourceVD);
         end;
       end;
       if VariableProcessSelector<>VPS_OnlyRelatedEnts then
-        if not SetVariable(pentity,pentvarext,PSourceVD) then
+        if not SetVariable(UMPlaced,pentity,pentvarext,PSourceVD) then
           pentity^.YouChanged(drawings.GetCurrentDWG^);
     end;
     psd:=drawings.GetCurrentDWG.SelObjArray.iterate(EntIterator);
   until psd=nil;
 end;
 
-procedure TMSEditor.SetRelatedVariables(PSourceVD:pvardesk;NeededObjType:TObjID);
+procedure TMSEditor.SetRelatedVariables(var UMPlaced:boolean;PSourceVD:pvardesk;NeededObjType:TObjID);
 var
   pentvarext,pmainentvarext: TVariablesExtender;
   EntIterator: itrec;
@@ -201,7 +212,7 @@ begin
       if pentvarext.pMainFuncEntity<>nil then begin
         pmainentity:=pentvarext.pMainFuncEntity;
         pmainentvarext:=pmainentity^.GetExtension<TVariablesExtender>;
-        SetVariable(pmainentity,pmainentvarext,PSourceVD);
+        SetVariable(UMPlaced,pmainentity,pmainentvarext,PSourceVD);
       end;
     end;
     psd:=drawings.GetCurrentDWG.SelObjArray.iterate(EntIterator);
@@ -238,7 +249,7 @@ begin
                                         iterator.destroy;
          end;
 end;
-procedure TMSEditor.processProperty(const ID:TObjID; const pdata: pointer; const pentity: pGDBObjEntity; const PMultiPropertyDataForObjects:PTMultiPropertyDataForObjects; const pu:PTEntityUnit; const PSourceVD:PVarDesk;const mp:TMultiProperty; var DC:TDrawContext);
+procedure TMSEditor.processProperty(var UMPlaced:boolean;const ID:TObjID; const pdata: pointer; const pentity: pGDBObjEntity; const PMultiPropertyDataForObjects:PTMultiPropertyDataForObjects; const pu:PTEntityUnit; const PSourceVD:PVarDesk;const mp:TMultiProperty; var DC:TDrawContext);
 var
    ChangedData:TChangedData;
    CanChangeValue:Boolean;
@@ -255,7 +266,7 @@ begin
                                                           end;
        if CanChangeValue then
                              begin
-                               PMultiPropertyDataForObjects.EntChangeProc(pu,PSourceVD,ChangedData,mp);
+                               PMultiPropertyDataForObjects.EntChangeProc(UMPlaced,pu,PSourceVD,ChangedData,mp);
                                pentity^.YouChanged(drawings.GetCurrentDWG^);
                                //pentity.FormatEntity(drawings.GetCurrentDWG^,dc);
                              end
@@ -278,7 +289,7 @@ begin
      end
 
 end;
-procedure TMSEditor.SetMultiProperty(pu:PTEntityUnit;PSourceVD:PVarDesk;NeededObjType:TObjID);
+procedure TMSEditor.SetMultiProperty(var UMPlaced:boolean;pu:PTEntityUnit;PSourceVD:PVarDesk;NeededObjType:TObjID);
 var
   //pentvarext: TVariablesExtender;
   EntIterator: itrec;
@@ -289,7 +300,7 @@ var
   i,j:integer;
   PMultiPropertyDataForObjects:PTMultiPropertyDataForObjects;
   ObjIDWithExtender:TObjIDWithExtender;
-  Extender:TBaseEntityExtender;
+  Extender:TAbstractEntityExtender;
   lpsh:TLPSHandle;
 begin
   ClearErrorRange;
@@ -306,25 +317,25 @@ begin
       for i:=0 to MultiPropertiesManager.MultiPropertyVector.Size-1 do
         if MultiPropertiesManager.MultiPropertyVector[i].usecounter<>0 then begin
           if ComparePropAndVarNames(MultiPropertiesManager.MultiPropertyVector[i].MPName,PSourceVD^.name) then begin
-            if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetMutableValue(TObjIDWithExtender.Create(pentity^.GetObjType,nil),PMultiPropertyDataForObjects)then begin
+            if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.tryGetMutableValue(TObjIDWithExtender.Create(pentity^.GetObjType,nil),PMultiPropertyDataForObjects)then begin
               if not PMultiPropertyDataForObjects^.SetValueErrorRange then
-                processProperty(pentity^.GetObjType,pentity,pentity,PMultiPropertyDataForObjects,pu,PSourceVD,MultiPropertiesManager.MultiPropertyVector[i],DC)
-            end else if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetMutableValue(TObjIDWithExtender.Create(0,nil),PMultiPropertyDataForObjects)then begin
+                processProperty(UMPlaced,pentity^.GetObjType,pentity,pentity,PMultiPropertyDataForObjects,pu,PSourceVD,MultiPropertiesManager.MultiPropertyVector[i],DC)
+            end else if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.tryGetMutableValue(TObjIDWithExtender.Create(0,nil),PMultiPropertyDataForObjects)then begin
                 if not PMultiPropertyDataForObjects^.SetValueErrorRange then
-                  processProperty(0,pentity,pentity,PMultiPropertyDataForObjects,pu,PSourceVD,MultiPropertiesManager.MultiPropertyVector[i],DC);
+                  processProperty(UMPlaced,0,pentity,pentity,PMultiPropertyDataForObjects,pu,PSourceVD,MultiPropertiesManager.MultiPropertyVector[i],DC);
             end else begin
               for j:=0 to pentity^.GetExtensionsCount-1 do begin
                 Extender:=pentity^.GetExtension(j);
                 ObjIDWithExtender.ObjID:=pentity^.GetObjType;
                 ObjIDWithExtender.ExtenderClass:=typeof(Extender);
-                if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetMutableValue(ObjIDWithExtender,PMultiPropertyDataForObjects)then begin
+                if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.tryGetMutableValue(ObjIDWithExtender,PMultiPropertyDataForObjects)then begin
                   if not PMultiPropertyDataForObjects^.SetValueErrorRange then
-                    processProperty(pentity^.GetObjType,Extender,pentity,PMultiPropertyDataForObjects,pu,PSourceVD,MultiPropertiesManager.MultiPropertyVector[i],DC)
+                    processProperty(UMPlaced,pentity^.GetObjType,Extender,pentity,PMultiPropertyDataForObjects,pu,PSourceVD,MultiPropertiesManager.MultiPropertyVector[i],DC)
                 end else begin
                   ObjIDWithExtender.ObjID:=0;
-                  if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetMutableValue(ObjIDWithExtender,PMultiPropertyDataForObjects)then begin
+                  if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.tryGetMutableValue(ObjIDWithExtender,PMultiPropertyDataForObjects)then begin
                     if not PMultiPropertyDataForObjects^.SetValueErrorRange then
-                      processProperty(pentity^.GetObjType,Extender,pentity,PMultiPropertyDataForObjects,pu,PSourceVD,MultiPropertiesManager.MultiPropertyVector[i],DC)
+                      processProperty(UMPlaced,pentity^.GetObjType,Extender,pentity,PMultiPropertyDataForObjects,pu,PSourceVD,MultiPropertiesManager.MultiPropertyVector[i],DC)
                   end;
                 end;
               end;
@@ -339,65 +350,59 @@ begin
 end;
 
 procedure  TMSEditor.FormatAfterFielfmod;
-var //i: Integer;
-    //pu:pointer;
-    pvd:pvardesk;
-    //vd:vardesk;
-    //ir2:itrec;
-    //etype:integer;
+var
+  pvd:pvardesk;
+  UMPlaced:boolean;
 begin
-      if (PFIELD=@self.TxtEntType)or(PFIELD=@self.VariableProcessSelector) then
-      begin
-           PFIELD:=@TxtEntType;
-           CreateUnit(SavezeUnitsFormat,false);
-           exit;
-      end;
+  UMPlaced:=false;
+  try
+    if (PFIELD=@self.TxtEntType)or(PFIELD=@self.VariableProcessSelector) then begin
+      PFIELD:=@TxtEntType;
+      CreateUnit(SavezeUnitsFormat,false);
+      exit;
+    end;
 
-      pvd:=VariablesUnit.FindVariableByInstance(PFIELD);
-      if pvd<>nil then
-      begin
-         SetVariables(pvd,GetObjType);
-         exit;
-      end;
+    pvd:=VariablesUnit.FindVariableByInstance(PFIELD);
+    if pvd<>nil then begin
+      SetVariables(UMPlaced,pvd,GetObjType);
+      exit;
+    end;
 
-      pvd:=RelatedVariablesUnit.FindVariableByInstance(PFIELD);
-      if pvd<>nil then
-      begin
-         SetRelatedVariables(pvd,GetObjType);
-         exit;
-      end;
+    pvd:=RelatedVariablesUnit.FindVariableByInstance(PFIELD);
+    if pvd<>nil then begin
+      SetRelatedVariables(UMPlaced,pvd,GetObjType);
+      exit;
+    end;
 
-      pvd:=GeneralUnit.FindVariableByInstance(PFIELD);
-      if pvd<>nil then
-      begin
-         SetMultiProperty(@GeneralUnit,pvd,GetObjType);
-         exit;
-      end;
+    pvd:=GeneralUnit.FindVariableByInstance(PFIELD);
+    if pvd<>nil then begin
+      SetMultiProperty(UMPlaced,@GeneralUnit,pvd,GetObjType);
+      exit;
+    end;
 
-      pvd:=GeometryUnit.FindVariableByInstance(PFIELD);
-      if pvd<>nil then
-      begin
-         SetMultiProperty(@GeometryUnit,pvd,GetObjType);
-         //CreateMultiPropertys(SavezeUnitsFormat);
-         exit;
-      end;
+    pvd:=GeometryUnit.FindVariableByInstance(PFIELD);
+    if pvd<>nil then begin
+      SetMultiProperty(UMPlaced,@GeometryUnit,pvd,GetObjType);
+       //CreateMultiPropertys(SavezeUnitsFormat);
+      exit;
+    end;
 
-      pvd:=MiscUnit.FindVariableByInstance(PFIELD);
-      if pvd<>nil then
-      begin
-         SetMultiProperty(@MiscUnit,pvd,GetObjType);
-         //CreateMultiPropertys(SavezeUnitsFormat);
-         exit;
-      end;
+    pvd:=MiscUnit.FindVariableByInstance(PFIELD);
+    if pvd<>nil then begin
+      SetMultiProperty(UMPlaced,@MiscUnit,pvd,GetObjType);
+       //CreateMultiPropertys(SavezeUnitsFormat);
+      exit;
+    end;
 
-      pvd:=ExtendersUnit.FindVariableByInstance(PFIELD);
-      if pvd<>nil then
-      begin
-         SetMultiProperty(@ExtendersUnit,pvd,GetObjType);
-         //CreateMultiPropertys(SavezeUnitsFormat);
-         exit;
-      end;
-
+    pvd:=ExtendersUnit.FindVariableByInstance(PFIELD);
+    if pvd<>nil then begin
+      SetMultiProperty(UMPlaced,@ExtendersUnit,pvd,GetObjType);
+       //CreateMultiPropertys(SavezeUnitsFormat);
+      exit;
+    end;
+  finally
+    zcPlaceUndoEndMarkerIfNeed(UMPlaced);
+  end;
 end;
 function TMSEditor.GetObjType:TObjID;
 begin
@@ -419,7 +424,7 @@ var
     entinfo:TEntInfoData;
     ObjIDWithExtender:TObjIDWithExtender;
     counter:integer;
-    EE:TBaseEntityExtender;
+    EE:TAbstractEntityExtender;
 begin
   //очистка-пересоздание структур данных
   ObjID2Counter.Free;
@@ -493,7 +498,7 @@ var
     fistrun:boolean;
     ChangedData:TChangedData;
     ObjIDWithExtender:TObjIDWithExtender;
-    Extender:TBaseEntityExtender;
+    Extender:TAbstractEntityExtender;
 begin
   SavezeUnitsFormat:=f;
   NeedObjID:=GetObjType;
@@ -515,13 +520,13 @@ begin
         if pv<>nil then
           if (pv^.GetObjType=NeedObjID)or(NeedObjID=0) then
             if pv^.Selected then begin
-              if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetValue(TObjIDWithExtender.Create(pv^.GetObjType,nil),MultiPropertyDataForObjects)then begin
+              if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.tryGetValue(TObjIDWithExtender.Create(pv^.GetObjType,nil),MultiPropertyDataForObjects)then begin
                 if @MultiPropertyDataForObjects.EntBeforeIterateProc<>nil then
                 begin
                   ChangedData:=CreateChangedData(pv,MultiPropertyDataForObjects.GSData);
                   MultiPropertyDataForObjects.EntBeforeIterateProc(MultiPropertiesManager.MultiPropertyVector[i].PIiterateData,ChangedData);
                 end;
-              end else if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetValue(TObjIDWithExtender.Create(0,nil),MultiPropertyDataForObjects)then begin
+              end else if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.tryGetValue(TObjIDWithExtender.Create(0,nil),MultiPropertyDataForObjects)then begin
                 if @MultiPropertyDataForObjects.EntBeforeIterateProc<>nil then begin
                   ChangedData:=CreateChangedData(pv,MultiPropertyDataForObjects.GSData);
                   MultiPropertyDataForObjects.EntBeforeIterateProc(MultiPropertiesManager.MultiPropertyVector[i].PIiterateData,ChangedData)
@@ -531,14 +536,14 @@ begin
                   Extender:=pv^.GetExtension(j);
                   ObjIDWithExtender.ObjID:=pv^.GetObjType;
                   ObjIDWithExtender.ExtenderClass:=typeof(Extender);
-                  if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetValue(ObjIDWithExtender,MultiPropertyDataForObjects)then begin
+                  if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.tryGetValue(ObjIDWithExtender,MultiPropertyDataForObjects)then begin
                     if @MultiPropertyDataForObjects.EntBeforeIterateProc<>nil then begin
                       ChangedData:=CreateChangedData(Extender,MultiPropertyDataForObjects.GSData);
                       MultiPropertyDataForObjects.EntBeforeIterateProc(MultiPropertiesManager.MultiPropertyVector[i].PIiterateData,ChangedData)
                     end;
                   end else begin
                     ObjIDWithExtender.ObjID:=0;
-                    if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetValue(ObjIDWithExtender,MultiPropertyDataForObjects)then begin
+                    if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.tryGetValue(ObjIDWithExtender,MultiPropertyDataForObjects)then begin
                       if @MultiPropertyDataForObjects.EntBeforeIterateProc<>nil then begin
                         ChangedData:=CreateChangedData(Extender,MultiPropertyDataForObjects.GSData);
                         MultiPropertyDataForObjects.EntBeforeIterateProc(MultiPropertiesManager.MultiPropertyVector[i].PIiterateData,ChangedData)
@@ -563,11 +568,11 @@ begin
         if pv<>nil then
           if (pv^.GetObjType=NeedObjID)or(NeedObjID=0) then
             if pv^.Selected then begin
-              if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetValue(TObjIDWithExtender.Create(pv^.GetObjType,nil),MultiPropertyDataForObjects)then begin
+              if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.tryGetValue(TObjIDWithExtender.Create(pv^.GetObjType,nil),MultiPropertyDataForObjects)then begin
                 ChangedData:=CreateChangedData(pv,MultiPropertyDataForObjects.GSData);
                 MultiPropertyDataForObjects.EntIterateProc(MultiPropertiesManager.MultiPropertyVector[i].PIiterateData,ChangedData,MultiPropertiesManager.MultiPropertyVector[i],fistrun,MultiPropertyDataForObjects.EntChangeProc,f);
                 fistrun:=false;
-              end else if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetValue(TObjIDWithExtender.Create(0,nil),MultiPropertyDataForObjects)then begin
+              end else if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.tryGetValue(TObjIDWithExtender.Create(0,nil),MultiPropertyDataForObjects)then begin
                 ChangedData:=CreateChangedData(pv,MultiPropertyDataForObjects.GSData);
                 MultiPropertyDataForObjects.EntIterateProc(MultiPropertiesManager.MultiPropertyVector[i].PIiterateData,ChangedData,MultiPropertiesManager.MultiPropertyVector[i],fistrun,MultiPropertyDataForObjects.EntChangeProc,f);
                 fistrun:=false;
@@ -576,7 +581,7 @@ begin
                   Extender:=pv^.GetExtension(j);
                   ObjIDWithExtender.ObjID:=pv^.GetObjType;
                   ObjIDWithExtender.ExtenderClass:=typeof(Extender);
-                  if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetValue(ObjIDWithExtender,MultiPropertyDataForObjects)then begin
+                  if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.tryGetValue(ObjIDWithExtender,MultiPropertyDataForObjects)then begin
                     if @MultiPropertyDataForObjects.EntIterateProc<>nil then begin
                       ChangedData:=CreateChangedData(Extender,MultiPropertyDataForObjects.GSData);
                       MultiPropertyDataForObjects.EntIterateProc(MultiPropertiesManager.MultiPropertyVector[i].PIiterateData,ChangedData,MultiPropertiesManager.MultiPropertyVector[i],fistrun,MultiPropertyDataForObjects.EntChangeProc,f);
@@ -584,7 +589,7 @@ begin
                     end;
                   end else begin
                     ObjIDWithExtender.ObjID:=0;
-                    if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.MyGetValue(ObjIDWithExtender,MultiPropertyDataForObjects)then begin
+                    if MultiPropertiesManager.MultiPropertyVector[i].MPObjectsData.tryGetValue(ObjIDWithExtender,MultiPropertyDataForObjects)then begin
                       if @MultiPropertyDataForObjects.EntIterateProc<>nil then begin
                         ChangedData:=CreateChangedData(Extender,MultiPropertyDataForObjects.GSData);
                         MultiPropertyDataForObjects.EntIterateProc(MultiPropertiesManager.MultiPropertyVector[i].PIiterateData,ChangedData,MultiPropertiesManager.MultiPropertyVector[i],fistrun,MultiPropertyDataForObjects.EntChangeProc,f);
@@ -723,14 +728,14 @@ begin
 end;
 
 procedure  TMSEditor.createunit;
-var //i: Integer;
-    pv:pGDBObjEntity;
-    psd:PSelectedObjDesc;
-    pu:pointer;
-    //pvd,pvdmy:pvardesk;
-    //vd:vardesk;
-    ir,ir2:itrec;
-    pentvarext:TVariablesExtender;
+var
+  pv:pGDBObjEntity;
+  psd:PSelectedObjDesc;
+  pu:pointer;
+  ir,ir2:itrec;
+  pentvarext:TVariablesExtender;
+  entscount:integer;
+  TrueSel:Boolean;
 begin
   with ProgramLog.Enter('TMSEditor.createunit',LM_Debug) do begin
   //debugln('{D+}TMSEditor.createunit start');
@@ -773,33 +778,42 @@ begin
       SummaryUnit.InterfaceUses.PushBackIfNotPresent(sysunit);
     programlog.leave(IfEntered);end;
 
-    CheckMultiPropertyUse;
-    CreateMultiPropertys(f);
-    //etype:=GetObjType;
-    psd:=drawings.GetCurrentDWG.SelObjArray.beginiterate(ir);
-    //pv:=drawings.GetCurrentDWG.ObjRoot.ObjArray.beginiterate(ir);
-    if psd<>nil then repeat
-      pv:=psd^.objaddr;
-      if pv<>nil then
-        if pv^.Selected then begin
-          pentvarext:=pv^.GetExtension<TVariablesExtender>;
-          if ((pv^.GetObjType=GetObjType)or(GetObjType=0))and(pentvarext<>nil) then begin
-            if VariableProcessSelector<>VPS_OnlyRelatedEnts then
-              processunit(pentvarext.entityunit);
-            if VariableProcessSelector<>VPS_OnlyThisEnts then begin
-              pu:=pentvarext.entityunit.InterfaceUses.beginiterate(ir2);
-              if pu<>nil then
-                repeat
-                  if typeof(PTSimpleUnit(pu)^)=typeof(TEntityUnit) then
-                    processunit(PTEntityUnit(pu)^,true);
-                  pu:=pentvarext.entityunit.InterfaceUses.iterate(ir2)
-                until pu=nil;
+    if TxtEntType.Selected=0 then
+      entscount:=drawings.GetCurrentDWG.SelObjArray.Count
+    else
+      entscount:=ObjID2Counter.MyGetValue(ObjIDVector[TxtEntType.Selected]);
+
+    TrueSel:=entscount<=sysvarDSGNMaxSelectEntsCountWithObjInsp;
+
+    if TrueSel then begin
+      CheckMultiPropertyUse;
+      CreateMultiPropertys(f);
+      //etype:=GetObjType;
+      psd:=drawings.GetCurrentDWG.SelObjArray.beginiterate(ir);
+      //pv:=drawings.GetCurrentDWG.ObjRoot.ObjArray.beginiterate(ir);
+      if psd<>nil then repeat
+        pv:=psd^.objaddr;
+        if pv<>nil then
+          if pv^.Selected then begin
+            pentvarext:=pv^.GetExtension<TVariablesExtender>;
+            if ((pv^.GetObjType=GetObjType)or(GetObjType=0))and(pentvarext<>nil) then begin
+              if VariableProcessSelector<>VPS_OnlyRelatedEnts then
+                processunit(pentvarext.entityunit);
+              if VariableProcessSelector<>VPS_OnlyThisEnts then begin
+                pu:=pentvarext.entityunit.InterfaceUses.beginiterate(ir2);
+                if pu<>nil then
+                  repeat
+                    if typeof(PTSimpleUnit(pu)^)=typeof(TEntityUnit) then
+                      processunit(PTEntityUnit(pu)^,true);
+                    pu:=pentvarext.entityunit.InterfaceUses.iterate(ir2)
+                  until pu=nil;
+              end;
             end;
           end;
-        end;
-      //pv:=drawings.GetCurrentDWG.ObjRoot.ObjArray.iterate(ir);
-      psd:=drawings.GetCurrentDWG.SelObjArray.iterate(ir);
-    until psd=nil;
+        //pv:=drawings.GetCurrentDWG.ObjRoot.ObjArray.iterate(ir);
+        psd:=drawings.GetCurrentDWG.SelObjArray.iterate(ir);
+      until psd=nil;
+    end;
   programlog.leave(IfEntered);end;
   //debugln('{D-}TMSEditor.createunit end');
 end;
@@ -852,280 +866,579 @@ begin
 end;
 procedure DeselectBlocsByName(PInstance:Pointer);
 var
-    pv:pGDBObjEntity;
-    ir:itrec;
-    count,selected:integer;
-    blockname:AnsiString;
+  pv:pGDBObjEntity;
+  ir:itrec;
+  Count,selected:integer;
+  blockname:ansistring;
+  ents:TZctnrVectorPGDBaseEntity;
 begin
-    selected:=PTEnumDataWithOtherStrings(PInstance)^.Selected;
-    blockname:=PTEnumDataWithOtherStrings(PInstance)^.Strings.getData(selected);
-    count:=0;
-    pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
-    if pv<>nil then
+  selected:=PTEnumDataWithOtherStrings(PInstance)^.Selected;
+  blockname:=PTEnumDataWithOtherStrings(PInstance)^.Strings.getData(selected);
+  Count:=0;
+  pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
+  if pv<>nil then
     repeat
       if pv^.Selected then
-      if (pv^.GetObjType=GDBDeviceID)or(pv^.GetObjType=GDBBlockInsertID) then
-      if (selected=0)or(PGDBObjBlockInsert(pv)^.Name=blockname)then
-      begin
-        inc(count);
-        pv^.DeSelect(drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount,drawings.CurrentDWG^.DeSelector);
-      end;
+        if (pv^.GetObjType=GDBDeviceID)or(pv^.GetObjType=GDBBlockInsertID)then begin
+          if selected<>0 then begin
+            if PGDBObjBlockInsert(pv)^.Name<>blockname then
+              Inc(Count);
+          end;
+        end else
+          Inc(Count);
       pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
     until pv=nil;
-    ZCMsgCallBackInterface.TextMessage(sysutils.Format(rscmNEntitiesDeselected,[count]),TMWOHistoryOut);
-    if count>0 then
-      ZCMsgCallBackInterface.Do_GUIaction(drawings.GetCurrentDWG.wa,ZMsgID_GUIActionSelectionChanged);
+  ents.init(Count);
+
+  pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
+  if pv<>nil then
+    repeat
+      if pv^.Selected then
+        if (pv^.GetObjType=GDBDeviceID)or(pv^.GetObjType=GDBBlockInsertID)then begin
+          if selected<>0 then begin
+            if PGDBObjBlockInsert(pv)^.Name<>blockname then
+              ents.PushBackData(pv);
+          end;
+        end else
+          ents.PushBackData(pv);
+      pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
+    until pv=nil;
+
+  Count:=drawings.GetCurrentDWG.SelObjArray.Count-Count;
+  drawings.GetCurrentDWG.DeSelectAll;
+  drawings.GetCurrentDWG.SelectEnts(ents);
+  ents.Clear;
+  ents.Free;
+
+  ZCMsgCallBackInterface.TextMessage(Format(rscmNEntitiesDeselected,[Count]),
+                                     TMWOHistoryOut);
+  if Count>0 then
+    ZCMsgCallBackInterface.Do_GUIaction(drawings.GetCurrentDWG.wa,
+                                        ZMsgID_GUIActionSelectionChanged);
 end;
 procedure DeselectTextsByStyle(PInstance:Pointer);
 var
-    pv:pGDBObjEntity;
-    ir:itrec;
-    count,selected:integer;
-    ptextstyle:pointer;
+  pv:pGDBObjEntity;
+  ir:itrec;
+  Count,selected:integer;
+  ptextstyle:pointer;
+  ents:TZctnrVectorPGDBaseEntity;
 begin
-    selected:=PTEnumDataWithOtherPointers(PInstance)^.Selected;
-    ptextstyle:=PTEnumDataWithOtherPointers(PInstance)^.Pointers.getData(selected);
-    count:=0;
-    pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
-    if pv<>nil then
+  selected:=PTEnumDataWithOtherPointers(PInstance)^.Selected;
+  ptextstyle:=PTEnumDataWithOtherPointers(PInstance)^.Pointers.getData(selected);
+  Count:=0;
+  pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
+  if pv<>nil then
     repeat
       if pv^.Selected then
-      if (pv^.GetObjType=GDBtextID)or(pv^.GetObjType=GDBMTextID) then
-      if (selected=0)or(PGDBObjText(pv)^.TXTStyleIndex=ptextstyle)then
-      begin
-        inc(count);
-        pv^.DeSelect(drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount,drawings.CurrentDWG^.DeSelector);
-      end;
+        if (pv^.GetObjType=GDBtextID)or(pv^.GetObjType=GDBMTextID)then begin
+          if selected<>0 then begin
+            if PGDBObjText(pv)^.TXTStyleIndex<>ptextstyle then
+              inc(Count);
+          end
+        end else
+            inc(Count);
       pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
     until pv=nil;
-    ZCMsgCallBackInterface.TextMessage(sysutils.Format(rscmNEntitiesDeselected,[count]),TMWOHistoryOut);
-    if count>0 then
-      ZCMsgCallBackInterface.Do_GUIaction(drawings.GetCurrentDWG.wa,ZMsgID_GUIActionSelectionChanged);
+  ents.init(Count);
+
+  pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
+  if pv<>nil then
+    repeat
+      if pv^.Selected then
+        if (pv^.GetObjType=GDBtextID)or(pv^.GetObjType=GDBMTextID)then begin
+          if selected<>0 then begin
+            if PGDBObjText(pv)^.TXTStyleIndex<>ptextstyle then
+              ents.PushBackData(pv);
+          end
+        end else
+            ents.PushBackData(pv);
+      pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
+    until pv=nil;
+
+  Count:=drawings.GetCurrentDWG.SelObjArray.Count-Count;
+  drawings.GetCurrentDWG.DeSelectAll;
+  drawings.GetCurrentDWG.SelectEnts(ents);
+  ents.Clear;
+  ents.Free;
+
+
+  ZCMsgCallBackInterface.TextMessage(Format(rscmNEntitiesDeselected,[Count]),
+                                     TMWOHistoryOut);
+  if Count>0 then
+    ZCMsgCallBackInterface.Do_GUIaction(drawings.GetCurrentDWG.wa,
+                                        ZMsgID_GUIActionSelectionChanged);
 end;
 
 procedure DeselectEntsByLayer(PInstance:Pointer);
 var
-    pv:pGDBObjEntity;
-    ir:itrec;
-    count,selected:integer;
-    ptextstyle:pointer;
+  pv:pGDBObjEntity;
+  ir:itrec;
+  Count,selected:integer;
+  player:pointer;
+  ents:TZctnrVectorPGDBaseEntity;
 begin
-    selected:=PTEnumDataWithOtherPointers(PInstance)^.Selected;
-    ptextstyle:=PTEnumDataWithOtherPointers(PInstance)^.Pointers.getData(selected);
-    count:=0;
+  selected:=PTEnumDataWithOtherPointers(PInstance)^.Selected;
+  player:=PTEnumDataWithOtherPointers(PInstance)^.Pointers.getData(selected);
+
+  Count:=0;
+  if selected<>0 then begin
     pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
     if pv<>nil then
-    repeat
-      if pv^.Selected then
-      if (selected=0)or(pv^.vp.Layer=ptextstyle)then
-      begin
-        inc(count);
-        pv^.DeSelect(drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount,drawings.CurrentDWG^.DeSelector);
-      end;
-      pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
-    until pv=nil;
-    ZCMsgCallBackInterface.TextMessage(sysutils.Format(rscmNEntitiesDeselected,[count]),TMWOHistoryOut);
-    if count>0 then
-      ZCMsgCallBackInterface.Do_GUIaction(drawings.GetCurrentDWG.wa,ZMsgID_GUIActionSelectionChanged);
+      repeat
+        if pv^.Selected then
+          if pv^.vp.Layer<>player then
+            Inc(Count);
+        pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
+      until pv=nil;
+    ents.init(Count);
+
+    pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
+    if pv<>nil then
+      repeat
+        if pv^.Selected then
+          if pv^.vp.Layer<>player then
+            ents.PushBackData(pv);
+        pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
+      until pv=nil;
+  end;
+
+  Count:=drawings.GetCurrentDWG.SelObjArray.Count-Count;
+  drawings.GetCurrentDWG.DeSelectAll;
+  if selected<>0 then begin
+    drawings.GetCurrentDWG.SelectEnts(ents);
+    ents.Clear;
+    ents.Free;
+  end;
+
+  ZCMsgCallBackInterface.TextMessage(Format(rscmNEntitiesDeselected,[Count]),
+                                     TMWOHistoryOut);
+  if Count>0 then
+    ZCMsgCallBackInterface.Do_GUIaction(drawings.GetCurrentDWG.wa,
+      ZMsgID_GUIActionSelectionChanged);
 end;
 
 procedure DeselectEntsByLinetype(PInstance:Pointer);
 var
-    pv:pGDBObjEntity;
-    ir:itrec;
-    count,selected:integer;
-    plinetype:pointer;
+  pv:pGDBObjEntity;
+  ir:itrec;
+  Count,selected:integer;
+  plinetype:pointer;
+  ents:TZctnrVectorPGDBaseEntity;
 begin
-    selected:=PTEnumDataWithOtherPointers(PInstance)^.Selected;
-    plinetype:=PTEnumDataWithOtherPointers(PInstance)^.Pointers.getData(selected);
-    count:=0;
+  selected:=PTEnumDataWithOtherPointers(PInstance)^.Selected;
+  plinetype:=PTEnumDataWithOtherPointers(PInstance)^.Pointers.getData(selected);
+  Count:=0;
+  pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
+
+  Count:=0;
+  if selected<>0 then begin
     pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
     if pv<>nil then
+      repeat
+        if pv^.Selected then
+          if pv^.vp.LineType<>plinetype then
+            Inc(Count);
+        pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
+      until pv=nil;
+    ents.init(Count);
+
+    pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
+    if pv<>nil then
+      repeat
+        if pv^.Selected then
+          if pv^.vp.LineType<>plinetype then
+            ents.PushBackData(pv);
+        pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
+      until pv=nil;
+  end;
+
+  Count:=drawings.GetCurrentDWG.SelObjArray.Count-Count;
+  drawings.GetCurrentDWG.DeSelectAll;
+  if selected<>0 then begin
+    drawings.GetCurrentDWG.SelectEnts(ents);
+    ents.Clear;
+    ents.Free;
+  end;
+
+  ZCMsgCallBackInterface.TextMessage(Format(rscmNEntitiesDeselected,[Count]),
+                                     TMWOHistoryOut);
+  if Count>0 then
+    ZCMsgCallBackInterface.Do_GUIaction(drawings.GetCurrentDWG.wa,
+                                        ZMsgID_GUIActionSelectionChanged);
+end;
+
+procedure DeselectEntsByExtender(PInstance:Pointer);
+var
+  pv:pGDBObjEntity;
+  ir:itrec;
+  Count,selected:integer;
+  extdrClass:TMetaEntityExtender;
+  ents:TZctnrVectorPGDBaseEntity;
+begin
+  selected:=PTEnumDataWithOtherPointers(PInstance)^.Selected;
+  extdrClass:=PTEnumDataWithOtherPointers(PInstance)^.Pointers.getData(selected);
+
+  Count:=0;
+  pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
+  if pv<>nil then
     repeat
-      if pv^.Selected then
-      if (selected=0)or(pv^.vp.LineType=plinetype)then
-      begin
-        inc(count);
-        pv^.DeSelect(drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount,drawings.CurrentDWG^.DeSelector);
+      if pv^.Selected then begin
+        if selected=0 then begin
+          if pv^.GetExtensionsCount=0 then
+            Inc(Count);
+        end else begin
+          if pv^.GetExtension(extdrClass)=nil then
+            Inc(Count);
+        end;
       end;
       pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
     until pv=nil;
-    ZCMsgCallBackInterface.TextMessage(sysutils.Format(rscmNEntitiesDeselected,[count]),TMWOHistoryOut);
-    if count>0 then
-      ZCMsgCallBackInterface.Do_GUIaction(drawings.GetCurrentDWG.wa,ZMsgID_GUIActionSelectionChanged);
+  ents.init(Count);
+
+  pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
+  if pv<>nil then
+    repeat
+      if pv^.Selected then begin
+        if selected=0 then begin
+          if pv^.GetExtensionsCount=0 then
+            ents.PushBackData(pv);
+        end else begin
+          if pv^.GetExtension(extdrClass)=nil then
+            ents.PushBackData(pv);
+        end;
+      end;
+      pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
+    until pv=nil;
+
+  Count:=drawings.GetCurrentDWG.SelObjArray.Count-Count;
+  drawings.GetCurrentDWG.DeSelectAll;
+  drawings.GetCurrentDWG.SelectEnts(ents);
+  ents.Clear;
+  ents.Free;
+
+  ZCMsgCallBackInterface.TextMessage(Format(rscmNEntitiesDeselected,[Count]),
+                                     TMWOHistoryOut);
+  if Count>0 then
+    ZCMsgCallBackInterface.Do_GUIaction(drawings.GetCurrentDWG.wa,
+      ZMsgID_GUIActionSelectionChanged);
 end;
+
+procedure Extendrs2ExtendersCounterIterateProc(pdata:Pointer;ChangedData:TChangedData;mp:TMultiProperty;fistrun:boolean;ecp:TEntChangeProc; const f:TzeUnitsFormat);
+var
+  p:TEntityExtensions;
+  i:integer;
+begin
+  p:=pointer(ppointer(ChangedData.PGetDataInEtity)^);
+  if p<>nil then begin
+    if assigned(p.fEntityExtensions)then
+      for i:=0 to p.fEntityExtensions.Size-1 do
+        if p.fEntityExtensions[i]<>nil then begin
+          PTPointerCounterData(pdata)^.counter.CountKey(p.fEntityExtensions[i].ClassType,1);
+          inc(PTPointerCounterData(pdata)^.totalcount);
+        end;
+  end;
+end;
+
 
 
 
 procedure SelectOnlyThisBlocsByName(PInstance:Pointer);
 var
-    pv:pGDBObjEntity;
-    ir:itrec;
-    count,selected:integer;
-    blockname:AnsiString;
+  pv:pGDBObjEntity;
+  ir:itrec;
+  Count,selected:integer;
+  blockname:ansistring;
+  ents:TZctnrVectorPGDBaseEntity;
 begin
-    selected:=PTEnumDataWithOtherStrings(PInstance)^.Selected;
-    blockname:=PTEnumDataWithOtherStrings(PInstance)^.Strings.getData(selected);
-    //if NeededObjType<>0 then
-    begin
-      count:=0;
-      pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
-      if pv<>nil then
-      repeat
-        if pv^.Selected then
-        if (pv^.GetObjType=GDBDeviceID)or(pv^.GetObjType=GDBBlockInsertID) then
-        begin
-          if (selected<>0)and(PGDBObjBlockInsert(pv)^.Name<>blockname) then begin
-          inc(count);
-          pv^.DeSelect(drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount,drawings.CurrentDWG^.DeSelector);
-          end;
-        end else
-        begin
-          inc(count);
-          pv^.DeSelect(drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount,drawings.CurrentDWG^.DeSelector);
+  selected:=PTEnumDataWithOtherStrings(PInstance)^.Selected;
+  blockname:=PTEnumDataWithOtherStrings(PInstance)^.Strings.getData(selected);
+
+  Count:=0;
+  pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
+  if pv<>nil then
+    repeat
+      if pv^.Selected then
+        if (pv^.GetObjType=GDBDeviceID)or(pv^.GetObjType=GDBBlockInsertID)then begin
+          if (selected<>0) then begin
+            if PGDBObjBlockInsert(pv)^.Name=blockname then
+              Inc(Count);
+          end else
+            Inc(Count);
         end;
-        pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
-      until pv=nil;
-      ZCMsgCallBackInterface.TextMessage(sysutils.Format(rscmNEntitiesDeselected,[count]),TMWOHistoryOut);
-      if count>0 then
-        ZCMsgCallBackInterface.Do_GUIaction(drawings.GetCurrentDWG.wa,ZMsgID_GUIActionSelectionChanged);
-    end;
+      pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
+    until pv=nil;
+  ents.init(count);
+
+  pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
+  if pv<>nil then
+    repeat
+      if pv^.Selected then
+        if (pv^.GetObjType=GDBDeviceID)or(pv^.GetObjType=GDBBlockInsertID)then begin
+          if (selected<>0) then begin
+            if PGDBObjBlockInsert(pv)^.Name=blockname then
+              ents.PushBackData(pv);
+          end else
+            ents.PushBackData(pv);
+        end;
+      pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
+    until pv=nil;
+
+  Count:=drawings.GetCurrentDWG.SelObjArray.Count-Count;
+  drawings.GetCurrentDWG.DeSelectAll;
+  drawings.GetCurrentDWG.SelectEnts(ents);
+  ents.Clear;
+  ents.free;
+
+  ZCMsgCallBackInterface.TextMessage(Format(rscmNEntitiesDeselected,[Count]),
+                                     TMWOHistoryOut);
+  if Count>0 then
+    ZCMsgCallBackInterface.Do_GUIaction(drawings.GetCurrentDWG.wa,
+      ZMsgID_GUIActionSelectionChanged);
 end;
 
 procedure SelectOnlyThisTextsByStyle(PInstance:Pointer);
 var
-    pv:pGDBObjEntity;
-    ir:itrec;
-    count,selected:integer;
-    ptextstyle:pointer;
+  pv:pGDBObjEntity;
+  ir:itrec;
+  Count,selected:integer;
+  ptextstyle:pointer;
+  ents:TZctnrVectorPGDBaseEntity;
 begin
-    selected:=PTEnumDataWithOtherPointers(PInstance)^.Selected;
-    ptextstyle:=PTEnumDataWithOtherPointers(PInstance)^.Pointers.getData(selected);
-    //if NeededObjType<>0 then
-    begin
-      count:=0;
-      pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
-      if pv<>nil then
-      repeat
-        if pv^.Selected then
-        if (pv^.GetObjType=GDBtextID)or(pv^.GetObjType=GDBMTextID) then
-        begin
-          if (selected<>0)and(PGDBObjText(pv)^.TXTStyleIndex<>ptextstyle) then begin
-          inc(count);
-          pv^.DeSelect(drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount,drawings.CurrentDWG^.DeSelector);
-          end;
-        end else
-        begin
-          inc(count);
-          pv^.DeSelect(drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount,drawings.CurrentDWG^.DeSelector);
+  selected:=PTEnumDataWithOtherPointers(PInstance)^.Selected;
+  ptextstyle:=PTEnumDataWithOtherPointers(PInstance)^.Pointers.getData(selected);
+
+  Count:=0;
+  pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
+  if pv<>nil then
+    repeat
+      if pv^.Selected then
+        if (pv^.GetObjType=GDBtextID)or(pv^.GetObjType=GDBMTextID)then begin
+          if (selected<>0) then begin
+            if PGDBObjText(pv)^.TXTStyleIndex=ptextstyle then
+              Inc(Count);
+          end else
+            Inc(Count);
         end;
-        pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
-      until pv=nil;
-      ZCMsgCallBackInterface.TextMessage(sysutils.Format(rscmNEntitiesDeselected,[count]),TMWOHistoryOut);
-      if count>0 then
-        ZCMsgCallBackInterface.Do_GUIaction(drawings.GetCurrentDWG.wa,ZMsgID_GUIActionSelectionChanged);
-    end;
+      pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
+    until pv=nil;
+  ents.init(count);
+
+  pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
+  if pv<>nil then
+    repeat
+      if pv^.Selected then
+        if (pv^.GetObjType=GDBtextID)or(pv^.GetObjType=GDBMTextID)then begin
+          if (selected<>0) then begin
+            if PGDBObjText(pv)^.TXTStyleIndex=ptextstyle then
+              ents.PushBackData(pv);
+          end else
+            ents.PushBackData(pv);
+        end;
+      pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
+    until pv=nil;
+
+  Count:=drawings.GetCurrentDWG.SelObjArray.Count-Count;
+  drawings.GetCurrentDWG.DeSelectAll;
+  drawings.GetCurrentDWG.SelectEnts(ents);
+  ents.Clear;
+  ents.free;
+
+  ZCMsgCallBackInterface.TextMessage(Format(rscmNEntitiesDeselected,[Count]),
+                                     TMWOHistoryOut);
+  if Count>0 then
+    ZCMsgCallBackInterface.Do_GUIaction(drawings.GetCurrentDWG.wa,
+      ZMsgID_GUIActionSelectionChanged);
 end;
 
 procedure SelectOnlyThisEntsByLayer(PInstance:Pointer);
 var
-    pv:pGDBObjEntity;
-    ir:itrec;
-    count,selected:integer;
-    player:pointer;
+  pv:pGDBObjEntity;
+  ir:itrec;
+  Count,selected:integer;
+  player:pointer;
+  ents:TZctnrVectorPGDBaseEntity;
 begin
-    selected:=PTEnumDataWithOtherPointers(PInstance)^.Selected;
-    player:=PTEnumDataWithOtherPointers(PInstance)^.Pointers.getData(selected);
-    //if NeededObjType<>0 then
-    begin
-      count:=0;
-      pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
-      if pv<>nil then
-      repeat
-        if pv^.Selected then
-        //if (pv^.GetObjType=GDBtextID)or(pv^.GetObjType=GDBMTextID) then
-        begin
-          if (selected<>0)and(pv^.vp.Layer<>player) then begin
-          inc(count);
-          pv^.DeSelect(drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount,drawings.CurrentDWG^.DeSelector);
-          end;
-        end else
-        begin
-          inc(count);
-          pv^.DeSelect(drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount,drawings.CurrentDWG^.DeSelector);
-        end;
-        pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
-      until pv=nil;
-      ZCMsgCallBackInterface.TextMessage(sysutils.Format(rscmNEntitiesDeselected,[count]),TMWOHistoryOut);
-      if count>0 then
-        ZCMsgCallBackInterface.Do_GUIaction(drawings.GetCurrentDWG.wa,ZMsgID_GUIActionSelectionChanged);
-    end;
+  selected:=PTEnumDataWithOtherPointers(PInstance)^.Selected;
+  if selected=0 then
+    exit;
+  player:=PTEnumDataWithOtherPointers(PInstance)^.Pointers.getData(selected);
+
+  Count:=0;
+  pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
+  if pv<>nil then
+    repeat
+      if pv^.Selected then
+        if (selected<>0)and(pv^.vp.Layer=player) then
+          Inc(Count);
+      pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
+    until pv=nil;
+  ents.init(count);
+
+  pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
+  if pv<>nil then
+    repeat
+      if pv^.Selected then
+        if (selected<>0)and(pv^.vp.Layer=player) then
+          ents.PushBackData(pv);
+      pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
+    until pv=nil;
+
+  Count:=drawings.GetCurrentDWG.SelObjArray.Count-Count;
+  drawings.GetCurrentDWG.DeSelectAll;
+  drawings.GetCurrentDWG.SelectEnts(ents);
+  ents.Clear;
+  ents.free;
+
+  ZCMsgCallBackInterface.TextMessage(Format(rscmNEntitiesDeselected,[Count]),
+                                     TMWOHistoryOut);
+  if Count>0 then
+    ZCMsgCallBackInterface.Do_GUIaction(drawings.GetCurrentDWG.wa,
+      ZMsgID_GUIActionSelectionChanged);
 end;
 
 procedure SelectOnlyThisEntsByLinetype(PInstance:Pointer);
 var
-    pv:pGDBObjEntity;
-    ir:itrec;
-    count,selected:integer;
-    plinetype:pointer;
+  pv:pGDBObjEntity;
+  ir:itrec;
+  Count,selected:integer;
+  plinetype:pointer;
+  ents:TZctnrVectorPGDBaseEntity;
 begin
-    selected:=PTEnumDataWithOtherPointers(PInstance)^.Selected;
-    plinetype:=PTEnumDataWithOtherPointers(PInstance)^.Pointers.getData(selected);
-    //if NeededObjType<>0 then
-    begin
-      count:=0;
-      pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
-      if pv<>nil then
-      repeat
-        if pv^.Selected then
-        //if (pv^.GetObjType=GDBtextID)or(pv^.GetObjType=GDBMTextID) then
-        begin
-          if (selected<>0)and(pv^.vp.LineType<>plinetype) then begin
-          inc(count);
-          pv^.DeSelect(drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount,drawings.CurrentDWG^.DeSelector);
-          end;
-        end else
-        begin
-          inc(count);
-          pv^.DeSelect(drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount,drawings.CurrentDWG^.DeSelector);
-        end;
-        pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
-      until pv=nil;
-      ZCMsgCallBackInterface.TextMessage(sysutils.Format(rscmNEntitiesDeselected,[count]),TMWOHistoryOut);
-      if count>0 then
-        ZCMsgCallBackInterface.Do_GUIaction(drawings.GetCurrentDWG.wa,ZMsgID_GUIActionSelectionChanged);
-    end;
+  selected:=PTEnumDataWithOtherPointers(PInstance)^.Selected;
+  if selected=0 then
+    exit;
+  plinetype:=PTEnumDataWithOtherPointers(PInstance)^.Pointers.getData(selected);
+  Count:=0;
+  pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
+  if pv<>nil then
+    repeat
+      if pv^.Selected then
+        if (selected<>0)and(pv^.vp.LineType=plinetype) then
+          Inc(Count);
+      pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
+    until pv=nil;
+  ents.init(count);
+
+  pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
+  if pv<>nil then
+    repeat
+      if pv^.Selected then
+        if (selected<>0)and(pv^.vp.LineType=plinetype) then
+          ents.PushBackData(pv);
+      pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
+    until pv=nil;
+
+  Count:=drawings.GetCurrentDWG.SelObjArray.Count-Count;
+  drawings.GetCurrentDWG.DeSelectAll;
+  drawings.GetCurrentDWG.SelectEnts(ents);
+  ents.Clear;
+  ents.free;
+
+  ZCMsgCallBackInterface.TextMessage(Format(rscmNEntitiesDeselected,[Count]),
+                                     TMWOHistoryOut);
+  if Count>0 then
+    ZCMsgCallBackInterface.Do_GUIaction(drawings.GetCurrentDWG.wa,
+      ZMsgID_GUIActionSelectionChanged);
 end;
 
+procedure SelectOnlyThisEntsByExtender(PInstance:Pointer);
+var
+  pv:pGDBObjEntity;
+  ir:itrec;
+  Count,selected:integer;
+  extdrClass:TMetaEntityExtender;
+  ents:TZctnrVectorPGDBaseEntity;
+begin
+  selected:=PTEnumDataWithOtherPointers(PInstance)^.Selected;
+  extdrClass:=PTEnumDataWithOtherPointers(PInstance)^.Pointers.getData(selected);
 
+  Count:=0;
+  pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
+  if pv<>nil then
+    repeat
+      if pv^.Selected then
+        if selected=0 then begin
+          if pv^.GetExtensionsCount>0 then
+            inc(count);
+        end else begin
+          if (pv^.GetExtensionsCount>0)and(pv^.GetExtension(extdrClass)<>nil) then
+            inc(count);
+        end;
+      pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
+    until pv=nil;
+  ents.init(count);
 
+  pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
+  if pv<>nil then
+    repeat
+      if pv^.Selected then
+        if selected=0 then begin
+          if pv^.GetExtensionsCount>0 then
+            ents.PushBackData(pv);
+        end else begin
+          if (pv^.GetExtensionsCount>0)and(pv^.GetExtension(extdrClass)<>nil) then
+            ents.PushBackData(pv);
+        end;
+      pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
+    until pv=nil;
+
+  Count:=drawings.GetCurrentDWG.SelObjArray.Count-Count;
+  drawings.GetCurrentDWG.DeSelectAll;
+  drawings.GetCurrentDWG.SelectEnts(ents);
+  ents.Clear;
+  ents.free;
+
+  ZCMsgCallBackInterface.TextMessage(Format(rscmNEntitiesDeselected,[Count]),
+                                     TMWOHistoryOut);
+  if Count>0 then
+    ZCMsgCallBackInterface.Do_GUIaction(drawings.GetCurrentDWG.wa,
+      ZMsgID_GUIActionSelectionChanged);
+end;
 
 procedure SelectOnlyThisEnts(PInstance:Pointer);
 var
-    NeededObjType:TObjID;
-    pv:pGDBObjEntity;
-    ir:itrec;
-    count:integer;
+  NeededObjType:TObjID;
+  pv:pGDBObjEntity;
+  ir:itrec;
+  Count:integer;
+  ents:TZctnrVectorPGDBaseEntity;
 begin
-    NeededObjType:=MSEditor.GetObjType;
-    if NeededObjType<>0 then
-    begin
-      count:=0;
-      pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
-      if pv<>nil then
+  NeededObjType:=MSEditor.GetObjType;
+  if NeededObjType<>0 then begin
+
+    Count:=0;
+    pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
+    if pv<>nil then
       repeat
         if pv^.Selected then
-        if (pv^.GetObjType<>NeededObjType)then
-        begin
-          inc(count);
-          pv^.DeSelect(drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount,drawings.CurrentDWG^.DeSelector);
-        end;
+          if (pv^.GetObjType=NeededObjType)then
+            Inc(Count);
         pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
       until pv=nil;
-      ZCMsgCallBackInterface.TextMessage(sysutils.Format(rscmNEntitiesDeselected,[count]),TMWOHistoryOut);
-      if count>0 then
-        ZCMsgCallBackInterface.Do_GUIaction(drawings.GetCurrentDWG.wa,ZMsgID_GUIActionSelectionChanged);
-    end;
+    ents.init(count);
+
+    pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
+    if pv<>nil then
+      repeat
+        if pv^.Selected then
+          if (pv^.GetObjType=NeededObjType)then
+            ents.PushBackData(pv);
+        pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
+      until pv=nil;
+
+    Count:=drawings.GetCurrentDWG.SelObjArray.Count-Count;
+    drawings.GetCurrentDWG.DeSelectAll;
+    drawings.GetCurrentDWG.SelectEnts(ents);
+    ents.Clear;
+    ents.free;
+
+    ZCMsgCallBackInterface.TextMessage(Format(rscmNEntitiesDeselected,[Count]),
+                                       TMWOHistoryOut);
+    if Count>0 then
+      ZCMsgCallBackInterface.Do_GUIaction(drawings.GetCurrentDWG.wa,
+                                          ZMsgID_GUIActionSelectionChanged);
+  end;
 end;
 
 

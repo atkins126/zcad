@@ -43,7 +43,7 @@ const
   TString=15;
   TGDBobject=16;}
   Ignore=#13;
-  Break='=:,'#10;
+  BreakChars='=:,'#10; // Старое название Break ломало ключевое слово Break
   dynamicoffset=-1;
   invar='_INVAR_';
   TA_COMPOUND=1;
@@ -66,9 +66,9 @@ TEditorDesc=record
                   Editor:TPropEditor;
                   Mode:TEditorMode;
             end;
-TOnCreateEditor=function (TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor):TEditorDesc;
-TOnGetValueAsString=function(PInstance:Pointer):String;
-TOnDrawProperty=procedure(canvas:TCanvas;ARect:TRect;PInstance:Pointer);
+TDecoratorCreateEditor=function (TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor;f:TzeUnitsFormat):TEditorDesc;
+TDecoratorGetValueAsString=function(PInstance:Pointer):String;
+TDecoratorDrawProperty=procedure(canvas:TCanvas;ARect:TRect;PInstance:Pointer);
 
 TFastEditorState=(TFES_Default,TFES_Hot,TFES_Pressed);
 
@@ -77,9 +77,9 @@ TDrawFastEditor=procedure (canvas:TCanvas;r:trect;PInstance:Pointer;state:TFastE
 TRunFastEditor=procedure (PInstance:Pointer);
 
 TDecoratedProcs=record
-                OnGetValueAsString:TOnGetValueAsString;
-                OnCreateEditor:TOnCreateEditor;
-                OnDrawProperty:TOnDrawProperty;
+                OnGetValueAsString:TDecoratorGetValueAsString;
+                OnCreateEditor:TDecoratorCreateEditor;
+                OnDrawProperty:TDecoratorDrawProperty;
                 end;
 TFastEditorProcs=record
                 OnGetPrefferedFastEditorSize:TGetPrefferedFastEditorSize;
@@ -139,7 +139,10 @@ TOIProps=record
 pvardesk = ^vardesk;
 TMyNotifyCommand=(TMNC_EditingDoneEnterKey,TMNC_EditingDoneLostFocus,TMNC_EditingDoneESC,TMNC_EditingProcess,TMNC_RunFastEditor,TMNC_EditingDoneDoNothing);
 TMyNotifyProc=procedure (Sender: TObject;Command:TMyNotifyCommand) of object;
-TCreateEditorFunc=function (TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;InitialValue:String;ptdesc:PUserTypeDescriptor;preferedHeight:integer):TEditorDesc of object;
+TCreateEditorFunc=function (TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;const InitialValue:String;ptdesc:PUserTypeDescriptor;preferedHeight:integer;f:TzeUnitsFormat):TEditorDesc of object;
+TonGetValueAsString=function (pinstance:Pointer):TInternalScriptString of object;
+TonGetEditableAsString=function (pinstance:Pointer;const f:TzeUnitsFormat):TInternalScriptString of object;
+TonSetEditableFromString=procedure (PInstance:Pointer;const f:TzeUnitsFormat;const Value:TInternalScriptString) of object;
 UserTypeDescriptor=object
                          SizeInBytes:Integer;
                          TypeName:String;
@@ -150,29 +153,35 @@ UserTypeDescriptor=object
                          //FastEditor:TFastEditorProcs;
                          FastEditors:TFastEditorsVector;
                          onCreateEditorFunc:TCreateEditorFunc;
+                         onGetValueAsString:TonGetValueAsString;
+                         onGetEditableAsString:TonGetEditableAsString;
+                         onSetEditableFromString:TonSetEditableFromString;
                          constructor init(size:Integer;tname:string;pu:pointer);
                          constructor baseinit(size:Integer;tname:string;pu:pointer);
                          procedure _init(size:Integer;tname:string;pu:pointer);
-                         function CreateEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;InitialValue:TInternalScriptString;preferedHeight:integer):TEditorDesc;virtual;
-                         procedure ApplyOperator(oper,path:TInternalScriptString;var offset:Integer;out tc:PUserTypeDescriptor);virtual;abstract;
+                         function CreateEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean; const InitialValue:TInternalScriptString;preferedHeight:integer;f:TzeUnitsFormat):TEditorDesc;virtual;
+                         procedure ApplyOperator(const oper,path:TInternalScriptString;var offset:Integer;out tc:PUserTypeDescriptor);virtual;abstract;
                          //function Serialize(PInstance:Pointer;SaveFlag:Word;var membuf:PTZctnrVectorBytes;var  linkbuf:PGDBOpenArrayOfTObjLinkRecord;var sub:integer):integer;virtual;abstract;
-                         function SerializePreProcess(Value:TInternalScriptString;sub:integer):TInternalScriptString;virtual;
+                         function SerializePreProcess(const Value:TInternalScriptString;sub:integer):TInternalScriptString;virtual;
                          //function DeSerialize(PInstance:Pointer;SaveFlag:Word;var membuf:TZctnrVectorBytes;linkbuf:PGDBOpenArrayOfTObjLinkRecord):integer;virtual;abstract;
                          function GetTypeAttributes:TTypeAttr;virtual;
+                         function GetEditableAsString(PInstance:Pointer; const f:TzeUnitsFormat):TInternalScriptString;virtual;
                          function GetValueAsString(pinstance:Pointer):TInternalScriptString;virtual;
                          function GetFormattedValueAsString(PInstance:Pointer; const f:TzeUnitsFormat):TInternalScriptString;virtual;
+                         procedure SetFormattedValueFromString(PInstance:Pointer;const f:TzeUnitsFormat; const Value:TInternalScriptString);virtual;
                          function GetUserValueAsString(pinstance:Pointer):TInternalScriptString;virtual;
                          function GetDecoratedValueAsString(pinstance:Pointer; const f:TzeUnitsFormat):TInternalScriptString;virtual;
                          procedure CopyInstanceTo(source,dest:pointer);virtual;
                          function Compare(pleft,pright:pointer):TCompareResult;virtual;
-                         procedure SetValueFromString(PInstance:Pointer;_Value:TInternalScriptString);virtual;abstract;
+                         procedure SetEditableFromString(PInstance:Pointer;const f:TzeUnitsFormat; const Value:TInternalScriptString);virtual;
+                         procedure SetValueFromString(PInstance:Pointer; const _Value:TInternalScriptString);virtual;abstract;
                          procedure InitInstance(PInstance:Pointer);virtual;
                          function AllocInstance:Pointer;virtual;
                          function AllocAndInitInstance:Pointer;virtual;
                          destructor Done;virtual;
                          procedure MagicFreeInstance(PInstance:Pointer);virtual;
                          procedure MagicAfterCopyInstance(PInstance:Pointer);virtual;
-                         procedure SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;prefix:TInternalScriptString);virtual;
+                         procedure SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;const prefix:TInternalScriptString);virtual;
                          procedure IncAddr(var addr:Pointer);virtual;
                          function GetFactTypedef:PUserTypeDescriptor;virtual;
                          procedure Format;virtual;
@@ -188,7 +197,8 @@ TPropEditor=class(TComponent)
                  CanRunFastEditor:boolean;
                  RunFastEditorValue:tobject;
                  changed:boolean;
-                 constructor Create(AOwner:TComponent;_PInstance:Pointer;var _PTD:UserTypeDescriptor;FreeOnLostFocus:boolean);
+                 f:TzeUnitsFormat;
+                 constructor Create(AOwner:TComponent;_PInstance:Pointer;var _PTD:UserTypeDescriptor;FreeOnLostFocus:boolean;_f:TzeUnitsFormat);
                  destructor Destroy;override;
                  procedure EditingDone(Sender: TObject);//Better name ..LostFocus..
                  procedure EditingDone2(Sender: TObject);
@@ -232,7 +242,7 @@ TOSMode=record
               kosm_tangent:Boolean;(*'Tangent'*)
               kosm_nearest:Boolean;(*'Nearest'*)
               kosm_apparentintersection:Boolean;(*'Apparent intersection'*)
-              kosm_paralel:Boolean;(*'Paralel'*)
+              kosm_parallel:Boolean;(*'Parallel'*)
         end;
   indexdesk=record
     indexmin, count: Integer;
@@ -270,9 +280,9 @@ ptypemanagerdef=^typemanagerdef;
 {REGISTEROBJECTWITHOUTCONSTRUCTORTYPE typemanagerdef}
 typemanagerdef=object
                   procedure readbasetypes;virtual;abstract;
-                  procedure readexttypes(fn: TInternalScriptString);virtual;abstract;
-                  function _TypeName2Index(name: TInternalScriptString): Integer;virtual;abstract;
-                  function _TypeName2PTD(name: TInternalScriptString):PUserTypeDescriptor;virtual;abstract;
+                  procedure readexttypes(const fn: TInternalScriptString);virtual;abstract;
+                  function _TypeName2Index(const name: TInternalScriptString): Integer;virtual;abstract;
+                  function _TypeName2PTD(const name: TInternalScriptString):PUserTypeDescriptor;virtual;abstract;
                   function _TypeIndex2PTD(ind:integer):PUserTypeDescriptor;virtual;abstract;
 
                   function getDataMutable(index:TArrayIndex):Pointer;virtual;abstract;
@@ -284,12 +294,12 @@ typemanagerdef=object
 varmanagerdef=object
                  {vardescarray:GDBOpenArrayOfData;
                  vararray:TZctnrVectorBytes;}
-                 function findvardesc(varname:TInternalScriptString): pvardesk;virtual;abstract;
-                 function createvariable(varname:TInternalScriptString; var vd:vardesk;attr:TVariableAttributes=0): pvardesk;virtual;abstract;
-                 function createvariable2(varname:TInternalScriptString; var vd:vardesk;attr:TVariableAttributes=0):TInVectorAddr;virtual;abstract;
-                 procedure createvariablebytype(varname,vartype:TInternalScriptString);virtual;abstract;
-                 procedure createbasevaluefromString(varname: TInternalScriptString; varvalue: TInternalScriptString; var vd: vardesk);virtual;abstract;
-                 function findfieldcustom(var pdesc: pByte; var offset: Integer;var tc:PUserTypeDescriptor; nam: shortString): Boolean;virtual;abstract;
+                 function findvardesc(const varname:TInternalScriptString): pvardesk;virtual;abstract;
+                 function createvariable(const varname:TInternalScriptString; var vd:vardesk;attr:TVariableAttributes=0): pvardesk;virtual;abstract;
+                 function createvariable2(const varname:TInternalScriptString; var vd:vardesk;attr:TVariableAttributes=0):TInVectorAddr;virtual;abstract;
+                 procedure createvariablebytype(const varname,vartype:TInternalScriptString);virtual;abstract;
+                 procedure createbasevaluefromString(const varname: TInternalScriptString; const varvalue: TInternalScriptString; var vd: vardesk);virtual;abstract;
+                 function findfieldcustom(var pdesc: pByte; var offset: Integer;var tc:PUserTypeDescriptor; const nam: String): Boolean;virtual;abstract;
                  //function getDS:Pointer;virtual;abstract;
            end;
 {EXPORT-}
@@ -383,7 +393,7 @@ begin
      attr:=(attr or setattrib)and(not resetattrib);
 end;
 
-constructor TPropEditor.Create(AOwner:TComponent;_PInstance:Pointer;var _PTD:UserTypeDescriptor;FreeOnLostFocus:boolean);
+constructor TPropEditor.Create(AOwner:TComponent;_PInstance:Pointer;var _PTD:UserTypeDescriptor;FreeOnLostFocus:boolean;_f:TzeUnitsFormat);
 begin
      inherited create(AOwner);
      PInstance:=_PInstance;
@@ -393,6 +403,7 @@ begin
      CanRunFastEditor:=false;
      RunFastEditorValue:=nil;
      changed:=false;
+     f:=_f;
 end;
 function TPropEditor.geteditor:TWinControl;
 begin
@@ -426,7 +437,7 @@ begin
      if key=#13 then
                     if assigned(OwnerNotify) then
                                                  begin
-                                                      ptd^.SetValueFromString(PInstance,tedit(sender).text);
+                                                      ptd^.SetEditableFromString(PInstance,f,tedit(sender).text);
                                                       OwnerNotify(self,TMNC_EditingDoneEnterKey);
                                                  end;
 end;
@@ -444,7 +455,7 @@ begin
                            ptd^.CopyInstanceTo(@p,PInstance)
                       end
                   else
-                      ptd^.SetValueFromString(PInstance,tedit(sender).text);
+                      ptd^.SetEditableFromString(PInstance,f,tedit(sender).text);
      end;
 end;
 procedure TPropEditor.EditingDone(Sender: TObject);
@@ -526,7 +537,7 @@ end;
 procedure UserTypeDescriptor.RegisterTypeinfo(ti:PTypeInfo);
 begin
 end;
-procedure UserTypeDescriptor.SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;prefix:TInternalScriptString);
+procedure UserTypeDescriptor.SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;const prefix:TInternalScriptString);
 begin
      membuf.TXTAddStringEOL(prefix+':='+{pvd.data.PTD.}GetValueAsString(PInstance)+';');
 end;
@@ -564,7 +575,7 @@ begin
                                                          result:=CRNotEqual;
 end;
 
-function UserTypeDescriptor.SerializePreProcess(Value:TInternalScriptString;sub:integer):TInternalScriptString;
+function UserTypeDescriptor.SerializePreProcess(const Value:TInternalScriptString;sub:integer):TInternalScriptString;
 begin
      result:=DupeString(' ',sub)+value;
 end;
@@ -589,21 +600,24 @@ begin
      _init(size,tname,pu);
      Decorators.OnGetValueAsString:=nil;
      FastEditors:=nil;
+     onGetValueAsString:=nil;
+     onGetEditableAsString:=nil;
+     onSetEditableFromString:=nil;
 end;
 
 destructor UserTypeDescriptor.done;
 begin
-     zTraceLn('{T}[FINALIZATION_TYPES]'+self.TypeName);
+     zTraceLn('{T}[FINALIZATION_TYPES]%s',[self.TypeName]);
      //programlog.LogOutStr(self.TypeName,lp_OldPos,LM_Trace);
      SizeInBytes:=0;
      typename:='';
      if FastEditors<>nil then
                              FastEditors.Destroy;
 end;
-function UserTypeDescriptor.CreateEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;InitialValue:TInternalScriptString;preferedHeight:integer):TEditorDesc;
+function UserTypeDescriptor.CreateEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean; const InitialValue:TInternalScriptString;preferedHeight:integer;f:TzeUnitsFormat):TEditorDesc;
 begin
      if assigned(onCreateEditorFunc) then
-                                         result:=onCreateEditorFunc(TheOwner,rect,pinstance,psa,FreeOnLostFocus,initialvalue,@self,preferedHeight)
+                                         result:=onCreateEditorFunc(TheOwner,rect,pinstance,psa,FreeOnLostFocus,initialvalue,@self,preferedHeight,f)
                                      else
                                          begin
                                            result.editor:=nil;
@@ -618,11 +632,28 @@ function UserTypeDescriptor.GetValueAsString(pinstance:Pointer):TInternalScriptS
 begin
      result:='UserTypeDescriptor.GetValueAsString;';
 end;
+function UserTypeDescriptor.GetEditableAsString(PInstance:Pointer; const f:TzeUnitsFormat):TInternalScriptString;
+begin
+  if assigned(onGetEditableAsString)then
+    exit(onGetEditableAsString(pinstance,f));
+  result:=GetFormattedValueAsString(pinstance,f);
+end;
+procedure UserTypeDescriptor.SetEditableFromString(PInstance:Pointer;const f:TzeUnitsFormat; const Value:TInternalScriptString);
+begin
+  if assigned(onSetEditableFromString)then
+    onSetEditableFromString(PInstance,f,Value)
+  else
+    SetFormattedValueFromString(PInstance,f,Value);
+end;
+
 function UserTypeDescriptor.GetFormattedValueAsString(pinstance:Pointer; const f:TzeUnitsFormat):TInternalScriptString;
 begin
      result:=GetValueAsString(PInstance);
 end;
-
+procedure UserTypeDescriptor.SetFormattedValueFromString(PInstance:Pointer;const f:TzeUnitsFormat; const Value:TInternalScriptString);
+begin
+     SetValueFromString(PInstance,Value);
+end;
 function UserTypeDescriptor.GetUserValueAsString(pinstance:Pointer):TInternalScriptString;
 begin
      result:=GetValueAsString(pinstance);

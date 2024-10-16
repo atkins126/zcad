@@ -50,9 +50,7 @@ resourcestring
   rsInitialization='Initialization:';
   rsVInfoText='Unstable version';
   rsCommEntEeport='Registered commands - %d; registered entities - %d; registered DXF entities - %d';
-  rsReleaseNotes='-UNDO\REDO - yet it is better not to use;'+#13#10+
-                 #13#10+
-                 '-If you have problems with rendering or selecting entities, run "Regen" and "RebuildTree" in command line;'#13#10+
+  rsReleaseNotes='-If you have problems with rendering or selecting entities, run "Regen" and "RebuildTree" in command line;'#13#10+
                  #13#10+
                  '-To disable the display of this window comment out line "About" in the file "components\autorun.cmd". Encoding of all configuration files - UTF8;'#13#10;
   rsAuthor='Writeln by Andrey M. Zubarev';
@@ -134,7 +132,11 @@ resourcestring
   rscmOptions2OI='Options are available in the Object Inspector';
   rscmSelOrSpecEntity='Select or specify the parameters entity!';
   rscmNEntitiesProcessed='%d entities processed';
-  rscmNEntitiesDeselected='%d entities deselected';
+  rscmNEntitiesSelected='%d entities selected';
+  rscmNEntitiesDeSelected='%d entities deselected';
+  rscmNEntitiesFounded='%d entities founded';
+  rscmNEntityFrom='Show entity %d from %d';
+  rscmNEntityFromWithDetails='Show entity %d from %d with details "%s"';
 
   rscmEntitiesCounter='%d entities processed (%d total, %d selected, %d filtred)';
 
@@ -165,6 +167,7 @@ resourcestring
   rsCloseDrawings='Close drawings';
 
   {messages}
+  rsLoadFile='Load file';
   rsMsgRepeatCountStr=' [%d]';
   rsDWGAlreadyContainsData='Drawing already contains data. Load anyway?';
   rsCAUTIONnoSyntaxCheckYet='CAUTION! There is no syntax check yet. Clicking "OK" the object will be updated. Error - CRASHES!!!';
@@ -188,6 +191,7 @@ resourcestring
   rsSysLineTypeWarning='This is system line type!';
   rsQuitQuery='Do you want to quit ZCAD?';
   rsCloseDWGQuery='Drawing "%s" not saved. Save?';
+  rsOverwriteFileQuery='Drawing "%s" already exists. Overwrite?';
   rsCurrentLayerOff='The current layer is turned off';
 
   rsLayerMustBeSelected='Layer must be selected';
@@ -208,7 +212,7 @@ resourcestring
   {window names}
   rsOpenFile='Open file...';
   rsSaveFile='Save file...';
-  rsAutoSave='Autosave';
+  rsAutoSave='Autosave "%s"';
   rsQuitCaption='Quit';
   rsWarningCaption='Warning!';
   rsErrorCaption='Error!';

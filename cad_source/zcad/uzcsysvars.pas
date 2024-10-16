@@ -67,6 +67,7 @@ type
              Template_Path:PString;(*'Templates'*)
              Template_File:PString;(*'Default template'*)
              LayoutFile:PString;(*'Current layout'*)
+             Dictionaries:PString;(*'Dictionaries'*)
              Program_Run:PString;(*'Program'*)(*oi_readonly*)
              Temp_files:PString;(*'Temporary files'*)(*oi_readonly*)
              Device_Library:PString;(*'Device base'*)
@@ -92,6 +93,7 @@ type
             RD_SpatialNodesDepth:PInteger;(*'Spatial index nodes depth'*)(*hidden_in_objinsp*)
             RD_SpatialNodeCount:PInteger;(*'Spatial index ents in node'*)(*hidden_in_objinsp*)
             RD_MaxLTPatternsInEntity:PInteger;(*'Max LT patterns in entity'*)
+            RD_UseLazFreeTypeImplementation:PBoolean;(*'Use LazFreeType engine instead FreeType'*)
       end;
   {REGISTERRECORDTYPE tsave}
   tsave=record
@@ -121,7 +123,7 @@ type
              SYS_NoSplash:PBoolean;(*'No splash screen'*)
              SYS_NoLoadLayout:PBoolean;(*'No load layout'*)(*oi_readonly*)
              SYS_UpdatePO:PBoolean;(*'Update PO file'*)(*oi_readonly*)
-
+             SYS_MemProfiling:PBoolean;(*'Memory profiling'*)(*oi_readonly*)
        end;
   {REGISTERRECORDTYPE tdwg}
   tdwg=record
@@ -129,7 +131,7 @@ type
              DWG_OSMode:PTGDBOSMode;(*'Snap mode'*)
              DWG_PolarMode:PBoolean;(*'Polar tracking mode'*)
              DWG_CLayer:{-}PPointer{/PPGDBLayerPropObjInsp/};(*'Current layer'*)
-             DWG_CLinew:PTGDBLineWeight;(*'Current line weigwt'*)
+             DWG_CLinew:PTGDBLineWeight;(*'Current line weight'*)
              DWG_CColor:PTGDBPaletteColor;(*'Current color'*)
              DWG_LTScale:PDouble;(*'Global line type scale'*)
              DWG_CLTScale:PDouble;(*'Current line type scale'*)
@@ -171,6 +173,8 @@ type
              DSGN_HelpScale:PDouble;(*'Scale of auxiliary elements'*)
              DSGN_SelNew:PBoolean;(*'New selection set'*)
              DSGN_SelSameName:PBoolean;(*'Auto select devices with same name'*)
+             DSGN_MaxSelectEntsCountWithObjInsp:PInteger;(*'Maximum selected entities to object inspector'*)
+             DSGN_MaxSelectEntsCountWithGrips:PInteger;(*'Maximum selected entities with grips'*)
              DSGN_OTrackTimerInterval:PInteger;(*'Object track timer interval'*)
              DSGN_EntityMoveStartTimerInterval:PInteger;
              DSGN_EntityMoveStartOffset:PInteger;
@@ -181,6 +185,8 @@ type
   tobjinspinterface=record
                 INTF_ObjInsp_ShowHeaders:PBoolean;(*'Show headers'*)
                 INTF_ObjInsp_OldStyleDraw:PBoolean;(*'Old style'*)
+                INTF_ObjInsp_Level0HeaderColor:PTZColor;(*'Level0 header color'*)
+                INTF_ObjInsp_BorderColor:PTZColor;(*'Border color'*)
                 INTF_ObjInsp_WhiteBackground:PBoolean;(*'White background'*)
                 INTF_ObjInsp_ShowSeparator:PBoolean;(*'Show separator'*)
                 INTF_ObjInsp_ShowFastEditors:PBoolean;(*'Show fast editors'*)
@@ -197,6 +203,7 @@ type
                end;
   {REGISTERRECORDTYPE tinterface}
   tinterface=record
+              INTF_LanguageOverride:PString;(*'Language override'*)
               INTF_CommandLineEnabled:PBoolean;(*'Command line enabled'*)
               INTF_ShowScrollBars:PBoolean;(*'Show scroll bars'*)
               INTF_ShowDwgTabs:PBoolean;(*'Show drawing tabs'*)

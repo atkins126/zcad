@@ -96,30 +96,30 @@ type
 
   TListDev=TVector<pGDBObjDevice>;
 
-  TListGroupHeadDev=TVector<string>;
+  //TListGroupHeadDev=TVector<string>;
   //TSortComparer=class
   // function Compare (str11, str2:string):boolean;{inline;}
   //end;
   //devgroupnamesort=TOrderingArrayUtils<TListGroupHeadDev, string, TSortComparer>;
 
 var
-  clFileParam:CMDLinePromptParser.TGeneralParsedText=nil;
+  //clFileParam:CMDLinePromptParser.TGeneralParsedText=nil;
   CmdProp:TuzvmanemSGparams;
   //SelSimParams:TSelBlockParams;
   listFullGraphEM:TListGraphDev;     //Граф со всем чем можно
-  listMainFuncHeadDev:TListDev;
+  //listMainFuncHeadDev:TListDev;
 
   //Получить головное устройство
   function getDeviceHeadGroup(listFullGraphEM:TListGraphDev;listDev:TListDev):pGDBObjDevice;
-  type
-    TListEntity=TVector<pGDBObjEntity>;
+  //type
+  //  TListEntity=TVector<pGDBObjEntity>;
   var
      selEnt:pGDBObjEntity;
-     pvd:pvardesk;
+     //pvd:pvardesk;
      //listDev:TListDev;
-     devName:string;
-     devlistMF,selDev,selDevMF:PGDBObjDevice;
-     isListDev:boolean;
+     //devName:string;
+     devlistMF{,selDev,selDevMF}:PGDBObjDevice;
+     //isListDev:boolean;
      selDevVarExt:TVariablesExtender;
      selEntMF:PGDBObjEntity;
 
@@ -227,15 +227,15 @@ var
   end;
 
 
-function generatorOnelineDiagramOneLevel_com(operands:TCommandOperands):TCommandResult;
+function generatorOnelineDiagramOneLevel_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var
   //inpt:String;
-  gr:TGetResult;
-  filename:string;
+  //gr:TGetResult;
+  //filename:string;
   pvd:pvardesk;
-  p:GDBVertex;
-  listHeadDev:TListDev;
-  listNameGroupDev:TListGroupHeadDev;
+  //p:GDBVertex;
+  //listHeadDev:TListDev;
+  //listNameGroupDev:TListGroupHeadDev;
   headDev:pGDBObjDevice;
   graphView:TGraphDev;
   depthVisual:double;
@@ -266,8 +266,8 @@ begin
     graphView:=uzvmanemgetgem.getGraphHeadDev(listFullGraphEM,headDev,listAllHeadDev);
 
     //Получить группы которые есть у головного устройства
-    listNameGroupDev:=TListGroupHeadDev.Create;
-    listNameGroupDev:=uzvmanemgetgem.getListNameGroupHD(graphView);
+    //listNameGroupDev:=TListGroupHeadDev.Create;
+    //listNameGroupDev:=uzvmanemgetgem.getListNameGroupHD(graphView);
 
     //devgroupnamesort.Sort(listNameGroupDev,listNameGroupDev.Size);
 
@@ -342,7 +342,7 @@ initialization
   //CmdProp.props.init('test');
 
   //SelSim.SetCommandParam(@SelSimParams,'PTSelSimParams');
-  CreateCommandFastObjectPlugin(@generatorOnelineDiagramOneLevel_com,'vGeneratorOneLine',CADWG,0);
+  CreateZCADCommand(@generatorOnelineDiagramOneLevel_com,'vGeneratorOneLine',CADWG,0);
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
   //CmdProp.props.free;

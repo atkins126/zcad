@@ -16,6 +16,7 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>)
 }
 unit uzeentdimension;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 
 interface
@@ -24,11 +25,9 @@ uses uzemathutils,uzgldrawcontext,uzeentabstracttext,uzestylestexts,
      uzbstrproc,uzctnrVectorBytes,uzeenttext,uzegeometry,uzeentline,uzeentcomplex,
      uzegeometrytypes,sysutils,uzeentity,uzbtypes,uzeconsts,
      uzedimensionaltypes,uzeentitiesmanager,UGDBOpenArrayOfPV,uzeentblockinsert,
-     uzglviewareadata,uzeSnap;
+     uzglviewareadata,uzeSnap,math;
 type
-{EXPORT+}
 PTDXFDimData2D=^TDXFDimData2D;
-{REGISTERRECORDTYPE TDXFDimData2D}
 TDXFDimData2D=record
   P10:GDBVertex2D;
   P11:GDBVertex2D;
@@ -39,7 +38,6 @@ TDXFDimData2D=record
   P16:GDBVertex2D;
 end;
 PTDXFDimData=^TDXFDimData;
-{REGISTERRECORDTYPE TDXFDimData}
 TDXFDimData=record
   P10InWCS:GDBVertex;
   P11InOCS:GDBVertex;
@@ -53,10 +51,9 @@ TDXFDimData=record
   MidPoint:GDBVertex;
 end;
 PGDBObjDimension=^GDBObjDimension;
-{REGISTEROBJECTTYPE GDBObjDimension}
 GDBObjDimension= object(GDBObjComplex)
                       DimData:TDXFDimData;
-                      PDimStyle:{-}PGDBDimStyle{/PGDBDimStyleObjInsp/};
+                      PDimStyle:PGDBDimStyle;
                       PProjPoint:PTDXFDimData2D;
                       vectorD,vectorN,vectorT:GDBVertex;
                       TextTParam,TextAngle,DimAngle:Double;
@@ -74,19 +71,19 @@ GDBObjDimension= object(GDBObjComplex)
                 function GetLinearDimStr(l:Double;var drawing:TDrawingDef):TDXFEntsInternalStringType;
                 function GetDimStr(var drawing:TDrawingDef):TDXFEntsInternalStringType;virtual;
                 procedure rtmodifyonepoint(const rtmod:TRTModifyData);virtual;
-                function P10ChangeTo(tv:GDBVertex):GDBVertex;virtual;
-                function P11ChangeTo(tv:GDBVertex):GDBVertex;virtual;
-                function P12ChangeTo(tv:GDBVertex):GDBVertex;virtual;
-                function P13ChangeTo(tv:GDBVertex):GDBVertex;virtual;
-                function P14ChangeTo(tv:GDBVertex):GDBVertex;virtual;
-                function P15ChangeTo(tv:GDBVertex):GDBVertex;virtual;
-                function P16ChangeTo(tv:GDBVertex):GDBVertex;virtual;
+                function P10ChangeTo(const tv:GDBVertex):GDBVertex;virtual;
+                function P11ChangeTo(const tv:GDBVertex):GDBVertex;virtual;
+                function P12ChangeTo(const tv:GDBVertex):GDBVertex;virtual;
+                function P13ChangeTo(const tv:GDBVertex):GDBVertex;virtual;
+                function P14ChangeTo(const tv:GDBVertex):GDBVertex;virtual;
+                function P15ChangeTo(const tv:GDBVertex):GDBVertex;virtual;
+                function P16ChangeTo(const tv:GDBVertex):GDBVertex;virtual;
                 procedure transform(const t_matrix:DMatrix4D);virtual;
                 procedure TransformAt(p:PGDBObjEntity;t_matrix:PDMatrix4D);virtual;
 
                 procedure DrawDimensionText(p:GDBVertex;var drawing:TDrawingDef;var DC:TDrawContext);virtual;
                 function GetTextOffset(var drawing:TDrawingDef):GDBVertex;virtual;
-                function TextNeedOffset(dimdir:gdbvertex):Boolean;virtual;
+                function TextNeedOffset(const dimdir:gdbvertex):Boolean;virtual;
                 function TextAlwaysMoved:Boolean;virtual;
                 function GetPSize:Double;virtual;
 
@@ -99,7 +96,6 @@ GDBObjDimension= object(GDBObjComplex)
                 destructor done;virtual;
                 //function GetObjType:TObjID;virtual;
                 end;
-{EXPORT-}
 implementation
 function GDBObjDimension.GetDIMSCALE:double;
 begin
@@ -262,8 +258,7 @@ begin
                          if PDimStyle.Text.DIMTOH then
                                                       TextAngle:=0;
                     end;
-  vectorT.x:=cos(TextAngle);
-  vectorT.y:=sin(TextAngle);
+  SinCos(TextAngle,vectorT.y,vectorT.x);
   vectorT.z:=0;
 end;
 procedure GDBObjDimension.CalcTextAngle;
@@ -285,7 +280,7 @@ begin
   if vectorN.y<0 then
                      Result:=-Result;
 end;
-function GDBObjDimension.TextNeedOffset(dimdir:gdbvertex):Boolean;
+function GDBObjDimension.TextNeedOffset(const dimdir:gdbvertex):Boolean;
 begin
      result:=(((textangle<>0)or(PDimStyle.Text.DIMTAD=DTVPCenters))and(TextInside and not PDimStyle.Text.DIMTIH))or(abs(dimdir.x)<eps)or(DimData.TextMoved);
 end;
@@ -404,8 +399,7 @@ begin
   ptext.linespacef:=1;
   ptext.textprop.justify:=jsmc;
   { TODO : removeing angle from text ents }//ptext.textprop.angle:=TextAngle;
-  ptext.Local.basis.ox.x:=cos(TextAngle);
-  ptext.Local.basis.ox.y:=sin(TextAngle);
+  SinCos(TextAngle,ptext.Local.basis.ox.y,ptext.Local.basis.ox.x);
   ptext.TXTStyleIndex:=dimtxtstyle;
   ptext.textprop.size:=textsize;
   ptext.vp.Color:=PDimStyle.Text.DIMCLRT;
@@ -451,31 +445,31 @@ begin
   DimData.P15InWCS:=VectorTransform3D(PGDBObjDimension(p)^.DimData.P15InWCS,t_matrix^);
   DimData.P16InOCS:=VectorTransform3D(PGDBObjDimension(p)^.DimData.P16InOCS,t_matrix^);
 end;
-function GDBObjDimension.P10ChangeTo(tv:GDBVertex):GDBVertex;
+function GDBObjDimension.P10ChangeTo(const tv:GDBVertex):GDBVertex;
 begin
      result:=tv;
 end;
-function GDBObjDimension.P11ChangeTo(tv:GDBVertex):GDBVertex;
+function GDBObjDimension.P11ChangeTo(const tv:GDBVertex):GDBVertex;
 begin
      result:=tv;
 end;
-function GDBObjDimension.P12ChangeTo(tv:GDBVertex):GDBVertex;
+function GDBObjDimension.P12ChangeTo(const tv:GDBVertex):GDBVertex;
 begin
      result:=tv;
 end;
-function GDBObjDimension.P13ChangeTo(tv:GDBVertex):GDBVertex;
+function GDBObjDimension.P13ChangeTo(const tv:GDBVertex):GDBVertex;
 begin
      result:=tv;
 end;
-function GDBObjDimension.P14ChangeTo(tv:GDBVertex):GDBVertex;
+function GDBObjDimension.P14ChangeTo(const tv:GDBVertex):GDBVertex;
 begin
      result:=tv;
 end;
-function GDBObjDimension.P15ChangeTo(tv:GDBVertex):GDBVertex;
+function GDBObjDimension.P15ChangeTo(const tv:GDBVertex):GDBVertex;
 begin
      result:=tv;
 end;
-function GDBObjDimension.P16ChangeTo(tv:GDBVertex):GDBVertex;
+function GDBObjDimension.P16ChangeTo(const tv:GDBVertex):GDBVertex;
 begin
      result:=tv;
 end;
@@ -529,7 +523,7 @@ begin
                                    else
                                        begin
                                             result:=TDXFEntsInternalStringType(PDimStyle.Units.DIMPOST);
-                                                 i:=pos('<>',uppercase(result));
+                                                 i:=pos('<>',result);
                                                  if i>0 then
                                                             begin
                                                                  result:=copy(result,1,i-1)+str+copy(result,i+2,length(result)-i-1)

@@ -24,22 +24,19 @@ uses
     UGDBSelectedObjArray,uzeentity,UGDBOutbound2DIArray,UGDBPoint3DArray,
     uzegeometrytypes,uzctnrVectorBytes,varman,varmandef,uzbtypes,uzeconsts,
     uzglviewareadata,uzegeometry,uzeffdxfsupport,uzeentplain,
-    uzctnrvectorpgdbaseobjects,uzeSnap;
+    uzeSnap,math,uzMVReader,uzCtnrVectorpBaseEntity;
 type
-{Export+}
   ptEllipsertmodify=^tEllipsertmodify;
-  {REGISTERRECORDTYPE tEllipsertmodify}
   tEllipsertmodify=record
                         p1,p2,p3:GDBVertex2d;
                   end;
 PGDBObjEllipse=^GDBObjEllipse;
-{REGISTEROBJECTTYPE GDBObjEllipse}
 GDBObjEllipse= object(GDBObjPlain)
-                 RR:Double;(*saved_to_shd*)
+                 RR:Double;
                  MajorAxis:GDBvertex;
-                 Ratio:Double;(*saved_to_shd*)
-                 StartAngle:Double;(*saved_to_shd*)
-                 EndAngle:Double;(*saved_to_shd*)
+                 Ratio:Double;
+                 StartAngle:Double;
+                 EndAngle:Double;
                  angle:Double;
                  Vertex3D_in_WCS_Array:GDBPoint3DArray;
                  length:Double;
@@ -47,7 +44,7 @@ GDBObjEllipse= object(GDBObjPlain)
                  pq0,pq1,pq2:GDBvertex;
                  constructor init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt;p:GDBvertex;{RR,}S,E:Double;majaxis:GDBVertex);
                  constructor initnul;
-                 procedure LoadFromDXF(var f:TZctnrVectorBytes;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
+                 procedure LoadFromDXF(var f:TZMemReader;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
 
                  procedure SaveToDXF(var outhandle:{Integer}TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
                  procedure DrawGeometry(lw:Integer;var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
@@ -59,7 +56,7 @@ GDBObjEllipse= object(GDBObjPlain)
                  procedure getoutbound(var DC:TDrawContext);virtual;
                  procedure RenderFeedback(pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;
                  procedure projectpoint;virtual;
-                 function onmouse(var popa:TZctnrVectorPGDBaseObjects;const MF:ClipArray;InSubEntry:Boolean):Boolean;virtual;
+                 function onmouse(var popa:TZctnrVectorPGDBaseEntity;const MF:ClipArray;InSubEntry:Boolean):Boolean;virtual;
                  function getsnap(var osp:os_record; var pdata:Pointer; const param:OGLWndtype; ProjectProc:GDBProjectProc;SnapMode:TGDBOSMode):Boolean;virtual;
                  function beforertmodify:Pointer;virtual;
                  procedure rtmodifyonepoint(const rtmod:TRTModifyData);virtual;
@@ -68,8 +65,8 @@ GDBObjEllipse= object(GDBObjPlain)
                  procedure rtsave(refp:Pointer);virtual;
                  destructor done;virtual;
                  function GetObjTypeName:String;virtual;
-                 function calcinfrustum(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
-                 function CalcTrueInFrustum(frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
+                 function calcinfrustum(const frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
+                 function CalcTrueInFrustum(const frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
                  function CalcObjMatrixWithoutOwner:DMatrix4D;virtual;
                  procedure transform(const t_matrix:DMatrix4D);virtual;
                  procedure TransformAt(p:PGDBObjEntity;t_matrix:PDMatrix4D);virtual;
@@ -78,7 +75,6 @@ GDBObjEllipse= object(GDBObjPlain)
                  function CreateInstance:PGDBObjEllipse;static;
                  function GetObjType:TObjID;virtual;
            end;
-{EXPORT-}
 implementation
 //uses log;
 procedure GDBObjEllipse.TransformAt;
@@ -172,7 +168,7 @@ begin
            //system.break;
       end;
       end;
-      result:=Vertex3D_in_WCS_Array.CalcTrueInFrustum(frustum);
+      result:=Vertex3D_in_WCS_Array.CalcTrueInFrustum(frustum,false);
 end;
 function GDBObjEllipse.calcinfrustum;
 var i:Integer;
@@ -210,7 +206,7 @@ begin
   inherited initnul(nil);
   //vp.ID:=GDBEllipseID;
   //r := 1;
-  Vertex3D_in_WCS_Array.init(100);
+  Vertex3D_in_WCS_Array.init(4);
 end;
 constructor GDBObjEllipse.init;
 begin
@@ -222,7 +218,7 @@ begin
   endangle := e;
   majoraxis:=majaxis;
   PProjoutbound:=nil;
-  Vertex3D_in_WCS_Array.init(100);
+  Vertex3D_in_WCS_Array.init(4);
   //format;
 end;
 function GDBObjEllipse.GetObjType;
@@ -262,21 +258,18 @@ begin
   calcObjMatrix;
   angle := endangle - startangle;
   if angle < 0 then angle := 2 * pi + angle;
-  length := abs(angle){*pi/180} * rr;//---------------------------------------------------------------
-  v.x:=cos(startangle{*pi/180});
-  v.y:=sin(startangle{*pi/180});
+  length := abs(angle)*rr;//---------------------------------------------------------------
+  SinCos(startangle,v.y,v.x);
   v.z:=0;
   v.w:=1;
   v:=VectorTransform(v,objMatrix);
   q0:=pgdbvertex(@v)^;
-  v.x:=cos(startangle+angle{*pi/180}/2);
-  v.y:=sin(startangle+angle{*pi/180}/2);
+  SinCos(startangle+angle/2,v.y,v.x);
   v.z:=0;
   v.w:=1;
   v:=VectorTransform(v,objMatrix);
   q1:=pgdbvertex(@v)^;
-  v.x:=cos(endangle{*pi/180});
-  v.y:=sin(endangle{*pi/180});
+  SinCos(endangle,v.y,v.x);
   v.z:=0;
   v.w:=1;
   v:=VectorTransform(v,objMatrix);
@@ -339,50 +332,26 @@ begin
 end;
 procedure GDBObjEllipse.createpoint;
 var
-  //psymbol: PByte;
-  i{, j, k}: Integer;
-  //len: Word;
-  //matr{,m1}: DMatrix4D;
+  i:Integer;
   v:GDBvertex;
   pv:GDBVertex;
 begin
-  {oglsm.myglpushmatrix;
-  glscaledf(r, r, 1);
-  gltranslatef(p_insert.x / r, p_insert.y / r, p_insert.z);
-  angle := endangle - startangle;
-  if angle < 0 then angle := 2 * pi + angle;
-  myglbegin(GL_line_strip);
-  glVertex3d(cos(startangle), sin(startangle), 0);
-  for i := 1 to arccount do
-  begin
-    glVertex3d(cos(startangle + i / arccount * angle), sin(startangle + i / arccount * angle), 0);
-  end;
-  myglend;
-  oglsm.myglpopmatrix;}
   angle := endangle - startangle;
   if angle < 0 then angle := 2 * pi + angle;
 
+  lod:=100;  { TODO : А кто лод считать будет? }
+  Vertex3D_in_WCS_Array.SetSize(lod+1);
+
   Vertex3D_in_WCS_Array.clear;
-  {if ppoint<>nil then
-                     begin
-                          ppoint^.done;
-                          Freemem(ppoint);
-                     end;
-  Getmem(PPoint,sizeof(GDBPoint2DArray));
-  PPoint^.init(lod+1);}
-  //matr:=objMatrix;
-  v.x:=cos(startangle);
-  v.y:=sin(startangle);
+
+  SinCos(startangle,v.y,v.x);
   v.z:=0;
   pv:=VectorTransform3D(v,objmatrix);
   Vertex3D_in_WCS_Array.PushBackData(pv);
 
-  lod:=100;  { TODO : А кто лод считать будет? }
-
   for i:=1 to lod do
   begin
-              v.x:=cos(startangle+i / lod * angle);
-              v.y:=sin(startangle+i / lod * angle);
+              SinCos(startangle+i / lod * angle,v.y,v.x);
               v.z:=0;
               pv:=VectorTransform3D(v,objmatrix);
               Vertex3D_in_WCS_Array.PushBackData(pv);
@@ -466,7 +435,7 @@ var //s: String;
   byt{, code}: Integer;
 begin
   //initnul;
-  byt:=readmystrtoint(f);
+  byt:=f.ParseInteger;
   while byt <> 0 do
   begin
     if not LoadFromDXFObjShared(f,byt,ptu,drawing) then
@@ -474,8 +443,8 @@ begin
     if not dxfvertexload(f,11,byt,MajorAxis) then
     if not dxfDoubleload(f,40,byt,ratio) then
     if not dxfDoubleload(f,41,byt,startangle) then
-    if not dxfDoubleload(f,42,byt,endangle) then {s := }f.readString;
-    byt:=readmystrtoint(f);
+    if not dxfDoubleload(f,42,byt,endangle) then {s := }f.SkipString;
+    byt:=f.ParseInteger;
   end;
   startangle := startangle{ * pi / 180};
   endangle := endangle{ * pi / 180};

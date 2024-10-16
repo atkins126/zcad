@@ -58,7 +58,7 @@ type
       TSetStateProc=procedure(var value:T;const n:integer;state:boolean) of object;
       TPartsEditFunc=function(var value:T):boolean of object;
       TReorganizePartsFunc=procedure (var parts:string;const AFrom,ATo:integer;ABefore:boolean) of object;
-   private
+   protected
     var
       fpvalue:PT;
       actns:array of taction;
@@ -236,7 +236,7 @@ end;
 procedure TPartEnabler.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
   sr:TRect;
-  a:TDockImageWindow;
+  //a:TDockImageWindow;
 begin
   inherited MouseMove(Shift,X,Y);
   if fButtonDrag then begin
@@ -246,8 +246,8 @@ begin
 end;
 
 procedure TPartEnabler.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-var
-  sr:TRect;
+//var
+//  sr:TRect;
 begin
   inherited;
   if InsertTo>0 then begin

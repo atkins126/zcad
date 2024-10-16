@@ -17,11 +17,13 @@
 }
 
 unit UGDBOpenArrayOfPV;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 interface
 uses uzegeometrytypes,uzgldrawcontext,uzedrawingdef,uzeentity,uzecamera,
      gzctnrVectorTypes,sysutils,uzbtypes,uzegeometry,
-     uzeentsubordinated,uzeentityfactory,uzctnrvectorpgdbaseobjects;
+     uzeentsubordinated,uzeentityfactory,//uzctnrvectorpgdbaseobjects,
+     uzctnrvectorpbaseentity,uzeEntBase;
 type
 {PGDBObjEntityArray=^GDBObjEntityArray;
 objvizarray = array[0..0] of PGDBObjEntity;
@@ -30,13 +32,13 @@ GDBObjEntityArray=array [0..0] of PGDBObjEntity;}
 {Export+}
 PGDBObjOpenArrayOfPV=^GDBObjOpenArrayOfPV;
 {REGISTEROBJECTTYPE GDBObjOpenArrayOfPV}
-GDBObjOpenArrayOfPV= object(TZctnrVectorPGDBaseObjects)
+GDBObjOpenArrayOfPV= object({TZctnrVectorPGDBaseObjects}TZctnrVectorPGDBaseEntity)
                       procedure DrawWithattrib(var DC:TDrawContext);virtual;
                       procedure DrawGeometry(lw:Integer;var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
                       procedure DrawOnlyGeometry(lw:Integer;var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
                       procedure renderfeedbac(infrustumactualy:TActulity;pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;
-                      function calcvisible(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
-                      function CalcTrueInFrustum(frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
+                      function calcvisible(const frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
+                      function CalcTrueInFrustum(const frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
                       procedure DeSelect(var SelectedObjCount:Integer;ds2s:TDeSelect2Stage);virtual;
                       function CreateObj(t: Byte{;owner:Pointer}):Pointer;virtual;
                       function CreateInitObj(t: Byte;owner:Pointer):PGDBObjSubordinated;virtual;
@@ -49,17 +51,17 @@ GDBObjOpenArrayOfPV= object(TZctnrVectorPGDBaseObjects)
                       procedure FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext;Stage:TEFStages=EFAllStages);virtual;
                       procedure FormatAfterEdit(var drawing:TDrawingDef;var DC:TDrawContext);virtual;
                       //function InRect:TInRect;virtual;
-                      function onpoint(var objects:TZctnrVectorPGDBaseObjects;const point:GDBVertex):Boolean;virtual;
+                      function onpoint(var objects:TZctnrVectorPGDBaseEntity;const point:GDBVertex):Boolean;virtual;
                       //function FindEntityByVar(objID:Word;vname,vvalue:String):PGDBObjSubordinated;virtual;
                 end;
 {Export-}
-function EqualFuncPGDBaseObject(const a, b: PGDBaseObject):Boolean;
+function EqualFuncPGDBaseEntity(const a, b: PGDBObjBaseEntity):Boolean;
 implementation
-function EqualFuncPGDBaseObject(const a, b: PGDBaseObject):Boolean;
+function EqualFuncPGDBaseEntity(const a, b: PGDBObjBaseEntity):Boolean;
 begin
   result:=(a=b);
 end;
-function GDBObjOpenArrayOfPV.onpoint(var objects:TZctnrVectorPGDBaseObjects;const point:GDBVertex):Boolean;
+function GDBObjOpenArrayOfPV.onpoint(var objects:TZctnrVectorPGDBaseEntity;const point:GDBVertex):Boolean;
 var pobj:pGDBObjEntity;
     ir:itrec;
     //fr:TInRect;
@@ -282,13 +284,13 @@ var
   p:pGDBObjEntity;
       ir:itrec;
 begin
-  if count>500 then
-                   count:=count;
+//  if count>500 then
+//                   count:=count;
   p:=beginiterate(ir);
   if p<>nil then
   repeat
-  if ir.itc=12 then
-                         count:=count;
+//  if ir.itc=12 then
+//                         count:=count;
 
   {if p^.GetObjType=0 then
                          p^.vp.ID:=p^.vp.ID;}
@@ -304,8 +306,8 @@ var
   p:pGDBObjEntity;
   ir:itrec;
 begin
-  if Count>1 then
-                    Count:=Count;
+//  if Count>1 then
+//                    Count:=Count;
   p:=beginiterate(ir);
   if p<>nil then
   repeat
@@ -319,8 +321,8 @@ var
   p:pGDBObjEntity;
       ir:itrec;
 begin
-  if Count>1 then
-                    Count:=Count;
+//  if Count>1 then
+//                    Count:=Count;
   p:=beginiterate(ir);
   if p<>nil then
   repeat
@@ -336,8 +338,8 @@ var
   p:pGDBObjEntity;
       ir:itrec;
 begin
-  if Count>1 then
-                    Count:=Count;
+//  if Count>1 then
+//                    Count:=Count;
   p:=beginiterate(ir);
   if p<>nil then
   repeat

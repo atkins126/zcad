@@ -17,10 +17,11 @@
 }
 
 unit uzestyleslayers;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 interface
 uses sysutils,uzbtypes,uzegeometry,
-     uzeconsts,UGDBNamedObjectsArray,uzbstrproc,uzeNamedObject,gzctnrVectorClass,
+     uzeconsts,UGDBNamedObjectsArray,uzbstrproc,uzeNamedObject,//gzctnrVectorClass,
      uzeEntityStylesRegister;
 type
 {EXPORT+}
@@ -29,16 +30,16 @@ PGDBLayerPropObjInsp={GDBPtrUInt}Pointer;
 PGDBLayerProp=^GDBLayerProp;
 {REGISTEROBJECTTYPE GDBLayerProp}
 GDBLayerProp= object(GDBNamedObject)
-               color:Byte;(*saved_to_shd*)(*'Color'*)
-               lineweight:SmallInt;(*saved_to_shd*)(*'Line weight'*)
-               LT:Pointer;(*saved_to_shd*)(*'Line type'*)
-               _on:Boolean;(*saved_to_shd*)(*'On'*)
-               _lock:Boolean;(*saved_to_shd*)(*'Lock'*)
-               _print:Boolean;(*saved_to_shd*)(*'Print'*)
-               desk:AnsiString;(*saved_to_shd*)(*'Description'*)
-               constructor InitWithParam(N:String; C: Integer; LW: Integer;oo,ll,pp:Boolean;d:String);
+               color:Byte;(*'Color'*)
+               lineweight:SmallInt;(*'Line weight'*)
+               LT:Pointer;(*'Line type'*)
+               _on:Boolean;(*'On'*)
+               _lock:Boolean;(*'Lock'*)
+               _print:Boolean;(*'Print'*)
+               desk:AnsiString;(*'Description'*)
+               constructor InitWithParam(const N:String; C: Integer; LW: Integer;oo,ll,pp:Boolean;const d:String);
                function GetFullName:String;virtual;
-               procedure SetValueFromDxf(group:Integer;value:String);virtual;
+               procedure SetValueFromDxf(group:Integer;const value:String);virtual;
                procedure SetDefaultValues;virtual;
                destructor done;virtual;
          end;
@@ -46,21 +47,18 @@ PGDBLayerPropArray=^GDBLayerPropArray;
 GDBLayerPropArray=packed array [0..0] of PGDBLayerProp;
 PGDBLayerArray=^GDBLayerArray;
 {REGISTEROBJECTTYPE GDBLayerArray}
-GDBLayerArray= object(GDBNamedObjectsArray{-}<PGDBLayerProp,GDBLayerProp>{//})(*OpenArrayOfData=GDBLayerProp*)
+GDBLayerArray= object(GDBNamedObjectsArray{-}<PGDBLayerProp,GDBLayerProp>{//})
                     constructor init(m:Integer;psyslt:Pointer);
                     constructor initnul;
 
-                    function addlayer(name:String;color:Integer;lw:Integer;oo,ll,pp:Boolean;d:String;lm:TLoadOpt):PGDBLayerProp;virtual;
+                    function addlayer(const name:String;color:Integer;lw:Integer;oo,ll,pp:Boolean;const d:String;lm:TLoadOpt):PGDBLayerProp;virtual;
                     function GetSystemLayer:PGDBLayerProp;
                     function createlayerifneed(_source:PGDBLayerProp):PGDBLayerProp;
-                    function createlayerifneedbyname(lname:String;_source:PGDBLayerProp):PGDBLayerProp;
+                    function createlayerifneedbyname(const lname:String;_source:PGDBLayerProp):PGDBLayerProp;
               end;
 {EXPORT-}
 TLayerProp=class(TNamedObject)
 end;
-TLayerPropClass=class of TLayerProp;
-TLayers=GZVectorClass<TLayerProp>;
-TLayersClass=class of TLayers;
 function GetLTName(LT:PGDBLayerProp):String;
 var
    DefaultErrorLayer:GDBLayerProp;
@@ -76,7 +74,7 @@ begin
                          result:='Continuous';
 end;
 
-function  GDBLayerArray.createlayerifneedbyname(lname:String;_source:PGDBLayerProp):PGDBLayerProp;
+function  GDBLayerArray.createlayerifneedbyname(const lname:String;_source:PGDBLayerProp):PGDBLayerProp;
 begin
            result:=getAddres(lname);
            if result=nil then
@@ -140,7 +138,7 @@ begin
                                            _print:=true;
      desk:='';
 end;
-procedure GDBLayerProp.SetValueFromDxf(group:Integer;value:String);
+procedure GDBLayerProp.SetValueFromDxf(group:Integer;const value:String);
 var
    _color:integer;
 begin
@@ -174,7 +172,7 @@ begin
         end;
 end;
 
-constructor GDBLayerProp.InitWithParam(N:String; C: Integer; LW: Integer;oo,ll,pp:Boolean;d:String);
+constructor GDBLayerProp.InitWithParam(const N:String; C: Integer; LW: Integer;oo,ll,pp:Boolean;const d:String);
 begin
     initnul;
     LT:=nil;

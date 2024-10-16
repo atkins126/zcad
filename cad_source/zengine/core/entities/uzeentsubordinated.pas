@@ -17,39 +17,36 @@
 }
 
 unit uzeentsubordinated;
+{$Mode objfpc}{$H+}
 {$INCLUDE zengineconfig.inc}
 
 interface
-uses strutils,uzgldrawcontext,uzeentityextender,uzedrawingdef,
+uses strutils,uzgldrawcontext,uzeExtdrAbstractEntityExtender,uzedrawingdef,
      uzbstrproc{$IFNDEF DELPHI},LazUTF8{$ENDIF},uzctnrVectorBytes,uzegeometrytypes,uzbtypes,
-     sysutils,uzestyleslayers,uzeffdxfsupport,gzctnrVectorTypes,uzecamera;
+     sysutils,uzestyleslayers,uzeffdxfsupport,gzctnrVectorTypes,uzecamera,uzeentbase;
 type
-{EXPORT+}
+
 PGDBObjExtendable=^GDBObjExtendable;
-{REGISTEROBJECTTYPE GDBObjExtendable}
-GDBObjExtendable=object(GDBaseObject)
-                                 EntExtensions:{-}TEntityExtensions{/Pointer/};
-                                 procedure AddExtension(ExtObj:TBaseEntityExtender);
+GDBObjExtendable=object(GDBObjBaseEntity)
+                                 EntExtensions:TEntityExtensions;
+                                 procedure AddExtension(ExtObj:TAbstractEntityExtender);
                                  procedure RemoveExtension(ExtType:TMetaEntityExtender);
-                                 function GetExtension<GEntityExtenderType>:GEntityExtenderType;overload;
-                                 function GetExtension(ExtType:TMetaEntityExtender):TBaseEntityExtender;overload;
-                                 function GetExtension(n:Integer):TBaseEntityExtender;overload;
+                                 generic function GetExtension<GEntityExtenderType>:GEntityExtenderType;overload;
+                                 function GetExtension(ExtType:TMetaEntityExtender):TAbstractEntityExtender;overload;
+                                 function GetExtension(n:Integer):TAbstractEntityExtender;overload;
                                  function GetExtensionsCount:Integer;
                                  procedure CopyExtensionsTo(var Dest:GDBObjExtendable);
                                  destructor done;virtual;
 end;
 
 PGDBObjDrawable=^GDBObjDrawable;
-{REGISTEROBJECTTYPE GDBObjDrawable}
 GDBObjDrawable=object(GDBObjExtendable)
   procedure RenderFeedback(pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;abstract;
 end;
 
 PGDBObjSubordinated=^GDBObjSubordinated;
 PGDBObjGenericWithSubordinated=^GDBObjGenericWithSubordinated;
-{REGISTEROBJECTTYPE GDBObjGenericWithSubordinated}
 GDBObjGenericWithSubordinated= object(GDBObjDrawable)
-                                    {OU:TFaceTypedData;(*'Variables'*)}
                                     procedure GoodAddObjectToObjArray(const obj:PGDBObjSubordinated);virtual;abstract;
                                     procedure GoodRemoveMiFromArray(const obj:PGDBObjSubordinated;const drawing:TDrawingDef);virtual;abstract;
                                     procedure ImEdited(pobj:PGDBObjSubordinated;pobjinarray:Integer;var drawing:TDrawingDef);virtual;
@@ -73,26 +70,21 @@ GDBObjGenericWithSubordinated= object(GDBObjDrawable)
 
 
 end;
-{REGISTERRECORDTYPE TEntityAdress}
-TEntityAdress=record
-                          Owner:PGDBObjGenericWithSubordinated;(*'Adress'*)
-                          SelfIndex:TArrayIndex;(*'Position'*)
+TEntityAddress=record
+                          Owner:PGDBObjGenericWithSubordinated;
+                          SelfIndex:TArrayIndex;
               end;
-{REGISTERRECORDTYPE TTreeAdress}
-TTreeAdress=record
-                          Owner:Pointer;(*'Adress'*)
-                          SelfIndex:TArrayIndex;(*'Position'*)
+TTreeAddress=record
+                          Owner:Pointer;
+                          SelfIndex:TArrayIndex;
               end;
-{REGISTERRECORDTYPE GDBObjBaseProp}
 GDBObjBaseProp=record
-                      ListPos:TEntityAdress;(*'List'*)
-                      TreePos:TTreeAdress;(*'Tree'*)
+                      ListPos:TEntityAddress;
+                      TreePos:TTreeAddress;
                  end;
-TOSnapModeControl=(On,Off,AsOwner);
-{REGISTEROBJECTTYPE GDBObjSubordinated}
 GDBObjSubordinated= object(GDBObjGenericWithSubordinated)
-                         bp:GDBObjBaseProp;(*'Owner'*)(*oi_readonly*)(*hidden_in_objinsp*)
-                         OSnapModeControl:TOSnapModeControl;(*'OSnap mode control'*)
+                         bp:GDBObjBaseProp;
+                         OSnapModeControl:TOSnapModeControl;
                          function GetOwner:PGDBObjSubordinated;virtual;abstract;
                          procedure createfield;virtual;
                          //function FindVariable(varname:String):pvardesk;virtual;
@@ -100,7 +92,6 @@ GDBObjSubordinated= object(GDBObjGenericWithSubordinated)
                          destructor done;virtual;
                          procedure postload(var context:TIODXFLoadContext);virtual;abstract;
          end;
-{EXPORT-}
 
 procedure extractvarfromdxfstring2(_Value:String;out vn,vt,vun:String);
 procedure extractvarfromdxfstring(_Value:String;out vn,vt,vv,vun:String);
@@ -110,7 +101,7 @@ procedure OldVersTextReplace(var vv:TDXFEntsInternalStringType);overload;
 
 implementation
 
-procedure GDBObjExtendable.AddExtension(ExtObj:TBaseEntityExtender);
+procedure GDBObjExtendable.AddExtension(ExtObj:TAbstractEntityExtender);
 begin
      if not assigned(EntExtensions) then
                                         EntExtensions:=TEntityExtensions.create;
@@ -121,14 +112,15 @@ begin
      if assigned(EntExtensions) then
        EntExtensions.RemoveExtension(ExtType);
 end;
-function GDBObjExtendable.GetExtension<GEntityExtenderType>:GEntityExtenderType;
+generic function GDBObjExtendable.GetExtension<GEntityExtenderType>:GEntityExtenderType;
 begin
-     if assigned(EntExtensions) then
-                                    result:=EntExtensions.GetExtension<GEntityExtenderType>
-                                else
-                                    result:=nil;
+  {todo: тут какаято хрень с сборкой 3.2.2 на appveyor}
+  if assigned(EntExtensions) then begin
+    result:=self.EntExtensions.specialize GetExtensionOf<GEntityExtenderType>;
+  end else
+    result:=nil;
 end;
-function GDBObjExtendable.GetExtension(ExtType:TMetaEntityExtender):TBaseEntityExtender;
+function GDBObjExtendable.GetExtension(ExtType:TMetaEntityExtender):TAbstractEntityExtender;
 begin
      if assigned(EntExtensions) then
                                     result:=EntExtensions.GetExtension(ExtType)
@@ -142,7 +134,7 @@ begin
   else
     result:=0;
 end;
-function GDBObjExtendable.GetExtension(n:Integer):TBaseEntityExtender;
+function GDBObjExtendable.GetExtension(n:Integer):TAbstractEntityExtender;
 begin
   if assigned(EntExtensions) then
     result:=EntExtensions.GetExtension(n)
@@ -157,12 +149,12 @@ end;
 procedure GDBObjExtendable.CopyExtensionsTo(var Dest:GDBObjExtendable);
 var
   i:integer;
-  SourceExt,DestExt:TBaseEntityExtender;
+  SourceExt,DestExt:TAbstractEntityExtender;
 begin
   for i:=0 to GetExtensionsCount-1 do begin
     SourceExt:=GetExtension(i);
     if SourceExt<>nil then begin
-      DestExt:=Dest.GetExtension(TypeOf(SourceExt));
+      DestExt:=Dest.GetExtension(TMetaEntityExtender(TypeOf(SourceExt)));
       if not Assigned(DestExt) then begin
         DestExt:=TMetaEntityExtender(SourceExt.ClassType).Create(@Dest);
         DestExt.Assign(SourceExt);
@@ -205,7 +197,7 @@ begin
      //ou.done;
      inherited;
 end;
-procedure GDBObjGenericWithSubordinated.FormatAfterDXFLoad;
+procedure GDBObjGenericWithSubordinated.FormatAfterDXFLoad(var drawing:TDrawingDef;var DC:TDrawContext);
 begin
      //format;
      //CalcObjMatrix;
@@ -217,27 +209,35 @@ begin
 end;
 
 procedure extractvarfromdxfstring(_Value:String;out vn,vt,vv,vun:String);
-var i:integer;
+var
+  i_beg:integer;
+  i_end:integer=0;
 begin
-    i:=pos('|',_value);
-    vn:=copy(_value,1,i-1);
-    _Value:=copy(_value,i+1,length(_value)-i);
-    i:=pos('|',_value);
-    vt:=copy(_value,1,i-1);
-    _Value:=copy(_value,i+1,length(_value)-i);
-    i:=pos('|',_value);
-    vv:=copy(_value,1,i-1);
-    vun:=copy(_value,i+1,length(_value)-i);
+    i_beg:=i_end+1;
+    i_end:=pos('|',_value,i_beg);
+    vn:=copy(_value,i_beg,i_end-i_beg);
+    i_beg:=i_end+1;
+    i_end:=pos('|',_value,i_beg);
+    vt:=copy(_value,i_beg,i_end-i_beg);
+    i_beg:=i_end+1;
+    i_end:=pos('|',_value,i_beg);
+    vv:=copy(_value,i_beg,i_end-i_beg);
+    i_beg:=i_end+1;
+    vun:=copy(_value,i_beg,length(_value)-i_end);
 end;
 procedure extractvarfromdxfstring2(_Value:String;out vn,vt,vun:String);
-var i:integer;
+var
+  i_beg:integer;
+  i_end:integer=0;
 begin
-    i:=pos('|',_value);
-    vn:=copy(_value,1,i-1);
-    _Value:=copy(_value,i+1,length(_value)-i);
-    i:=pos('|',_value);
-    vt:=copy(_value,1,i-1);
-    vun:=copy(_value,i+1,length(_value)-i);
+    i_beg:=i_end+1;
+    i_end:=pos('|',_value,i_beg);
+    vn:=copy(_value,i_beg,i_end-i_beg);
+    i_beg:=i_end+1;
+    i_end:=pos('|',_value,i_beg);
+    vt:=copy(_value,i_beg,i_end-i_beg);
+    i_beg:=i_end+1;
+    vun:=copy(_value,i_beg,length(_value)-i_end);
 end;
 function ansitoutf8ifneed(var s:String):boolean;
 begin
@@ -386,7 +386,7 @@ begin
                         end;
 
 end;
-procedure GDBObjGenericWithSubordinated.Build;
+procedure GDBObjGenericWithSubordinated.Build(var drawing:TDrawingDef);
 begin
 
 end;
@@ -415,13 +415,13 @@ begin
                                                  result:=self.bp.ListPos.Owner.FindVariable(varname);
 
 end;}
-procedure GDBObjGenericWithSubordinated.ImEdited;
+procedure GDBObjGenericWithSubordinated.ImEdited(pobj:PGDBObjSubordinated;pobjinarray:Integer;var drawing:TDrawingDef);
 begin
 end;
-procedure GDBObjGenericWithSubordinated.ImSelected;
+procedure GDBObjGenericWithSubordinated.ImSelected(pobj:PGDBObjSubordinated;pobjinarray:Integer);
 begin
 end;
-procedure GDBObjGenericWithSubordinated.DelSelectedSubitem;
+procedure GDBObjGenericWithSubordinated.DelSelectedSubitem(var drawing:TDrawingDef);
 begin
 end;
 begin

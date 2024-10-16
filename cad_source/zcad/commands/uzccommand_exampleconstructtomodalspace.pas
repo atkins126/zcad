@@ -25,7 +25,7 @@ uses
   uzcLog,
   uzccommandsabstract,uzccommandsimpl,
   uzestyleslayers,uzbtypes,
-  uzcstrconsts,uzccommandsmanager,uzcdrawings,uzeentity,uzccominteractivemanipulators,
+  uzcstrconsts,uzccommandsmanager,{uzcdrawings,}uzeentity,//uzccominteractivemanipulators,
   uzegeometrytypes,
   uzeentmtext,
   uzegeometry,
@@ -47,9 +47,9 @@ type
 var
   CmdProp:TCmdProp;
 
-function ExampleConstructToModalSpace_com(operands:TCommandOperands):TCommandResult;
+function ExampleConstructToModalSpace_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 //Визуализация многострочный текст
-function drawMText(pt:GDBVertex;color:integer;rotate:double):PGDBObjMText;
+function drawMText(const pt:GDBVertex;color:integer;rotate:double):PGDBObjMText;
 begin
   Result:=GDBObjMText.CreateInstance;
   zcSetEntPropFromCurrentDrawingProp(Result);                        //добавляем дефаултные свойства
@@ -115,7 +115,7 @@ initialization
   SysUnit^.RegisterType(TypeInfo(TCmdProp));
   SysUnit^.SetTypeDesk(TypeInfo(TCmdProp),['параметры']);
   CmdProp.props.init('test');
-  CreateCommandFastObjectPlugin(@ExampleConstructToModalSpace_com,'ExampleConstructToModalSpace',CADWG,0);
+  CreateZCADCommand(@ExampleConstructToModalSpace_com,'ExampleConstructToModalSpace',CADWG,0);
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
   CmdProp.props.free;

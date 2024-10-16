@@ -20,12 +20,14 @@ unit uzcdrawing;
 {$INCLUDE zengineconfig.inc}
 interface
 uses
-    uzcTranslations,uzcinterface,uzgldrawcontext,zeundostack,gzundoCmdChgData,
-    gzundoCmdChgMethod,zebaseundocommands,uzbpaths,uzestylesdim,
+    uzcTranslations,uzcinterface,uzgldrawcontext,zeundostack,gzUndoCmdChgData,
+    gzUndoCmdChgMethod,zUndoCmdChgCameraBaseProp,zebaseundocommands,uzbpaths,uzestylesdim,
     uzcdialogsfiles,LResources,uzcsysvars,uzcstrconsts,uzbstrproc,uzeblockdef,UUnitManager,
     uzbtypes,varmandef,varman,sysutils,uzegeometry, uzeconsts,
     uzedrawingsimple,uzestyleslayers,uzeentity,uzefontmanager,
-    uzedimensionaltypes,uzegeometrytypes,uzctnrVectorBytes,gzctnrVectorTypes,uzglviewareadata;
+    uzedimensionaltypes,uzegeometrytypes,uzctnrVectorBytes,gzctnrVectorTypes,uzglviewareadata
+    //,zUndoCmdChgExtTypes
+    ;
 type
 {EXPORT+}
 PTZCADDrawing=^TZCADDrawing;
@@ -78,8 +80,8 @@ begin
     vd:=DWGUnit.InterfaceVariables.findvardesc('DWG_LTScale');
   if vd<>nil then
                  dc.DrawingContext.GlobalLTScale:=dc.DrawingContext.GlobalLTScale*PDouble(vd^.data.Addr.Instance)^;
-  if commandmanager.pcommandrunning<>nil then
-                                               dc.DrawingContext.DrawHeplGeometryProc:=commandmanager.pcommandrunning^.DrawHeplGeometry;
+  if commandmanager.CurrCmd.pcommandrunning<>nil then
+                                               dc.DrawingContext.DrawHeplGeometryProc:=commandmanager.CurrCmd.pcommandrunning^.DrawHeplGeometry;
 end;
 
 function TZCADDrawing.GetUnitsFormat:TzeUnitsFormat;
@@ -257,9 +259,9 @@ begin
   pdwgwarsunit^.CreateFixedVariable('DWG_TextSize','Double',@TextSize);
 
   if preloadedfile1<>'' then
-  DWGUnits.loadunit(GetSupportPath,InterfaceTranslate,expandpath({'*rtl/dwg/DrawingDeviceBase.pas')}preloadedfile1),nil);
+    DWGUnits.loadunit(GetSupportPath,InterfaceTranslate,expandpath(preloadedfile1),nil);
   if preloadedfile2<>'' then
-  DWGUnits.loadunit(GetSupportPath,InterfaceTranslate,expandpath({'*rtl/dwg/DrawingVars.pas'}preloadedfile2),nil);
+    DWGUnits.loadunit(GetSupportPath,InterfaceTranslate,expandpath(preloadedfile2),nil);
   DWGDBUnit:=DWGUnits.findunit(GetSupportPath,InterfaceTranslate,DrawingDeviceBaseUnitName);
 
   pcam:=nil;
@@ -275,7 +277,7 @@ begin
   Pointer(FileName):=nil;
   FileName:=rsHardUnnamed;
   Changed:=False;
-  UndoStack:=TZctnrVectorUndoCommands.Create;
+  UndoStack.init;//:=TZctnrVectorUndoCommands.Create;
   UndoStack.onUndoRedo:=self.onUndoRedo;
   zebaseundocommands.onUndoRedoDataOwner:=self.onUndoRedoDataOwner;
 

@@ -33,11 +33,11 @@ uses
   uzcdrawing,uzcdrawings,
   uzcinterface,uzcmainwindow;
 
-function DWGNew_com(operands:TCommandOperands):TCommandResult;
+function DWGNew_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 
 implementation
 
-function DWGNew_com(operands:TCommandOperands):TCommandResult;
+function DWGNew_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var
    PDrawing:PTZCADDrawing;
    TabSheet:TTabSheet;
@@ -46,7 +46,7 @@ var
    FileName:ansistring;
    dwgname:ansistring;
 begin
-  PDrawing:=drawings.CreateDWG('*rtl/dwg/DrawingDeviceBase.pas','*rtl/dwg/DrawingVars.pas');
+  PDrawing:=drawings.CreateDWG('$(ZCADPath)/rtl/dwg/DrawingDeviceBase.pas','$(ZCADPath)/rtl/dwg/DrawingVars.pas');
   drawings.PushBackData(PDrawing);
   FileName:=operands;
 
@@ -104,17 +104,9 @@ begin
   ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIActionRedrawContent);
   result:=cmd_ok;
 end;
-procedure startup;
-begin
-  CreateCommandFastObjectPlugin(@DWGNew_com,'DWGNew',0,0).CEndActionAttr:=[CEDWGNChanged];
-end;
-procedure finalize;
-begin
-end;
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-  startup;
+  CreateZCADCommand(@DWGNew_com,'DWGNew',0,0).CEndActionAttr:=[CEDWGNChanged];
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
-  finalize;
 end.

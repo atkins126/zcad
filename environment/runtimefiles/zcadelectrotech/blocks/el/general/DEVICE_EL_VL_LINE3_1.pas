@@ -10,7 +10,7 @@ usescopy addtocable;
 
 var
 
-T1:String;(*'Питающая фаза'*)
+VL_Code:String;(*'Код'*)
 
 implementation
 

@@ -17,6 +17,7 @@
 }
 
 unit UGDBVisibleTreeArray;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 interface
 uses uzeentitiestree,UGDBVisibleOpenArray,sysutils,uzegeometry,
@@ -25,7 +26,7 @@ type
 {Export+}
 PGDBObjEntityTreeArray=^GDBObjEntityTreeArray;
 {REGISTEROBJECTTYPE GDBObjEntityTreeArray}
-GDBObjEntityTreeArray= object(GDBObjEntityOpenArray)(*OpenArrayOfPObj*)
+GDBObjEntityTreeArray= object(GDBObjEntityOpenArray)
                             ObjTree:TEntTreeNode;
                             constructor init(m:Integer);
                             constructor initnul;

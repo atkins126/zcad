@@ -105,7 +105,8 @@ uses
    uzcenitiesvariablesextender,
    UUnitManager,
    uzbpaths,
-   uzctranslations;
+   uzctranslations,
+   math;
 
 
 
@@ -124,8 +125,8 @@ implementation
   function getTestLayer(createdlayername:string):PGDBLayerProp;
   var
       pproglayer:PGDBLayerProp;
-      pnevlayer:PGDBLayerProp;
-      pe:PGDBObjEntity;
+      //pnevlayer:PGDBLayerProp;
+      //pe:PGDBObjEntity;
   //const
   //    createdlayername='systemTempVisualLayer';
   begin
@@ -240,7 +241,7 @@ implementation
   var
       polyObj:PGDBObjPolyLine;
       tempPoint:GDBVertex;
-      i:integer;
+      //i:integer;
       //vertexObj:GDBvertex;
      // pe:T3PointCircleModePentity;
      // p1,p2:gdbvertex;
@@ -275,9 +276,10 @@ implementation
 
   procedure DrawInOutPoly(pt:GDBVertex; radius: double; sides, color, where, alpha: Integer);
  var
-    x, y: Integer;
+    //x, y: Integer;
     i   : Integer;
     tempPt:GDBVertex;
+    sine,cosine:double;
  begin
    //SetColor(color);
    {Вычисление производится по формуле:
@@ -309,8 +311,9 @@ implementation
      //tempPt.x := pt.x + round(radius*cos(2*pi*i/sides));
      //tempPt.y := pt.y + round(radius*sin(2*pi*i/sides));
 
-     tempPt.x := pt.x + radius*cos(alpha + (2*pi*i/sides));
-     tempPt.y := pt.y + radius*sin(alpha + (2*pi*i/sides));
+     SinCos(alpha + (2*pi*i/sides),sine,cosine);
+     tempPt.x := pt.x + radius*cosine;
+     tempPt.y := pt.y + radius*sine;
      {Коордианты очередной вершины вычислены
       рисуем линию из текущего положения графического курсора
       в вычисленную. Делается это с помощью поцедуры LineTo}
@@ -340,12 +343,12 @@ implementation
   //  e.Graphics.DrawLines(Pens.Black, points);
 
 
-function TestModul_com(operands:TCommandOperands):TCommandResult;
+function TestModul_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 
 
      var
-    x, y: Integer;
-    i   : Integer;
+    //x, y: Integer;
+    //i   : Integer;
     tempPoint:GDBVertex;
  begin
 
@@ -360,7 +363,7 @@ function TestModul_com(operands:TCommandOperands):TCommandResult;
  end;
 
 initialization
- CreateCommandFastObjectPlugin(@TestModul_com,'test555',CADWG,0);
+ CreateZCADCommand(@TestModul_com,'test555',CADWG,0);
 end.
 
 

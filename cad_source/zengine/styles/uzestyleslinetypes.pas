@@ -17,6 +17,7 @@
 }
 
 unit uzeStylesLineTypes;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 interface
 uses LCLProc,LazUTF8,Classes,gzctnrVector,sysutils,uzbtypes,
@@ -65,11 +66,11 @@ ShapeProp= object(BasicSHXDashProp)
                 destructor done;virtual;
           end;
 {REGISTEROBJECTTYPE GDBDashInfoArray}
-GDBDashInfoArray= object(GZVector{-}<TDashInfo>{//})(*OpenArrayOfData=TDashInfo*)
+GDBDashInfoArray= object(GZVector{-}<TDashInfo>{//})
                end;
 PTStrokesArray=^TStrokesArray;
 {REGISTEROBJECTTYPE TStrokesArray}
-TStrokesArray= object(GZVector{-}<Double>{//})(*OpenArrayOfData=Double*)
+TStrokesArray= object(GZVector{-}<Double>{//})
                 LengthFact:Double;(*'Length'*)
                 constructor init(m:Integer);
                 function CopyTo(var dest:GZVector{-}<Double>{//}):Integer;virtual;
@@ -77,11 +78,11 @@ TStrokesArray= object(GZVector{-}<Double>{//})(*OpenArrayOfData=Double*)
                 procedure format;
                end;
 {REGISTEROBJECTTYPE GDBShapePropArray}
-GDBShapePropArray= object(GZVectorObjects{-}<ShapeProp>{//})(*OpenArrayOfObject=ShapeProp*)
+GDBShapePropArray= object(GZVectorObjects{-}<ShapeProp>{//})
                 constructor init(m:Integer);
                end;
 {REGISTEROBJECTTYPE GDBTextPropArray}
-GDBTextPropArray= object(GZVectorObjects{-}<TextProp>{//})(*OpenArrayOfObject=TextProp*)
+GDBTextPropArray= object(GZVectorObjects{-}<TextProp>{//})
                 constructor init(m:Integer);
                end;
 PPGDBLtypePropObjInsp=^PGDBLtypePropObjInsp;
@@ -99,7 +100,7 @@ GDBLtypeProp= object(GDBNamedObject)
                shapearray:GDBShapePropArray;(*'Shape array'*)
                Textarray:GDBTextPropArray;(*'Text array'*)
                desk:AnsiString;(*'Description'*)
-               constructor init(n:String);
+               constructor init(const n:String);
                destructor done;virtual;
                procedure Format;virtual;
                function GetAsText:String;
@@ -110,10 +111,10 @@ PGDBLtypePropArray=^GDBLtypePropArray;
 GDBLtypePropArray=packed array [0..0] of GDBLtypeProp;
 PGDBLtypeArray=^GDBLtypeArray;
 {REGISTEROBJECTTYPE GDBLtypeArray}
-GDBLtypeArray= object(GDBNamedObjectsArray{-}<PGDBLtypeProp,GDBLtypeProp>{//})(*OpenArrayOfData=GDBLtypeProp*)
+GDBLtypeArray= object(GDBNamedObjectsArray{-}<PGDBLtypeProp,GDBLtypeProp>{//})
                     constructor init(m:Integer);
                     constructor initnul;
-                    procedure LoadFromFile(fname:String;lm:TLoadOpt);
+                    procedure LoadFromFile(const fname:String;lm:TLoadOpt);
                     procedure ParseStrings(const ltd:tstrings; var CurrentLine:integer;out LTName,LTDesk,LTImpl:String);
                     function createltypeifneed(_source:PGDBLtypeProp;var _DestTextStyleTable:GDBTextStyleArray):PGDBLtypeProp;
                     function GetSystemLT(neededtype:TLTMode):PGDBLtypeProp;
@@ -277,21 +278,25 @@ begin
                                       repeat
                                             PTP.txtL:=0;
                                             PTP.txtH:=0;
+                                            Psymbol:=nil;
                                             for i:=1 to length(PTP^.Text) do
                                             begin
                                                  if PTP^.param.PStyle<>nil then
                                                  begin
                                                       sym:=byte(PTP^.Text[i]);
-                                                      if ptp.param.PStyle.pfont.font.unicode then
-                                                                                                 sym:=ach2uch(sym);
-                                                 Psymbol:=PTP^.param.PStyle.pfont^.GetOrReplaceSymbolInfo(byte(sym){//-ttf-//,TDInfo});
-                                                 processH(Psymbol,PTP^.param);
-                                                 if PTP.txtH<Psymbol.SymMaxY*PTP.param.Height then
-                                                                                                  PTP.txtH:=Psymbol.SymMaxY*PTP.param.Height;
-                                                 PTP.txtL:=PTP.txtL+Psymbol.NextSymX*PTP^.param.Height;
+                                                      if ptp.param.PStyle.pfont<>nil then begin
+                                                        if ptp.param.PStyle.pfont.font.IsUnicode then
+                                                           sym:=ach2uch(sym);
+                                                        Psymbol:=PTP^.param.PStyle.pfont^.GetOrReplaceSymbolInfo(byte(sym){//-ttf-//,TDInfo});
+                                                        processH(Psymbol,PTP^.param);
+                                                        if PTP.txtH<Psymbol.SymMaxY*PTP.param.Height then
+                                                          PTP.txtH:=Psymbol.SymMaxY*PTP.param.Height;
+                                                        PTP.txtL:=PTP.txtL+Psymbol.NextSymX*PTP^.param.Height;
+                                                      end;
                                                  end;
                                             end;
-                                            PTP.txtL:=PTP.txtL-(Psymbol.NextSymX-Psymbol.SymMaxX)*PTP^.param.Height;
+                                            if Psymbol<>nil then
+                                              PTP.txtL:=PTP.txtL-(Psymbol.NextSymX-Psymbol.SymMaxX)*PTP^.param.Height;
                                             if h<PTP.txtL then
                                                           h:=PTP.txtL;
                                             PTP.txtH:=PTP.txtH/2;
@@ -300,20 +305,22 @@ begin
                                       until PTP=nil;
 
 end;
-function N2TLTMode(n:String):TLTMode;
+function N2TLTMode(const n:String):TLTMode;
+var
+   n_lower: string;
 begin
-     n:=lowercase(n);
-     if n='continuous' then
+     n_lower:=lowercase(n);
+     if n_lower='continuous' then
                            result:=TLTMode.TLTContinous
-else if n='bylayer' then
+else if n_lower='bylayer' then
                            result:=TLTMode.TLTByLayer
-else if n='byblock' then
+else if n_lower='byblock' then
                            result:=TLTMode.TLTByBlock
 else
     result:=TLTMode.TLTLineType;
 end;
 
-constructor GDBLtypeProp.init(n:String);
+constructor GDBLtypeProp.init(const n:String);
 begin
      inherited;
      FirstStroke:=TODIUnknown;
@@ -426,6 +433,16 @@ begin
                        result.init(_source.Name);
                        //result.LengthFact:=_source.LengthFact;
                        result.LengthDXF:=_source.LengthDXF;
+                       result.h:=_source.h;
+
+
+                       result.Mode:=_source.Mode;
+                       result.FirstStroke:=_source.FirstStroke;
+                       result.LastStroke:=_source.LastStroke;
+                       result.WithoutLines:=_source.WithoutLines;
+                       result.desk:=_source.desk;
+
+
                        _source.dasharray.copyto(result.dasharray);
                        _source.strokesarray.copyto(result.strokesarray);
                        //_source.shapearray.copyto(@result.shapearray);
@@ -638,7 +655,7 @@ begin
           element:=GetStr(LT,dinfo);
      end;
 end;
-procedure GDBLtypeArray.LoadFromFile(fname:String;lm:TLoadOpt);
+procedure GDBLtypeArray.LoadFromFile(const fname:String;lm:TLoadOpt);
 var
    strings:TStringList{=nil};
    line:String;

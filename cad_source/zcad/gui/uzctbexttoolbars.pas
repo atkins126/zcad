@@ -32,7 +32,8 @@ uses
   uzcstrconsts,uzccommand_loadlayout,uzcgui2linetypes,uzestyleslinetypes,uzcinterfacedata,
   uzcgui2linewidth,uzcflineweights,uzcgui2textstyles,uzcgui2dimstyles,
   uzedrawingsimple,uzcdrawing,uzcuidialogs,uzbstrproc,
-  uzestyleslayers,gzundoCmdChgData,uzcutils,gzctnrVectorTypes;
+  uzestyleslayers,zUndoCmdChgBaseTypes,uzcutils,gzctnrVectorTypes,uzcCtrlFindEditBox,
+  zUndoCmdChgTypes;
 type
   TMyToolbar=class(TToolBar)
     public
@@ -45,6 +46,7 @@ type
     class procedure TBGroupActionCreateFunc(fmf:TForm;actlist:TActionList;aNode: TDomNode; TB:TToolBar);
     class procedure TBButtonCreateFunc(fmf:TForm;actlist:TActionList;aNode: TDomNode; TB:TToolBar);
     class procedure TBLayerComboBoxCreateFunc(fmf:TForm;actlist:TActionList;aNode: TDomNode; TB:TToolBar);
+    class procedure TBFindEditBoxCreateFunc(fmf:TForm;actlist:TActionList;aNode: TDomNode; TB:TToolBar);
     class procedure TBLayoutComboBoxCreateFunc(fmf:TForm;actlist:TActionList;aNode: TDomNode; TB:TToolBar);
     class procedure TBColorComboBoxCreateFunc(fmf:TForm;actlist:TActionList;aNode: TDomNode; TB:TToolBar);
     class procedure TBLTypeComboBoxCreateFunc(fmf:TForm;actlist:TActionList;aNode: TDomNode; TB:TToolBar);
@@ -113,10 +115,13 @@ begin
      result:=false;
      case numprop of
                     0:begin
-                        with TBooleanChangeCommand.CreateAndPushIfNeed(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,PGDBLayerProp(PLayer)^._on,nil,nil) do
+                        with TBooleanChangeCommand.CreateAndPushIfNeed(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,
+                                                                       TChangedBoolean.CreateRec(PGDBLayerProp(PLayer)^._on),
+                                                                       TSharedEmpty(Default(TEmpty)),
+                                                                       TAfterChangeEmpty(Default(TEmpty)))do
                         begin
                           PGDBLayerProp(PLayer)^._on:=not(PGDBLayerProp(PLayer)^._on);
-                          ComitFromObj;
+                          //ComitFromObj;
                         end;
                         if PLayer=cdwg^.GetCurrentLayer then
                           if not PGDBLayerProp(PLayer)^._on then
@@ -125,10 +130,13 @@ begin
                       end;
                     {1:;}
                     2:begin
-                        with TBooleanChangeCommand.CreateAndPushIfNeed(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,PGDBLayerProp(PLayer)^._lock,nil,nil) do
+                        with TBooleanChangeCommand.CreateAndPushIfNeed(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,
+                                                                       TChangedBoolean.CreateRec(PGDBLayerProp(PLayer)^._lock),
+                                                                       TSharedEmpty(Default(TEmpty)),
+                                                                       TAfterChangeEmpty(Default(TEmpty)))do
                         begin
                           PGDBLayerProp(PLayer)^._lock:=not(PGDBLayerProp(PLayer)^._lock);
-                          ComitFromObj;
+                          //ComitFromObj;
                         end;
                       end;
                     3:begin
@@ -140,10 +148,13 @@ begin
                                           if assigned(sysvar.dwg.DWG_CLayer) then
                                           if sysvar.dwg.DWG_CLayer^<>Player then
                                           begin
-                                               with TGDBPoinerChangeCommand.CreateAndPushIfNeed(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,sysvar.dwg.DWG_CLayer^,nil,nil) do
+                                               with TPoinerChangeCommand.CreateAndPushIfNeed(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,
+                                                                                             TChangedPointer.CreateRec(sysvar.dwg.DWG_CLayer^),
+                                                                                             TSharedEmpty.CreateRec(Default(TEmpty)),
+                                                                                             TAfterChangeEmpty.CreateRec(Default(TEmpty))) do
                                                begin
                                                     sysvar.dwg.DWG_CLayer^:=Player;
-                                                    ComitFromObj;
+                                                    //ComitFromObj;
                                                end;
                                           end;
                                           if not PGDBLayerProp(PLayer)^._on then
@@ -310,7 +321,7 @@ begin
      begin
           if img[1]<>'#' then
                               begin
-                              img:={SysToUTF8}(ProgramPath)+'menu/BMP/'+img;
+                              img:={SysToUTF8}(ProgramPath)+'/menu/BMP/'+img;
                               bmp:=Graphics.TBitmap.create;
                               bmp.LoadFromFile(img);
                               bmp.Transparent:=true;
@@ -431,6 +442,20 @@ begin
   va.Enabled:=true;
   va.ActionList:=actlist;
 end;
+class procedure TZTBZCADExtensions.TBFindEditBoxCreateFunc(fmf:TForm;actlist:TActionList;aNode: TDomNode; TB:TToolBar);
+var
+  _Width:integer;
+  FindEditBox:TFindEditBox;
+begin
+  _Width:=getAttrValue(aNode,'Width',100);
+  FindEditBox:=TFindEditBox.Create(tb);
+  FindEditBox.style:=csDropDown;
+  FindEditBox.Parent:=tb;
+  FindEditBox.Width:=_Width;
+  updatescontrols.Add(FindEditBox);
+  enabledcontrols.Add(FindEditBox);
+end;
+
 class procedure TZTBZCADExtensions.TBLayerComboBoxCreateFunc(fmf:TForm;actlist:TActionList;aNode: TDomNode; TB:TToolBar);
 var
   _hint:string;
@@ -603,13 +628,13 @@ var
     s:string;
 begin
   if sender is TComboBox then begin
-    s:=ProgramPath+'components/'+(sender as TComboBox).text+'.xml';
+    s:=ProgramPath+'/components/'+(sender as TComboBox).text+'.xml';
     LoadLayoutFromFile(s);
   end;
 end;
 
 
-procedure addfiletoLayoutbox(filename:String;pdata:pointer);
+procedure addfiletoLayoutbox(const filename:String;pdata:pointer);
 var
     s:string;
 begin
@@ -628,7 +653,7 @@ begin
   result:=TComboBox.Create(tb);
   result.Style:=csDropDownList;
   result.Sorted:=true;
-  FromDirIterator(ProgramPath+'components/','*.xml','',addfiletoLayoutbox,nil,pointer(result));
+  FromDirIterator(ProgramPath+'/components/','*.xml','',addfiletoLayoutbox,nil,pointer(result));
   result.OnChange:=ChangeLayout;
 
   s:=extractfilename(sysvar.PATH.LayoutFile^);
@@ -869,6 +894,7 @@ initialization
   ToolBarsManager.RegisterTBItemCreateFunc('Action',TZTBZCADExtensions.TBActionCreateFunc);
   ToolBarsManager.RegisterTBItemCreateFunc('GroupAction',TZTBZCADExtensions.TBGroupActionCreateFunc);
   ToolBarsManager.RegisterTBItemCreateFunc('Button',TZTBZCADExtensions.TBButtonCreateFunc);
+  ToolBarsManager.RegisterTBItemCreateFunc('FindEditBox',TZTBZCADExtensions.TBFindEditBoxCreateFunc);
   ToolBarsManager.RegisterTBItemCreateFunc('LayerComboBox',TZTBZCADExtensions.TBLayerComboBoxCreateFunc);
   ToolBarsManager.RegisterTBItemCreateFunc('LayoutComboBox',TZTBZCADExtensions.TBLayoutComboBoxCreateFunc);
   ToolBarsManager.RegisterTBItemCreateFunc('ColorComboBox',TZTBZCADExtensions.TBColorComboBoxCreateFunc);

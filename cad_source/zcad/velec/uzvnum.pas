@@ -139,9 +139,10 @@ uses
    uzctranslations,
 
   uzvcom,
-  uzvconsts,
+  //uzvconsts,
   uzvtmasterdev,
-  uzvtestdraw;
+  uzvtestdraw,
+  math;
 
 
 type
@@ -645,10 +646,10 @@ var
   // tempNumVertex:TInfoTempNumVertex;
    limbTreeDeviceinGroup:TInfoVertexSubGraph;
    //tempVertexNum:TVertexAfterBefore;
-   beforeLength,bAfterLength:double;
-   bNumAfter,numEdgeNow,numEdgeBefore:integer;
-   IsExchange, haveLimb, haveWay, lengthEqual:boolean;
-   i,j,k,l,counterColor,goodWayCol:integer;
+   {beforeLength,}bAfterLength:double;
+   {bNumAfter,}numEdgeNow,numEdgeBefore:integer;
+   {IsExchange,} haveLimb, haveWay{, lengthEqual}:boolean;
+   i,j,k,{l,}counterColor,goodWayCol:integer;
 begin
     //ourListGroup.listVertexWayGroup;
     counterColor:=0;
@@ -768,13 +769,13 @@ end;
  procedure getListOnlyVertexWayGroup(var ourListGroup:THeadGroupInfo;ourGraph:TGraphBuilder);
 var
   // tempNumVertex:TInfoTempNumVertex;
-   limbTreeDeviceinGroup:TInfoVertexSubGraph;
+   //limbTreeDeviceinGroup:TInfoVertexSubGraph;
    listNumEdge:TListVertexWayOnlyVertex;
    //tempVertexNum:TVertexAfterBefore;
-   beforeLength,bAfterLength:double;
-   bNumAfter,numEdgeNow,numEdgeBefore:integer;
-   IsExchange, haveVertex, haveWay, lengthEqual:boolean;
-   i,j,k,l,tempNumVertex,NumVertexSave:integer;
+   //beforeLength,bAfterLength:double;
+   //bNumAfter,numEdgeNow,numEdgeBefore:integer;
+   IsExchange, haveVertex{, haveWay, lengthEqual}:boolean;
+   i{,j,k,l},tempNumVertex,NumVertexSave:integer;
   // IsExchange:boolean;
 begin
 
@@ -901,7 +902,7 @@ var
     i,j,counter:integer;
     mtext:string;
     notVertex:boolean;
-    pvdHeadDevice,pvdHDGroup:pvardesk; //для работы со свойствами устройств
+    //pvdHeadDevice,pvdHDGroup:pvardesk; //для работы со свойствами устройств
     myVertex,vertexAnalized:TListVertexWayOnlyVertex;
     myTerminalBox:TListVertexTerminalBox;
 
@@ -957,12 +958,12 @@ function buildCableGroupLine(listHeadDevice:TListHeadDevice;ourGraph:TGraphBuild
 var
     //polyObj:PGDBObjPolyLine;
     polyObj:PGDBObjCable;
-    i,j,counter:integer;
-    mtext:string;
-    notVertex,bCable:boolean;
-    pvd,pvdHDGroup:pvardesk; //для работы со свойствами устройств
-    myVertex,vertexAnalized:TListVertexWayOnlyVertex;
-    myTerminalBox:TListVertexTerminalBox;
+    i{,j,counter}:integer;
+    //mtext:string;
+    //notVertex,bCable:boolean;
+    pvd{,pvdHDGroup}:pvardesk; //для работы со свойствами устройств
+    //myVertex,vertexAnalized:TListVertexWayOnlyVertex;
+    //myTerminalBox:TListVertexTerminalBox;
     //listTraversedVert:TListVertexTerminalBox;
         psu:ptunit;
         pvarext:TVariablesExtender;
@@ -1040,21 +1041,21 @@ end;
 function cablingGroupLine(listHeadDevice:TListHeadDevice;ourGraph:TGraphBuilder;numHead:integer;numGroup:integer):TCommandResult;
 var
     //polyObj:PGDBObjPolyLine;
-    polyObj:PGDBObjCable;
+    //polyObj:PGDBObjCable;
     i,j,counter:integer;
-    mtext:string;
-    notVertex,bCable,breakCable:boolean;
-    pvd,pvdHDGroup:pvardesk; //для работы со свойствами устройств
+    //mtext:string;
+    notVertex,bCable{,breakCable}:boolean;
+    //pvd,pvdHDGroup:pvardesk; //для работы со свойствами устройств
     myVertex,vertexAnalized,wayCableLine:TListVertexWayOnlyVertex;
-    myTerminalBox:TListVertexTerminalBox;
+    //myTerminalBox:TListVertexTerminalBox;
     //listTraversedVert:TListVertexTerminalBox;
-        psu:ptunit;
-        pvarext:TVariablesExtender;
+        //psu:ptunit;
+        //pvarext:TVariablesExtender;
 begin
      vertexAnalized:= TListVertexWayOnlyVertex.Create;
      wayCableLine:= TListVertexWayOnlyVertex.Create;
      myVertex:=listHeadDevice[numHead].listGroup[numGroup].listVertexWayOnlyVertex;
-     myTerminalBox:=listHeadDevice[numHead].listGroup[numGroup].listVertexTerminalBox;
+     //myTerminalBox:=listHeadDevice[numHead].listGroup[numGroup].listVertexTerminalBox;
 
      counter:=0;
      bCable:=false;   //прокладка кабеля не ведется
@@ -1113,7 +1114,7 @@ end;
  //рисуем прямоугольник с цветом  зная номера вершин, координат возьмем из графа по номерам
 function autoNumberEquip(lVertex:TListVertexWayOnlyVertex;ourGraph:TGraphBuilder;color:Integer):TCommandResult;
 var
-    polyObj:PGDBObjPolyLine;
+    //polyObj:PGDBObjPolyLine;
     i:integer;
     //vertexObj:GDBvertex;
    // pe:T3PointCircleModePentity;
@@ -1137,7 +1138,7 @@ begin
      result:=cmd_ok;
 end;
 
-function NumPsIzvAndDlina_com(operands:TCommandOperands):TCommandResult;
+function NumPsIzvAndDlina_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
   begin
           result:=cmd_ok;
   end;
@@ -1898,7 +1899,7 @@ end;
   procedure addEasyTreeDevice(globalGraph:TGraph;var listMasterDevice:TVectorOfMasterDevice);
   var
      i,j,k,l:integer;
-     VertexPath: TClassList;
+     //VertexPath: TClassList;
      VPath: TClassList;
      infoGTree:TGraph;
      tempVertexGraph:TVertex;
@@ -2118,9 +2119,9 @@ end;
   //type
     //tempuseVertex:Tvectorofinteger;
   var
-     pvd:pvardesk; //для работы со свойствами устройств
-     polyObj:PGDBObjPolyLine;
-     i,j,k,m,counter1,counter2,counter3:integer;
+     //pvd:pvardesk; //для работы со свойствами устройств
+     //polyObj:PGDBObjPolyLine;
+     i,j,k,m{,counter1,counter2,counter3}:integer;
      tIndex,tIndexLocal,tIndexGlobal:integer;
      EdgePath, VertexPath: TClassList;
      infoGTree:TGraph;
@@ -2129,9 +2130,9 @@ end;
      //infoLay:TCableLaying;
      //listStr1,listStr2,listStr3:TVertexofString;
      tempString:string;
-     sumWeightPath: Float;
+     //sumWeightPath: Float;
      tempLVertex:TvectorOfInteger;
-     gg:GDBVertex;
+     //gg:GDBVertex;
 
      function isVertexAdded(tempLVertex:tvectorofinteger;index:integer):boolean;
      var
@@ -2191,7 +2192,7 @@ end;
                   EdgePath:=TClassList.Create;     //Создаем реберный путь
                   VertexPath:=TClassList.Create;   //Создаем вершиный путь
                   //Получение ребер минимального пути в графе из одной точки в другую
-                  sumWeightPath:=globalGraph.FindMinWeightPath(globalGraph[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexMaster], globalGraph[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexSub], EdgePath);
+                  {sumWeightPath:=}globalGraph.FindMinWeightPath(globalGraph[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexMaster], globalGraph[listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexSub], EdgePath);
                   //Получение вершин минимального пути в графе на основе минимального пути в ребер, указывается из какой точки старт
                   //ZCMsgCallBackInterface.TextMessage('master = '+inttostr(listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexMaster)+' sub - ' + inttostr(listMasterDevice[i].LGroup[j].LNumSubDevice[k].indexSub),TMWOHistoryOut);
 
@@ -2538,7 +2539,7 @@ function getListParamDev(nowDev:PGDBObjDevice;nameType:string):TListString;
     end;
 procedure addErrorinList(nowDev:PGDBObjDevice;var listError:TListError;textError:string);
     var
-       pvd:pvardesk; //для работы со свойствами устройств
+       //pvd:pvardesk; //для работы со свойствами устройств
        //tempName,nameParam:String;
        errorInfo:TErrorInfo;
        //tempstring:string;
@@ -2835,10 +2836,10 @@ procedure addErrorinList(nowDev:PGDBObjDevice;var listError:TListError;textError
     end;
     result:=cmd_ok;
   end;
-  function TestTREEUses_com(operands:TCommandOperands):TCommandResult;
+  function TestTREEUses_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
   var
     G: TGraph;
-    EdgePath, VertexPath: TClassList;
+    {EdgePath,} VertexPath: TClassList;
     //I: Integer;
     //T: Float;
     procedure ShowPath(const CorrectPath: array of Integer);
@@ -2946,7 +2947,7 @@ const
   indent=30;
 
 type
-    PTInfoVertex=^TInfoVertex;
+    //PTInfoVertex=^TInfoVertex;
     TInfoVertex=record
         num,kol,childs:Integer;
         poz:GDBVertex2D;
@@ -3035,9 +3036,7 @@ var
           pmtext^.vp.LineWeight:=LnWt100;
           pmtext^.linespacef:=1;
           //pmtext^.textprop.aaaangle:=rotate;
-          rotate:=(rotate*pi)/180;
-          pmtext^.Local.basis.ox.x:=cos(rotate);
-          pmtext^.Local.basis.ox.y:=sin(rotate);
+          SinCos(rotate*pi/180, pmtext^.Local.basis.ox.y, pmtext^.Local.basis.ox.x);
 
           //pmtext^.vp.LineTypeScale:=1;
           pmtext^.vp.Color:=color;
@@ -3133,7 +3132,7 @@ begin
 
 end;
 
-  function TestTREEUses_com2(operands:TCommandOperands):TCommandResult;
+  function TestTREEUses_com2(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
   var
     G: TGraph;
     EdgePath, VertexPath: TClassList;
@@ -3353,8 +3352,8 @@ begin
    //в зависимости что чего меньше-больше
 end;
 function TDummyComparer.CompareEdges (Edge1, Edge2: Pointer): Integer;
-var
-  e1,e2:TAttrSet;
+//var
+//  e1,e2:TAttrSet;
 begin
 
    ////result:=1;
@@ -3388,9 +3387,9 @@ end;
 
 
 initialization
-  CreateCommandFastObjectPlugin(@NumPsIzvAndDlina_com,'test111',CADWG,0);
-  CreateCommandFastObjectPlugin(@TestTREEUses_com,'test222',CADWG,0);
-  CreateCommandFastObjectPlugin(@TestTREEUses_com2,'test333',CADWG,0);
+  CreateZCADCommand(@NumPsIzvAndDlina_com,'test111',CADWG,0);
+  CreateZCADCommand(@TestTREEUses_com,'test222',CADWG,0);
+  CreateZCADCommand(@TestTREEUses_com2,'test333',CADWG,0);
   DummyComparer:=TDummyComparer.Create;
   SortTreeLengthComparer:=TSortTreeLengthComparer.Create;
 finalization

@@ -31,21 +31,21 @@ uses
 
 implementation
 
-function SaveOptions_com(operands:TCommandOperands):TCommandResult;
+function SaveOptions_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var
    mem:TZctnrVectorBytes;
 begin
   mem.init(1024);
   SysVarUnit^.SavePasToMem(mem);
-  mem.SaveToFile(expandpath(ProgramPath+'rtl/sysvar.pas'));
+  mem.SaveToFile(expandpath(ProgramPath+'/rtl/sysvar.pas'));
   mem.done;
-  SaveParams(expandpath(ProgramPath+'rtl/config.xml'),SysParam.saved);
+  SaveParams(expandpath(ProgramPath+'/rtl/config.xml'),SysParam.saved);
   result:=cmd_ok;
 end;
 
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-  CreateCommandFastObjectPlugin(@SaveOptions_com,'SaveOptions',0,0);
+  CreateZCADCommand(@SaveOptions_com,'SaveOptions',0,0);
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
 end.

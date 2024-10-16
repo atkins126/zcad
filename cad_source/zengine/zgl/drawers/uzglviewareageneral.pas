@@ -17,6 +17,7 @@
 }
 
 unit uzglviewareageneral;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 interface
 uses
@@ -27,13 +28,14 @@ uses
      ExtCtrls,Controls,Classes,{$IFDEF DELPHI}Types,{$ENDIF}{$IFNDEF DELPHI}LCLType,{$ENDIF}Forms,
      UGDBOpenArrayOfPV,uzeentgenericsubentry,uzecamera,UGDBVisibleOpenArray,uzgldrawerabstract,
      uzgldrawergeneral,uzglviewareaabstract,uzeentitiesprop,gzctnrSTL,uzbLogIntf,
-     uzeSnap;
+     uzeSnap,uzeMouseTimer;
 const
   ontracdist=10;
   ontracignoredist=25;
+  cDefaultMouseMode=MGetControlpoint or MGetSelectObject or MMoveCamera or MRotateCamera or MGetSelectionFrame;
 
 resourcestring
-  rswonlyparalel='Works only for parallel projection!';
+  rswonlyparallel='Works only for parallel projection!';
   rswonlytop='Works only for top view!';
 
 type
@@ -44,8 +46,10 @@ type
     public
       class var ShowCursorHandlersVector:TShowCursorHandlersVector;
 
-                           WorkArea:TCADControl;
+                       var WorkArea:TCADControl;
                            InsidePaintMessage:integer;
+                           TrackPointMouseTimer:TMouseTimer;
+                           OHTimer:TTimer;
 
                            function getviewcontrol:TCADControl;override;
 
@@ -72,9 +76,7 @@ type
                            procedure CalcOptimalMatrix;override;
                            procedure SetOGLMatrix;virtual;
                            procedure CalcMouseFrustum;override;
-                           procedure ProcOTrackTimer(Sender:TObject);override;
-                           procedure KillOTrackTimer(Sender: TObject);override;
-                           procedure SetOTrackTimer(Sender: TObject);override;
+                           procedure SetOTrackTimer(Sender: TObject;const mp:TPoint);
                            procedure KillOHintTimer(Sender: TObject);override;
                            procedure SetOHintTimer(Sender: TObject);override;
                            procedure getosnappoint(radius: Single);override;
@@ -94,13 +96,13 @@ type
                            procedure asyncupdatemouse(Data: PtrInt);override;
                            procedure asyncsendmouse(Data: PtrInt);override;
                            procedure set3dmouse;override;
-                           procedure SetCameraPosZoom(_pos:gdbvertex;_zoom:Double;finalcalk:Boolean);override;
+                           procedure SetCameraPosZoom(const _pos:gdbvertex;_zoom:Double;finalcalk:Boolean);override;
                            procedure DISP_ZoomFactor(x: double{; MousePos: TPoint});
                            procedure showmousecursor;override;
                            procedure hidemousecursor;override;
                            Procedure Paint; override;
-                           function treerender(var Node:TEntTreeNode;StartTime:TDateTime;var DC:TDrawContext):Boolean; override;
-                           procedure partailtreerender(var Node:TEntTreeNode;const part:TBoundingBox; var DC:TDrawContext); override;
+                           function treerender(var Node:TEntTreeNode;StartTime:TDateTime;var DC:TDrawContext;LODDeep:integer=0):Boolean; override;
+                           procedure partailtreerender(var Node:TEntTreeNode;const part:TBoundingBox; var DC:TDrawContext;LODDeep:integer=0); override;
                            procedure render(const Root:GDBObjGenericSubEntry;var DC:TDrawContext); override;
                            procedure finishdraw(var RC:TDrawContext); override;
                            procedure draw;override;
@@ -126,6 +128,8 @@ type
                            procedure WaMouseLeave(Sender:TObject);
                            procedure WaResize(sender:tobject);override;
                            procedure mypaint(sender:tobject);
+
+                           procedure AddOTPoint(StartX,StartY,X,Y:Integer);
 
                            procedure idle(Sender: TObject; var Done: Boolean);override;
 
@@ -197,6 +201,8 @@ var
    sysvarDSGNEntityMoveStartTimerInterval:Integer=300;
    sysvarDSGNEntityMoveStartOffset:Integer=-30;
    sysvarDSGNEntityMoveByMouseUp:Boolean=True;
+   sysvarDSGNMaxSelectEntsCountWithObjInsp:Integer=25000;
+   sysvarDSGNMaxSelectEntsCountWithGrips:Integer=100;
 
 implementation
 
@@ -296,7 +302,7 @@ var
   Tempplane,plx,ply,plz:DVector4D;
   a: Integer;
   i2d,i2dresult:intercept2dprop;
-  _NotUseLCS:boolean;
+  //_NotUseLCS:boolean;
 begin
   if param.scrollmode then
                           exit;
@@ -417,7 +423,7 @@ begin
   *)
   //glColor3ub(255, 255, 255);
   dc.drawer.startrender(TRM_WindowSpace,dc.DrawingContext.matrixs);
-  dc.drawer.SetColor(palette[ForeGroundColorIndex].RGB);
+  //dc.drawer.SetColor(palette[ForeGroundColorIndex].RGB);
   //oglsm.glColor3ubv(foreground);
 
   if param.seldesc.MouseFrameON then
@@ -440,17 +446,13 @@ begin
                               param.seldesc.Frame2.x,param.seldesc.Frame1.y);
 
     if param.seldesc.MouseFrameInverse then
-      dc.drawer.SetPenStyle(TPS_Solid);
-    if param.seldesc.MouseFrameInverse then
     begin
-      dc.drawer.SetDrawMode(TDM_XOR);
       dc.drawer.SetPenStyle(TPS_Dash);
-    end;
-    if param.seldesc.MouseFrameInverse then
       dc.drawer.SetColor(0,40,0,10)
+    end
     else
       dc.drawer.SetColor(0,0,40,10);
-    dc.drawer.SetDrawMode(TDM_XOR);
+    dc.drawer.SetDrawMode(TDM_OR);
     dc.drawer.DrawQuad2DInDCS(param.seldesc.Frame1.x,param.seldesc.Frame1.y,param.seldesc.Frame2.x,param.seldesc.Frame2.y);
     if param.seldesc.MouseFrameInverse then
       dc.drawer.SetPenStyle(TPS_Solid);
@@ -572,7 +574,7 @@ end;
 procedure TGeneralViewArea.DrawCSAxis(var DC:TDrawContext);
 var
   td,td2,td22:Double;
-  d2dx,d2dy,d2d:GDBvertex2D;
+  //d2dx,d2dy,d2d:GDBvertex2D;
 begin
   dc.drawer.SetDrawMode(TDM_Normal);
 
@@ -652,61 +654,89 @@ procedure TGeneralViewArea.SwapBuffers(var DC:TDrawContext);
 begin
      drawer.SwapBuffers;
 end;
-procedure TGeneralViewArea.partailtreerender(var Node:TEntTreeNode;const part:TBoundingBox; var DC:TDrawContext);
+procedure TGeneralViewArea.partailtreerender(var Node:TEntTreeNode;const part:TBoundingBox; var DC:TDrawContext;LODDeep:integer=0);
 //копипаста из treerender
 begin
   if (Node.NodeData.infrustum=PDWG.Getpcamera.POSCOUNT)and(boundingintersect(Node.BoundingBox,part)) then begin
     if (Node.NodeData.FulDraw=TDTFulDraw)or(Node.nul.count=0) then begin
       if assigned(node.pminusnode)then
-        partailtreerender(PTEntTreeNode(node.pminusnode)^,part,dc);
+        partailtreerender(PTEntTreeNode(node.pminusnode)^,part,dc,LODDeep);
       if assigned(node.pplusnode)then
-        partailtreerender(PTEntTreeNode(node.pplusnode)^,part,dc);
+        partailtreerender(PTEntTreeNode(node.pplusnode)^,part,dc,LODDeep);
     end;
     TEntTreeNode(Node).DrawWithAttribExternalArray(dc);
   end;
 end;
 
+function SqrCanSimplyDrawInWCS(const DC:TDrawContext;const ParamSize,TargetSize:Double):Boolean;
+var
+   templod:Double;
+begin
+     if dc.maxdetail then
+                         exit(true);
+  templod:=(ParamSize)/(dc.DrawingContext.zoom*dc.DrawingContext.zoom);
+  if templod>TargetSize then
+                            exit(true)
+                        else
+                            exit(false);
+end;
 
 function TGeneralViewArea.treerender;
+const
+  MaxLODDeepDrtaw=5;
 var
   currtime:TDateTime;
   Hour,Minute,Second,MilliSecond:word;
-  q1,q2:Boolean;
+  v:gdbvertex;
+  LODSave:TLOD;
 begin
   if (sysvarRDMaxRenderTime<>0) then begin
     currtime:=now;
     decodetime(currtime-StartTime,Hour,Minute,Second,MilliSecond);
-    if (sysvarRDMaxRenderTime<>0) then
-      if (sysvarRDMaxRenderTime-MilliSecond)<0 then
-        exit(true);
+    if (sysvarRDMaxRenderTime-MilliSecond)<0 then
+      exit(true);
   end;
-  q1:=false;
-  q2:=false;
+  Result:=false;
 
   if Node.NodeData.infrustum=PDWG.Getpcamera.POSCOUNT then begin
+
+    LODSave:=DC.LOD;
+    if DC.LOD=LODCalculatedDetail then begin
+      if LODDeep=0 then begin
+        v:=Node.BoundingBox.RTF-Node.BoundingBox.LBN;
+        if not SqrCanSimplyDrawInWCS(DC,uzegeometry.SqrOneVertexlength(v),300) then begin
+          DC.LOD:=LODLowDetail;
+          inc(LODDeep);
+        end;
+      end else
+        inc(LODDeep);
+      end else if LODDeep>0 then
+        inc(loddeep);
+
     if (Node.NodeData.FulDraw=TDTFulDraw)or(Node.nul.count=0) then begin
-      if assigned(node.pminusnode)then
+      if assigned(node.pminusnode)and(LODDeep<MaxLODDeepDrtaw)then
         if node.NodeData.minusdrawpos<>PDWG.Getpcamera.DRAWCOUNT then begin
-          if not treerender(PTEntTreeNode(node.pminusnode)^,StartTime,dc) then
+          if not treerender(PTEntTreeNode(node.pminusnode)^,StartTime,dc,LODDeep) then
             node.NodeData.minusdrawpos:=PDWG.Getpcamera.DRAWCOUNT
           else
-            q1:=true;
+            Result:=true;
         end;
-      if assigned(node.pplusnode)then
+      if assigned(node.pplusnode)and(LODDeep<MaxLODDeepDrtaw)then
         if node.NodeData.plusdrawpos<>PDWG.Getpcamera.DRAWCOUNT then begin
-          if not treerender(PTEntTreeNode(node.pplusnode)^,StartTime,dc) then
+          if not treerender(PTEntTreeNode(node.pplusnode)^,StartTime,dc,LODDeep) then
             node.NodeData.plusdrawpos:=PDWG.Getpcamera.DRAWCOUNT
           else
-            q2:=true;
+            Result:=true;
         end;
     end;
+
     if node.NodeData.nuldrawpos<>PDWG.Getpcamera.DRAWCOUNT then begin
-      TEntTreeNode(Node).DrawWithAttribExternalArray(dc);
+      TEntTreeNode(Node).DrawWithAttribExternalArray(dc,LODDeep);
       //GDBObjEntityOpenArray(Node.nul).DrawWithattrib(dc{gdb.GetCurrentDWG.pcamera.POSCOUNT,subrender});
       node.NodeData.nuldrawpos:=PDWG.Getpcamera.DRAWCOUNT;
     end;
+    DC.LOD:=LODSave;
   end;
-  result:=q1 or q2;
 end;
 procedure TGeneralViewArea.render;
 begin
@@ -1145,7 +1175,7 @@ procedure TGeneralViewArea.ZoomToVolume(Volume:TBoundingBox);
     if param.projtype = PROJPerspective then
                                             begin
                                                  //historyout('Zoom: Works only for parallel projection!');
-                                                 DebugLn('{WH}Zoom:'+rswonlyparalel);
+                                                 DebugLn('{WH}Zoom:'+rswonlyparallel);
                                             end;
     //historyout('Zoom: Works only for top view!');
     DebugLn('{WH}Zoom:'+rswonlytop);
@@ -1196,7 +1226,12 @@ procedure TGeneralViewArea.ZoomToVolume(Volume:TBoundingBox);
                                                                            DebugLn('{WH}'+'ZoomToVolume: Пустой чертеж?');
                                                                            exit;
                                                                       end;
-    target:=createvertex(-(wcsLBN.x+(wcsRTF.x-wcsLBN.x)/2),-(wcsLBN.y+(wcsRTF.y-wcsLBN.y)/2),-(wcsLBN.z+(wcsRTF.z-wcsLBN.z)/2));
+    //без этого разделения камера уползает по Z
+    if IsPointEqual(pdwg.Getpcamera^.prop.look,xy_MinusZ_Vertex) then
+      //добавоено чтоб не уполжала камера
+      target:=createvertex(-(wcsLBN.x+(wcsRTF.x-wcsLBN.x)/2),-(wcsLBN.y+(wcsRTF.y-wcsLBN.y)/2),pdwg.Getpcamera^.prop.point.z)
+    else
+      target:=createvertex(-(wcsLBN.x+(wcsRTF.x-wcsLBN.x)/2),-(wcsLBN.y+(wcsRTF.y-wcsLBN.y)/2),-(wcsLBN.z+(wcsRTF.z-wcsLBN.z)/2));
     camerapos:=pdwg.Getpcamera^.prop.point;
     target:=vertexsub(target,camerapos);
 
@@ -1239,7 +1274,7 @@ begin
                                     mouseunproject(getviewcontrol.clientwidth div 2, getviewcontrol.clientheight div 2);
         glx1 := param.md.mouseray.lbegin.x;
         gly1 := param.md.mouseray.lbegin.y;
-        if param.projtype = ProjParalel then
+        if param.projtype = ProjParallel then
           PDWG.Getpcamera^.prop.zoom := PDWG.Getpcamera^.prop.zoom * x
         else
         begin
@@ -1256,7 +1291,7 @@ begin
                                 mouseunproject(param.md.mouse.x, getviewcontrol.clientheight-param.md.mouse.y)
                             else
                                 mouseunproject(getviewcontrol.clientwidth div 2, getviewcontrol.clientheight div 2);
-        if param.projtype = ProjParalel then
+        if param.projtype = ProjParallel then
         begin
         PDWG.Getpcamera^.prop.point.x := PDWG.Getpcamera^.prop.point.x - (glx1 - param.md.mouseray.lbegin.x);
         PDWG.Getpcamera^.prop.point.y := PDWG.Getpcamera^.prop.point.y - (gly1 - param.md.mouseray.lbegin.y);
@@ -1267,7 +1302,7 @@ begin
   doCameraChanged;
 end;
 
-procedure TGeneralViewArea.SetCameraPosZoom(_pos:gdbvertex;_zoom:Double;finalcalk:Boolean);
+procedure TGeneralViewArea.SetCameraPosZoom(const _pos:gdbvertex;_zoom:Double;finalcalk:Boolean);
 var
   fv1: GDBVertex;
 begin
@@ -1419,12 +1454,12 @@ end;
 
 procedure TGeneralViewArea.WaMouseMove(sender:tobject;Shift: TShiftState; X, Y: Integer);
 var
-  //glmcoord1: gdbpiece;
   ux,uy:Double;
-  //htext,htext2:String;
+  mp:TPoint;
   key: Byte;
-  //f:TzeUnitsFormat;
 begin
+  mp:=Point(X,Y);
+  TrackPointMouseTimer.Touch(mp,[TMouseTimer.TReason.RMMove]);
   if assigned(mainmousemove)then
                                 mainmousemove;
   KillOHintTimer(self);
@@ -1563,19 +1598,11 @@ end;
       //create0axis;-------------------------------
     if sysvarDWGOSMode <> 0 then
     begin
-      if otracktimer = 1 then
-      begin
-        otracktimer := 0;
-        projectaxis;
-        project0axis;//-------------------------------
-        AddOntrackpoint;
-      end;
       if (param.ospoint.ostype <> os_none)and(param.ospoint.ostype <> os_snap)and(param.ospoint.ostype <> os_nearest)and(param.ospoint.ostype<>os_perpendicular) then
       begin
-        SetOTrackTimer(@self);
+        SetOTrackTimer(@self,mp);
         copyospoint(param.oldospoint,param.ospoint);
       end
-      else KillOTrackTimer(@self)
     end
     else param.ospoint.ostype := os_none;
 
@@ -1660,8 +1687,8 @@ begin
   PolarAxis.done;
   param.done;
   freeandnil(drawer);
-  freeandnil(OTTimer);
   freeandnil(OHTimer);
+  TrackPointMouseTimer.Free;
   inherited;
 end;
 
@@ -1678,20 +1705,18 @@ begin
      CreateDrawer;
      SetupWorkArea;
 
-     OTTimer:=TTimer.create(self);
      OHTimer:=TTimer.create(self);
 
      PDWG:=nil;
 
      param.init;
-     SetMouseMode((MGetControlpoint) or (MGetSelectObject) or (MMoveCamera) or (MRotateCamera) or (MGetSelectionFrame));
+     SetMouseMode(cDefaultMouseMode);
 
      PolarAxis.init(10);
 
      for i := 0 to 4 - 1 do
      begin
-       v.x:=cos(pi * i / 4);
-       v.y:=sin(pi * i / 4);
+       SinCos(pi * i / 4,v.y,v.x);
        v.z:=0;
        PolarAxis.PushBackData(v);
      end;
@@ -1719,6 +1744,7 @@ begin
      WorkArea.onmouseenter:=WaMouseEnter;
      WorkArea.onmouseleave:=WaMouseLeave;
      WorkArea.onresize:=WaResize;
+     TrackPointMouseTimer:=TMouseTimer.Create;
 end;
 function MouseBS2ZKey(Button:TMouseButton;Shift:TShiftState):TZKeys;
 begin
@@ -1769,6 +1795,7 @@ var //key: Byte;
     //FreeClick:boolean;
 begin
   //FreeClick:=true;
+  TrackPointMouseTimer.Touch(Point(X,Y),[TMouseTimer.TReason.RMDown]);
   if assigned(MainmouseDown)then
   if mainmousedown(self) then
                        exit;
@@ -1818,6 +1845,7 @@ procedure TGeneralViewArea.WaMouseUp(Sender:TObject;Button: TMouseButton; Shift:
 var
   needredraw:boolean;
 begin
+  TrackPointMouseTimer.Touch(Point(X,Y),[TMouseTimer.TReason.RMUp]);
   inherited;
   if button = mbMiddle then
   begin
@@ -1833,7 +1861,7 @@ begin
     if assigned(OnWaMouseDown) then
       OnWaMouseDown(self,MouseBS2ZKey(Button,Shift),X, Y,param.SelDesc.OnMouseObject,needredraw);
   end else begin
-    if assigned(OnWaMouseDown) then
+    if assigned(OnWaMouseUp) then
       OnWaMouseUp(self,MouseBS2ZKey(Button,shift),X, Y,param.SelDesc.OnMouseObject,needredraw);
   end;
 end;
@@ -1850,6 +1878,10 @@ begin
   result.Subrender:=0;
   result.Selected:=false;
   result.MaxDetail:=_maxdetail;
+  if result.MaxDetail then
+    result.LOD:=LODMaxDetail
+  else
+    result.LOD:=LODCalculatedDetail;
 
   {if sysvar.dwg.DWG_DrawMode<>nil then
                                       result.DrawMode:=sysvar.dwg.DWG_DrawMode^
@@ -1877,7 +1909,7 @@ begin
      if (param.ospoint.ostype <> os_none)or(currentmousemovesnaptogrid) then
      begin
 
-     if param.projtype = ProjParalel then
+     if param.projtype = ProjParallel then
      begin
           d:=pdwg.getpcamera^.prop.look;
           b1:=PointOfLinePlaneIntersect(param.ospoint.worldcoord,d,pdwg.getpcamera^.frustum[4],tv1);
@@ -2219,41 +2251,22 @@ begin
   end;
 end;
 
-procedure TGeneralViewArea.ProcOTrackTimer(Sender:TObject);
+procedure TGeneralViewArea.AddOTPoint(StartX,StartY,X,Y:Integer);
 begin
-  //timeKillEvent(uEventID);
-  otracktimer := 1;
-  OTTimer.Interval:=0;
-  OTTimer.Enabled:=false;
+  projectaxis;
+  project0axis;//-------------------------------
+  AddOntrackpoint;
 end;
-procedure TGeneralViewArea.KillOTrackTimer(Sender: TObject);
-begin
-  if param.otracktimerwork = 0 then exit;
-  dec(param.otracktimerwork);
-  OTTimer.Interval:=0;
-  OTTimer.Enabled:=false;
-  //timeKillEvent(uEventID);
-end;
-procedure TGeneralViewArea.SetOTrackTimer(Sender: TObject);
+
+procedure TGeneralViewArea.SetOTrackTimer(Sender: TObject;const mp:TPoint);
 var
    interval:integer;
 begin
-  if param.otracktimerwork = 1 then exit;
-  inc(param.otracktimerwork);
-  if param.otracktimerwork > 0 then
-                                   begin
-                                        //if assigned(sysvar.DSGN.DSGN_OTrackTimerInterval) then
-                                        begin
-                                             if sysvarDSGNOTrackTimerInterval>0 then
-                                                                                   interval:=sysvarDSGNOTrackTimerInterval
-                                                                                else
-                                                                                   interval:=0;
-                                        end;
-                                        OTTimer.Interval:=interval;
-                                        OTTimer.OnTimer:=ProcOTrackTimer;
-                                        OTTimer.Enabled:=true;
-
-                                   end;
+  if sysvarDSGNOTrackTimerInterval>0 then
+    interval:=sysvarDSGNOTrackTimerInterval
+  else
+    interval:=0;
+  TrackPointMouseTimer.&Set(mp,0,[RMMove,RMDown,RMUp,RReSet,RLeave],AddOTPoint,interval);
 end;
 procedure TGeneralViewArea.KillOHintTimer(Sender: TObject);
 begin
@@ -2408,14 +2421,14 @@ begin
   ProjectPoint2(proot.vp.BoundingBox.RTF.x,proot.vp.BoundingBox.RTF.y,proot.vp.BoundingBox.RTF.Z,pdwg.pcamera^.modelMatrix,ccsLBN,ccsRTF);
   ProjectPoint2(proot.vp.BoundingBox.LBN.x,proot.vp.BoundingBox.RTF.y,proot.vp.BoundingBox.RTF.Z,pdwg.pcamera^.modelMatrix,ccsLBN,ccsRTF);
   }
-  {ProjectPoint2(proot.VisibleOBJBoundingBox.LBN.x,proot.VisibleOBJBoundingBox.LBN.y,proot.VisibleOBJBoundingBox.LBN.Z,pdwg.pcamera^.modelMatrix,ccsLBN,ccsRTF);
-  ProjectPoint2(proot.VisibleOBJBoundingBox.RTF.x,proot.VisibleOBJBoundingBox.LBN.y,proot.VisibleOBJBoundingBox.LBN.Z,pdwg.pcamera^.modelMatrix,ccsLBN,ccsRTF);
-  ProjectPoint2(proot.VisibleOBJBoundingBox.RTF.x,proot.VisibleOBJBoundingBox.RTF.y,proot.VisibleOBJBoundingBox.LBN.Z,pdwg.pcamera^.modelMatrix,ccsLBN,ccsRTF);
-  ProjectPoint2(proot.VisibleOBJBoundingBox.LBN.x,proot.VisibleOBJBoundingBox.RTF.y,proot.VisibleOBJBoundingBox.LBN.Z,pdwg.pcamera^.modelMatrix,ccsLBN,ccsRTF);
-  ProjectPoint2(proot.VisibleOBJBoundingBox.LBN.x,proot.VisibleOBJBoundingBox.LBN.y,proot.VisibleOBJBoundingBox.RTF.Z,pdwg.pcamera^.modelMatrix,ccsLBN,ccsRTF);
-  ProjectPoint2(proot.VisibleOBJBoundingBox.RTF.x,proot.VisibleOBJBoundingBox.LBN.y,proot.VisibleOBJBoundingBox.RTF.Z,pdwg.pcamera^.modelMatrix,ccsLBN,ccsRTF);
-  ProjectPoint2(proot.VisibleOBJBoundingBox.RTF.x,proot.VisibleOBJBoundingBox.RTF.y,proot.VisibleOBJBoundingBox.RTF.Z,pdwg.pcamera^.modelMatrix,ccsLBN,ccsRTF);
-  ProjectPoint2(proot.VisibleOBJBoundingBox.LBN.x,proot.VisibleOBJBoundingBox.RTF.y,proot.VisibleOBJBoundingBox.RTF.Z,pdwg.pcamera^.modelMatrix,ccsLBN,ccsRTF);}
+  {ProjectPoint2(proot.InFrustumAABB.LBN.x,proot.InFrustumAABB.LBN.y,proot.InFrustumAABB.LBN.Z,pdwg.pcamera^.modelMatrix,ccsLBN,ccsRTF);
+  ProjectPoint2(proot.InFrustumAABB.RTF.x,proot.InFrustumAABB.LBN.y,proot.InFrustumAABB.LBN.Z,pdwg.pcamera^.modelMatrix,ccsLBN,ccsRTF);
+  ProjectPoint2(proot.InFrustumAABB.RTF.x,proot.InFrustumAABB.RTF.y,proot.InFrustumAABB.LBN.Z,pdwg.pcamera^.modelMatrix,ccsLBN,ccsRTF);
+  ProjectPoint2(proot.InFrustumAABB.LBN.x,proot.InFrustumAABB.RTF.y,proot.InFrustumAABB.LBN.Z,pdwg.pcamera^.modelMatrix,ccsLBN,ccsRTF);
+  ProjectPoint2(proot.InFrustumAABB.LBN.x,proot.InFrustumAABB.LBN.y,proot.InFrustumAABB.RTF.Z,pdwg.pcamera^.modelMatrix,ccsLBN,ccsRTF);
+  ProjectPoint2(proot.InFrustumAABB.RTF.x,proot.InFrustumAABB.LBN.y,proot.InFrustumAABB.RTF.Z,pdwg.pcamera^.modelMatrix,ccsLBN,ccsRTF);
+  ProjectPoint2(proot.InFrustumAABB.RTF.x,proot.InFrustumAABB.RTF.y,proot.InFrustumAABB.RTF.Z,pdwg.pcamera^.modelMatrix,ccsLBN,ccsRTF);
+  ProjectPoint2(proot.InFrustumAABB.LBN.x,proot.InFrustumAABB.RTF.y,proot.InFrustumAABB.RTF.Z,pdwg.pcamera^.modelMatrix,ccsLBN,ccsRTF);}
 
   tbb:=proot.vp.BoundingBox;
 
@@ -2505,7 +2518,7 @@ begin
 
 
 
-  if param.projtype = ProjParalel then
+  if param.projtype = ProjParallel then
                                       begin
                                       pcamera^.projMatrix:=ortho(-getviewcontrol.clientwidth*pcamera^.prop.zoom/2,getviewcontrol.clientwidth*pcamera^.prop.zoom/2,
                                                                                  -getviewcontrol.clientheight*pcamera^.prop.zoom/2,getviewcontrol.clientheight*pcamera^.prop.zoom/2,
@@ -2529,8 +2542,7 @@ begin
 
   tm:=pcamera^.modelMatrix;
   //MatrixInvert(tm);
-  pcamera^.CamCSOffset:=uzegeometry.VectorTransform3D(pcamera^.CamCSOffset,tm);
-  pcamera^.CamCSOffset:=pcamera^.prop.point;
+  pcamera^.CamCSOffset:=pcamera^.prop.point-pcamera^.prop.look*(pcamera^.zmax+pcamera^.zmin)/2;
 
   {получение центра виевфрустума}
   tm:=uzegeometry.CreateTranslationMatrix({minusvertex(pdwg.pcamera^.CamCSOffset)}nulvertex);
@@ -2543,7 +2555,7 @@ begin
   pcamera^.modelMatrixLCS:=uzegeometry.MatrixMultiply(tm,pcamera^.modelMatrixLCS);
   ccsLBN:=InfinityVertex;
   ccsRTF:=MinusInfinityVertex;
-  tbb:=proot.VisibleOBJBoundingBox;
+  tbb:=proot.InFrustumAABB;
   if IsBBNul(tbb) then
   begin
        concatBBandPoint(tbb,param.CSIcon.CSIconCoord);
@@ -2555,7 +2567,7 @@ begin
   tbb2:=pdwg.getConstructObjRoot.vp.BoundingBox;
   ConcatBB(tbb,tbb2);
 
-  //proot.VisibleOBJBoundingBox:=tbb;
+  //proot.InFrustumAABB:=tbb;
 
   if not IsBBNul(tbb) then
   begin
@@ -2618,7 +2630,7 @@ begin
 
   //glLoadIdentity;
   //pdwg.pcamera^.projMatrix:=onematrix;
-  if param.projtype = ProjParalel then
+  if param.projtype = ProjParallel then
                                       begin
                                       pcamera^.projMatrixLCS:=ortho(-getviewcontrol.clientwidth*pcamera^.prop.zoom/2,getviewcontrol.clientwidth*pcamera^.prop.zoom/2,
                                                                                  -getviewcontrol.clientheight*pcamera^.prop.zoom/2,getviewcontrol.clientheight*pcamera^.prop.zoom/2,
@@ -2629,7 +2641,7 @@ begin
                                            pcamera^.projMatrixLCS:=Perspective(pcamera^.fovy, getviewcontrol.Width / getviewcontrol.Height, pcamera^.zminLCS, pcamera^.zmaxLCS,@onematrix);
   //glGetDoublev(GL_PROJECTION_MATRIX, @pdwg.pcamera^.projMatrix);
                                       end;
-  if param.projtype = ProjParalel then
+  if param.projtype = ProjParallel then
                                       begin
                                            if {uzegeometry.oneVertexlength(pcamera^.CamCSOffset)>1000000}true then
                                            begin
@@ -2817,7 +2829,7 @@ begin
      posr.arrayworldaxis.PushBackData(axis);
 
      if @posr<>@param.ontrackarray.otrackarray[0] then
-     if (sysvarDWGOSMode and osm_paralel)<>0 then
+     if (sysvarDWGOSMode and osm_parallel)<>0 then
      begin
           param.ontrackarray.otrackarray[0].arrayworldaxis.PushBackData(axis);
      end;
@@ -3117,7 +3129,7 @@ begin
                            if (pt.trace)and(pt2.trace) then
                            if SqrOneVertexlength(vectordot(pt.dir,pt2.dir))>sqreps then
                            begin
-                           ip:=ip;
+//                           ip:=ip;
                            ip.isintercept:=false;
                            ip:=intercept3dmy2(param.ontrackarray.otrackarray[i].worldcoord,pt.worldraycoord,param.ontrackarray.otrackarray[j].worldcoord,pt2.worldraycoord);
                            //ip:=intercept3dmy(createvertex(0,0,0),createvertex(0,2,0),createvertex(-1,1,0),createvertex(1,1,0));

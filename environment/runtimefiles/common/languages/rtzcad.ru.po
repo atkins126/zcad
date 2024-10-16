@@ -5,10 +5,11 @@ msgstr ""
 "PO-Revision-Date: \n"
 "Last-Translator: zamtmn <zamtmn@yandex.ru>\n"
 "Language-Team: \n"
+"Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.5.7\n"
+"X-Generator: Poedit 3.5\n"
 
 #: zcadexternal.acn_3dpoly~caption
 msgid "3DPolyLine"
@@ -305,14 +306,66 @@ msgstr "Стили размеров..."
 msgid "Dimension styles properties manager"
 msgstr "Менеджер стилей размеров"
 
-#: zcadexternal.acn_el_find~caption
-msgid "Find device"
-msgstr "Найти устройство"
-
 #: zcadexternal.acn_erase~caption
 msgctxt "zcadexternal.acn_erase~caption"
 msgid "Erase"
 msgstr "Стереть"
+
+#: zcadexternal.acn_exportdevtoexcell~caption
+msgid "Export devices to excel"
+msgstr ""
+
+#: zcadexternal.acn_exportdevtoexcell~textimage
+msgid "D>X"
+msgstr ""
+
+#: zcadexternal.acn_exportdevtoexceltocad~caption
+msgid "Export devices to excel to CAD"
+msgstr ""
+
+#: zcadexternal.acn_exportdevtoexceltocad~textimage
+msgid "D>Z"
+msgstr ""
+
+#: zcadexternal.acn_exportmodeltoexcell~caption
+msgid "Export model to excel"
+msgstr ""
+
+#: zcadexternal.acn_exportmodeltoexcell~textimage
+msgid "M>X"
+msgstr ""
+
+#: zcadexternal.acn_extdralllist~caption
+msgid "List of available extenders"
+msgstr ""
+
+#: zcadexternal.acn_extdralllist~textimage
+msgid "exAL"
+msgstr ""
+
+#: zcadexternal.acn_extdrentlist~caption
+msgid "List of extenders of selected entities"
+msgstr ""
+
+#: zcadexternal.acn_extdrentlist~textimage
+msgid "exEL"
+msgstr ""
+
+#: zcadexternal.acn_findnext~caption
+msgid "Find next"
+msgstr ""
+
+#: zcadexternal.acn_findparams~caption
+msgid "Find params"
+msgstr ""
+
+#: zcadexternal.acn_findprev~caption
+msgid "Find prev"
+msgstr ""
+
+#: zcadexternal.acn_find~caption
+msgid "Find ..."
+msgstr ""
 
 #: zcadexternal.acn_generatoronediagram~caption
 msgid "Generator one-level diagram"
@@ -702,7 +755,7 @@ msgid "Save as ..."
 msgstr "Сохранить как ..."
 
 #: zcadexternal.acn_saveas~hint
-msgid "Save drawing as"
+msgid "Save drawing as ..."
 msgstr "Сохранить чертеж как ..."
 
 #: zcadexternal.acn_savelayout~caption
@@ -875,7 +928,7 @@ msgid "Start command panels for autocabeling SL"
 msgstr ""
 
 #: zcadexternal.acn_slagcabcom~textimage
-msgid "D()"
+msgid "ACL"
 msgstr ""
 
 #: zcadexternal.acn_smtextall~caption
@@ -889,6 +942,20 @@ msgstr ""
 #: zcadexternal.acn_snapruntime~caption
 msgid "Run time snap editor"
 msgstr "Редактор привязок"
+
+#: zcadexternal.acn_spellcheck~caption
+msgctxt "zcadexternal.acn_spellcheck~caption"
+msgid "Spell check"
+msgstr "Проверка орфографии"
+
+#: zcadexternal.acn_spellcheck~hint
+msgctxt "zcadexternal.acn_spellcheck~hint"
+msgid "Spell check"
+msgstr "Проверка орфографии"
+
+#: zcadexternal.acn_spellcheck~textimage
+msgid "SC"
+msgstr ""
 
 #: zcadexternal.acn_stretch~caption
 msgid "Stretch"
@@ -1008,12 +1075,12 @@ msgstr "Редактор переменных нескольких примит�
 msgid "Object variables editor"
 msgstr "Редактор переменных примитива"
 
-#: zcadexternal.acn_vbuildelschema~caption
-msgid "Start building vEL Schema"
+#: zcadexternal.acn_vbuildmc~caption
+msgid "Start building connection model"
 msgstr ""
 
-#: zcadexternal.acn_vbuildelschema~textimage
-msgid "vEL"
+#: zcadexternal.acn_vbuildmc~textimage
+msgid "MC"
 msgstr ""
 
 #: zcadexternal.acn_vbuildssschema~caption
@@ -1088,6 +1155,14 @@ msgstr "SW изометрия"
 msgid "View top"
 msgstr "Вид сверху"
 
+#: zcadexternal.acn_vvarslink~caption
+msgid "Creating master/slave device"
+msgstr ""
+
+#: zcadexternal.acn_vvarslink~textimage
+msgid "VL"
+msgstr ""
+
 #: zcadexternal.acn_whitebackgrounfdinobjinsp~caption
 msgid "White background in object inspector"
 msgstr ""
@@ -1115,6 +1190,14 @@ msgstr "Предыдущее окно"
 #: zcadexternal.acn_wprev~textimage
 msgctxt "zcadexternal.acn_wprev~textimage"
 msgid "P"
+msgstr ""
+
+#: zcadexternal.acn_xlsxtocadinsertblock~caption
+msgid "Import block from xlsx"
+msgstr ""
+
+#: zcadexternal.acn_xlsxtocadinsertblock~textimage
+msgid "X>Z"
 msgstr ""
 
 #: zcadexternal.acn_zoomall~caption
@@ -1209,6 +1292,23 @@ msgstr ""
 msgid "Command options"
 msgstr "Опции команды"
 
+#: zcadexternal.functionsroot~connections
+msgid "Connections"
+msgstr ""
+
+#: zcadexternal.functionsroot~connections~electrotechnics
+msgctxt "zcadexternal.functionsroot~connections~electrotechnics"
+msgid "Electrotechnics"
+msgstr "Электротехника"
+
+#: zcadexternal.functionsroot~connections~electrotechnics~control
+msgid "Control"
+msgstr ""
+
+#: zcadexternal.functionsroot~connections~electrotechnics~power
+msgid "Power"
+msgstr ""
+
 #: zcadexternal.functionsroot~electrotechnics
 msgctxt "zcadexternal.functionsroot~electrotechnics"
 msgid "Electrotechnics"
@@ -1234,14 +1334,12 @@ msgid "Smoke"
 msgstr "Дымовой"
 
 #: zcadexternal.functionsroot~electrotechnics~alarm~fire~detectors~smoke~linear
-msgctxt ""
-"zcadexternal.functionsroot~electrotechnics~alarm~fire~detectors~smoke~linear"
+msgctxt "zcadexternal.functionsroot~electrotechnics~alarm~fire~detectors~smoke~linear"
 msgid "Linear"
 msgstr ""
 
 #: zcadexternal.functionsroot~electrotechnics~alarm~fire~detectors~smoke~spot
-msgctxt ""
-"zcadexternal.functionsroot~electrotechnics~alarm~fire~detectors~smoke~spot"
+msgctxt "zcadexternal.functionsroot~electrotechnics~alarm~fire~detectors~smoke~spot"
 msgid "Spot"
 msgstr ""
 
@@ -1250,15 +1348,12 @@ msgid "Thermal"
 msgstr ""
 
 #: zcadexternal.functionsroot~electrotechnics~alarm~fire~detectors~thermal~linear
-msgctxt ""
-"zcadexternal."
-"functionsroot~electrotechnics~alarm~fire~detectors~thermal~linear"
+msgctxt "zcadexternal.functionsroot~electrotechnics~alarm~fire~detectors~thermal~linear"
 msgid "Linear"
 msgstr ""
 
 #: zcadexternal.functionsroot~electrotechnics~alarm~fire~detectors~thermal~spot
-msgctxt ""
-"zcadexternal.functionsroot~electrotechnics~alarm~fire~detectors~thermal~spot"
+msgctxt "zcadexternal.functionsroot~electrotechnics~alarm~fire~detectors~thermal~spot"
 msgid "Spot"
 msgstr ""
 
@@ -1277,73 +1372,57 @@ msgid "Level"
 msgstr "Уровень"
 
 #: zcadexternal.functionsroot~electrotechnics~measuring_equipment~level~gauge
-msgctxt ""
-"zcadexternal.functionsroot~electrotechnics~measuring_equipment~level~gauge"
+msgctxt "zcadexternal.functionsroot~electrotechnics~measuring_equipment~level~gauge"
 msgid "Level gauge"
 msgstr "Указатель уровня"
 
 #: zcadexternal.functionsroot~electrotechnics~measuring_equipment~level~sensor
-msgctxt ""
-"zcadexternal.functionsroot~electrotechnics~measuring_equipment~level~sensor"
+msgctxt "zcadexternal.functionsroot~electrotechnics~measuring_equipment~level~sensor"
 msgid "Level sensor"
 msgstr "Датчик уровня"
 
 #: zcadexternal.functionsroot~electrotechnics~measuring_equipment~level~switch
-msgctxt ""
-"zcadexternal.functionsroot~electrotechnics~measuring_equipment~level~switch"
+msgctxt "zcadexternal.functionsroot~electrotechnics~measuring_equipment~level~switch"
 msgid "Level switch"
 msgstr "Реле уровня"
 
 #: zcadexternal.functionsroot~electrotechnics~measuring_equipment~pressure
-msgctxt ""
-"zcadexternal.functionsroot~electrotechnics~measuring_equipment~pressure"
+msgctxt "zcadexternal.functionsroot~electrotechnics~measuring_equipment~pressure"
 msgid "Pressure"
 msgstr "Давление"
 
 #: zcadexternal.functionsroot~electrotechnics~measuring_equipment~pressure~gauge
-msgctxt ""
-"zcadexternal.functionsroot~electrotechnics~measuring_equipment~pressure~gauge"
+msgctxt "zcadexternal.functionsroot~electrotechnics~measuring_equipment~pressure~gauge"
 msgid "Pressure gauge"
 msgstr "Манометр"
 
 #: zcadexternal.functionsroot~electrotechnics~measuring_equipment~pressure~sensor
-msgctxt ""
-"zcadexternal."
-"functionsroot~electrotechnics~measuring_equipment~pressure~sensor"
+msgctxt "zcadexternal.functionsroot~electrotechnics~measuring_equipment~pressure~sensor"
 msgid "Pressure sensor"
 msgstr "Датчик давления"
 
 #: zcadexternal.functionsroot~electrotechnics~measuring_equipment~pressure~switch
-msgctxt ""
-"zcadexternal."
-"functionsroot~electrotechnics~measuring_equipment~pressure~switch"
+msgctxt "zcadexternal.functionsroot~electrotechnics~measuring_equipment~pressure~switch"
 msgid "Pressure switch"
 msgstr "Реле давления"
 
 #: zcadexternal.functionsroot~electrotechnics~measuring_equipment~temperature
-msgctxt ""
-"zcadexternal.functionsroot~electrotechnics~measuring_equipment~temperature"
+msgctxt "zcadexternal.functionsroot~electrotechnics~measuring_equipment~temperature"
 msgid "Temperature"
 msgstr ""
 
 #: zcadexternal.functionsroot~electrotechnics~measuring_equipment~temperature~gauge
-msgctxt ""
-"zcadexternal."
-"functionsroot~electrotechnics~measuring_equipment~temperature~gauge"
+msgctxt "zcadexternal.functionsroot~electrotechnics~measuring_equipment~temperature~gauge"
 msgid "Temperature gauge"
 msgstr ""
 
 #: zcadexternal.functionsroot~electrotechnics~measuring_equipment~temperature~sensor
-msgctxt ""
-"zcadexternal."
-"functionsroot~electrotechnics~measuring_equipment~temperature~sensor"
+msgctxt "zcadexternal.functionsroot~electrotechnics~measuring_equipment~temperature~sensor"
 msgid "Temperature sensor"
 msgstr ""
 
 #: zcadexternal.functionsroot~electrotechnics~measuring_equipment~temperature~switch
-msgctxt ""
-"zcadexternal."
-"functionsroot~electrotechnics~measuring_equipment~temperature~switch"
+msgctxt "zcadexternal.functionsroot~electrotechnics~measuring_equipment~temperature~switch"
 msgid "Temperature switch"
 msgstr ""
 
@@ -1358,8 +1437,7 @@ msgid "Drives"
 msgstr "Привода"
 
 #: zcadexternal.functionsroot~electrotechnics~power_consumer~drives~motor
-msgctxt ""
-"zcadexternal.functionsroot~electrotechnics~power_consumer~drives~motor"
+msgctxt "zcadexternal.functionsroot~electrotechnics~power_consumer~drives~motor"
 msgid "Motor"
 msgstr "Мотор"
 
@@ -1369,9 +1447,7 @@ msgid "Heating"
 msgstr "Отопление"
 
 #: zcadexternal.functionsroot~electrotechnics~power_consumer~heating~electric_heater
-msgctxt ""
-"zcadexternal."
-"functionsroot~electrotechnics~power_consumer~heating~electric_heater"
+msgctxt "zcadexternal.functionsroot~electrotechnics~power_consumer~heating~electric_heater"
 msgid "Electric heater"
 msgstr "ТЭН"
 
@@ -1381,8 +1457,7 @@ msgid "Lighting"
 msgstr "Освещение"
 
 #: zcadexternal.functionsroot~electrotechnics~power_consumer~lighting~lamp
-msgctxt ""
-"zcadexternal.functionsroot~electrotechnics~power_consumer~lighting~lamp"
+msgctxt "zcadexternal.functionsroot~electrotechnics~power_consumer~lighting~lamp"
 msgid "Lamp"
 msgstr "Лампа"
 
@@ -1793,10 +1868,22 @@ msgstr ""
 #: zcadexternal.menucommand~dbgclipboard
 msgctxt "zcadexternal.menucommand~dbgclipboard"
 msgid "Check clipboard"
-msgstr "Проверить клипбоард"
+msgstr "Проверить буфер обмена"
+
+#: zcadexternal.menucommand~dbgmemprofiler
+msgid "dbgMemProfiler"
+msgstr ""
+
+#: zcadexternal.menucommand~dbgmemprofiler(off)
+msgid "dbgMemProfiler(off)"
+msgstr ""
+
+#: zcadexternal.menucommand~dbgmemprofiler(on)
+msgid "dbgMemProfiler(on)"
+msgstr ""
 
 #: zcadexternal.menucommand~dbgmemsummary
-msgid "Report on memory allocation(for debugbuild)"
+msgid "Report on memory allocation(debug mode)"
 msgstr "Отчет о выделениях памяти (отладка)"
 
 #: zcadexternal.menucommand~el_autogen_cable_remove
@@ -1815,20 +1902,45 @@ msgstr ""
 msgid "Process auto cables"
 msgstr ""
 
-#: zcadexternal.menucommand~el_find
-msgid "Find device/cable"
-msgstr ""
-
 #: zcadexternal.menucommand~el_material_legend
 msgid "Create material report"
 msgstr ""
 
-#: zcadexternal.menucommand~executefile(*components\blockpreviewexport.cmd)
+#: zcadexternal.menucommand~executefile($(zcadpath)|components|blockpreviewexport.cmd)
+msgctxt "zcadexternal.menucommand~executefile($(zcadpath)|components|blockpreviewexport.cmd)"
 msgid "BlockPreviewExport"
 msgstr ""
 
 #: zcadexternal.menucommand~exportdevwithaxis
 msgid "Names of devices with axis"
+msgstr ""
+
+#: zcadexternal.menucommand~extdradd(extdrincludingvolume)
+msgid "Add extdrIncludingVolume"
+msgstr ""
+
+#: zcadexternal.menucommand~extdradd(extdrlayercontrol)
+msgid "Add extdrLayerControl"
+msgstr ""
+
+#: zcadexternal.menucommand~extdradd(extdrreport)
+msgid "Add extdrReport"
+msgstr ""
+
+#: zcadexternal.menucommand~extdradd(extdrschconnection)
+msgid "Add extdrSCHConnection"
+msgstr ""
+
+#: zcadexternal.menucommand~extdradd(extdrschconnector)
+msgid "Add extdrSCHConnector"
+msgstr ""
+
+#: zcadexternal.menucommand~extdradd(extdrsmarttextent)
+msgid "Add extdrSmartTextEnt"
+msgstr ""
+
+#: zcadexternal.menucommand~extdradd(extdrvariables)
+msgid "Add extdrVariables"
 msgstr ""
 
 #: zcadexternal.menucommand~findallintersections
@@ -1979,6 +2091,11 @@ msgstr "Чертить"
 msgid "Edit"
 msgstr "Правка"
 
+#: zcadexternal.menu~extenders
+msgctxt "zcadexternal.menu~extenders"
+msgid "Extenders"
+msgstr "Расширения"
+
 #: zcadexternal.menu~file
 msgid "File"
 msgstr "Файл"
@@ -2045,6 +2162,7 @@ msgid "Placement equipment"
 msgstr ""
 
 #: zcadexternal.menu~plan
+msgctxt "zcadexternal.menu~plan"
 msgid "Plan"
 msgstr "План"
 
@@ -2055,7 +2173,7 @@ msgstr ""
 #: zcadexternal.menu~power_supply
 msgctxt "zcadexternal.menu~power_supply"
 msgid "Power supply"
-msgstr ""
+msgstr "Электроснабжение"
 
 #: zcadexternal.menu~sample_files
 msgctxt "zcadexternal.menu~sample_files"
@@ -2092,6 +2210,10 @@ msgstr "Панели инструментов"
 #: zcadexternal.menu~toolpalettes
 msgid "ToolPalettes"
 msgstr "Палитры"
+
+#: zcadexternal.menu~tools
+msgid "Tools"
+msgstr "Инструменты"
 
 #: zcadexternal.menu~view
 msgid "View"
@@ -2153,17 +2275,17 @@ msgstr "Цвет"
 #: zcadexternal.oimultiproperty~delta_x
 msgctxt "zcadexternal.oimultiproperty~delta_x"
 msgid "Delta X"
-msgstr "Делта X"
+msgstr "Дельта X"
 
 #: zcadexternal.oimultiproperty~delta_y
 msgctxt "zcadexternal.oimultiproperty~delta_y"
 msgid "Delta Y"
-msgstr "Делта Y"
+msgstr "Дельта Y"
 
 #: zcadexternal.oimultiproperty~delta_z
 msgctxt "zcadexternal.oimultiproperty~delta_z"
 msgid "Delta Z"
-msgstr "Делта Z"
+msgstr "Дельта Z"
 
 #: zcadexternal.oimultiproperty~diameter
 msgctxt "zcadexternal.oimultiproperty~diameter"
@@ -2203,7 +2325,7 @@ msgstr "Конец Z"
 #: zcadexternal.oimultiproperty~entityaddress
 msgctxt "zcadexternal.oimultiproperty~entityaddress"
 msgid "Entity address"
-msgstr "Адреc примитива"
+msgstr "Адрес примитива"
 
 #: zcadexternal.oimultiproperty~entityname
 msgctxt "zcadexternal.oimultiproperty~entityname"
@@ -2221,6 +2343,14 @@ msgstr "Выражение"
 #: zcadexternal.oimultiproperty~extdrlayercontrol_goodlayer
 msgid "True layer"
 msgstr "True слой"
+
+#: zcadexternal.oimultiproperty~extdrnetconnector_connectorradius
+msgid "Connector radius"
+msgstr ""
+
+#: zcadexternal.oimultiproperty~extdrnetconnector_connectortype
+msgid "Connector type"
+msgstr ""
 
 #: zcadexternal.oimultiproperty~extdrssmarttextent_baseline
 msgid "Base line"
@@ -2270,6 +2400,10 @@ msgstr "Переопределение вертикального выравни
 #: zcadexternal.oimultiproperty~filter_blocksbynames
 msgctxt "zcadexternal.oimultiproperty~filter_blocksbynames"
 msgid "Blocks by names"
+msgstr ""
+
+#: zcadexternal.oimultiproperty~filter_entsbyextenders
+msgid "Ents by extenders"
 msgstr ""
 
 #: zcadexternal.oimultiproperty~filter_entsbylayers
@@ -2541,8 +2675,7 @@ msgid "On connection scheme"
 msgstr ""
 
 #: zcadexternal.representationsroot~graphsymbol~onscheme~electrical_circuit
-msgctxt ""
-"zcadexternal.representationsroot~graphsymbol~onscheme~electrical_circuit"
+msgctxt "zcadexternal.representationsroot~graphsymbol~onscheme~electrical_circuit"
 msgid "On electrical circuit scheme"
 msgstr ""
 
@@ -2555,37 +2688,6 @@ msgstr ""
 msgctxt "zcadexternal.representationsroot~not_classified"
 msgid "Not classified"
 msgstr ""
-
-#: zcadexternal.rgbcolorname~blue
-msgctxt "zcadexternal.rgbcolorname~blue"
-msgid "Blue"
-msgstr "Синий"
-
-#: zcadexternal.rgbcolorname~cyan
-msgid "Cyan"
-msgstr "Голубой"
-
-#: zcadexternal.rgbcolorname~green
-msgctxt "zcadexternal.rgbcolorname~green"
-msgid "Green"
-msgstr "Зеленый"
-
-#: zcadexternal.rgbcolorname~magenta
-msgid "Magenta"
-msgstr "Пурпурный"
-
-#: zcadexternal.rgbcolorname~red
-msgctxt "zcadexternal.rgbcolorname~red"
-msgid "Red"
-msgstr "Красный"
-
-#: zcadexternal.rgbcolorname~white
-msgid "White"
-msgstr "Белый"
-
-#: zcadexternal.rgbcolorname~yellow
-msgid "Yellow"
-msgstr "Желтый"
 
 #: zcadexternal.tangdir~adclockwise
 msgid "Clockwise"
@@ -2616,7 +2718,7 @@ msgid "Surveyors units"
 msgstr "Топографические единицы"
 
 #: zcadexternal.taxisreducedistancemode~tardm_allaxis
-msgid "All xxis"
+msgid "All axis"
 msgstr ""
 
 #: zcadexternal.taxisreducedistancemode~tardm_longaxis
@@ -2655,6 +2757,10 @@ msgstr "Выбор блока"
 msgid "Current block"
 msgstr "Текущий блок"
 
+#: zcadexternal.tbeditparam~filter
+msgid "Filter block name"
+msgstr ""
+
 #: zcadexternal.tblockdesc~bborder
 msgid "Border"
 msgstr "Граница"
@@ -2667,18 +2773,18 @@ msgstr "Группа блока"
 msgid "Block type"
 msgstr "Тип блока"
 
-#: zcadexternal.tblockrotateparams~absolytly
-msgctxt "zcadexternal.tblockrotateparams~absolytly"
-msgid "Absolytly"
+#: zcadexternal.tblockrotateparams~Absolutely
+msgctxt "zcadexternal.tblockrotateparams~Absolutely"
+msgid "Absolutely"
 msgstr "Абсолютно"
 
 #: zcadexternal.tblockrotateparams~rotate
 msgid "Rotation angle"
 msgstr "Угол поворота"
 
-#: zcadexternal.tblockscaleparams~absolytly
-msgctxt "zcadexternal.tblockscaleparams~absolytly"
-msgid "Absolytly"
+#: zcadexternal.tblockscaleparams~Absolutely
+msgctxt "zcadexternal.tblockscaleparams~Absolutely"
+msgid "Absolutely"
 msgstr "Абсолютно"
 
 #: zcadexternal.tblockscaleparams~scale
@@ -2810,12 +2916,12 @@ msgstr "Инженерные"
 #: zcadexternal.tdimunit~dufractional
 msgctxt "zcadexternal.tdimunit~dufractional"
 msgid "Fractional"
-msgstr "Длобные"
+msgstr "Дробные"
 
 #: zcadexternal.tdimunit~duscientific
 msgctxt "zcadexternal.tdimunit~duscientific"
 msgid "Scientific"
-msgstr "Нацчные"
+msgstr "Научные"
 
 #: zcadexternal.tdimunit~dusystem
 msgctxt "zcadexternal.tdimunit~dusystem"
@@ -2840,7 +2946,7 @@ msgstr "Размер прицела"
 
 #: zcadexternal.tdisp~disp_defaultlw
 msgid "Default line weight"
-msgstr "Толщина линии по умочанию"
+msgstr "Толщина линии по умолчанию"
 
 #: zcadexternal.tdisp~disp_drawzaxis
 msgid "Show Z axis"
@@ -2869,7 +2975,7 @@ msgstr "Убирать системный курсор в области отр�
 
 #: zcadexternal.tdisp~disp_selectedgripcolor
 msgid "Selected grip color"
-msgstr "Цвет выбраных ручек"
+msgstr "Цвет выбранных ручек"
 
 #: zcadexternal.tdisp~disp_systmgeometrycolor
 msgid "Help color"
@@ -2881,7 +2987,7 @@ msgstr "Системная геометрия"
 
 #: zcadexternal.tdisp~disp_unselectedgripcolor
 msgid "Unselected grip color"
-msgstr "Цвет не выбраных ручек"
+msgstr "Цвет не выбранных ручек"
 
 #: zcadexternal.tdisp~disp_zoomfactor
 msgid "Mouse wheel scale factor"
@@ -2901,11 +3007,11 @@ msgstr "AngDir (направление положительного угла)"
 
 #: zcadexternal.tdwg~dwg_aunits
 msgid "AUnits (angular units format)"
-msgstr "AUnits (формат угловых едениц)"
+msgstr "AUnits (формат угловых единиц)"
 
 #: zcadexternal.tdwg~dwg_auprec
 msgid "AUPrec (angular units precision)"
-msgstr "AUPrec (точность угловых едениц)"
+msgstr "AUPrec (точность угловых единиц)"
 
 #: zcadexternal.tdwg~dwg_ccolor
 msgid "Current color"
@@ -2920,7 +3026,7 @@ msgid "Current layer"
 msgstr "Текущий слой"
 
 #: zcadexternal.tdwg~dwg_clinew
-msgid "Current line weigwt"
+msgid "Current line weight"
 msgstr "Текущий вес линии"
 
 #: zcadexternal.tdwg~dwg_cltscale
@@ -2962,15 +3068,15 @@ msgstr "InsUnits (масштаб вставки блока)"
 
 #: zcadexternal.tdwg~dwg_ltscale
 msgid "Global line type scale"
-msgstr "Масштаб типов линий чертжа"
+msgstr "Масштаб типов линий чертежа"
 
 #: zcadexternal.tdwg~dwg_lunits
 msgid "LUnits (linear units format)"
-msgstr "LUnits (формат линейных едениц)"
+msgstr "LUnits (формат линейных единиц)"
 
 #: zcadexternal.tdwg~dwg_luprec
 msgid "LUPrec (linear units precision)"
-msgstr "LUPrec (точность линейных едениц)"
+msgstr "LUPrec (точность линейных единиц)"
 
 #: zcadexternal.tdwg~dwg_osmode
 msgid "Snap mode"
@@ -2999,11 +3105,11 @@ msgstr "Шаг"
 
 #: zcadexternal.tdwg~dwg_textsize
 msgid "TextSize (size of new crreated text ents)"
-msgstr "TextSize (размер вновь созданных текстоывх примитивов)"
+msgstr "TextSize (размер вновь созданных текстовых примитивов)"
 
 #: zcadexternal.tdwg~dwg_unitmode
 msgid "UnitMode (display format for units)"
-msgstr "UnitMode (формат отображения едениц)"
+msgstr "UnitMode (формат отображения единиц)"
 
 #: zcadexternal.tdxdata~rd_renderer
 msgctxt "zcadexternal.tdxdata~rd_renderer"
@@ -3061,19 +3167,6 @@ msgstr "Позиция"
 #: zcadexternal.texportdevwithaxisparams~axisdevicename
 msgid "AxisDeviceName"
 msgstr ""
-
-#: zcadexternal.tfinddeviceparam~findmethod
-msgid "Use symbols *, ?"
-msgstr "Использовать символы *, ?"
-
-#: zcadexternal.tfinddeviceparam~findstring
-msgctxt "zcadexternal.tfinddeviceparam~findstring"
-msgid "Text"
-msgstr "Текст"
-
-#: zcadexternal.tfinddeviceparam~findtype
-msgid "Find in"
-msgstr "Искать в"
 
 #: zcadexternal.tforcresult~iscreated
 msgid "IsCreated"
@@ -3142,7 +3235,7 @@ msgstr "Ангстремы"
 
 #: zcadexternal.tinsunits~iuastronomicalunits
 msgid "Astronomical units"
-msgstr "Астрономические еденицы"
+msgstr "Астрономические единицы"
 
 #: zcadexternal.tinsunits~iucentimeters
 msgid "Centimeters"
@@ -3198,7 +3291,7 @@ msgstr "Мили"
 
 #: zcadexternal.tinsunits~iumillimeters
 msgid "Millimeters"
-msgstr "Милиметры"
+msgstr "Миллиметры"
 
 #: zcadexternal.tinsunits~iumils
 msgid "Mils"
@@ -3254,6 +3347,11 @@ msgstr "Размер шрифта редактора по умолчанию"
 #: zcadexternal.tinterface~intf_dwgtabsposition
 msgid "Drawing tabs position"
 msgstr "Позиция закладок чертежей"
+
+#: zcadexternal.tinterface~intf_languageoverride
+msgctxt "zcadexternal.tinterface~intf_languageoverride"
+msgid "Language override"
+msgstr ""
 
 #: zcadexternal.tinterface~intf_messages_properties
 msgid "Messages properties"
@@ -3342,6 +3440,7 @@ msgid "Suppress doubles"
 msgstr ""
 
 #: zcadexternal.tmseditor~extendersunit
+msgctxt "zcadexternal.tmseditor~extendersunit"
 msgid "Extenders"
 msgstr "Расширения"
 
@@ -3458,8 +3557,7 @@ msgid "by width/height"
 msgstr "по ширине/длине"
 
 #: zcadexternal.toolpalette_blocklib_instrumentation_itemcaption~unsorted
-msgctxt ""
-"zcadexternal.toolpalette_blocklib_instrumentation_itemcaption~unsorted"
+msgctxt "zcadexternal.toolpalette_blocklib_instrumentation_itemcaption~unsorted"
 msgid "Unsorted"
 msgstr "Без сортировки"
 
@@ -3477,21 +3575,31 @@ msgctxt "zcadexternal.toolpalette_blocklib_itemcaption~power_supply"
 msgid "Power supply"
 msgstr "Электроснабжение"
 
+#: zcadexternal.toolpalette_blocklib_itemcaption~schemes
+msgctxt "zcadexternal.toolpalette_blocklib_itemcaption~schemes"
+msgid "Schemes"
+msgstr "Схемы"
+
 #: zcadexternal.toolpalette_blocklib_itemcaption~unsorted
 msgctxt "zcadexternal.toolpalette_blocklib_itemcaption~unsorted"
 msgid "Unsorted"
 msgstr "Без сортировки"
 
+#: zcadexternal.toolpalette_blocklib_itemcaption~velectrical
+msgid "Velectrical"
+msgstr ""
+
+#: zcadexternal.toolpalette_blocklib_itemcaption~vlowcurrentnetworks
+msgid "Vlowcurrentnetworks"
+msgstr ""
+
 #: zcadexternal.toolpalette_blocklib_low-current_alarm_fire_alarm_itemcaption~detectors
-msgctxt ""
-"zcadexternal.toolpalette_blocklib_low-"
-"current_alarm_fire_alarm_itemcaption~detectors"
+msgctxt "zcadexternal.toolpalette_blocklib_low-current_alarm_fire_alarm_itemcaption~detectors"
 msgid "Detectors"
 msgstr "Извещатели"
 
 #: zcadexternal.toolpalette_blocklib_low-current_alarm_itemcaption~fire_alarm
-msgctxt ""
-"zcadexternal.toolpalette_blocklib_low-current_alarm_itemcaption~fire_alarm"
+msgctxt "zcadexternal.toolpalette_blocklib_low-current_alarm_itemcaption~fire_alarm"
 msgid "Fire alarm"
 msgstr "Пожарная сигнализация"
 
@@ -3501,8 +3609,7 @@ msgid "Alarm"
 msgstr "Сигнализация"
 
 #: zcadexternal.toolpalette_blocklib_power_supply_itemcaption~calculations
-msgctxt ""
-"zcadexternal.toolpalette_blocklib_power_supply_itemcaption~calculations"
+msgctxt "zcadexternal.toolpalette_blocklib_power_supply_itemcaption~calculations"
 msgid "Calculations"
 msgstr "Расчеты"
 
@@ -3517,15 +3624,12 @@ msgid "Equipment"
 msgstr "Эл. оборулование"
 
 #: zcadexternal.toolpalette_blocklib_power_supply_itemcaption~formats_stamps
-msgctxt ""
-"zcadexternal.toolpalette_blocklib_power_supply_itemcaption~formats_stamps"
+msgctxt "zcadexternal.toolpalette_blocklib_power_supply_itemcaption~formats_stamps"
 msgid "Formats stamps"
 msgstr "Форматы и штампы"
 
 #: zcadexternal.toolpalette_blocklib_power_supply_itemcaption~high-voltage_networks
-msgctxt ""
-"zcadexternal.toolpalette_blocklib_power_supply_itemcaption~high-"
-"voltage_networks"
+msgctxt "zcadexternal.toolpalette_blocklib_power_supply_itemcaption~high-voltage_networks"
 msgid "High-voltage networks"
 msgstr "Высоковольтные сети"
 
@@ -3540,8 +3644,7 @@ msgid "Nodes"
 msgstr "Узлы"
 
 #: zcadexternal.toolpalette_blocklib_power_supply_itemcaption~outdoor_networks
-msgctxt ""
-"zcadexternal.toolpalette_blocklib_power_supply_itemcaption~outdoor_networks"
+msgctxt "zcadexternal.toolpalette_blocklib_power_supply_itemcaption~outdoor_networks"
 msgid "Outdoor networks"
 msgstr "Наружные сети"
 
@@ -3569,6 +3672,52 @@ msgstr "Ведомости"
 msgctxt "zcadexternal.toolpalette_blocklib_power_supply_itemcaption~switches"
 msgid "Switches"
 msgstr "Выключатели"
+
+#: zcadexternal.toolpalette_blocklib_schemes_itemcaption~unsorted
+msgctxt "zcadexternal.toolpalette_blocklib_schemes_itemcaption~unsorted"
+msgid "Unsorted"
+msgstr "Без сортировки"
+
+#: zcadexternal.toolpalette_blocklib_velectrical_itemcaption~plan
+msgctxt "zcadexternal.toolpalette_blocklib_velectrical_itemcaption~plan"
+msgid "Plan"
+msgstr "План"
+
+#: zcadexternal.toolpalette_blocklib_velectrical_itemcaption~schemes
+msgctxt "zcadexternal.toolpalette_blocklib_velectrical_itemcaption~schemes"
+msgid "Schemes"
+msgstr "Схемы"
+
+#: zcadexternal.toolpalette_blocklib_velectrical_plan_itemcaption~elreceiver
+msgid "ElReceiver"
+msgstr ""
+
+#: zcadexternal.toolpalette_blocklib_velectrical_plan_itemcaption~lighting
+msgctxt "zcadexternal.toolpalette_blocklib_velectrical_plan_itemcaption~lighting"
+msgid "Lighting"
+msgstr "Освещение"
+
+#: zcadexternal.toolpalette_blocklib_velectrical_plan_itemcaption~shields
+msgid "Shields"
+msgstr ""
+
+#: zcadexternal.toolpalette_blocklib_velectrical_plan_itemcaption~sockets
+msgctxt "zcadexternal.toolpalette_blocklib_velectrical_plan_itemcaption~sockets"
+msgid "Sockets"
+msgstr "Розетки"
+
+#: zcadexternal.toolpalette_blocklib_velectrical_schemes_itemcaption~shield_devices
+msgid "Shield devices"
+msgstr ""
+
+#: zcadexternal.toolpalette_blocklib_velectrical_schemes_itemcaption~shield_diagram
+msgid "Shield diagram"
+msgstr ""
+
+#: zcadexternal.toolpalette_blocklib_vlowcurrentnetworks_itemcaption~plan
+msgctxt "zcadexternal.toolpalette_blocklib_vlowcurrentnetworks_itemcaption~plan"
+msgid "Plan"
+msgstr "План"
 
 #: zcadexternal.toolpalette_blocklib~caption
 msgid "Рамка А4 книга"
@@ -3625,7 +3774,7 @@ msgstr "Версия"
 
 #: zcadexternal.topengldata~rd_vsync
 msgid "VSync"
-msgstr "Вертикальная снхронизация"
+msgstr "Вертикальная синхронизация"
 
 #: zcadexternal.topsdattype~topsdt_smoke
 msgctxt "zcadexternal.topsdattype~topsdt_smoke"
@@ -3812,7 +3961,7 @@ msgstr "Ближайшая"
 
 #: zcadexternal.tosmode~kosm_paralel
 msgid "Paralel"
-msgstr "Паралель"
+msgstr "Параллель"
 
 #: zcadexternal.tosmode~kosm_perpendicular
 msgid "Perpendicular"
@@ -3841,6 +3990,10 @@ msgstr "Файл альтернативного шрифта"
 #: zcadexternal.tpath~device_library
 msgid "Device base"
 msgstr "База описаний устройств"
+
+#: zcadexternal.tpath~dictionaries
+msgid "Dictionaries"
+msgstr ""
 
 #: zcadexternal.tpath~fonts_path
 msgid "Fonts"
@@ -3963,6 +4116,10 @@ msgstr ""
 msgid "Spatial index nodes depth"
 msgstr ""
 
+#: zcadexternal.trd~rd_uselazfreetypeimplementation
+msgid "Use LazFreeType engine instead FreeType"
+msgstr ""
+
 #: zcadexternal.trestoremode~wnd_accumbuffer
 msgid "ACCUM buffer"
 msgstr "ACCUM буфер"
@@ -4001,6 +4158,19 @@ msgstr "Зеленый"
 msgctxt "zcadexternal.trgb~r"
 msgid "Red"
 msgstr "Красный"
+
+#: zcadexternal.tsavedparams~dictionariespath
+msgid "Dictionaries path"
+msgstr ""
+
+#: zcadexternal.tsavedparams~langoverride
+msgctxt "zcadexternal.tsavedparams~langoverride"
+msgid "Language override"
+msgstr ""
+
+#: zcadexternal.tsavedparams~memprofiling
+msgid "Internal memory profiler"
+msgstr ""
 
 #: zcadexternal.tsavedparams~noloadlayout
 msgctxt "zcadexternal.tsavedparams~noloadlayout"
@@ -4055,6 +4225,10 @@ msgstr ""
 #: zcadexternal.tsys~ssy_compileinfo
 msgid "Build info"
 msgstr "Информация о сборке"
+
+#: zcadexternal.tsys~sys_memprofiling
+msgid "Memory profiling"
+msgstr ""
 
 #: zcadexternal.tsys~sys_noloadlayout
 msgctxt "zcadexternal.tsys~sys_noloadlayout"
@@ -4291,6 +4465,10 @@ msgstr "Конец"
 #: zcadexternal.varcategory~extdrlayercontrol
 msgid "Layer control"
 msgstr "Управление слоем"
+
+#: zcadexternal.varcategory~extdrnetconnector
+msgid "Connector control"
+msgstr ""
 
 #: zcadexternal.varcategory~extdrssmarttextent
 msgid "Text control"

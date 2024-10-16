@@ -38,12 +38,12 @@ type
   TextInsert_com= object(FloatInsert_com)
                        pt:PGDBObjText;
                        //procedure Build(Operands:pansichar); virtual;
-                       procedure CommandStart(Operands:TCommandOperands); virtual;
-                       procedure CommandEnd; virtual;
+                       procedure CommandStart(const Context:TZCADCommandContext;Operands:TCommandOperands); virtual;
+                       procedure CommandEnd(const Context:TZCADCommandContext); virtual;
                        procedure Command(Operands:TCommandOperands); virtual;
                        procedure BuildPrimitives; virtual;
                        procedure Format;virtual;
-                       function DoEnd(pdata:Pointer):Boolean;virtual;
+                       function DoEnd(Context:TZCADCommandContext;pdata:Pointer):Boolean;virtual;
   end;
 {EXPORT-}
 TIMode=(
@@ -104,7 +104,7 @@ begin
      drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.AddPEntity(pt^);
      end;
 end;
-procedure TextInsert_com.CommandStart(Operands:TCommandOperands);
+procedure TextInsert_com.CommandStart(const Context:TZCADCommandContext;Operands:TCommandOperands);
 begin
      inherited;
      if drawings.GetCurrentDWG^.TextStyleTable.GetRealCount<1 then
@@ -113,9 +113,9 @@ begin
           commandmanager.executecommandend;
      end;
 end;
-procedure TextInsert_com.CommandEnd;
+procedure TextInsert_com.CommandEnd(const Context:TZCADCommandContext);
 begin
-
+  inherited;
 end;
 
 function GetStyleNames(var BDefNames:TZctnrVectorStrings;selname:String):Integer;
@@ -164,7 +164,7 @@ begin
      format;
      end;
 end;
-function TextInsert_com.DoEnd(pdata:Pointer):Boolean;
+function TextInsert_com.DoEnd(Context:TZCADCommandContext;pdata:Pointer):Boolean;
 begin
      result:=false;
      dec(self.mouseclic);
@@ -172,7 +172,7 @@ begin
      if TextInsertParams.runtexteditor then
                                            RunTextEditor(pdata,drawings.GetCurrentDWG^);
      //redrawoglwnd;
-     build('');
+     build(context,'');
 end;
 
 procedure TextInsert_com.Format;
@@ -216,8 +216,9 @@ begin
      dc:=drawings.GetCurrentDWG^.CreateDrawingRC;
      pt^.FormatEntity(drawings.GetCurrentDWG^,dc);
 end;
-procedure startup;
-begin
+
+initialization
+  programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
   SysUnit^.RegisterType(TypeInfo(PTTextInsertParams));//регистрируем тип данных в зкадном RTTI
   //SysUnit^.RegisterType(TypeInfo(TTextInsertParams));
   SysUnit^.SetTypeDesk(TypeInfo(TTextInsertParams),['mode','Style','justify','h','WidthFactor','Oblique','Width','LineSpace','text','runtexteditor']);//Даем програмные имена параметрам, по идее это должно быть в ртти, но ненашел
@@ -229,21 +230,13 @@ begin
   TextInsertParams.h:=2.5;
   TextInsertParams.Oblique:=0;
   TextInsertParams.WidthFactor:=1;
-  TextInsertParams.justify:=uzeentabstracttext.jstl;
+  TextInsertParams.justify:=jstl;
   TextInsertParams.text:='text';
   TextInsertParams.runtexteditor:=false;
   TextInsertParams.Width:=100;
   TextInsertParams.LineSpace:=1;
   TextInsert.SetCommandParam(@TextInsertParams,'PTTextInsertParams');
-end;
-procedure Finalize;
-begin
-  TextInsertParams.Style.Enums.done;
-end;
-initialization
-  programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-  startup;
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
-  finalize;
+  TextInsertParams.Style.Enums.done;
 end.

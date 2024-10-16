@@ -16,11 +16,9 @@ uses uzcenitiesvariablesextender,uzeentityfactory,Varman,uzgldrawcontext,
      gzctnrVectorTypes,uzeentity,varmandef,uzbtypes,uzeconsts,uzeffdxfsupport,
      uzegeometrytypes,uzeentsubordinated,uzestylestables,uzclog,
      UGDBOpenArrayOfPV,uzeentcurve,uzeobjectextender,uzetextpreprocessor,
-     uzctnrvectorpgdbaseobjects,uzglviewareadata;
+     uzglviewareadata,uzCtnrVectorpBaseEntity;
 type
-{EXPORT+}
 PGDBObjElLeader=^GDBObjElLeader;
-{REGISTEROBJECTTYPE GDBObjElLeader}
 GDBObjElLeader= object(GDBObjComplex)
             MainLine:GDBObjLine;
             MarkLine:GDBObjLine;
@@ -35,9 +33,9 @@ GDBObjElLeader= object(GDBObjComplex)
             procedure DrawGeometry(lw:Integer;var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
             procedure DrawOnlyGeometry(lw:Integer;var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
             procedure getoutbound(var DC:TDrawContext);virtual;
-            function CalcInFrustum(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
-            function CalcTrueInFrustum(frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
-            function onmouse(var popa:TZctnrVectorPGDBaseObjects;const MF:ClipArray;InSubEntry:Boolean):Boolean;virtual;
+            function CalcInFrustum(const frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
+            function CalcTrueInFrustum(const frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
+            function onmouse(var popa:TZctnrVectorPGDBaseEntity;const MF:ClipArray;InSubEntry:Boolean):Boolean;virtual;
             procedure RenderFeedback(pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;
             procedure addcontrolpoints(tdesc:Pointer);virtual;
             procedure rtmodifyonepoint(const rtmod:TRTModifyData);virtual;
@@ -63,12 +61,11 @@ GDBObjElLeader= object(GDBObjComplex)
             procedure transform(const t_matrix:DMatrix4D);virtual;
             procedure TransformAt(p:PGDBObjEntity;t_matrix:PDMatrix4D);virtual;
             procedure SetInFrustumFromTree(const frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double);virtual;
-            function calcvisible(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
+            function calcvisible(const frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
             function GetObjType:TObjID;virtual;
             class function GetDXFIOFeatures:TDXFEntIODataManager;static;
             procedure SaveToDXFObjXData(var outhandle:{Integer}TZctnrVectorBytes;var IODXFContext:TIODXFContext);virtual;
             end;
-{EXPORT-}
 implementation
 var
   GDBObjElLeaderDXFFeatures:TDXFEntIODataManager;
@@ -218,8 +215,8 @@ begin
          pvc:=pv^.Clone(@self{.bp.Owner});
          pvc2:=pv^.Clone(@self{.bp.Owner});
          //historyoutstr(pv^.ObjToString('','')+'  cloned obj='+pvc^.ObjToString('',''));
-         if pvc^.GetObjType=GDBDeviceID then
-            pvc:=pvc;
+//         if pvc^.GetObjType=GDBDeviceID then
+//            pvc:=pvc;
 
          //pvc^.bp.ListPos.Owner:=@gdbtrash;
          p:=pv^.bp.ListPos.Owner;
@@ -288,7 +285,7 @@ begin
        EntExtensions.RunOnBeforeEntityFormat(@self,drawing,DC);
      tbl.ptablestyle:=drawing.GetTableStyleTable^.getAddres('Temp');
      TCP:=CodePage;
-     CodePage:=CP_win;
+     CodePage:=CP_utf8;
      pdev:=nil;
      //pobj:=nil;
      sta.init(10);
@@ -432,7 +429,7 @@ begin
        end;
      until ps=nil;
 
-     textcontent:=Tria_AnsiToUtf8(textcontent);
+     //textcontent:=Tria_AnsiToUtf8(textcontent);
 
      if sta.Count=0 then begin
        s:='??';
@@ -458,7 +455,7 @@ begin
                                        psl.init(10);
                                   end;
           s:=ps^;
-          psl.PushBackData(s);
+          psl.PushBackData(Tria_Utf8ToAnsi(s));
           S:='';
           ps:=sta.iterate(ir);
      until ps=nil;
@@ -553,7 +550,7 @@ begin
           begin
           ptext:=pointer(self.ConstObjArray.CreateInitObj(GDBMTextID,@self));
           ptext.vp.Layer:=vp.Layer;
-          ptext.Template:=UTF8ToString(Tria_AnsiToUtf8(s));
+          ptext.Template:=UTF8ToString({Tria_AnsiToUtf8}(s));
           ptext.Local.P_insert:=tbl.Local.P_insert;
           ptext.Local.P_insert.y:=ptext.Local.P_insert.y+1.5*scale;
           ptext.textprop.justify:=jsbl;

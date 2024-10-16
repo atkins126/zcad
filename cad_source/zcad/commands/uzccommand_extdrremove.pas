@@ -24,8 +24,8 @@ interface
 uses
   uzcLog,SysUtils,
   uzccommandsabstract,uzccommandsimpl,
-  uzeentity,gzctnrVectorTypes,uzcdrawings,uzcstrconsts,uzeentityextender,
-  gzundoCmdChgMethods2,uzcdrawing,
+  uzeentity,gzctnrVectorTypes,uzcdrawings,uzcstrconsts,uzeExtdrAbstractEntityExtender,
+  gzUndoCmdChgMethods2,uzcdrawing,
   uzcinterface;
 
 implementation
@@ -33,13 +33,13 @@ implementation
 const
   cmdName='extdrRemove';
 
-function extdrRemove_com(operands:TCommandOperands):TCommandResult;
+function extdrRemove_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var
   extdr:TMetaEntityExtender;
   pEntity,pLastSelectedEntity:PGDBObjEntity;
   ir:itrec;
   DoMethod,UndoMethod:TMethod;
-  ext:TBaseEntityExtender;
+  ext:TAbstractEntityExtender;
   count:Integer;
 begin
   try
@@ -58,7 +58,7 @@ begin
           undomethod.Data:=pLastSelectedEntity;
           ext:=extdr.Create(pLastSelectedEntity);
 
-          with GUCmdChgMethods2<TBaseEntityExtender,Pointer>.CreateAndPush(ext,typeof(ext),domethod,undomethod,PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,drawings.AfterNotAutoProcessGDB,true) do
+          with GUCmdChgMethods2<TAbstractEntityExtender,Pointer>.CreateAndPush(ext,typeof(ext),domethod,undomethod,PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,drawings.AfterNotAutoProcessGDB,true) do
           begin
             comit;
           end;
@@ -78,7 +78,7 @@ begin
             undomethod.Code:=pointer(pEntity^.RemoveExtension);
             undomethod.Data:=pEntity;
             ext:=extdr.Create(pEntity);
-            with GUCmdChgMethods2<TBaseEntityExtender,Pointer>.CreateAndPush(ext,typeof(ext),domethod,undomethod,PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,drawings.AfterNotAutoProcessGDB,true) do
+            with GUCmdChgMethods2<TAbstractEntityExtender,Pointer>.CreateAndPush(ext,typeof(ext),domethod,undomethod,PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,drawings.AfterNotAutoProcessGDB,true) do
             begin
               comit;
             end;
@@ -98,7 +98,7 @@ end;
 
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-  CreateCommandFastObjectPlugin(@extdrRemove_com,cmdName,CADWG or CASelEnts,0);
+  CreateZCADCommand(@extdrRemove_com,cmdName,CADWG or CASelEnts,0);
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
 end.

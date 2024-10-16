@@ -29,20 +29,81 @@ uses
   uzeffmanager,
   uzccommand_DWGNew,
   uzccommandsimpl,uzccommandsabstract,
-  uzcsysvars,
+  uzcsysvars,uzcsysparams,
   uzcstrconsts,
-  uzcdrawings,
+  uzcdrawings,uzedrawingsimple,
   uzcinterface,
-  uzccmdload;
+  uzccmdload,
+  uzmacros,MacroDefIntf;
 
-function Load_com(operands:TCommandOperands):TCommandResult;
+function Load_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 
 implementation
+
+type
+
+TZCADPathsMacroMethods=class
+  class function MacroFuncCurrentDrawingPath(const {%H-}Param: string; const Data: PtrInt;
+                                            var {%H-}Abort: boolean): string;
+  class function MacroFuncCurrentDrawingFileNameOnly(const {%H-}Param: string; const Data: PtrInt;
+                                                var {%H-}Abort: boolean): string;
+  class function MacroFuncCurrentDrawingFileName(const {%H-}Param: string; const Data: PtrInt;
+                                                var {%H-}Abort: boolean): string;
+  class function MacroFuncLastAutoSaveFile(const {%H-}Param: string; const Data: PtrInt;
+                                               var {%H-}Abort: boolean): string;
+end;
+
 
 var
   LastFileHandle:Integer=-1;
 
-function Load_com(operands:TCommandOperands):TCommandResult;
+  class function TZCADPathsMacroMethods.MacroFuncCurrentDrawingPath(const {%H-}Param: string; const Data: PtrInt;var {%H-}Abort: boolean): string;
+  var
+    cdwg:PTSimpleDrawing;
+  begin
+    cdwg:=drawings.GetCurrentDWG;
+    if cdwg<>nil then begin
+      result:=ExtractFileDir(cdwg^.GetFileName);
+      if result=''then
+        result:=TempPath;
+    end else
+      result:=TempPath;
+  end;
+
+  class function TZCADPathsMacroMethods.MacroFuncCurrentDrawingFileNameOnly(const {%H-}Param: string; const Data: PtrInt;var {%H-}Abort: boolean): string;
+  var
+    cdwg:PTSimpleDrawing;
+  begin
+    cdwg:=drawings.GetCurrentDWG;
+    if cdwg<>nil then begin
+      result:=ExtractFileName(cdwg^.GetFileName);
+      result:=ChangeFileExt(result,'');
+      if result=''then
+        result:=TempPath;
+    end else
+      result:=TempPath;
+  end;
+
+  class function TZCADPathsMacroMethods.MacroFuncCurrentDrawingFileName(const {%H-}Param: string; const Data: PtrInt;var {%H-}Abort: boolean): string;
+  var
+    cdwg:PTSimpleDrawing;
+  begin
+    cdwg:=drawings.GetCurrentDWG;
+    if cdwg<>nil then begin
+      result:=ExtractFileName(cdwg^.GetFileName);
+      if result=''then
+        result:=TempPath;
+    end else
+      result:=TempPath;
+  end;
+
+  class function TZCADPathsMacroMethods.MacroFuncLastAutoSaveFile(const {%H-}Param: string; const Data: PtrInt;var {%H-}Abort: boolean): string;
+  begin
+    result:=ExpandPath(SysParam.saved.LastAutoSaveFile);
+  end;
+
+
+function Load_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var
    s: AnsiString;
    isload:boolean;
@@ -68,7 +129,7 @@ begin
   end;
   isload:=FileExists(utf8tosys(s));
   if isload then begin
-    DWGNew_com(s);
+    DWGNew_com(Context,s);
     drawings.GetCurrentDWG.SetFileName(s);
     if @loadproc=nil then
       load_merge(s,tloload)
@@ -86,17 +147,17 @@ begin
   end;
 end;
 
-procedure startup;
-begin
-  CreateCommandFastObjectPlugin(@Load_com,'Load',0,0).CEndActionAttr:=[CEDWGNChanged];
-end;
-procedure finalize;
-begin
-end;
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-  startup;
+  CreateZCADCommand(@Load_com,'Load',0,0).CEndActionAttr:=[CEDWGNChanged];
+  DefaultMacros.AddMacro(TTransferMacro.Create('CurrentDrawingPath','',
+                         'Current drawing path',TZCADPathsMacroMethods.MacroFuncCurrentDrawingPath,[]));
+  DefaultMacros.AddMacro(TTransferMacro.Create('CurrentDrawingFileNameOnly','',
+                         'Current drawing file name only',TZCADPathsMacroMethods.MacroFuncCurrentDrawingFileNameOnly(),[]));
+  DefaultMacros.AddMacro(TTransferMacro.Create('CurrentDrawingFileName','',
+                         'Current drawing file name',TZCADPathsMacroMethods.MacroFuncCurrentDrawingFileName(),[]));
+  DefaultMacros.AddMacro(TTransferMacro.Create('LastAutoSaveFile','',
+                         'Last auto save file',TZCADPathsMacroMethods.MacroFuncLastAutoSaveFile,[]));
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
-  finalize;
 end.

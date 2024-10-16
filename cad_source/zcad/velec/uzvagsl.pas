@@ -101,9 +101,9 @@ uses
                       //модуль описывающий "фабрику" для создания примитивов
   uzcsysvars,        //system global variables
                       //системные переменные
-  uzgldrawcontext,
+  //uzgldrawcontext,
   uzcinterface,
-  uzbtypes, //base types
+  //uzbtypes, //base types
                       //описания базовых типов
   uzeconsts, //base constants
                       //описания базовых констант
@@ -127,7 +127,7 @@ uses
 
      gzctnrVectorTypes,                  //itrec
   //для работы графа
-  ExtType,
+  //ExtType,
   Pointerv,
   Graphs,
    //uzccomexample,
@@ -177,7 +177,7 @@ type
   //**Список стен с их ориентацией относительно перпендикуляра
   TWallInfo=record
          p1,p2:GDBVertex;
-         paralel:boolean;
+         parallel:boolean;
   end;
   TListWallOrient=specialize TVector<TWallInfo>;
   //**Список суперлиний
@@ -525,16 +525,16 @@ implementation
     var
       ir:itrec;
       pobj: pGDBObjEntity;
-      drawing:PTSimpleDrawing; //для работы с чертежом
+      //drawing:PTSimpleDrawing; //для работы с чертежом
     begin
-      drawing:=drawings.GetCurrentDWG; // присваиваем наш чертеж
+      //drawing:=drawings.GetCurrentDWG; // присваиваем наш чертеж
       result:=false;
       pobj:=drawings.GetCurrentROOT^.ObjArray.beginiterate(ir); //зона уже выбрана в перспективе застовлять пользователя ее выбирать
         if pobj<>nil then
         repeat
           if pobj^.selected then
             begin
-             pobj^.DeSelect(drawings.GetCurrentDWG^.wa.param.SelDesc.Selectedobjcount,@drawings.CurrentDWG^.deselector);
+             pobj^.DeSelect(drawings.GetCurrentDWG^.wa.param.SelDesc.Selectedobjcount,@drawings.CurrentDWG^.DeSelector);
              if pobj^.GetObjType=GDBPolyLineID then
                begin
                  contourRoom:=PGDBObjPolyLine(pobj);
@@ -635,7 +635,7 @@ implementation
         vertexLWObj:GDBvertex2D; //для двух серной полилинии
         widthObj:GLLWWidth;      //переменная для добавления веса линии в начале и конце пути
 
-        drawing:PTSimpleDrawing; //для работы с чертежом
+        //drawing:PTSimpleDrawing; //для работы с чертежом
         NearObjects:GDBObjOpenArrayOfPV;//список примитивов рядом с точкой
         ir:itrec;  // применяется для обработки списка выделений, но что это понятия не имею :)
     begin
@@ -646,7 +646,7 @@ implementation
        areaSelectRoom:= getAreaSelectRoom(contourRoom);
 
        //**Выделяем все примитывы внутри данной области
-       drawing:=drawings.GetCurrentDWG; // присваиваем наш чертеж
+       //drawing:=drawings.GetCurrentDWG; // присваиваем наш чертеж
        NearObjects.init(100); //инициализируем список
 
        //** создаем двухмерную полилинию для работы механизма попадания датчка в контур помещения или нет
@@ -773,19 +773,19 @@ implementation
   //**-получение ориентированости стен относительно перпендикуляра, если больше паралельно то true, если больше перпендикулярно то false
   function getWallInfoOrient(contourRoomEmbedSL:TListVertex;perpendListVertex:TListVertex):TListWallOrient;
   var
-    angleper,{anglewall,}xlineper,xylineper{,xlinewall,xylinewall}:double;
+    //{angleper,}{anglewall,}xlineper,xylineper{,xlinewall,xylinewall}:double;
     tempVertex{,perp1,perp2}:gdbvertex;
     i:integer;
     iwall:Twallinfo;
   begin
     result:=TListWallOrient.Create;
 
-    xylineper:=uzegeometry.Vertexlength(perpendListVertex.front,perpendListVertex[1]);
+    //xylineper:=uzegeometry.Vertexlength(perpendListVertex.front,perpendListVertex[1]);
     tempVertex.x:=perpendListVertex[1].x;
     tempVertex.y:=perpendListVertex.front.y;
     tempVertex.z:=0;
-    xlineper:=uzegeometry.Vertexlength(perpendListVertex.front,tempVertex);
-    angleper:=arccos(xlineper/xylineper);
+    //xlineper:=uzegeometry.Vertexlength(perpendListVertex.front,tempVertex);
+    //angleper:=arccos(xlineper/xylineper);
     for i:=0 to contourRoomEmbedSL.Size-1 do
     begin
       if i=0 then
@@ -796,7 +796,7 @@ implementation
        iwall.p2:=contourRoomEmbedSL[i];
 
        //** если угол лежит в определеном промежутки от угла стены
-       iwall.paralel:=isOrientAngle(iwall.p1,iwall.p2,perpendListVertex.front,perpendListVertex[1]);
+       iwall.parallel:=isOrientAngle(iwall.p1,iwall.p2,perpendListVertex.front,perpendListVertex[1]);
        //uzvtestdraw.testTempDrawLine(iwall.p1,iwall.p2);
        //uzvtestdraw.testTempDrawLine(iwall.p1,tempVertex);
 
@@ -904,21 +904,22 @@ implementation
         mpd:devcoordarray;
         //pdev:PGDBObjDevice;
         tempvert:GDBVertex;
-        index:integer;
+        //index:integer;
         //pvd:pvardesk;
         dcoord:tdevcoord;
         i,j{,count}:integer;
         //process:boolean;
-        DC:TDrawContext;
+        //DC:TDrawContext;
         //pdevvarext:TVariablesExtender;
         angle:double;
          //infoVertexDevice:TVertexDevice;
          tempforinfo:string;
+         sine,cosine:double;
     begin
          //ZCMsgCallBackInterface.TextMessage('Заработалоssssss');
 
          mpd:=devcoordarray.Create;  //**создания списока устройств и координат
-         dc:=drawings.GetCurrentDWG^.CreateDrawingRC;
+         {dc:=}drawings.GetCurrentDWG^.CreateDrawingRC;
 
          //** подбор правильного угла поворота относительно перпендикуляра
          angle:=arccos(anglePerpendCos)+1.5707963267949;
@@ -937,8 +938,9 @@ implementation
                begin
                    dcoord.coordOld:=listDeviceinRoom[i].coord;
 
-                   tempvert.x:=perpendListVertex.front.X + (listDeviceinRoom[i].coord.X-perpendListVertex.front.X) * Cos(angle) + (listDeviceinRoom[i].coord.Y-perpendListVertex.front.Y) * Sin(angle) ;
-                   tempvert.y:=perpendListVertex.front.Y - (listDeviceinRoom[i].coord.X -perpendListVertex.front.X)* Sin(angle) + (listDeviceinRoom[i].coord.Y -perpendListVertex.front.Y)* Cos(angle);
+                   SinCos(angle,sine,cosine);
+                   tempvert.x:=perpendListVertex.front.X + (listDeviceinRoom[i].coord.X-perpendListVertex.front.X) * cosine + (listDeviceinRoom[i].coord.Y-perpendListVertex.front.Y) * sine ;
+                   tempvert.y:=perpendListVertex.front.Y - (listDeviceinRoom[i].coord.X -perpendListVertex.front.X)* sine + (listDeviceinRoom[i].coord.Y -perpendListVertex.front.Y)* cosine;
                    tempvert.z:=0;
                    dcoord.coord:=uzegeometry.CreateVertex(tempvert.x,tempvert.y,tempvert.z);
 
@@ -948,7 +950,7 @@ implementation
                    mpd.PushBack(dcoord);
                end;
 
-         index:=1;
+         //index:=1;
 
          devcoordsort.Sort(mpd,mpd.Size);  // запуск сортировка
 
@@ -964,8 +966,9 @@ implementation
                begin
                    dcoord.coordOld:=listDeviceinRoom[i].coord;
 
-                   tempvert.x:=perpendListVertex.front.X + (listDeviceinRoom[i].coord.X-perpendListVertex.front.X) * Cos(angle) + (listDeviceinRoom[i].coord.Y-perpendListVertex.front.Y) * Sin(angle) ;
-                   tempvert.y:=perpendListVertex.front.Y - (listDeviceinRoom[i].coord.X -perpendListVertex.front.X)* Sin(angle) + (listDeviceinRoom[i].coord.Y -perpendListVertex.front.Y)* Cos(angle);
+                   SinCos(angle,sine,cosine);
+                   tempvert.x:=perpendListVertex.front.X + (listDeviceinRoom[i].coord.X-perpendListVertex.front.X) * cosine + (listDeviceinRoom[i].coord.Y-perpendListVertex.front.Y) * sine ;
+                   tempvert.y:=perpendListVertex.front.Y - (listDeviceinRoom[i].coord.X -perpendListVertex.front.X)* sine + (listDeviceinRoom[i].coord.Y -perpendListVertex.front.Y)* cosine;
                    tempvert.z:=0;
                    dcoord.coord:=uzegeometry.CreateVertex(tempvert.x,tempvert.y,tempvert.z);
 
@@ -975,7 +978,7 @@ implementation
                    mpd.PushBack(dcoord);
                end;
 
-         index:=1;
+         //index:=1;
 
          devcoordsort.Sort(mpd,mpd.Size);  // запуск сортировка
 
@@ -1395,7 +1398,7 @@ begin
 
                //Создаем 1-й список всех возможных перпендикуляров к стенам
                for k:=0 to listWall.size-1 do begin
-                  if (listWall[k].paralel = false) and (uzvsgeom.perpendToLine(listWall[k].p1,listWall[k].p2,listColumnDev[i].listLineDev[j].coord,tempVertex)) then
+                  if (listWall[k].parallel = false) and (uzvsgeom.perpendToLine(listWall[k].p1,listWall[k].p2,listColumnDev[i].listLineDev[j].coord,tempVertex)) then
                     listPerp1.PushBack(tempVertex);
                end;
 
@@ -1490,7 +1493,7 @@ var
  infoSL:TSLInfo;
  analisListVert,tempListVertex,beforeListVert:TListNum;
  mathGraph:TGraph;
- T: Float;
+ //T: Float;
  EdgePath,VertexPath:TClassList;
  i,j,k,{m,}count:integer;
  isClone,isFirst:boolean;
@@ -1536,7 +1539,7 @@ begin
               EdgePath:=TClassList.Create;     //Создаем реберный путь
               VertexPath:=TClassList.Create;   //Создаем вершиный путь
               //**Получение ребер минимального пути в графи из одной точки в другую
-              T:=mathGraph.FindMinWeightPath(mathGraph[analisListVert[j]], mathGraph[tempListDevice[i].num], EdgePath);
+              {T:=}mathGraph.FindMinWeightPath(mathGraph[analisListVert[j]], mathGraph[tempListDevice[i].num], EdgePath);
               //**Получение вершин минимального пути в графи на основе минимального пути в ребер, указывается из какой точки старт
               mathGraph.EdgePathToVertexPath(mathGraph[analisListVert[j]], EdgePath, VertexPath);
 
@@ -1774,7 +1777,7 @@ begin
    end;
 end;
 
-function Test111sl(operands:TCommandOperands):TCommandResult;
+function Test111sl(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 //const
   //accuracy=0.001;
   //indent=5;
@@ -1877,7 +1880,7 @@ initialization
   autogenSuperLine.indent:=5;
   autogenSuperLine.LayerNamePrefix:='SYS_SL_';
   autogenSuperLine.ProcessLayer:=true;
-  CreateCommandFastObjectPlugin(@Test111sl,'t111',CADWG,0);
+  CreateZCADCommand(@Test111sl,'t111',CADWG,0);
 end.
 
 

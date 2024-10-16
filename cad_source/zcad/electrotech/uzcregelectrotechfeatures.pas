@@ -32,7 +32,7 @@ var
   StringsTreeSelector:TStringsTreeSelector=nil;
 implementation
 
-function FunctionsTest_com(operands:TCommandOperands):TCommandResult;
+function FunctionsTest_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 begin
   StringsTreeSelector:=TStringsTreeSelector.Create(nil);
   StringsTreeSelector.fill(FunctionsTree.BlobTree);
@@ -41,7 +41,7 @@ begin
   result:=cmd_ok;
 end;
 
-function RepresentationsTest_com(operands:TCommandOperands):TCommandResult;
+function RepresentationsTest_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 begin
   StringsTreeSelector:=TStringsTreeSelector.Create(nil);
   StringsTreeSelector.fill(RepresentationsTree.BlobTree);
@@ -91,17 +91,23 @@ end;
 
 
 initialization;
-  FunctionsTree.LoadTree(expandpath('*rtl/functions.xml'),InterfaceTranslate);
-  RepresentationsTree.LoadTree(expandpath('*rtl/representations.xml'),InterfaceTranslate);
+  FunctionsTree.LoadTree(expandpath('$(ZCADPath)/rtl/functions.xml'),InterfaceTranslate);
+  RepresentationsTree.LoadTree(expandpath('$(ZCADPath)/rtl/representations.xml'),InterfaceTranslate);
 
-  CreateCommandFastObjectPlugin(@FunctionsTest_com,'ft',CADWG,0);
-  CreateCommandFastObjectPlugin(@RepresentationsTest_com,'rt',CADWG,0);
+  CreateZCADCommand(@FunctionsTest_com,'ft',CADWG,0);
+  CreateZCADCommand(@RepresentationsTest_com,'rt',CADWG,0);
 
   //AddEditorToType(SysUnit.TypeName2PTD('TEentityRepresentation'),TBaseTypesEditors.BaseCreateEditor);
   //AddEditorToType(SysUnit.TypeName2PTD('TEentityFunction'),TBaseTypesEditors.BaseCreateEditor);
 
   AddFastEditorToType(SysUnit.TypeName2PTD('TEentityRepresentation'),@OIUI_FE_ButtonGetPrefferedSize,@ButtonTxtDrawFastEditor,@RunEentityRepresentationEditor);
   AddFastEditorToType(SysUnit.TypeName2PTD('TEentityFunction'),@OIUI_FE_ButtonGetPrefferedSize,@ButtonTxtDrawFastEditor,@RunEentityFunctionEditor);
+
+  with SysUnit.TypeName2PTD('TCalculatedString')^ do begin
+    onGetValueAsString:=CalculatedStringDescriptor.GetValueAsString;
+    onGetEditableAsString:=CalculatedStringDescriptor.GetEditableAsString;
+    onSetEditableFromString:=CalculatedStringDescriptor.SetEditableFromString;
+  end;
 
 finalization;
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);

@@ -17,6 +17,7 @@
 }
 
 unit uzgprimitives;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 interface
 uses uzgprimitivessarray,math,uzglgeomdata,uzgldrawcontext,uzgvertex3sarray,uzgldrawerabstract,
@@ -60,14 +61,14 @@ TLLPrimitive= object(GDBaseObject)
                        constructor init;
                        destructor done;virtual;
                        function draw(drawer:TZGLAbstractDrawer;var rc:TDrawContext;var GeomData:ZGLGeomData;var LLPArray:TLLPrimitivesArray;var OptData:ZGLOptimizerData):Integer;virtual;
-                       function CalcTrueInFrustum(frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;virtual;
+                       function CalcTrueInFrustum(const frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;virtual;
                    end;
 PTLLLine=^TLLLine;
 {---REGISTEROBJECTTYPE TLLLine}
 TLLLine= object(TLLPrimitive)
               P1Index:TLLVertexIndex;{P2Index=P1Index+1}
               function draw(drawer:TZGLAbstractDrawer;var rc:TDrawContext;var GeomData:ZGLGeomData;var LLPArray:TLLPrimitivesArray;var OptData:ZGLOptimizerData):Integer;virtual;
-              function CalcTrueInFrustum(frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;virtual;
+              function CalcTrueInFrustum(const frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;virtual;
               procedure getEntIndexs(var GeomData:ZGLGeomData;out eid:TEntIndexesData);virtual;
               procedure CorrectIndexes(const offset:TEntIndexesOffsetData);virtual;
         end;
@@ -108,6 +109,7 @@ PTLLPoint=^TLLPoint;
 TLLPoint= object(TLLPrimitive)
               PIndex:TLLVertexIndex;
               function draw(drawer:TZGLAbstractDrawer;var rc:TDrawContext;var GeomData:ZGLGeomData;var LLPArray:TLLPrimitivesArray;var OptData:ZGLOptimizerData):Integer;virtual;
+              function CalcTrueInFrustum(const frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;virtual;
               procedure getEntIndexs(var GeomData:ZGLGeomData;out eid:TEntIndexesData);virtual;
               procedure CorrectIndexes(const offset:TEntIndexesOffsetData);virtual;
         end;
@@ -134,7 +136,7 @@ TLLSymbol= object(TLLPrimitive)
               function draw(drawer:TZGLAbstractDrawer;var rc:TDrawContext;var GeomData:ZGLGeomData;var LLPArray:TLLPrimitivesArray;var OptData:ZGLOptimizerData):Integer;virtual;
               procedure drawSymbol(drawer:TZGLAbstractDrawer;var rc:TDrawContext;var GeomData:ZGLGeomData;var LLPArray:TLLPrimitivesArray;var OptData:ZGLOptimizerData;const PSymbolsParam:PTSymbolSParam);virtual;
               constructor init;
-              function CalcTrueInFrustum(frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;virtual;
+              function CalcTrueInFrustum(const frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;virtual;
         end;
 PTLLSymbolLine=^TLLSymbolLine;
 {---REGISTEROBJECTTYPE TLLSymbolLine}
@@ -145,13 +147,13 @@ TLLSymbolLine= object(TLLPrimitive)
               FirstOutBoundIndex,LastOutBoundIndex:TLLVertexIndex;
               function draw(drawer:TZGLAbstractDrawer;var rc:TDrawContext;var GeomData:ZGLGeomData;var LLPArray:TLLPrimitivesArray;var OptData:ZGLOptimizerData):Integer;virtual;
               constructor init;
-              function CalcTrueInFrustum(frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;virtual;
+              function CalcTrueInFrustum(const frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;virtual;
         end;
 PTLLSymbolEnd=^TLLSymbolEnd;
 {---REGISTEROBJECTTYPE TLLSymbolEnd}
 TLLSymbolEnd= object(TLLPrimitive)
               function draw(drawer:TZGLAbstractDrawer;var rc:TDrawContext;var GeomData:ZGLGeomData;var LLPArray:TLLPrimitivesArray;var OptData:ZGLOptimizerData):Integer;virtual;
-              function CalcTrueInFrustum(frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;virtual;
+              function CalcTrueInFrustum(const frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;virtual;
                    end;
 PTLLPolyLine=^TLLPolyLine;
 {---REGISTEROBJECTTYPE TLLPolyLine}
@@ -159,7 +161,7 @@ TLLPolyLine= object(TLLPrimitive)
               P1Index,Count,SimplifiedContourIndex,SimplifiedContourSize:TLLVertexIndex;
               Closed:Boolean;
               function draw(drawer:TZGLAbstractDrawer;var rc:TDrawContext;var GeomData:ZGLGeomData;var LLPArray:TLLPrimitivesArray;var OptData:ZGLOptimizerData):Integer;virtual;
-              function CalcTrueInFrustum(frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;virtual;
+              function CalcTrueInFrustum(const frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;virtual;
               procedure getEntIndexs(var GeomData:ZGLGeomData;out eid:TEntIndexesData);virtual;
               procedure AddSimplifiedIndex(Index:TLLVertexIndex);virtual;
               procedure CorrectIndexes(const offset:TEntIndexesOffsetData);virtual;
@@ -192,7 +194,7 @@ function TLLPrimitive.draw(drawer:TZGLAbstractDrawer;var rc:TDrawContext;var Geo
 begin
      result:=getPrimitiveSize;
 end;
-function TLLPrimitive.CalcTrueInFrustum(frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;
+function TLLPrimitive.CalcTrueInFrustum(const frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;
 begin
      InRect:=IREmpty;
      result:=getPrimitiveSize;
@@ -203,7 +205,7 @@ begin
                                     Drawer.DrawLine(@geomdata.Vertex3S,P1Index,P1Index+1);
      result:=inherited;
 end;
-function TLLLine.CalcTrueInFrustum(frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;
+function TLLLine.CalcTrueInFrustum(const frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;
 begin
      InRect:=uzegeometry.CalcTrueInFrustum(geomdata.Vertex3S.getDataMutable(self.P1Index)^,geomdata.Vertex3S.getDataMutable(self.P1Index+1)^,frustum);
      result:=getPrimitiveSize;
@@ -224,6 +226,12 @@ begin
      Drawer.DrawPoint(@geomdata.Vertex3S,PIndex);
      result:=inherited;
 end;
+function TLLPoint.CalcTrueInFrustum(const frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;
+begin
+     InRect:=uzegeometry.CalcPointTrueInFrustum(geomdata.Vertex3S.getDataMutable(self.PIndex)^,frustum);
+     result:=getPrimitiveSize;
+end;
+
 procedure TLLPoint.getEntIndexs(var GeomData:ZGLGeomData;out eid:TEntIndexesData);
 begin
      eid.GeomIndexMin:=PIndex;
@@ -413,31 +421,40 @@ begin
      P1Index:=P1Index+offset.GeomIndexOffset;
      SimplifiedContourIndex:=SimplifiedContourIndex+offset.IndexsIndexOffset;
 end;
-function TLLPolyLine.CalcTrueInFrustum(frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;
+function TLLPolyLine.CalcTrueInFrustum(const frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;
 var
-   i,index:integer;
-   SubRect:TInBoundingVolume;
+  i,index:integer;
+  SubRect:TInBoundingVolume;
+
+  procedure ProcessSubrect;
+  begin
+    case SubRect of
+      IREmpty:if InRect=IRFully then
+                                     InRect:=IRPartially;
+      IRFully:if InRect<>IRFully then
+                                     InRect:=IRPartially;
+      IRPartially:
+                  InRect:=IRPartially;
+      IRNotAplicable:;//заглушка на варнинг
+    end;
+  end;
 begin
-     InRect:=uzegeometry.CalcTrueInFrustum(PGDBvertex3S(geomdata.Vertex3S.getDataMutable(P1Index))^,PGDBvertex3S(geomdata.Vertex3S.getDataMutable(P1Index+1))^,frustum);
+     InRect:=uzegeometry.CalcTrueInFrustum(geomdata.Vertex3S.getDataMutable(P1Index)^,geomdata.Vertex3S.getDataMutable(P1Index+1)^,frustum);
      result:=getPrimitiveSize;
      if InRect=IRPartially then
                                exit;
      index:=P1Index+1;
-     for i:=2 to Count-1 do
+     for i:=3 to Count do
      begin
         SubRect:=uzegeometry.CalcTrueInFrustum(geomdata.Vertex3S.getDataMutable(index)^,geomdata.Vertex3S.getDataMutable(index+1)^,frustum);
-        case SubRect of
-          IREmpty:if InRect=IRFully then
-                                         InRect:=IRPartially;
-          IRFully:if InRect<>IRFully then
-                                         InRect:=IRPartially;
-          IRPartially:
-                      InRect:=IRPartially;
-          IRNotAplicable:;//заглушка на варнинг
-        end;
+        ProcessSubrect;
         if InRect=IRPartially then
                                   exit;
         inc(index);
+     end;
+     if closed then begin
+       SubRect:=uzegeometry.CalcTrueInFrustum(geomdata.Vertex3S.getDataMutable(index)^,geomdata.Vertex3S.getDataMutable(P1Index)^,frustum);
+       ProcessSubrect;
      end;
 end;
 function TLLSymbolEnd.draw(drawer:TZGLAbstractDrawer;var rc:TDrawContext;var GeomData:ZGLGeomData;var LLPArray:TLLPrimitivesArray;var OptData:ZGLOptimizerData):Integer;
@@ -447,7 +464,7 @@ begin
      OptData.symplify:=false;
      result:=inherited;
 end;
-function TLLSymbolEnd.CalcTrueInFrustum(frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;
+function TLLSymbolEnd.CalcTrueInFrustum(const frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;
 begin
   result:=getPrimitiveSize;
   InRect:=IRNotAplicable;
@@ -461,22 +478,14 @@ end;
 
 function TLLSymbolLine.draw(drawer:TZGLAbstractDrawer;var rc:TDrawContext;var GeomData:ZGLGeomData;var LLPArray:TLLPrimitivesArray;var OptData:ZGLOptimizerData):Integer;
 begin
-  if (MaxSqrSymH/(rc.DrawingContext.zoom*rc.DrawingContext.zoom)<3)and(not rc.maxdetail) then
-                                                begin
-                                                  Drawer.DrawLine(@geomdata.Vertex3S,FirstOutBoundIndex,LastOutBoundIndex+3);
-                                                  //Drawer.DrawLine(FirstOutBoundIndex+1,LastOutBoundIndex+2);
-                                                  {Drawer.DrawQuad(FirstOutBoundIndex,FirstOutBoundIndex+1,LastOutBoundIndex+2,LastOutBoundIndex+3);
-                                                  Drawer.DrawLine(FirstOutBoundIndex,FirstOutBoundIndex+1);
-                                                  Drawer.DrawLine(FirstOutBoundIndex+1,LastOutBoundIndex+2);
-                                                  Drawer.DrawLine(FirstOutBoundIndex+2,LastOutBoundIndex+3);
-                                                  Drawer.DrawLine(FirstOutBoundIndex+3,FirstOutBoundIndex);}
-                                                  self.SimplyDrawed:=true;
-                                                end
-                                            else
-                                                self.SimplyDrawed:=false;
+  if (rc.LOD=LODLowDetail)or(MaxSqrSymH/(rc.DrawingContext.zoom*rc.DrawingContext.zoom)<3)and(not rc.maxdetail) then begin
+    Drawer.DrawLine(@geomdata.Vertex3S,FirstOutBoundIndex,LastOutBoundIndex+3);
+    self.SimplyDrawed:=true;
+  end else
+    self.SimplyDrawed:=false;
   result:=inherited;
 end;
-function TLLSymbolLine.CalcTrueInFrustum(frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;
+function TLLSymbolLine.CalcTrueInFrustum(const frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;
 begin
   result:=getPrimitiveSize;
   InRect:=IRNotAplicable;
@@ -492,39 +501,37 @@ begin
   ExternalLLPOffset:=-1;
   ExternalLLPCount:=-1;
 end;
-function TLLSymbol.CalcTrueInFrustum(frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;
+function TLLSymbol.CalcTrueInFrustum(const frustum:ClipArray;var GeomData:ZGLGeomData;out InRect:TInBoundingVolume):Integer;
 var
-   //ir1,ir2,ir3,ir4:TInBoundingVolume;
-   myfrustum:ClipArray;
-   OutBound:OutBound4V;
-   p:ZGLVertex3Sarray.PT;
+  myfrustum:ClipArray;
+  OutBound:OutBound4V;
+  p:ZGLVertex3Sarray.PT;
 begin
-     p:=geomdata.Vertex3S.getDataMutable(OutBoundIndex);
-     OutBound[0].x:=p^.x;
-     OutBound[0].y:=p^.y;
-     OutBound[0].z:=p^.z;
-     p:=geomdata.Vertex3S.getDataMutable(OutBoundIndex+1);
-     OutBound[1].x:=p^.x;
-     OutBound[1].y:=p^.y;
-     OutBound[1].z:=p^.z;
-     p:=geomdata.Vertex3S.getDataMutable(OutBoundIndex+2);
-     OutBound[2].x:=p^.x;
-     OutBound[2].y:=p^.y;
-     OutBound[2].z:=p^.z;
-     p:=geomdata.Vertex3S.getDataMutable(OutBoundIndex+3);
-     OutBound[3].x:=p^.x;
-     OutBound[3].y:=p^.y;
-     OutBound[3].z:=p^.z;
+  p:=geomdata.Vertex3S.getDataMutable(OutBoundIndex);
+  OutBound[0].x:=p^.x;
+  OutBound[0].y:=p^.y;
+  OutBound[0].z:=p^.z;
+  p:=geomdata.Vertex3S.getDataMutable(OutBoundIndex+1);
+  OutBound[1].x:=p^.x;
+  OutBound[1].y:=p^.y;
+  OutBound[1].z:=p^.z;
+  p:=geomdata.Vertex3S.getDataMutable(OutBoundIndex+2);
+  OutBound[2].x:=p^.x;
+  OutBound[2].y:=p^.y;
+  OutBound[2].z:=p^.z;
+  p:=geomdata.Vertex3S.getDataMutable(OutBoundIndex+3);
+  OutBound[3].x:=p^.x;
+  OutBound[3].y:=p^.y;
+  OutBound[3].z:=p^.z;
 
-     InRect:=CalcOutBound4VInFrustum(OutBound,frustum);
+  InRect:=CalcOutBound4VInFrustum(OutBound,frustum);
 
-     result:=getPrimitiveSize;
+  result:=getPrimitiveSize;
 
-     if InRect<>IRPartially then
-                                exit;
-
-     myfrustum:=FrustumTransform(frustum,SymMatr);
-     InRect:=PZGLVectorObject(PExternalVectorObject).CalcCountedTrueInFrustum(myfrustum,true,ExternalLLPOffset,ExternalLLPCount);
+  if InRect<>IRPartially then
+    exit;
+  myfrustum:=FrustumTransform(frustum,SymMatr);
+  InRect:=PZGLVectorObject(PExternalVectorObject).CalcCountedTrueInFrustum(myfrustum,true,ExternalLLPOffset,ExternalLLPCount);
 end;
 
 function TLLSymbol.draw(drawer:TZGLAbstractDrawer;var rc:TDrawContext;var GeomData:ZGLGeomData;var LLPArray:TLLPrimitivesArray;var OptData:ZGLOptimizerData):Integer;

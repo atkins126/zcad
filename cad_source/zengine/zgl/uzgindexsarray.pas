@@ -17,6 +17,7 @@
 }
 
 unit uzgindexsarray;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 interface
 uses gzctnrVector,sysutils,
@@ -25,7 +26,7 @@ type
 {Export+}
 PZGLIndexsArray=^ZGLIndexsArray;
 {REGISTEROBJECTTYPE ZGLIndexsArray}
-ZGLIndexsArray= object(GZVector{-}<TArrayIndex>{//})(*OpenArrayOfData=TArrayIndex*)
+ZGLIndexsArray= object(GZVector{-}<TArrayIndex>{//})
                 constructor init(m:Integer);
                 constructor initnul;
              end;

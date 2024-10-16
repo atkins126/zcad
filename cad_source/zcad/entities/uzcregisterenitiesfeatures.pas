@@ -24,7 +24,7 @@ uses uzcinterface,uzeffdxf,uzbpaths,uzcsysvars,uzcTranslations,sysutils,
      uzetextpreprocessor,uzctnrVectorBytes,uzbtypes,uzeobjectextender,
      uzeentsubordinated,uzeentity,uzeenttext,uzeblockdef,varmandef,Varman,UUnitManager,
      URecordDescriptor,UBaseTypeDescriptor,uzedrawingdef,
-     uzbstrproc,uzeentitiesprop,uzcentelleader,math;
+     uzbstrproc,uzeentitiesprop,uzcentelleader,math,gzctnrVectorTypes,uzccommandsmanager;
 var
    PFCTTD:Pointer=nil;
    extvarunit:TUnit;
@@ -126,7 +126,7 @@ begin
 end;
 procedure TextIOSave_TMPL1(var outhandle:TZctnrVectorBytes;PEnt:PGDBObjText);
 begin
-     if UnicodeStringReplace(pent^.content,#10,'\P',[rfReplaceAll])<>convertfromunicode(pent^.template) then
+     if UnicodeStringReplace(pent^.content,#10,'\P',[rfReplaceAll])<>pent^.template{convertfromunicode(pent^.template)} then
        dxfStringout(outhandle,1000,'_TMPL1='+string(pent^.template));
 end;
 
@@ -195,6 +195,9 @@ procedure DeviceNameProcess(pEntity:PGDBObjEntity;const drawing:TDrawingDef);
 var
    pvn,pvnt:pvardesk;
    pentvarext:TVariablesExtender;
+   ir:itrec;
+   p:PUserTypeDescriptor;
+   ptcs:PTCalculatedString;
 begin
   pentvarext:=pEntity^.GetExtension<TVariablesExtender>;
   if pentvarext<>nil then begin
@@ -213,10 +216,32 @@ begin
     if (pvnt<>nil)and(pvnt<>nil) then
       DeviceNameSubProcess(pvn,pstring(pvnt^.data.Addr.Instance)^,pEntity);
 
+    pvn:=pentvarext.entityunit.FindVariable('GC_NameGroup',true);
+    pvnt:=pentvarext.entityunit.FindVariable('GC_NameGroupTemplate',true);
+    if (pvnt<>nil)and(pvnt<>nil) then
+      DeviceNameSubProcess(pvn,pstring(pvnt^.data.Addr.Instance)^,pEntity);
+
+    pvn:=pentvarext.entityunit.FindVariable('INFOPERSONALUSE_Text',true);
+    pvnt:=pentvarext.entityunit.FindVariable('INFOPERSONALUSE_TextTemplate',true);
+    if (pvnt<>nil)and(pvnt<>nil) then
+      DeviceNameSubProcess(pvn,pstring(pvnt^.data.Addr.Instance)^,pEntity);
+
 
     pvnt:=pentvarext.entityunit.FindVariable('RiserName',true);
     if (pvnt<>nil)and(pvn<>nil)then
       pstring(pvnt^.data.Addr.Instance)^:=pstring(pvn^.data.Addr.Instance)^;
+  end;
+
+  p:=SysUnit.TypeName2PTD('TCalculatedString');
+  if p<>nil then begin
+    pvn:=pentvarext.entityunit.InterfaceVariables.vardescarray.beginiterate(ir);
+    if pvn<>nil then repeat
+      if pvn.data.PTD=p then begin
+        ptcs:=pvn.data.Addr.Instance;
+        ptcs.value:=textformat(ptcs.format,pEntity)
+      end;
+      pvn:=pentvarext.entityunit.InterfaceVariables.vardescarray.iterate(ir);
+    until pvn=nil;
   end;
 
   DBLinkProcess(pentity,drawing);
@@ -384,25 +409,19 @@ procedure GDBObjBlockDefLoadVarsFromFile(pEntity:PGDBObjBlockDef);
 var
   uou:PTEntityUnit;
   pentvarext:TVariablesExtender;
-  //p:PTUnitManager;
-  //S:string;
 begin
-     if pos(DevicePrefix,pEntity^.name)=1 then
-     begin
-         //p:=@units;
-         //S:=pEntity^.name;
-         //S:=SupportPath;
-         uou:=pointer(units.findunit(GetSupportPath,InterfaceTranslate,pEntity^.name));
-         if uou<>nil then
-                         begin
-                              pentvarext:=pEntity^.GetExtension<TVariablesExtender>;
-                              pentvarext.entityunit.CopyFrom(uou);
-                         end
-                     else
-                         begin
-                                ZCMsgCallBackInterface.TextMessage(sysutils.format(rsfardeffilenotfounf,[pEntity^.Name]),TMWOHistoryOut);
-                         end;
-     end;
+  if pos(DevicePrefix,pEntity^.name)=1 then begin
+  uou:=pointer(units.findunit(GetSupportPath,InterfaceTranslate,pEntity^.name));
+  if uou<>nil then begin
+    pentvarext:=pEntity^.GetExtension<TVariablesExtender>;
+    pentvarext.entityunit.CopyFrom(uou);
+  end else begin
+    if commandmanager.isBusy then
+      ZCMsgCallBackInterface.TextMessage(sysutils.format(rsfardeffilenotfounf,[pEntity^.Name]),[TMWOToLog])
+    else
+      ZCMsgCallBackInterface.TextMessage(sysutils.format(rsfardeffilenotfounf,[pEntity^.Name]),TMWOHistoryOut);
+  end;
+  end;
 end;
 function CreateExtDxfLoadData:pointer;
 begin

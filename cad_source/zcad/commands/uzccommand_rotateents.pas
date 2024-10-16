@@ -34,7 +34,7 @@ uses
 
 implementation
 
-function RotateEnts_com(operands:TCommandOperands):TCommandResult;
+function RotateEnts_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var
   pv:pGDBObjEntity;
   ir:itrec;
@@ -71,7 +71,7 @@ begin
         else
           pc:=Vertexmorph(pv^.vp.BoundingBox.LBN,pv^.vp.BoundingBox.RTF,0.5);
         dispmatr:=uzegeometry.CreateTranslationMatrix(createvertex(-pc.x,-pc.y,-pc.z));
-        rotmatr:=uzegeometry.CreateRotationMatrixZ(sin(a),cos(a));
+        rotmatr:=uzegeometry.CreateRotationMatrixZ(a);
         rotmatr:=uzegeometry.MatrixMultiply(dispmatr,rotmatr);
         dispmatr:=uzegeometry.CreateTranslationMatrix(createvertex(pc.x,pc.y,pc.z));
         dispmatr:=uzegeometry.MatrixMultiply(rotmatr,dispmatr);
@@ -79,7 +79,7 @@ begin
         im:=dispmatr;
         uzegeometry.MatrixInvert(im);
 
-        with PushCreateTGMultiObjectChangeCommand(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,dispmatr,im,1) do
+        with PushCreateTGMultiObjectChangeCommand(@PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,dispmatr,im,1) do
         begin
           m:=TMethod(@pv^.Transform);
           AddMethod(m);
@@ -98,7 +98,7 @@ begin
 end;
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-  CreateCommandFastObjectPlugin(@RotateEnts_com,'RotateEnts',CADWG or CASelEnts,0);
+  CreateZCADCommand(@RotateEnts_com,'RotateEnts',CADWG or CASelEnts,0);
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
 end.

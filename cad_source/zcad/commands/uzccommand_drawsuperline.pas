@@ -68,10 +68,21 @@ uses
   Varman,UBaseTypeDescriptor,uzbstrproc,
 
   gzctnrVectorTypes,
-  uzcstrconsts;       //resouce strings
+  uzcstrconsts,       //resouce strings
+  uzvcabmountmethod,
+
+  uzcLapeScriptsManager,uzcLapeScriptsImplBase,uzcCommand_LPCSRun,lpcompiler;
 
 
 type
+
+TMethod2ltContext=class(TBaseScriptContext)
+  FInput:string;
+  FOutput:string;
+end;
+TMethod2ltContextSetter=class
+  class procedure SetCtx(mode:TLapeScriptContextModes;ctx:TBaseScriptContext;cplr:TLapeCompiler);
+end;
 PTDrawSuperlineParams=^TDrawSuperlineParams;
 TDrawSuperlineParams=record
                          pu:PTUnit;                //рантайм юнит с параметрами суперлинии
@@ -79,18 +90,48 @@ TDrawSuperlineParams=record
                          ProcessLayer:Boolean;  //выключатель слоя
                          ProcessTypeLine:Boolean;  //выключатель типа линyи
                          SLSetting1:String;     //сохраненная настройка суперлинии для кнопки суперлиния №1
-                         SLSettingTypeLine1:String;     //сохраненная настройка суперлинии для кнопки суперлиния №1 типа линии
+                         SLSettingTypeLine1:TDCableMountingMethod;     //сохраненная настройка суперлинии для кнопки суперлиния №1 типа линии
                          SLSetting2:String;     //сохраненная настройка суперлинии для кнопки суперлиния №2
-                         SLSettingTypeLine2:String;     //сохраненная настройка суперлинии для кнопки суперлиния №2 типа линии
+                         SLSettingTypeLine2:TDCableMountingMethod;     //сохраненная настройка суперлинии для кнопки суперлиния №2 типа линии
                          SLSetting3:String;     //сохраненная настройка суперлинии для кнопки суперлиния №3
-                         SLSettingTypeLine3:String;     //сохраненная настройка суперлинии для кнопки суперлиния №2 типа линии
+                         SLSettingTypeLine3:TDCableMountingMethod;     //сохраненная настройка суперлинии для кнопки суперлиния №2 типа линии
                      end;
 var
    DrawSuperlineParams:TDrawSuperlineParams;
+   method2lt:TScriptData;
 
    function createSuperLine(p1,p2:GDBVertex;nameSL:string;changeLayer:boolean;LayerNamePrefix:string):TCommandResult;
 
 implementation
+
+
+class procedure TMethod2ltContextSetter.SetCtx(mode:TLapeScriptContextModes;ctx:TBaseScriptContext;cplr:TLapeCompiler);
+var
+  pvd:pvardesk;
+  psu:ptunit;
+begin
+  if LSCMCompilerSetup in mode then begin
+    cplr.StartImporting;
+    cplr.addBaseDefine('LAPE');
+    cplr.addGlobalVar('String',@TMethod2ltContext(ctx).FInput,'Input');
+    cplr.addGlobalVar('String',@TMethod2ltContext(ctx).FOutput,'Output');
+    cplr.EndImporting;
+  end;
+  if LSCMContextSetup in mode then begin
+    if ctx is TMethod2ltContext then begin
+      psu:=units.findunit(GetSupportPath,InterfaceTranslate,'superline');
+      if psu<>nil then
+        pvd:=psu.FindVariable('CABLE_MountingMethod')
+      else
+        pvd:=nil;
+
+      if pvd<>nil then
+        (ctx as TMethod2ltContext).FInput:=pvd^.GetValueAsString
+      else
+        (ctx as TMethod2ltContext).FInput:='error'
+    end;
+  end;
+end;
 
 function GetInteractiveLine(prompt1,prompt2:String;out p1,p2:GDBVertex):Boolean;
 var
@@ -168,7 +209,7 @@ begin
     result:=cmd_ok;
 end;
 
-function DrawSuperLine_com(operands:TCommandOperands):TCommandResult;
+function DrawSuperLine_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var
     psuperline:PGDBObjSuperLine;
     p1,p2:gdbvertex;
@@ -183,6 +224,7 @@ procedure createline;
 var
     pvd:pvardesk;        //для нахождения имени суперлинии
     layername:String; //имя слоя куда будет помещена супелиния
+    ltname:string;
     player:PGDBLayerProp;//указатель на слой куда будет помещена супелиния
 begin
     psuperline := AllocEnt(GDBSuperLineID);
@@ -197,14 +239,28 @@ begin
     zcSetEntPropFromCurrentDrawingProp(psuperline);           //присваиваем умолчательные значения
 
     ////open~inTrust          open~inСableСhannel
+
     pvd:=psu.FindVariable('CABLE_MountingMethod');
     if (DrawSuperlineParams.ProcessTypeLine)and(pvd<>nil) then begin
-       if pvd.data.PTD^.GetValueAsString(pvd.data.Addr.Instance) = 'open~inMetalTray' then
-          psuperline.vp.LineType:=drawings.GetCurrentDWG^.LTypeStyleTable.getAddres('cablotok');
-       if pvd.data.PTD^.GetValueAsString(pvd.data.Addr.Instance) = 'open~inСableСhannel' then
-          psuperline.vp.LineType:=drawings.GetCurrentDWG^.LTypeStyleTable.getAddres('cabkorob');
-       if pvd.data.PTD^.GetValueAsString(pvd.data.Addr.Instance) = 'Hidden~inPipe' then
-          psuperline.vp.LineType:=drawings.GetCurrentDWG^.LTypeStyleTable.getAddres('cabtruba');
+
+      //заводим в контекст скрипта в переменную Input наше значение
+      (method2lt.Ctx as TMethod2ltContext).FInput:=pvd.GetValueAsString;
+      //выполняем скрипт
+      CommandScriptsManager.RunScript(method2lt);
+      //выводим из контекста скрипта выходное значение из переменной Output
+      ltname:=(method2lt.Ctx as TMethod2ltContext).FOutput;
+      ZCMsgCallBackInterface.TextMessage('ltname:'+ltname,TMWOHistoryOut);
+      //копируем при необходимости и возможности тип линий из базы загруженых dxf
+      drawings.AddLTStyleFromDBIfNeed(drawings.GetCurrentDWG,ltname);
+
+      psuperline.vp.LineType:=drawings.GetCurrentDWG^.LTypeStyleTable.getAddres(ltname);
+
+       //if pvd.data.PTD^.GetValueAsString(pvd.data.Addr.Instance) = 'open~inMetalTray' then
+       //   psuperline.vp.LineType:=drawings.GetCurrentDWG^.LTypeStyleTable.getAddres('cablotok');
+       //if pvd.data.PTD^.GetValueAsString(pvd.data.Addr.Instance) = 'open~inСableСhannel' then
+       //   psuperline.vp.LineType:=drawings.GetCurrentDWG^.LTypeStyleTable.getAddres('cabkorob');
+       //if pvd.data.PTD^.GetValueAsString(pvd.data.Addr.Instance) = 'Hidden~inPipe' then
+       //   psuperline.vp.LineType:=drawings.GetCurrentDWG^.LTypeStyleTable.getAddres('cabtruba');
        end;
 
     //если манипуляции со слоем включены и ранее был найден "юнит" с параметрами
@@ -243,18 +299,18 @@ begin
 
     if operands = '1' then
     begin
-       hotkeyname:=Tria_AnsiToUtf8(DrawSuperlineParams.SLSetting1);
-       hotkeytypeline:=Tria_AnsiToUtf8(DrawSuperlineParams.SLSettingTypeLine1);
+       hotkeyname:={Tria_AnsiToUtf8}(DrawSuperlineParams.SLSetting1);
+       hotkeytypeline:={Tria_AnsiToUtf8}(DrawSuperlineParams.SLSettingTypeLine1);
     end;
     if operands = '2' then
     begin
-       hotkeyname:=Tria_AnsiToUtf8(DrawSuperlineParams.SLSetting2);
-       hotkeytypeline:=Tria_AnsiToUtf8(DrawSuperlineParams.SLSettingTypeLine2);
+       hotkeyname:={Tria_AnsiToUtf8}(DrawSuperlineParams.SLSetting2);
+       hotkeytypeline:={Tria_AnsiToUtf8}(DrawSuperlineParams.SLSettingTypeLine2);
     end;
     if operands = '3' then
     begin
-       hotkeyname:=Tria_AnsiToUtf8(DrawSuperlineParams.SLSetting3);
-       hotkeytypeline:=Tria_AnsiToUtf8(DrawSuperlineParams.SLSettingTypeLine3);
+       hotkeyname:={Tria_AnsiToUtf8}(DrawSuperlineParams.SLSetting3);
+       hotkeytypeline:={Tria_AnsiToUtf8}(DrawSuperlineParams.SLSettingTypeLine3);
     end;
 
      //ZCMsgCallBackInterface.TextMessage('hotkeyname:'+hotkeyname,TMWOHistoryOut);
@@ -301,5 +357,8 @@ initialization
      DrawSuperlineParams.SLSettingTypeLine2:='-';
      DrawSuperlineParams.SLSetting3:='???';
      DrawSuperlineParams.SLSettingTypeLine3:='-';
-     CreateCommandFastObjectPlugin(@DrawSuperLine_com,   'DrawSuperLine',   CADWG,0);
+     CreateZCADCommand(@DrawSuperLine_com,   'DrawSuperLine',   CADWG,0);
+     method2lt:=CommandScriptsManager.CreateExternalScriptData('method2lt',TMethod2ltContext,[TMethod2ltContextSetter.SetCtx]);
+finalization
+     TScriptsmanager.FreeExternalScriptData(method2lt);
 end.

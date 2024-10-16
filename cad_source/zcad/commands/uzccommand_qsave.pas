@@ -29,7 +29,7 @@ uses
   uzeffmanager,
   uzccommand_DWGNew,
   uzccommandsimpl,uzccommandsabstract,
-  uzcsysvars,
+  uzcsysvars,uzcSysParams,
   uzcstrconsts,
   uzcdrawings,
   uzcinterface,
@@ -37,40 +37,42 @@ uses
 
 implementation
 
-function QSave_com(operands:TCommandOperands):TCommandResult;
-var s,s1:AnsiString;
-    itautoseve:boolean;
+function QSave_com(const Context:TZCADCommandContext;
+                   operands:TCommandOperands):TCommandResult;
+var
+  s,s1:ansistring;
+  itAutoSeve:boolean;
+  TempSavedParam:tsavedparams;
 begin
-  itautoseve:=false;
+  itAutoSeve:=False;
   if operands='QS' then begin
     s1:=ExpandPath(sysvar.SAVE.SAVE_Auto_FileName^);
-    s:=rsAutoSave+': '''+s1+'''';
+    s:=format(rsAutoSave,[s1]);
     ZCMsgCallBackInterface.TextMessage(s,TMWOHistoryOut);
-    itautoseve:=true;
+    itAutoSeve:=True;
   end else begin
     if extractfilepath(drawings.GetCurrentDWG.GetFileName)='' then begin
-      SaveAs_com(EmptyCommandOperands);
+      SaveAs_com(Context,EmptyCommandOperands);
       exit;
     end;
-      s1:=drawings.GetCurrentDWG.GetFileName;
+    s1:=drawings.GetCurrentDWG.GetFileName;
   end;
-    result:=SaveDXFDPAS(s1);
-    if (not itautoseve)and(result=cmd_ok) then
-      drawings.GetCurrentDWG.ChangeStampt(false);
-    SysVar.SAVE.SAVE_Auto_Current_Interval^:=SysVar.SAVE.SAVE_Auto_Interval^;
+
+  if itAutoSeve then begin
+    LoadParams(expandpath(ProgramPath+CParamsFile),TempSavedParam);
+    TempSavedParam.LastAutoSaveFile:=s1;
+    SysParam.saved.LastAutoSaveFile:=s1;
+    SaveParams(expandpath(ProgramPath+CParamsFile),TempSavedParam);
+  end;
+  Result:=SaveDXFDPAS(s1,not itAutoSeve);
+  if (not itAutoSeve)and(Result=cmd_ok) then
+    drawings.GetCurrentDWG.ChangeStampt(False);
+  SysVar.SAVE.SAVE_Auto_Current_Interval^:=SysVar.SAVE.SAVE_Auto_Interval^;
 end;
 
-procedure startup;
-begin
-  CreateCommandFastObjectPlugin(@QSave_com,'QSave',CADWG or CADWGChanged,0).CEndActionAttr:=[CEDWGNChanged];
-end;
-procedure finalize;
-begin
-end;
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-  startup;
+  CreateZCADCommand(@QSave_com,'QSave',CADWG or CADWGChanged,0).CEndActionAttr:=[CEDWGNChanged];
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
-  finalize;
 end.

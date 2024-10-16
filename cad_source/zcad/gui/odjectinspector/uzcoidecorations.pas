@@ -22,7 +22,7 @@ unit uzcoidecorations;
 interface
 
 uses
-  SysUtils,Graphics,LCLType,Themes,Forms,
+  SysUtils,Graphics,LCLType,Themes,Forms,ColorBox,
   zcobjectinspectorui,uzctypesdecorations,uzccommandsabstract,uzepalette,
   zcobjectinspectoreditors,UEnumDescriptor,zcobjectinspector,uzcinfoform,
   uzestyleslinetypes,uzctreenode,uzcfsnapeditor,
@@ -31,7 +31,7 @@ uses
   StdCtrls,uzcdrawings,uzcstrconsts,Controls,Classes,uzbstrproc,uzcsysvars,uzccommandsmanager,
   uzcsysparams,gzctnrVectorTypes,uzegeometrytypes,uzcinterface,uzcoimultiobjects,
   uzcgui2color,uzcgui2linewidth,uzcgui2linetypes,
-  uzccommand_layer,uzcuitypes,uzeNamedObject;
+  uzccommand_layer,uzcuitypes,uzeNamedObject,uzccommandsimpl,uzedimensionaltypes;
 type
     AsyncCommHelper=class
                          class procedure GetVertex(Pinstance:PtrInt);
@@ -63,9 +63,13 @@ function PaletteColorDecorator(PInstance:Pointer):String;
 begin
      result:=ColorIndex2Name(PTGDBPaletteColor(PInstance)^);
 end;
-procedure CreateComboPropEditor(TheOwner:TPropEditorOwner;pinstance:pointer;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor;out propeditor:TPropEditor; out cbedit:TComboBox);
+function ZColorDecorator(PInstance:Pointer):String;
 begin
-  propeditor:=TPropEditor.Create(theowner,PInstance,ptd^,FreeOnLostFocus);
+     result:=ColorToString(PColor(PInstance)^);
+end;
+procedure CreateComboPropEditor(TheOwner:TPropEditorOwner;pinstance:pointer;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor;out propeditor:TPropEditor; out cbedit:TComboBox;f:TzeUnitsFormat);
+begin
+  propeditor:=TPropEditor.Create(theowner,PInstance,ptd^,FreeOnLostFocus,f);
   propeditor.byObjects:=true;
   propeditor.changed:=false;
   cbedit:=TComboBox.Create(propeditor);
@@ -77,14 +81,29 @@ begin
   {$ENDIF}
 end;
 
-function NamedObjectsDecoratorCreateEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor;NO:PTGenericNamedObjectsArray):TEditorDesc;
+procedure CreateTColorPropEditor(TheOwner:TPropEditorOwner;pinstance:pointer;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor;out propeditor:TPropEditor; out cbedit:TColorBox;f:TzeUnitsFormat);
+begin
+  propeditor:=TPropEditor.Create(theowner,PInstance,ptd^,FreeOnLostFocus,f);
+  propeditor.byObjects:=true;
+  propeditor.changed:=false;
+  cbedit:=TColorBox.Create(propeditor);
+  cbedit.Text:=PTD.GetValueAsString(pinstance);
+  cbedit.OnChange:=propeditor.EditingProcess;
+  SetComboSize(TComboBox(cbedit),sysvar.INTF.INTF_DefaultControlHeight^-6,CBReadOnly);
+  {$IFNDEF DELPHI}
+  {cbedit.ReadOnly:=true;//now it deprecated, see in SetComboSize}
+  {$ENDIF}
+end;
+
+
+function NamedObjectsDecoratorCreateEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor;NO:PTGenericNamedObjectsArray;f:TzeUnitsFormat):TEditorDesc;
 var
     cbedit:TComboBox;
     ir:itrec;
     number:integer;
     p,pcurrent:PGDBLayerProp;
 begin
-     CreateComboPropEditor(TheOwner,pinstance,FreeOnLostFocus,PTD,result.editor,cbedit);
+     CreateComboPropEditor(TheOwner,pinstance,FreeOnLostFocus,PTD,result.editor,cbedit,f);
 
      pcurrent:=PGDBLayerProp(ppointer(pinstance)^);
 
@@ -99,7 +118,7 @@ begin
 
      result.mode:=TEM_Integrate;
 end;
-function LineWeightDecoratorCreateEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor):TEditorDesc;
+function LineWeightDecoratorCreateEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor;f:TzeUnitsFormat):TEditorDesc;
 var
     cbedit:TComboBox;
     i,seli:integer;
@@ -112,7 +131,7 @@ begin
 end;
 
 begin
-     CreateComboPropEditor(TheOwner,pinstance,FreeOnLostFocus,PTD,result.editor,cbedit);
+     CreateComboPropEditor(TheOwner,pinstance,FreeOnLostFocus,PTD,result.editor,cbedit,f);
      SetComboSize(cbedit,sysvar.INTF.INTF_DefaultControlHeight^-6,CBReadOnly);
      cbedit.Style:=csOwnerDrawFixed;
      cbedit.OnDrawItem:=TSupportLineWidthCombo.LineWBoxDrawItem;
@@ -130,27 +149,27 @@ begin
      cbedit.ItemIndex:=seli;
      result.mode:=TEM_Integrate;
 end;
-function LayersDecoratorCreateEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor):TEditorDesc;
+function LayersDecoratorCreateEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor;f:TzeUnitsFormat):TEditorDesc;
 begin
-     result:=NamedObjectsDecoratorCreateEditor(TheOwner,rect,pinstance,psa,FreeOnLostFocus,PTD,@drawings.GetCurrentDWG.LayerTable);
+     result:=NamedObjectsDecoratorCreateEditor(TheOwner,rect,pinstance,psa,FreeOnLostFocus,PTD,@drawings.GetCurrentDWG.LayerTable,f);
 end;
-function LTypeDecoratorCreateEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor):TEditorDesc;
+function LTypeDecoratorCreateEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor;f:TzeUnitsFormat):TEditorDesc;
 var
     cbedit:TComboBox;
 begin
-     result:=NamedObjectsDecoratorCreateEditor(TheOwner,rect,pinstance,psa,FreeOnLostFocus,PTD,@drawings.GetCurrentDWG.LTypeStyleTable);
+     result:=NamedObjectsDecoratorCreateEditor(TheOwner,rect,pinstance,psa,FreeOnLostFocus,PTD,@drawings.GetCurrentDWG.LTypeStyleTable,f);
      cbedit:=TComboBox(result.Editor.geteditor);
      SetComboSize(cbedit,sysvar.INTF.INTF_DefaultControlHeight^-6,CBReadOnly);
      cbedit.Style:=csOwnerDrawFixed;
      cbedit.OnDrawItem:=TSupportLineTypeCombo.LTypeBoxDrawItem;
 end;
-function TextStyleDecoratorCreateEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor):TEditorDesc;
+function TextStyleDecoratorCreateEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor;f:TzeUnitsFormat):TEditorDesc;
 begin
-     result:=NamedObjectsDecoratorCreateEditor(TheOwner,rect,pinstance,psa,FreeOnLostFocus,PTD,@drawings.GetCurrentDWG.TextStyleTable);
+     result:=NamedObjectsDecoratorCreateEditor(TheOwner,rect,pinstance,psa,FreeOnLostFocus,PTD,@drawings.GetCurrentDWG.TextStyleTable,f);
 end;
-function DimStyleDecoratorCreateEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor):TEditorDesc;
+function DimStyleDecoratorCreateEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor;f:TzeUnitsFormat):TEditorDesc;
 begin
-     result:=NamedObjectsDecoratorCreateEditor(TheOwner,rect,pinstance,psa,FreeOnLostFocus,PTD,@drawings.GetCurrentDWG.DimStyleTable);
+     result:=NamedObjectsDecoratorCreateEditor(TheOwner,rect,pinstance,psa,FreeOnLostFocus,PTD,@drawings.GetCurrentDWG.DimStyleTable,f);
 end;
 procedure _3SBooleanDrawFastEditor(canvas:TCanvas;r:trect;PInstance:Pointer;state:TFastEditorState;boundr:trect);
 var
@@ -216,7 +235,7 @@ end;
 
 procedure runlayerswnd(PInstance:Pointer);
 begin
-     layer_cmd(EmptyCommandOperands);
+     layer_cmd(TZCADCommandContext.CreateRec,EmptyCommandOperands);
 end;
 procedure runcolorswnd(PInstance:Pointer);
 var
@@ -257,7 +276,7 @@ begin
      index:=PTGDBPaletteColor(PInstance)^;
      DrawColor(Canvas,Index,ARect);
 end;
-function CreateEmptyEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor):TEditorDesc;
+function CreateEmptyEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor;f:TzeUnitsFormat):TEditorDesc;
 begin
      result.mode:=TEM_Nothing;
      result.Editor:=nil;
@@ -269,7 +288,7 @@ begin
   ZCMsgCallBackInterface.DOShowModal(SnapEditorForm);
   Freeandnil(SnapEditorForm);
 end;
-function ColorDecoratorCreateEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor):TEditorDesc;
+function ColorDecoratorCreateEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor;f:TzeUnitsFormat):TEditorDesc;
 var
     cbedit:TComboBox;
     i,seli:integer;
@@ -282,7 +301,7 @@ begin
 end;
 
 begin
-     CreateComboPropEditor(TheOwner,pinstance,FreeOnLostFocus,PTD,result.editor,cbedit);
+     CreateComboPropEditor(TheOwner,pinstance,FreeOnLostFocus,PTD,result.editor,cbedit,f);
      SetComboSize(cbedit,sysvar.INTF.INTF_DefaultControlHeight^-6,CBReadOnly);
      cbedit.Style:=csOwnerDrawFixed;
      cbedit.OnDrawItem:=TSupportColorCombo.ColorDrawItem;
@@ -305,6 +324,19 @@ begin
      cbedit.ItemIndex:=seli;
      result.mode:=TEM_Integrate;
 end;
+
+function ZColorDecoratorCreateEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor;f:TzeUnitsFormat):TEditorDesc;
+var
+  cbedit:TColorBox;
+begin
+  CreateTColorPropEditor(TheOwner,pinstance,FreeOnLostFocus,PTD,result.editor,cbedit,f);
+  SetComboSize(TComboBox(cbedit),sysvar.INTF.INTF_DefaultControlHeight^-6,CBReadOnly);
+  cbedit.Style:=cbedit.Style+[cbStandardColors,cbExtendedColors,cbSystemColors,cbIncludeDefault];
+  cbedit.Selected:=PColor(pinstance)^;
+  result.mode:=TEM_Integrate;
+end;
+
+
 procedure drawLTProp(canvas:TCanvas;ARect:TRect;PInstance:Pointer);
 var
    PLT:PGDBLtypeProp;
@@ -534,21 +566,24 @@ begin
      AddEditorToType(SysUnit.TypeName2PTD('GDBAngleDegDouble'),TBaseTypesEditors.BaseCreateEditor);
      AddEditorToType(SysUnit.TypeName2PTD('String'),TBaseTypesEditors.BaseCreateEditor);
      AddEditorToType(SysUnit.TypeName2PTD('AnsiString'),TBaseTypesEditors.BaseCreateEditor);
+     AddEditorToType(SysUnit.TypeName2PTD('AnsiString1251'),TBaseTypesEditors.BaseCreateEditor);
      AddEditorToType(SysUnit.TypeName2PTD('UnicodeString'),TBaseTypesEditors.BaseCreateEditor);
      AddEditorToType(SysUnit.TypeName2PTD('Single'),TBaseTypesEditors.BaseCreateEditor);
      AddEditorToType(SysUnit.TypeName2PTD('Pointer'),TBaseTypesEditors.BaseCreateEditor);
      AddEditorToType(SysUnit.TypeName2PTD('PtrUInt'),TBaseTypesEditors.BaseCreateEditor);
      AddEditorToType(SysUnit.TypeName2PTD('TEnumDataDescriptor'),TBaseTypesEditors.TEnumDataCreateEditor);
      EnumGlobalEditor:=TBaseTypesEditors.EnumDescriptorCreateEditor;
+     AddEditorToType(SysUnit.TypeName2PTD('TCalculatedStringDescriptor'),TBaseTypesEditors.BaseCreateEditor);
 
 
-     DecorateType(SysUnit.TypeName2PTD('TGDBLineWeight'),@LWDecorator,@LineWeightDecoratorCreateEditor,@drawLWProp);
-     DecorateType(SysUnit.TypeName2PTD('PGDBLayerPropObjInsp'),@NamedObjectsDecorator,@LayersDecoratorCreateEditor,nil);
-     DecorateType(SysUnit.TypeName2PTD('PGDBLtypePropObjInsp'),@NamedObjectsDecorator,@LTypeDecoratorCreateEditor,@drawLTProp);
-     DecorateType(SysUnit.TypeName2PTD('PGDBTextStyleObjInsp'),@NamedObjectsDecorator,@TextStyleDecoratorCreateEditor,nil);
-     DecorateType(SysUnit.TypeName2PTD('PGDBDimStyleObjInsp'),@NamedObjectsDecorator,@DimStyleDecoratorCreateEditor,nil);
-     DecorateType(SysUnit.TypeName2PTD('TGDBPaletteColor'),@PaletteColorDecorator,@ColorDecoratorCreateEditor,@drawIndexColorProp);
+     DecorateType(SysUnit.TypeName2PTD('TGDBLineWeight'),LWDecorator,LineWeightDecoratorCreateEditor,drawLWProp);
+     DecorateType(SysUnit.TypeName2PTD('PGDBLayerPropObjInsp'),NamedObjectsDecorator,LayersDecoratorCreateEditor,nil);
+     DecorateType(SysUnit.TypeName2PTD('PGDBLtypePropObjInsp'),NamedObjectsDecorator,LTypeDecoratorCreateEditor,drawLTProp);
+     DecorateType(SysUnit.TypeName2PTD('PGDBTextStyleObjInsp'),NamedObjectsDecorator,TextStyleDecoratorCreateEditor,nil);
+     DecorateType(SysUnit.TypeName2PTD('PGDBDimStyleObjInsp'),NamedObjectsDecorator,DimStyleDecoratorCreateEditor,nil);
+     DecorateType(SysUnit.TypeName2PTD('TGDBPaletteColor'),PaletteColorDecorator,ColorDecoratorCreateEditor,drawIndexColorProp);
      DecorateType(SysUnit.TypeName2PTD('TGDBOSMode'),nil,CreateEmptyEditor,nil);
+     DecorateType(SysUnit.TypeName2PTD('TZColor'),ZColorDecorator,ZColorDecoratorCreateEditor,{drawIndexColorProp}nil);
 
      AddFastEditorToType(SysUnit.TypeName2PTD('Integer'),@OIUI_FE_HalfButtonGetPrefferedSize,@OIUI_FE_ButtonGreatThatDraw,@OIUI_FE_IntegerInc);
      AddFastEditorToType(SysUnit.TypeName2PTD('Integer'),@OIUI_FE_HalfButtonGetPrefferedSize,@OIUI_FE_ButtonLessThatDraw,@OIUI_FE_IntegerDec);
@@ -582,5 +617,7 @@ begin
      AddFastEditorToType(SysUnit.TypeName2PTD('TMSEntsLinetypesDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonHLineDraw,@DeselectEntsByLinetype,true);
      AddFastEditorToType(SysUnit.TypeName2PTD('TMSEntsLinetypesDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonMultiplyDraw,@SelectOnlyThisEntsByLinetype,true);
 
+     AddFastEditorToType(SysUnit.TypeName2PTD('TMSEntsExtendersDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonHLineDraw,@DeselectEntsByExtender,true);
+     AddFastEditorToType(SysUnit.TypeName2PTD('TMSEntsExtendersDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonMultiplyDraw,@SelectOnlyThisEntsByExtender,true);
 end;
 end.

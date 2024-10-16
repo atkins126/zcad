@@ -17,6 +17,7 @@
 }
 
 unit UGDBControlPointArray;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 interface
 uses uzepalette,uzgldrawcontext,gzctnrVector,sysutils,uzbtypes,uzegeometry,
@@ -47,7 +48,7 @@ begin
   if count<>0 then
   begin
        point:=GetParrayAsPointer;
-       for i:=0 to count-1 do
+       for i:=count-1 downto 0 do
        begin
             if point^.selected then
                                    dc.drawer.SetColor(SelColor)
@@ -71,7 +72,7 @@ begin
   if count<>0 then
   begin
        point:=GetParrayAsPointer;
-       for i:=0 to count-1 do
+       for i:=count-1 downto 0 do
        begin
             if CPA_Strech in point^.attr then
             if (point^.dispcoord.x>=f1.x)
@@ -94,7 +95,7 @@ begin
   if count<>0 then
   begin
        point:=GetParrayAsPointer;
-       for i:=0 to count-1 do           { TODO 1 -ozamtmn -c1 : Переделать нахуй без GDB }
+       for i:=count-1 downto 0 do           { TODO 1 -ozamtmn -c1 : Переделать нахуй без GDB }
        begin
             //d := (vertexlen2id(GDB.GetCurrentDWG.OGLwindow1.param.md.mouse.x,GDB.GetCurrentDWG.OGLwindow1.param.height-GDB.GetCurrentDWG.OGLwindow1.param.md.mouse.y,point^.dispcoord.x,point^.dispcoord.y));
             d := (vertexlen2id(mx,my,point^.dispcoord.x,point^.dispcoord.y));
@@ -116,7 +117,7 @@ begin
   if count<>0 then
   begin
        point:=GetParrayAsPointer;
-       for i:=1 to count do
+       for i:=count-1 downto 0 do
        begin
             //if (GDB.GetCurrentDWG.OGLwindow1.param.md.mouseglue.x=point^.dispcoord.x)and
             //   (GDB.GetCurrentDWG.OGLwindow1.param.md.mouseglue.y=GDB.GetCurrentDWG.OGLwindow1.param.height-point^.dispcoord.y)

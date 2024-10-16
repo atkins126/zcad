@@ -116,6 +116,10 @@ GZVector{-}<T>{//}=object(TZAbsVector)
         procedure setData(index:TArrayIndex;const Value:T);
         {**Возвращает последнее значение}
         function getLast:T;
+        function getPLast:PT;
+        {**Возвращает ппервое значение}
+        function getFirst:T;
+        function getPFirst:PT;
         {**Добавить в конец массива значение, возвращает индекс добавленного значения}
         function PushBackData(const data:T):TArrayIndex;
         {**Добавить в конец массива значение если его еще нет в массиве, возвращает индекс найденного или добавленного значения}
@@ -132,7 +136,7 @@ GZVector{-}<T>{//}=object(TZAbsVector)
         function GetSpecializedTypeInfo:PTypeInfo;inline;
 
         {**Возвращает размер элемента массива}
-        function SizeOfData:TArrayIndex;
+        function SizeOfData:TArrayIndex; inline;
         {**Возвращает указатель на массив}
         function GetParray:pointer;virtual;
         {**Возвращает указатель на массив}
@@ -185,6 +189,10 @@ begin
   FreeMem(pblock);
 end;
 
+function GZVector<T>.SizeOfData:TArrayIndex;
+begin
+  result:=sizeof(T);
+end;
 function GZVector<T>.GetSpecializedTypeInfo:PTypeInfo;
 begin
   result:=TypeInfo(T);
@@ -225,7 +233,24 @@ function GZVector<T>.getLast;
 begin
   Result:=getData(count-1);
 end;
-
+function GZVector<T>.getPLast:T;
+begin
+  if count>0 then
+    Result:=@parray^[count-1]
+  else
+    Result:=nil;
+end;
+function GZVector<T>.getFirst;
+begin
+  Result:=getData(0);
+end;
+function GZVector<T>.getPFirst;
+begin
+  if count>0 then
+    Result:=PT(parray)
+  else
+    Result:=nil;
+end;
 function GZVector<T>.PushBackData(const data:T):TArrayIndex;
 begin
   if parray=nil then
@@ -407,32 +432,28 @@ end;
 
 function GZVector<T>.SetCount;
 begin
-     count:=index;
-     if parray=nil then
-                        createarray;
-     if count>=max then
-                       begin
-                            if count>2*max then
-                                               SetSize(2*count)
-                                           else
-                                               SetSize(2*max);
-                       end;
-     result:=parray;
+  count:=index;
+  if count>max then
+    SetSize(count);
+  if parray=nil then
+    createarray;
+  result:=parray;
 end;
+
 procedure GZVector<T>.SetSize;
 begin
-     if nsize>max then
-                      begin
-                           parray := enlargememblock(parray, SizeOfData*max, SizeOfData*nsize);
-                      end
-else if nsize<max then
-                      begin
-                           parray := enlargememblock(parray, SizeOfData*max, SizeOfData*nsize);
-                           if count>nsize then count:=nsize;
-                      end;
-     if nsize<>0 then
-       max:=nsize;
+  if parray<>nil then begin
+    if nsize>max then
+      parray := enlargememblock(parray, SizeOfData*max, SizeOfData*nsize)
+    else if nsize<max then begin
+      parray := enlargememblock(parray, SizeOfData*max, SizeOfData*nsize);
+      if count>nsize then count:=nsize;
+    end;
+  end;
+  if nsize<>0 then
+    max:=nsize;
 end;
+
 function GZVector<T>.beginiterate;
 begin
   if parray=nil then
@@ -491,16 +512,14 @@ begin
                              PArray^[i]:=default(t);
   count:=0;
 end;
-function GZVector<T>.SizeOfData:TArrayIndex;
-begin
-  result:=sizeof(T);
-end;
 procedure GZVector<T>.clear;
 begin
   count:=0;
 end;
 function GZVector<T>.CreateArray;
 begin
+  if max=0 then
+    max:=4;
   Getmem(PArray,SizeOfData*max);
   result:=parray;
 end;

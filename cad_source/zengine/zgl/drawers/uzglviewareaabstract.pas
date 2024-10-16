@@ -20,7 +20,7 @@ unit uzglviewareaabstract;
 {$INCLUDE zengineconfig.inc}
 interface
 uses
-     UGDBOpenArrayOfPV,uzgldrawerabstract,uzeentgenericsubentry,uzbtypes,
+     UGDBOpenArrayOfPV,uzgldrawerabstract,uzeentgenericsubentry,//uzbtypes,
      uzglviewareadata,uzgldrawcontext,UGDBPoint3DArray,uzeentitiestree,uzegeometry,uzedrawingabstract,
      uzegeometrytypes,sysutils,
      ExtCtrls,Controls,Classes,{$IFDEF DELPHI}Types,Messages,Graphics,{$ENDIF}{$IFNDEF DELPHI}LCLType,{$ENDIF}Forms,uzeentity;
@@ -63,8 +63,6 @@ type
                            Drawer:TZGLAbstractDrawer;
                            param: OGLWndtype;
                            PolarAxis:GDBPoint3dArray;
-                           OTTimer:TTimer;
-                           OHTimer:TTimer;
                            PDWG:PTAbstractDrawing;
                            onCameraChanged:TCameraChangedNotify;
                            ShowCXMenu:procedure of object;
@@ -105,7 +103,7 @@ type
                            procedure RestoreMouse;virtual;abstract;
                            procedure myKeyPress(var Key: Word; Shift: TShiftState);virtual;abstract;
                            procedure finishdraw(var RC:TDrawContext);virtual;abstract;
-                            procedure SetCameraPosZoom(_pos:gdbvertex;_zoom:Double;finalcalk:Boolean);virtual;abstract;
+                            procedure SetCameraPosZoom(const _pos:gdbvertex;_zoom:Double;finalcalk:Boolean);virtual;abstract;
 
                            procedure showmousecursor;virtual;abstract;
                            procedure hidemousecursor;virtual;abstract;
@@ -116,9 +114,6 @@ type
                            procedure mouseunproject(X, Y: integer);virtual;abstract;
                            procedure CalcMouseFrustum;virtual;abstract;
                            procedure ClearOntrackpoint;virtual;abstract;
-                           procedure ProcOTrackTimer(Sender:TObject);virtual;abstract;
-                           procedure KillOTrackTimer(Sender: TObject);virtual;abstract;
-                           procedure SetOTrackTimer(Sender: TObject);virtual;abstract;
                            procedure KillOHintTimer(Sender: TObject);virtual;abstract;
                            procedure SetOHintTimer(Sender: TObject);virtual;abstract;
                            procedure getonmouseobjectbytree(var Node:TEntTreeNode;InSubEntry:Boolean);virtual;abstract;
@@ -140,8 +135,8 @@ type
                            procedure DrawGrid(var DC:TDrawContext); virtual;abstract;
                            procedure showcursor(var DC:TDrawContext); virtual;abstract;
                            procedure render(const Root:GDBObjGenericSubEntry;var DC:TDrawContext); virtual;abstract;
-                           function treerender(var Node:TEntTreeNode;StartTime:TDateTime;var DC:TDrawContext):Boolean;virtual;abstract;
-                           procedure partailtreerender(var Node:TEntTreeNode;const part:TBoundingBox; var DC:TDrawContext);virtual;abstract;
+                           function treerender(var Node:TEntTreeNode;StartTime:TDateTime;var DC:TDrawContext;LODDeep:integer=0):Boolean;virtual;abstract;
+                           procedure partailtreerender(var Node:TEntTreeNode;const part:TBoundingBox; var DC:TDrawContext;LODDeep:integer=0);virtual;abstract;
                            function startpaint:boolean;virtual;abstract;
                            procedure endpaint;virtual;abstract;
                            procedure asyncupdatemouse(Data: PtrInt);virtual;abstract;
@@ -154,10 +149,8 @@ type
                            procedure asynczoomsel(Data: PtrInt); virtual;abstract;
                            procedure asynczoomall(Data: PtrInt); virtual;abstract;
                       end;
-var
-   otracktimer: Integer;
 procedure copyospoint(var dest:os_record; source:os_record);
-function correcttogrid(point:GDBVertex;const grid:GDBSnap2D):GDBVertex;
+function correcttogrid(const point:GDBVertex;const grid:GDBSnap2D):GDBVertex;
 function CreateFaceRC:TDrawContext;
 implementation
 function CreateFaceRC:TDrawContext;
@@ -169,6 +162,7 @@ begin
   result.DrawingContext.DRAWCOUNT:=-1;
   result.DrawingContext.SysLayer:=nil;
   result.MaxDetail:=false;
+  result.LOD:=LODCalculatedDetail;
   result.DrawMode:=true;
   result.OwnerLineWeight:=-3;
   result.OwnerColor:=7;
@@ -196,7 +190,7 @@ begin
                                inherited;
 end;
 {$ENDIF}
-function correcttogrid(point:GDBVertex;const grid:GDBSnap2D):GDBVertex;
+function correcttogrid(const point:GDBVertex;const grid:GDBSnap2D):GDBVertex;
 begin
   result.x:=round((point.x-grid.Base.x)/grid.Spacing.x)*grid.Spacing.x+grid.Base.x;
   result.y:=round((point.y-grid.Base.y)/grid.Spacing.y)*grid.Spacing.y+grid.Base.y;

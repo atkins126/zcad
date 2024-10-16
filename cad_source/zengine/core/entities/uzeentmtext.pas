@@ -17,6 +17,7 @@
 }
 
 unit uzeentmtext;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 
 interface
@@ -25,25 +26,22 @@ uses
     uzbstrproc,uzefont,uzeentabstracttext,UGDBPoint3DArray,uzestyleslayers,SysUtils,
     uzeentity,UGDBOutbound2DIArray,uzctnrVectorBytes,
     uzbtypes,uzeenttext,uzeconsts,uzegeometry,uzeffdxfsupport,math,uzeentsubordinated,
-    gzctnrVectorTypes,uzegeometrytypes,uzestylestexts,StrUtils,gzctnrVector;
+    gzctnrVectorTypes,uzegeometrytypes,uzestylestexts,StrUtils,gzctnrVector,uzMVReader;
 const maxdxfmtextlen=250;
 type
-//procedure CalcObjMatrix;virtual;
-{Export+}
+
 PGDBXYZWStringArray=^XYZWStringArray;
-{REGISTEROBJECTTYPE XYZWStringArray}
-XYZWStringArray=object(GZVector{-}<GDBStrWithPoint>{//})
+XYZWStringArray=object(GZVector<GDBStrWithPoint>)
                 end;
 PGDBObjMText=^GDBObjMText;
-{REGISTEROBJECTTYPE GDBObjMText}
 GDBObjMText= object(GDBObjText)
-                 width:Double;(*saved_to_shd*)
-                 linespace:Double;(*saved_to_shd*)(*oi_readonly*)
-                 linespacef:Double;(*saved_to_shd*)
+                 width:Double;
+                 linespace:Double;
+                 linespacef:Double;
                  text:XYZWStringArray;(*oi_readonly*)(*hidden_in_objinsp*)
                  constructor init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt;c:TDXFEntsInternalStringType;p:GDBvertex;s,o,w,a:Double;j:TTextJustify;wi,l:Double);
                  constructor initnul(owner:PGDBObjGenericWithSubordinated);
-                 procedure LoadFromDXF(var f: TZctnrVectorBytes;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
+                 procedure LoadFromDXF(var f:TZMemReader;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
                  procedure SaveToDXF(var outhandle:{Integer}TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
                  procedure CalcGabarit(const drawing:TDrawingDef);virtual;
                  //procedure getoutbound;virtual;
@@ -60,8 +58,8 @@ GDBObjMText= object(GDBObjText)
                  function CreateInstance:PGDBObjMText;static;
                  function GetObjType:TObjID;virtual;
             end;
-{Export-}
-procedure FormatMtext(pfont:pgdbfont;width,size,wfactor:Double;content:TDXFEntsInternalStringType;var text:XYZWStringArray);
+
+procedure FormatMtext(pfont:pgdbfont;width,size,wfactor:Double;const content:TDXFEntsInternalStringType;var text:XYZWStringArray);
 function GetLinesH(linespace,size:Double;var lines:XYZWStringArray):Double;
 function GetLinesW(var lines:XYZWStringArray):Double;
 function GetLineSpaceFromLineSpaceF(linespacef,size:Double):Double;
@@ -154,7 +152,7 @@ begin
                else
                    result:=0;
 end;
-procedure FormatMtext(pfont:pgdbfont;width,size,wfactor:Double;content:TDXFEntsInternalStringType;var text:XYZWStringArray);
+procedure FormatMtext(pfont:pgdbfont;width,size,wfactor:Double;const content:TDXFEntsInternalStringType;var text:XYZWStringArray);
 var
   canbreak: Boolean;
   currsymbol, lastbreak, lastcanbreak: Integer;
@@ -186,7 +184,7 @@ begin
   if content<>'' then
   begin
   repeat
-    sym:=getsymbol_fromGDBText(content,currsymbol,l,pgdbfont(pfont)^.font.unicode);
+    sym:=getsymbol_fromGDBText(content,currsymbol,l,pgdbfont(pfont)^.font.IsUnicode);
     psyminfo:=pgdbfont(pfont)^.GetOrReplaceSymbolInfo({ach2uch(integer(content[currsymbol]))}sym{//-ttf-//,tdinfo});
     if newline then
                    begin
@@ -303,9 +301,9 @@ procedure setstartx;
 begin
      if length(pswp.str)>0 then
                                begin
-                                 if pswp.str[1]=' ' then
-                                                         l:=l;
-                               sym:=getsymbol_fromGDBText(pswp.str,1,l,pgdbfont(pfont)^.font.unicode);
+                                 //if pswp.str[1]=' ' then
+                                 //                        l:=l;
+                               sym:=getsymbol_fromGDBText(pswp.str,1,l,pgdbfont(pfont)^.font.IsUnicode);
                                psyminfo:=pgdbfont(pfont)^.GetOrReplaceSymbolInfo(sym{//-ttf-//,tdinfo});
                                pswp^.x:= 0-psyminfo.SymMinX{*textprop.size};
                                end
@@ -316,6 +314,8 @@ begin
   textprop.wfactor:=PGDBTextStyle((TXTStyleIndex))^.prop.wfactor;
   textprop.oblique:=PGDBTextStyle((TXTStyleIndex))^.prop.oblique;
   pfont:=TXTStyleIndex^.pfont;
+  if pfont=nil then
+    exit;
   TCP:=CodePage;
   CodePage:=CP_win;
   if template='' then
@@ -722,7 +722,7 @@ begin
   while i<=length(pswp^.str) do
   begin
     m1:=matr;
-    sym:=getsymbol_fromGDBText(pswp^.str{[i]},i,l,pgdbfont(pfont)^.font.unicode);
+    sym:=getsymbol_fromGDBText(pswp^.str{[i]},i,l,pgdbfont(pfont)^.font.IsUnicode);
     if {pswp^.str[i]}sym={#}1 then
     begin
          ispl:=not(ispl);
@@ -924,7 +924,7 @@ begin
   style:='';
   ttemplate:='';
   j:=0;
-  byt:=readmystrtoint(f);
+  byt:=f.ParseInteger;
   while byt <> 0 do
   begin
     if not LoadFromDXFObjShared(f,byt,ptu,drawing) then
@@ -945,8 +945,8 @@ begin
                                                  if TXTStyleIndex=nil then
                                                                      TXTStyleIndex:=pointer(drawing.GetTextStyleTable^.getDataMutable(0));
                                                  end
-    else {s := }f.readString;
-    byt:=readmystrtoint(f);
+    else {s := }f.SkipString;
+    byt:=f.ParseInteger;
   end;
   if TXTStyleIndex=nil then
                            begin
@@ -971,21 +971,16 @@ begin
   //format;
 end;
 function z2dxfmtext(s:String;var ul:boolean):String;
-var i:Integer;
+var count:Integer;
 begin
-     result:=s;
-     repeat
-          i:=pos(#1,result);
-          if i>0 then
-                     begin
-                          if not(ul) then
-                                         result:=copy(result,1,i-1)+'\L'+copy(result,i+1,length(result)-i)
-                                     else
-                                         result:=copy(result,1,i-1)+'\l'+copy(result,i+1,length(result)-i);
-
-                          ul:=not(ul);
-                     end;
-     until i<=0;
+    result:=s;
+    repeat
+        if not(ul) then
+                       result:=StringReplace(result,#1,'\L',[],count)
+                   else
+                       result:=StringReplace(result,#1,'\l',[],count);
+        ul:=not(ul);
+    until count=0;
 end;
 procedure GDBObjMText.SaveToDXF(var outhandle:{Integer}TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);
 var
@@ -1003,9 +998,10 @@ begin
   dxfIntegerout(outhandle,71,j2b[textprop.justify]{ord(textprop.justify)+1});
   quotedcontent:=StringReplace(content,TDXFEntsInternalStringType(#10),TDXFEntsInternalStringType('\P'),[rfReplaceAll]);
   if  convertfromunicode(template)=quotedcontent then
-                                               s := Tria_Utf8ToAnsi(UTF8Encode(template))
-                                           else
-                                               s := Tria_Utf8ToAnsi(UTF8Encode(quotedcontent));
+    s := Tria_Utf8ToAnsi(UTF8Encode(template))
+  else
+    s := Tria_Utf8ToAnsi(UTF8Encode(quotedcontent));
+  s:=StringReplace(s,#10,'\P',[rfReplaceAll]);
   //s := content;
   if length(s) < maxdxfmtextlen then
   begin

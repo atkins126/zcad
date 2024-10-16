@@ -17,6 +17,7 @@
 }
 
 unit uzeenttext;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 
 interface
@@ -25,21 +26,19 @@ uses
     uzedrawingdef,uzecamera,uzbstrproc,sysutils,uzefont,uzestyleslayers,
     uzeentabstracttext,uzeentity,UGDBOutbound2DIArray,uzctnrVectorBytes,uzbtypes,
     uzeconsts,uzglviewareadata,uzegeometry,uzeffdxfsupport,uzeentsubordinated,LazLogger,
-    uzegeometrytypes,uzestylestexts,uzeSnap;
+    uzegeometrytypes,uzestylestexts,uzeSnap,uzMVReader;
 type
-{Export+}
 PGDBObjText=^GDBObjText;
-{REGISTEROBJECTTYPE GDBObjText}
 GDBObjText= object(GDBObjAbstractText)
                  Content:TDXFEntsInternalStringType;
-                 Template:TDXFEntsInternalStringType;(*saved_to_shd*)
-                 TXTStyleIndex:{-}PGDBTextStyle{/PGDBTextStyleObjInsp/};(*saved_to_shd*)(*'Style'*)
-                 obj_height:Double;(*oi_readonly*)(*hidden_in_objinsp*)
-                 obj_width:Double;(*oi_readonly*)(*hidden_in_objinsp*)
-                 obj_y:Double;(*oi_readonly*)(*hidden_in_objinsp*)
+                 Template:TDXFEntsInternalStringType;
+                 TXTStyleIndex:PGDBTextStyle;
+                 obj_height:Double;
+                 obj_width:Double;
+                 obj_y:Double;
                  constructor init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt;c:TDXFEntsInternalStringType;p:GDBvertex;s,o,w,a:Double;j:TTextJustify);
                  constructor initnul(owner:PGDBObjGenericWithSubordinated);
-                 procedure LoadFromDXF(var f: TZctnrVectorBytes;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
+                 procedure LoadFromDXF(var f:TZMemReader;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
                  procedure SaveToDXF(var outhandle:{Integer}TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
                  procedure CalcGabarit(const drawing:TDrawingDef);virtual;
                  procedure getoutbound(var DC:TDrawContext);virtual;
@@ -56,13 +55,12 @@ GDBObjText= object(GDBObjAbstractText)
                  procedure rtsave(refp:Pointer);virtual;
                  function IsHaveObjXData:Boolean;virtual;
                  procedure SaveToDXFObjXData(var outhandle:{Integer}TZctnrVectorBytes;var IODXFContext:TIODXFContext);virtual;
-                 function ProcessFromDXFObjXData(_Name,_Value:String;ptu:PExtensionData;const drawing:TDrawingDef):Boolean;virtual;
+                 function ProcessFromDXFObjXData(const _Name,_Value:String;ptu:PExtensionData;const drawing:TDrawingDef):Boolean;virtual;
                  class function GetDXFIOFeatures:TDXFEntIODataManager;static;
 
                  function CreateInstance:PGDBObjText;static;
                  function GetObjType:TObjID;virtual;
            end;
-{Export-}
 var
 jt: array[0..3, 0..4] of TTextJustify = ((jsbl, jsbc, jsbr, jsbl, jsmc), (jsbtl, jsbtc, jsbtr, jsbl, jsbl), (jsml, jsmc, jsmr, jsbl, jsbl), (jstl, jstc, jstr, jsbl, jsbl));
 j2b: array[TTextJustify] of byte=(1,2,3,4,5,6,7,8,9,10,11,12);
@@ -243,7 +241,7 @@ begin
    while i<=length(content) do
   //for i:=1 to length(content) do
   begin
-    sym:=getsymbol_fromGDBText(content,i,l,PGDBTextStyle({gdb.GetCurrentDWG}(TXTStyleIndex))^.pfont^.font.unicode);
+    sym:=getsymbol_fromGDBText(content,i,l,PGDBTextStyle({gdb.GetCurrentDWG}(TXTStyleIndex))^.pfont^.font.IsUnicode);
     //psyminfo:=PGDBTextStyle(gdb.GetCurrentDWG.TextStyleTable.getDataMutable(TXTStyleIndex))^.pfont^.GetOrReplaceSymbolInfo(ach2uch(Byte(content[i])));
     psyminfo:=PGDBTextStyle({gdb.GetCurrentDWG}(TXTStyleIndex))^.pfont^.GetOrReplaceSymbolInfo(sym{//-ttf-//,tdinfo});
     obj_width:=obj_width+psyminfo.NextSymX;
@@ -589,14 +587,13 @@ end;
 function z2dxftext(s:String):String;
 var i:Integer;
 begin
-     result:=s;
-     repeat
-          i:=pos(#1,result);
-          if i>0 then
-                     begin
-                          result:=copy(result,1,i-1)+'%%U'+copy(result,i+1,length(result)-i);
-                     end;
-     until i<=0;
+  result:=StringReplace(s,#10,'\P',[rfReplaceAll]);
+  repeat
+    i:=pos(#1,result);
+    if i>0 then begin
+      result:=copy(result,1,i-1)+'%%U'+copy(result,i+1,length(result)-i);
+    end;
+  until i<=0;
 end;
 procedure GDBObjText.SaveToDXF(var outhandle:{Integer}TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);
 var
@@ -659,7 +656,7 @@ begin
   //initnul;
   vv := 0;
   gv := 0;
-  byt:=readmystrtoint(f);
+  byt:=f.ParseInteger;
   angleload:=false;
   doublepoint:=false;
   style:='';
@@ -691,8 +688,8 @@ else if not dxfIntegerload(f,72,byt,gv)then
      if not dxfIntegerload(f,73,byt,vv)then
      if not dxfIntegerload(f,71,byt,textbackward)then
      if not dxfStringload(f,1,byt,tcontent)then
-                                               {s := }f.readString;
-    byt:=readmystrtoint(f);
+                                               {s := }f.SkipString;
+    byt:=f.ParseInteger;
   end;
   if (textbackward and 4)<>0 then
                                  textprop.upsidedown:=true

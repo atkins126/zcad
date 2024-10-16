@@ -21,31 +21,33 @@ unit uzccommand_selectframe;
 
 interface
 uses
- uzglviewareageneral,
- uzgldrawcontext,
- uzccommandsmanager,
- uzcstrconsts,
+  SysUtils,
+  uzglviewareageneral,
+  uzgldrawcontext,
+  uzccommandsmanager,
+  uzcstrconsts,
   uzccommandsabstract,
   uzccommandsimpl,
   uzbtypes,
-  uzcdrawings,
+  uzcdrawings,uzedrawingsimple,
   uzglviewareadata,
   uzcinterface,
   uzeconsts,
   uzeentity,
- uzclog,
- uzegeometrytypes,
- gzctnrVectorTypes,uzegeometry;
+  uzclog,
+  uzegeometrytypes,
+  uzCtnrVectorPBaseEntity,
+  gzctnrVectorTypes,uzegeometry;
 var
   selframecommand:PCommandObjectDef;
 
-procedure FrameEdit_com_CommandStart(Operands:pansichar);
+procedure FrameEdit_com_CommandStart(const Context:TZCADCommandContext;Operands:pansichar);
 procedure FrameEdit_com_Command_End;
-function FrameEdit_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
-function FrameEdit_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
+function FrameEdit_com_BeforeClick(const Context:TZCADCommandContext;wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
+function FrameEdit_com_AfterClick(const Context:TZCADCommandContext;wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
 
 implementation
-procedure FrameEdit_com_CommandStart(Operands:pansichar);
+procedure FrameEdit_com_CommandStart(const Context:TZCADCommandContext;Operands:pansichar);
 begin
   drawings.GetCurrentDWG.wa.SetMouseMode((MGet3DPointWOOP) or (MMoveCamera));
   ZCMsgCallBackInterface.TextMessage(rscmFirstPoint,TMWOHistoryOut);
@@ -55,7 +57,7 @@ begin
   drawings.GetCurrentDWG.wa.param.seldesc.MouseFrameON := false;
 end;
 
-function FrameEdit_com_BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
+function FrameEdit_com_BeforeClick(const Context:TZCADCommandContext;wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
 begin
   result:=0;
   if (button and MZW_LBUTTON)<>0 then
@@ -68,7 +70,7 @@ begin
     drawings.GetCurrentDWG.wa.param.seldesc.Frame23d := wc;
   end
 end;
-function FrameEdit_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
+function FrameEdit_com_AfterClick(const Context:TZCADCommandContext;wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): Integer;
 var
   ti: Integer;
   x,y,w,h:Double;
@@ -78,6 +80,10 @@ var
   DC:TDrawContext;
   glmcoord1:gdbpiece;
   OnlyOnScreenSelect:boolean;
+  Ents:TZctnrVectorPGDBaseEntity;
+  oldSelCount:integer;
+  TrueSel:Boolean;
+  SelProc:TSimpleDrawing.TSelector;
 begin
   result:=mclick;
   OnlyOnScreenSelect:=(button and MZW_CONTROL)=0;
@@ -147,6 +153,8 @@ begin
 
       drawings.GetCurrentDWG.wa.param.seldesc.BigMouseFrustum:=CalcDisplaySubFrustum(x,y,w,h,drawings.getcurrentdwg.pcamera.modelMatrix,drawings.getcurrentdwg.pcamera.projMatrix,drawings.getcurrentdwg.pcamera.viewport);
 
+      Ents.init(25000);
+
       pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
       if pv<>nil then
       repeat
@@ -160,30 +168,55 @@ begin
                         begin
                              if r<>IREmpty then
                                                begin
-                                               pv^.RenderFeedbackIFNeed(drawings.GetCurrentDWG.pcamera^.POSCOUNT,drawings.GetCurrentDWG.pcamera^,drawings.GetCurrentDWG^.myGluProject2,dc);
-                                               if (button and MZW_SHIFT)=0 then
-                                                                               pv^.select(drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount,drawings.CurrentDWG^.selector)
-                                                                           else
-                                                                               pv^.deselect(drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount,drawings.CurrentDWG^.deselector);
-                                               drawings.GetCurrentDWG.wa.param.SelDesc.LastSelectedObject:=pv;
+                                                 Ents.PushBackData(pv);
+                                                 pv^.RenderFeedbackIFNeed(drawings.GetCurrentDWG.pcamera^.POSCOUNT,drawings.GetCurrentDWG.pcamera^,drawings.GetCurrentDWG^.myGluProject2,dc);
+                                                 drawings.GetCurrentDWG.wa.param.SelDesc.LastSelectedObject:=pv;
                                                end;
                         end
                     else
                         begin
                              if r=IRFully then
                                               begin
-                                               pv^.RenderFeedbackIFNeed(drawings.GetCurrentDWG.pcamera^.POSCOUNT,drawings.GetCurrentDWG.pcamera^,drawings.GetCurrentDWG^.myGluProject2,dc);
-                                               if (button and MZW_SHIFT)=0 then
-                                                                               pv^.select(drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount,drawings.CurrentDWG^.selector)
-                                                                           else
-                                                                               pv^.deselect(drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount,drawings.CurrentDWG^.deselector);
-                                               drawings.GetCurrentDWG.wa.param.SelDesc.LastSelectedObject:=pv;
+                                                Ents.PushBackData(pv);
+                                                pv^.RenderFeedbackIFNeed(drawings.GetCurrentDWG.pcamera^.POSCOUNT,drawings.GetCurrentDWG.pcamera^,drawings.GetCurrentDWG^.myGluProject2,dc);
+                                                drawings.GetCurrentDWG.wa.param.SelDesc.LastSelectedObject:=pv;
                                               end;
                         end
             end;
 
             pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
       until pv=nil;
+
+      TrueSel:=Ents.Count<=sysvarDSGNMaxSelectEntsCountWithGrips;
+
+      if TrueSel then
+        SelProc:=drawings.CurrentDWG^.Selector
+      else
+        SelProc:=drawings.CurrentDWG^.SelectorWOGrips;
+
+      oldSelCount:=drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount;
+
+      pv:=Ents.beginiterate(ir);
+      if pv<>nil then
+        repeat
+          if (button and MZW_SHIFT)=0 then begin
+            pv^.select(drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount,SelProc)
+            {if TrueSel then
+              pv^.select(drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount,drawings.CurrentDWG^.SelectorWOGrips())
+            else
+              pv^.SelectQuik;}
+          end else
+            pv^.deselect(drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount,drawings.CurrentDWG^.deselector);
+          pv:=Ents.iterate(ir);
+        until pv=nil;
+
+      if (button and MZW_SHIFT)=0 then
+        ZCMsgCallBackInterface.TextMessage(format(rscmNEntitiesSelected,[drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount-oldSelCount]),TMWOHistoryOut)
+      else
+        ZCMsgCallBackInterface.TextMessage(format(rscmNEntitiesDeSelected,[oldSelCount-drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount]),TMWOHistoryOut);
+
+      Ents.Clear;
+      Ents.done;
 
       {if drawings.GetCurrentDWG.ObjRoot.ObjArray.count = 0 then exit;
       ti:=0;
@@ -223,17 +256,12 @@ begin
     end
   end;
 end;
-procedure startup;
-//var
-   //pmenuitem:pzmenuitem;
-begin
+
+initialization
+  programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
   selframecommand:=CreateCommandRTEdObjectPlugin(@FrameEdit_com_CommandStart,@FrameEdit_com_Command_End,nil,nil,@FrameEdit_com_BeforeClick,@FrameEdit_com_AfterClick,nil,nil,'SelectFrame',0,0);
   selframecommand^.overlay:=true;
   selframecommand.CEndActionAttr:=[];
-end;
-initialization
-  programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-  startup;
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
 end.

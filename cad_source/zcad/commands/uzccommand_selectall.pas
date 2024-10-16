@@ -26,21 +26,25 @@ uses
   uzccommandsabstract,uzccommandsimpl,
   uzeentity,
   uzcdrawings,
-  uzcinterface,
-  gzctnrVectorTypes;
+  uzcinterface{,
+  gzctnrVectorTypes};
+
+implementation
 
 var
   selall:pCommandFastObjectPlugin;
 
-implementation
-
-function SelectAll_com(operands:TCommandOperands):TCommandResult;
-var
+function SelectAll_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
+{var
     pv:pGDBObjEntity;
     ir:itrec;
-    count:integer;
+    count:integer;}
 begin
-  if drawings.GetCurrentROOT.ObjArray.Count = 0 then exit;
+
+  drawings.GetCurrentDWG.DeSelectAll;
+  drawings.GetCurrentDWG.SelectEnts(drawings.GetCurrentROOT.ObjArray);
+
+  {if drawings.GetCurrentROOT.ObjArray.Count = 0 then exit;
   drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount:=0;
 
   count:=0;
@@ -62,7 +66,7 @@ begin
       pv^.select(drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount,drawings.CurrentDWG^.selector);
 
   pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
-  until pv=nil;
+  until pv=nil;}
 
   ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIActionRedraw);
   //if assigned(updatevisibleproc) then updatevisibleproc(ZMsgID_GUIActionRedraw);
@@ -71,9 +75,9 @@ end;
 
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-  selall:=CreateCommandFastObjectPlugin(@SelectAll_com,'SelectAll',CADWG,0);
+  selall:=CreateZCADCommand(@SelectAll_com,'SelectAll',CADWG,0);
   selall^.overlay:=true;
-  selall.CEndActionAttr:=[];
+  selall^.CEndActionAttr:=[];
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
 end.

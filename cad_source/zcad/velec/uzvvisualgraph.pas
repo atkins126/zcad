@@ -100,7 +100,7 @@ uses
 
   //для работы графа
   //ExtType,
-  uzgldrawcontext,
+  //uzgldrawcontext,
   uzeroot,
   Pointerv,
   Graphs,
@@ -116,7 +116,8 @@ uses
   uzvcom,
    uzvconsts,
   uzvtmasterdev,
-  uzvtestdraw;
+  uzvtestdraw,
+  math;
 
 
 type
@@ -141,7 +142,7 @@ const
   size=5;
   indent=30;
 type
-    PTInfoVertex=^TInfoVertex;
+    //PTInfoVertex=^TInfoVertex;
     TInfoVertex=record
         num,kol,childs:Integer;
         poz:GDBVertex2D;
@@ -223,9 +224,7 @@ type
           pmtext^.vp.LineWeight:=LnWt100;
           pmtext^.linespacef:=1;
           //pmtext^.textprop.aaaangle:=rotate;
-          rotate:=(rotate*pi)/180;
-          pmtext^.Local.basis.ox.x:=cos(rotate);
-          pmtext^.Local.basis.ox.y:=sin(rotate);
+          SinCos(rotate*pi/180,pmtext^.Local.basis.ox.y,pmtext^.Local.basis.ox.x);
 
           //pmtext^.vp.LineTypeScale:=1;
           pmtext^.vp.Color:=color;
@@ -594,7 +593,7 @@ const
   size=5;
   indent=30;
 type
-   PTInfoVertex=^TInfoVertex;
+   //PTInfoVertex=^TInfoVertex;
    TInfoVertex=record
        num,kol,childs:Integer;
        poz:GDBVertex2D;
@@ -607,14 +606,14 @@ var
   //ptext:PGDBObjText;
   //indent,size:double;
   x,y,i,tParent:integer;
-  iNum:integer;
+  //iNum:integer;
   listVertex:TListVertex;
   infoVertex:TInfoVertex;
-  pt1,pt2,pt3,ptext,ptSt,ptEd:GDBVertex;
+  pt1,pt2{,pt3,ptext},ptSt,ptEd:GDBVertex;
   VertexPath: TClassList;
-  pv:pGDBObjDevice;
-  ppvvarext,pvarv:TVariablesExtender;
-  pvmc,pvv:pvardesk;
+  //pv:pGDBObjDevice;
+  //ppvvarext,pvarv:TVariablesExtender;
+  //pvmc,pvv:pvardesk;
 
   function howParent(listVertex:TListVertex;ch:integer):integer;
   var
@@ -633,9 +632,9 @@ var
   var
       datname:String;
       pv:pGDBObjDevice;
-      DC:TDrawContext;
-      lx,{rx,}uy,dy:Double;
-        c:integer;
+      //DC:TDrawContext;
+      //lx,{rx,}uy,dy:Double;
+        //c:integer;
         pCentralVarext,pVarext:TVariablesExtender;
   begin
       //addBlockonDraw(velec_beforeNameGlobalSchemaBlock + string(TVertexTree(G.Root.AsPointer[vpTVertexTree]^).dev^.Name),pt1,drawings.GetCurrentDWG^.mainObjRoot);
@@ -669,10 +668,10 @@ var
   var
       datname:String;
       pv:pGDBObjDevice;
-      DC:TDrawContext;
-      lx,{rx,}uy,dy:Double;
-        c:integer;
-        pCentralVarext,pVarext:TVariablesExtender;
+      //DC:TDrawContext;
+      //lx,{rx,}uy,dy:Double;
+        //c:integer;
+        //pCentralVarext,pVarext:TVariablesExtender;
   begin
       //addBlockonDraw(velec_beforeNameGlobalSchemaBlock + string(TVertexTree(G.Root.AsPointer[vpTVertexTree]^).dev^.Name),pt1,drawings.GetCurrentDWG^.mainObjRoot);
 
@@ -720,9 +719,9 @@ var
       //рисуем прямоугольник с цветом  зная номера вершин, координат возьмем из графа по номерам
       procedure drawConnectLineDev(pSt,p1,p2,pEd:GDBVertex);
       var
-          polyObj:PGDBObjPolyLine;
+          //polyObj:PGDBObjPolyLine;
           cableLine:PGDBObjCable;
-          p3:GDBVertex;
+          //p3:GDBVertex;
       begin
            cableLine := AllocEnt(GDBCableID);
            cableLine^.init(nil,nil,0);
@@ -1005,11 +1004,11 @@ procedure visualGraphPlan(G: TGraph; height:double);
 var
     //ptext:PGDBObjText;
     //indent,size:double;
-    x,y,i,tParent:integer;
-    listVertex:TListVertex;
-    infoVertex:TInfoVertex;
-    pt1,pt2,pt3,ptext:GDBVertex;
-    VertexPath: TClassList;
+    {x,y,}i{,tParent}:integer;
+    //listVertex:TListVertex;
+    //infoVertex:TInfoVertex;
+    //pt1,pt2,pt3,ptext:GDBVertex;
+    //VertexPath: TClassList;
     text:string;
     startPt,endPt,CentrPt:GDBVertex;
 

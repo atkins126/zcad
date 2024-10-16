@@ -26,7 +26,7 @@ uses
     uzegeometrytypes,uzeentity,UGDBPoint3DArray,uzctnrVectorBytes,
     uzbtypes,uzeentwithlocalcs,uzeconsts,uzegeometry,uzeffdxfsupport,uzecamera,
     UGDBPolyLine2DArray,uzglviewareadata,uzeTriangulator,
-    uzeBoundaryPath,uzeStylesHatchPatterns,gvector,garrayutils;
+    uzeBoundaryPath,uzeStylesHatchPatterns,gvector,garrayutils,uzMVReader;
 type
 TLineInContour=record
   C{,L}:integer;
@@ -41,24 +41,21 @@ TIntercept2dpropWithLICCompate=class
 end;
 TIntercept2dpropWithLICVector=TVector<TIntercept2dpropWithLIC>;
 TVSorter=TOrderingArrayUtils<TIntercept2dpropWithLICVector,TIntercept2dpropWithLIC,TIntercept2dpropWithLICCompate>;
-{Export+}
 THatchIslandDetection=(HID_Normal,Hid_Ignore,HID_Outer);
 PGDBObjHatch=^GDBObjHatch;
-{REGISTEROBJECTTYPE GDBObjHatch}
 GDBObjHatch= object(GDBObjWithLocalCS)
                  Path:TBoundaryPath;
                  PPattern:PTHatchPattern;
-                 Outbound:OutBound4V;(*oi_readonly*)(*hidden_in_objinsp*)
-                 //Vertex2D_in_OCS_Array:GDBpolyline2DArray;(*oi_readonly*)(*hidden_in_objinsp*)
-                 Vertex3D_in_WCS_Array:GDBPoint3DArray;(*oi_readonly*)(*hidden_in_objinsp*)
-                 PProjPoint:PGDBpolyline2DArray;(*hidden_in_objinsp*)
+                 Outbound:OutBound4V;
+                 Vertex3D_in_WCS_Array:GDBPoint3DArray;
+                 PProjPoint:PGDBpolyline2DArray;
                  PatternName:string;
                  IslandDetection:THatchIslandDetection;
                  Angle,Scale:Double;
                  Origin:GDBvertex2D;
                  constructor init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt;p:GDBvertex);
                  constructor initnul;
-                 procedure LoadFromDXF(var f:TZctnrVectorBytes;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
+                 procedure LoadFromDXF(var f:TZMemReader;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
 
                  procedure SaveToDXF(var outhandle:TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
                  procedure FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext;Stage:TEFStages=EFAllStages);virtual;
@@ -68,7 +65,7 @@ GDBObjHatch= object(GDBObjWithLocalCS)
                  procedure DrawStrokes(var Strokes:TPatStrokesArray;var st:Double;const p1,p2:GDBvertex2D;var DC:TDrawContext);
                  procedure FillPattern(var Strokes:TPatStrokesArray;var DC:TDrawContext);
                  procedure DrawGeometry(lw:Integer;var DC:TDrawContext);virtual;
-                 function ObjToString(prefix,sufix:String):String;virtual;
+                 function ObjToString(const prefix,sufix:String):String;virtual;
                  destructor done;virtual;
 
                  function GetObjTypeName:String;virtual;
@@ -80,7 +77,7 @@ GDBObjHatch= object(GDBObjWithLocalCS)
 
                  procedure createpoint;virtual;
                  procedure getoutbound(var DC:TDrawContext);virtual;
-                 function CalcTrueInFrustum(frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
+                 function CalcTrueInFrustum(const frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
                  procedure remaponecontrolpoint(pdesc:pcontrolpointdesc);virtual;
                  procedure RenderFeedback(pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;
                  procedure addcontrolpoints(tdesc:Pointer);virtual;
@@ -90,7 +87,6 @@ GDBObjHatch= object(GDBObjWithLocalCS)
                  procedure transform(const t_matrix:DMatrix4D);virtual;
                  procedure TransformAt(p:PGDBObjEntity;t_matrix:PDMatrix4D);virtual;
            end;
-{Export-}
 const
   HID2DXF:array[THatchIslandDetection] of integer=(0,2,1);
 implementation
@@ -152,7 +148,7 @@ begin
   end;
   PatternName:='';
 end;
-function GDBObjHatch.ObjToString(prefix,sufix:String):String;
+function GDBObjHatch.ObjToString(const prefix,sufix:String):String;
 begin
      result:=prefix+inherited ObjToString('GDBObjHatch (addr:',')')+sufix;
 end;
@@ -161,7 +157,7 @@ begin
   inherited initnul(nil);
   PProjoutbound:=nil;
   PProjPoint:=nil;
-  Vertex3D_in_WCS_Array.init(10);
+  Vertex3D_in_WCS_Array.init(4);
   //Vertex2D_in_OCS_Array.init(10,true);
   Path.init(10);
   PPattern:=nil;
@@ -179,7 +175,7 @@ begin
   Local.basis.oz:=ZWCS;
   PProjoutbound:=nil;
   PProjPoint:=nil;
-  Vertex3D_in_WCS_Array.init(10);
+  Vertex3D_in_WCS_Array.init(4);
   //Vertex2D_in_OCS_Array.init(10,true);
   Path.init(10);
   PPattern:=nil;
@@ -237,7 +233,6 @@ var
   i,j:integer;
   ppath:PGDBPolyline2DArray;
   FirstP,PrevP,CurrP:PGDBvertex2D;
-  iprop:intercept2dprop;
 begin
   for i:=0 to Path.paths.Count-1 do begin
     ppath:=Path.paths.getDataMutable(i);
@@ -426,7 +421,7 @@ end;
 
 procedure GDBObjHatch.FillPattern(var Strokes:TPatStrokesArray;var DC:TDrawContext);
 var
-  Angl,LenOffs,LF,sinA,cosA:Double;
+  Angl,{LenOffs,}LF,sinA,cosA:Double;
   offs,offs2,dirx,diry,p2,ls:GDBVertex2D;
   pp:PGDBvertex2D;
   i,j:integer;
@@ -434,20 +429,21 @@ var
   tmin,tmax:double;
   first:boolean;
   IV:TIntercept2dpropWithLICVector;
+  sine,cosine:double;
 begin
   IV:=TIntercept2dpropWithLICVector.Create;
   Angl:=DegToRad(Angle+Strokes.Angle);
-  LenOffs:=oneVertexlength2D(Strokes.Offset);
+  //LenOffs:=oneVertexlength2D(Strokes.Offset);
   if Strokes.LengthFact>0 then
     LF:=Strokes.LengthFact
   else
     LF:=1;
-  diry.x:=cos(Angl)*LF*Scale;
-  diry.y:=sin(Angl)*LF*Scale;
+  SinCos(Angl,sine,cosine);
+  diry.x:=cosine*LF*Scale;
+  diry.y:=sine*LF*Scale;
 
   Angl:=DegToRad(Angle);
-  sinA:=sin(Angl);
-  cosA:=cos(Angl);
+  SinCos(Angl,sinA,cosA);
   dirx.x:=(Strokes.Offset.x*cosA-Strokes.Offset.y*sinA)*Scale;
   dirx.y:=(Strokes.Offset.y*cosA+Strokes.Offset.x*sinA)*Scale;
   //dirx.x:=Strokes.Offset.x*Scale;
@@ -533,17 +529,21 @@ begin
 end;
 procedure GDBObjHatch.createpoint;
 var
-  i,j: Integer;
+  i,j,vc:Integer;
   v:GDBvertex4D;
   v3d:GDBVertex;
-  pv:PGDBVertex2D;
   ppolyarr:pGDBPolyline2DArray;
 begin
   Vertex3D_in_WCS_Array.clear;
+  vc:=0;
+  for i:=0 to Path.paths.Count-1  do begin
+    vc:=vc+Path.paths.getDataMutable(i)^.Count;
+  end;
+  Vertex3D_in_WCS_Array.SetSize(vc);
 
   for i:=0 to Path.paths.Count-1  do begin
     ppolyarr:=Path.paths.getDataMutable(i);
-    for j:=0 to Path.paths.getData(i).Count-1 do begin
+    for j:=0 to Path.paths.getDataMutable(i).Count-1 do begin
        v.x:=ppolyarr^.getData(j).x;
        v.y:=ppolyarr^.getData(j).y;
        v.z:=0;
@@ -607,7 +607,7 @@ var
 begin
   hstyle:=100;
   Angle:=0;
-  byt:=readmystrtoint(f);
+  byt:=f.ParseInteger;
   while byt <> 0 do
   begin
     if not LoadFromDXFObjShared(f,byt,ptu,drawing) then
@@ -617,8 +617,8 @@ begin
     if not dxfDoubleload(f,52,byt,Angle) then
     if not dxfDoubleload(f,41,byt,Scale) then
     if not dxfStringload(f,2,byt,PatternName) then
-      f.readString;
-    byt:=readmystrtoint(f);
+      f.SkipString;
+    byt:=f.ParseInteger;
   end;
   case hstyle of
     1:IslandDetection:=HID_Outer;
@@ -630,7 +630,6 @@ end;
 function GDBObjHatch.Clone;
 var
   tvo: PGDBObjHatch;
-  p:PGDBVertex2D;
   i:integer;
 begin
   Getmem(Pointer(tvo),sizeof(GDBObjHatch));
@@ -661,14 +660,13 @@ end;
 
 function GDBObjHatch.CalcTrueInFrustum;
 var
-  pv1,pv2:pgdbvertex;
+  pv1:pgdbvertex;
 begin
-  result:=Vertex3D_in_WCS_Array.CalcTrueInFrustum(frustum);
-  if (result=IREmpty)and(Vertex3D_in_WCS_Array.count>3) then begin
-    pv1:=Vertex3D_in_WCS_Array.getDataMutable(0);
-    pv2:=Vertex3D_in_WCS_Array.getDataMutable(Vertex3D_in_WCS_Array.Count-1);
-    result:=uzegeometry.CalcTrueInFrustum(pv1^,pv2^,frustum);
-  end;
+  pv1:=Vertex3D_in_WCS_Array.getDataMutable(0);
+  if pv1<>nil then
+    result:=Path.DummyCalcTrueInFrustum(pv1,frustum)
+  else
+    result:=IRFully;
 end;
 procedure GDBObjHatch.remaponecontrolpoint(pdesc:pcontrolpointdesc);
 var vertexnumber:Integer;
@@ -760,14 +758,14 @@ begin
   result.initnul;
   result.bp.ListPos.Owner:=owner;
 end;
-procedure SetHatchGeomProps(Pcircle:PGDBObjHatch;args:array of const);
+procedure SetHatchGeomProps(Pcircle:PGDBObjHatch; const args:array of const);
 var
    counter:integer;
 begin
   counter:=low(args);
   Pcircle.Local.p_insert:=CreateVertexFromArray(counter,args);
 end;
-function AllocAndCreateHatch(owner:PGDBObjGenericWithSubordinated;args:array of const):PGDBObjHatch;
+function AllocAndCreateHatch(owner:PGDBObjGenericWithSubordinated; const args:array of const):PGDBObjHatch;
 begin
   result:=AllocAndInitHatch(owner);
   //owner^.AddMi(@result);

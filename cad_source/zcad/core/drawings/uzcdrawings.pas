@@ -30,7 +30,7 @@ uses
     UGDBOpenArrayOfPV,uzefont,UGDBVisibleOpenArray,
     gzctnrVectorTypes,uzedimensionaltypes,uzetrash,uzctnrVectorBytes,uzglviewareadata,
     uzccommandsabstract,
-    uzeentitiestypefilter,uzctnrvectorpgdbaseobjects,
+    uzeentitiestypefilter,uzctnrvectorpgdbaseobjects,uzCtnrVectorpBaseEntity,
     LCLProc;
 type
 {EXPORT+}
@@ -61,13 +61,14 @@ TZCADDrawingsManager= object(TZctnrVectorPGDBaseObjects)
 
                     procedure CopyBlock(_from,_to:PTSimpleDrawing;_source:PGDBObjBlockdef);
                     function CopyEnt(_from,_to:PTSimpleDrawing;_source:PGDBObjEntity):PGDBObjEntity;
-                    procedure AddBlockFromDBIfNeed(_to:{PTSimpleDrawing}PTDrawingDef;name:String);
+                    procedure AddBlockFromDBIfNeed(_to:PTDrawingDef;name:String);
+                    procedure AddLTStyleFromDBIfNeed(_to:PTSimpleDrawing;name:String);
                     //procedure rtmodify(obj:PGDBObjEntity;md:Pointer;dist,wc:gdbvertex;save:Boolean);virtual;
                     function FindOneInArray(const entities:GDBObjOpenArrayOfPV;objID:Word; InOwner:Boolean):PGDBObjEntity;
                     function FindEntityByVar(objID:Word;vname,vvalue:String):PGDBObjEntity;
-                    procedure FindMultiEntityByType(Filter:TEntsTypeFilter;var entarray:TZctnrVectorPGDBaseObjects);
-                    procedure FindMultiEntityByVar(objID:Word;vname,vvalue:String;var entarray:TZctnrVectorPGDBaseObjects);
-                    procedure FindMultiEntityByVar2(objID:Word;vname:String;var entarray:TZctnrVectorPGDBaseObjects);
+                    procedure FindMultiEntityByType(Filter:TEntsTypeFilter;var entarray:TZctnrVectorPGDBaseEntity);
+                    procedure FindMultiEntityByVar(objID:Word;vname,vvalue:String;var entarray:TZctnrVectorPGDBaseEntity);
+                    procedure FindMultiEntityByVar2(objID:Word;vname:String;var entarray:TZctnrVectorPGDBaseEntity);
                     procedure standardization(PEnt:PGDBObjEntity;ObjType:TObjID);
                     //procedure AddEntToCurrentDrawingWithUndo(PEnt:PGDBObjEntity);
                     function GetDefaultDrawingName:String;
@@ -573,11 +574,7 @@ begin
 end;
 procedure TZCADDrawingsManager.AddBlockFromDBIfNeed(_to:{PTSimpleDrawing}PTDrawingDef;name:String);
 var
-   {_dest,}td:PGDBObjBlockdef;
-   //tn:String;
-   //ir:itrec;
-   //pvisible,pvisible2:PGDBObjEntity;
-  // pl:PGDBLayerProp;
+  td:PGDBObjBlockdef;
 begin
   td:=PTSimpleDrawing(_to).BlockDefArray.getblockdef(name);
   if td=nil then begin
@@ -590,12 +587,56 @@ begin
         exit;
     end;
     if td=nil then begin
-      DebugLn(sysutils.format('{EW}Block "%s" not found! If this dimension arrow block - manually creating block not implemented yet((',[name]));
+      DebugLn(sysutils.format('{EM}Block "%s" not found! If this dimension arrow block - manually creating block not implemented yet((',[name]));
       exit;
     end;
     CopyBlock(BlockBaseDWG,PTSimpleDrawing(_to),td);
   end;
 end;
+function RemapLStyle2(_from,_to:PTSimpleDrawing;_source:PGDBLtypeProp):PGDBLtypeProp;
+var
+  ir:itrec;
+  psp:PShapeProp;
+  ptp:PTextProp;
+begin
+  if _source=nil then
+    exit(nil);
+  psp:=_source.shapearray.beginiterate(ir);
+  if psp<>nil then
+  repeat
+        _to.TextStyleTable.addstyle(psp^.param.PStyle.name,psp^.param.PStyle.pfont.Name,psp^.param.PStyle.FontFamily,psp^.param.PStyle.prop,psp^.param.PStyle.UsedInLTYPE);
+        psp:=_source.shapearray.iterate(ir);
+  until psp=nil;
+  ptp:=_source.textarray.beginiterate(ir);
+  if ptp<>nil then
+  repeat
+        _to.TextStyleTable.addstyle(ptp^.param.PStyle.name,ptp^.param.PStyle.pfont.Name,ptp^.param.PStyle.FontFamily,ptp^.param.PStyle.prop,ptp^.param.PStyle.UsedInLTYPE);
+        ptp:=_source.textarray.iterate(ir);
+  until ptp=nil;
+  result:=_to.LTypeStyleTable.createltypeifneed(_source,_to.TextStyleTable);
+end;
+
+procedure RemapLStyle(_from,_to:PTSimpleDrawing;_source,_dest:PGDBObjEntity);
+begin
+  if _source.vp.LineType=nil then
+    exit;
+  _dest.vp.LineType:=RemapLStyle2(_from,_to,_source.vp.LineType);
+end;
+
+procedure TZCADDrawingsManager.AddLTStyleFromDBIfNeed(_to:PTSimpleDrawing;name:String);
+var
+  lt:PGDBLtypeProp;
+begin
+  lt:=PTSimpleDrawing(_to).LTypeStyleTable.getAddres(name);
+  if lt=nil then begin
+    lt:=BlockBaseDWG.LTypeStyleTable.getAddres(name);
+    if lt<>nil then
+      RemapLStyle2(BlockBaseDWG,_to,lt)
+    else
+      DebugLn(sysutils.format('{EM}Line type "%s" not found!',[name]));
+    end;
+end;
+
 function createtstylebyindex(_from,_to:PTSimpleDrawing;oldti:{TArrayIndex}PGDBTextStyle):PGDBTextStyle;
 var
    //{_dest,}td:PGDBObjBlockdef;
@@ -722,32 +763,6 @@ begin
      _dest.correctsublayers(_to.LayerTable);
      //_dest.vp.Layer:=createlayerifneed(_from,_to,_source.vp.Layer);
 end;
-procedure RemapLStyle(_from,_to:PTSimpleDrawing;_source,_dest:PGDBObjEntity);
-var //p:Pointer;
-    ir:itrec;
-    psp:PShapeProp;
-    ptp:PTextProp;
-    //sp:ShapeProp;
-    //tp:TextProp;
-begin
-  if _source.vp.LineType=nil then
-                                 exit;
-  psp:=_source.vp.LineType.shapearray.beginiterate(ir);
-  if psp<>nil then
-  repeat
-        _to.TextStyleTable.addstyle(psp^.param.PStyle.name,psp^.param.PStyle.pfont.Name,psp^.param.PStyle.FontFamily,psp^.param.PStyle.prop,psp^.param.PStyle.UsedInLTYPE);
-        psp:=_source.vp.LineType.shapearray.iterate(ir);
-  until psp=nil;
-  ptp:=_source.vp.LineType.textarray.beginiterate(ir);
-  if ptp<>nil then
-  repeat
-        _to.TextStyleTable.addstyle(ptp^.param.PStyle.name,ptp^.param.PStyle.pfont.Name,ptp^.param.PStyle.FontFamily,ptp^.param.PStyle.prop,ptp^.param.PStyle.UsedInLTYPE);
-        ptp:=_source.vp.LineType.textarray.iterate(ir);
-  until ptp=nil;
-     _dest.vp.LineType:=_to.LTypeStyleTable.createltypeifneed(_source.vp.LineType,_to.TextStyleTable);
-     //_dest.correctsublayers(_to.LayerTable);
-     //_dest.vp.Layer:=createlayerifneed(_from,_to,_source.vp.Layer);
-end;
 procedure RemapEntArray(_from,_to:PTSimpleDrawing;const _source,_dest:GDBObjEntityOpenArray);
 var
    irs,ird:itrec;
@@ -797,7 +812,7 @@ begin
     end;
     result:=tv;
 end;
-procedure TZCADDrawingsManager.FindMultiEntityByType(Filter:TEntsTypeFilter;var entarray:TZctnrVectorPGDBaseObjects);
+procedure TZCADDrawingsManager.FindMultiEntityByType(Filter:TEntsTypeFilter;var entarray:TZctnrVectorPGDBaseEntity);
 var
    croot:PGDBObjGenericSubEntry;
    pvisible:PGDBObjEntity;
@@ -810,13 +825,13 @@ begin
     pvisible:=croot.ObjArray.beginiterate(ir);
     if pvisible<>nil then
     repeat
-      if Filter.IsEntytyTypeAccepted(pvisible.GetObjType) then
+      if Filter.IsEntytyAccepted(pvisible) then
         entarray.PushBackData(pvisible);
       pvisible:=croot.ObjArray.iterate(ir);
     until pvisible=nil;
   end;
 end;
-procedure TZCADDrawingsManager.FindMultiEntityByVar(objID:Word;vname,vvalue:String;var entarray:TZctnrVectorPGDBaseObjects);
+procedure TZCADDrawingsManager.FindMultiEntityByVar(objID:Word;vname,vvalue:String;var entarray:TZctnrVectorPGDBaseEntity);
 var
    croot:PGDBObjGenericSubEntry;
    pvisible{,pvisible2,pv}:PGDBObjEntity;
@@ -846,7 +861,7 @@ begin
          until pvisible=nil;
      end;
 end;
-procedure TZCADDrawingsManager.FindMultiEntityByVar2(objID:Word;vname:String;var entarray:TZctnrVectorPGDBaseObjects);
+procedure TZCADDrawingsManager.FindMultiEntityByVar2(objID:Word;vname:String;var entarray:TZctnrVectorPGDBaseEntity);
 var
    croot:PGDBObjGenericSubEntry;
    pvisible{,pvisible2,pv}:PGDBObjEntity;

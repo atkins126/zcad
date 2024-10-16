@@ -24,14 +24,14 @@ interface
 uses
   uzcLog,SysUtils,
   uzccommandsabstract,uzccommandsimpl,
-  uzeentity,gzctnrVectorTypes,uzcdrawings,uzcstrconsts,uzeentityextender,
+  uzeentity,gzctnrVectorTypes,uzcdrawings,uzcstrconsts,uzeExtdrAbstractEntityExtender,
   uzcinterface,gzctnrSTL;
 
-function extdrEntsList_com(operands:TCommandOperands):TCommandResult;
+function extdrEntsList_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 
 implementation
 
-function extdrEntsList_com(operands:TCommandOperands):TCommandResult;
+function extdrEntsList_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 type
   TExtCounter=TMyMapCounter<TMetaEntityExtender>;
 var
@@ -41,6 +41,7 @@ var
   count:integer;
   extcounter:TExtCounter;
   pair:TExtCounter.TDictionaryPair;
+  ee:TAbstractEntityExtender;
 begin
   extcounter:=TExtCounter.create;
   try
@@ -51,7 +52,8 @@ begin
       inc(count);
       if Assigned(pls^.EntExtensions) then begin
         for i:=0 to pls^.EntExtensions.GetExtensionsCount-1 do begin
-          extcounter.CountKey(typeof(pls^.EntExtensions.GetExtension(i)),1);
+          ee:=pls^.EntExtensions.GetExtension(i);
+          extcounter.CountKey(typeof(ee),1);
         end;
       end;
     end;
@@ -63,7 +65,8 @@ begin
         inc(count);
         if Assigned(pv^.EntExtensions) then begin
           for i:=0 to pv^.EntExtensions.GetExtensionsCount-1 do begin
-            extcounter.CountKey(typeof(pv^.EntExtensions.GetExtension(i)),1);
+            ee:=pls^.EntExtensions.GetExtension(i);
+            extcounter.CountKey(typeof(ee),1);
           end;
         end;
       end;
@@ -85,7 +88,7 @@ end;
 
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-  CreateCommandFastObjectPlugin(@extdrEntsList_com,'extdrEntsList',CADWG or CASelEnts,0);
+  CreateZCADCommand(@extdrEntsList_com,'extdrEntsList',CADWG or CASelEnts,0);
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
 end.

@@ -16,18 +16,18 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>)
 }
 unit uzeentdimensiongeneric;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 
 interface
 uses uzeentityfactory,uzeentwithlocalcs,uzeentdimension,uzestylesdim,uzestyleslayers,
      uzedrawingdef,uzbstrproc,uzctnrVectorBytes,uzegeometry,
      sysutils,uzeentity,uzbtypes,uzeconsts,uzeffdxfsupport,uzeentsubordinated,
-     uzeentdimradial,uzeentdimdiametric,uzeentdimrotated,uzeentdimaligned;
+     uzeentdimradial,uzeentdimdiametric,uzeentdimrotated,uzeentdimaligned,
+     uzMVReader;
 type
-{EXPORT+}
 TDimType=(DTRotated,DTAligned,DTAngular,DTDiameter,DTRadius,DTAngular3P,DTOrdinate);
 PGDBObjGenericDimension=^GDBObjGenericDimension;
-{REGISTEROBJECTTYPE GDBObjGenericDimension}
 GDBObjGenericDimension= object(GDBObjWithLocalCS)
                       DimData:TDXFDimData;
                       PDimStyle:PGDBDimStyle;
@@ -35,11 +35,10 @@ GDBObjGenericDimension= object(GDBObjWithLocalCS)
                       a50,a52:Double;
                       constructor init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt);
                       constructor initnul(owner:PGDBObjGenericWithSubordinated);
-                      procedure LoadFromDXF(var f: TZctnrVectorBytes;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
+                      procedure LoadFromDXF(var f:TZMemReader;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
                       function FromDXFPostProcessBeforeAdd(ptu:PExtensionData;const drawing:TDrawingDef):PGDBObjSubordinated;virtual;
                       function GetObjType:TObjID;virtual;
                    end;
-{EXPORT-}
 implementation
 var
   WorkingFormatSettings:TFormatSettings;
@@ -107,7 +106,7 @@ var
   byt,dtype:Integer;
   style:String;
 begin
-  byt:=readmystrtoint(f);
+  byt:=f.ParseInteger;
   dtype:=-1;
   style:='';
   while byt <> 0 do
@@ -130,8 +129,8 @@ begin
                                                                                             PDimStyle:=pointer(drawing.GetDimStyleTable^.getDataMutable(0));
                                                                   end
                             else
-                                f.readString;
-    byt:=readmystrtoint(f);
+                                f.SkipString;
+    byt:=f.ParseInteger;
   end;
   if dtype<>-1 then
   begin

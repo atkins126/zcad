@@ -21,6 +21,7 @@ unit uzccommand_rotate;
 
 interface
 uses
+  math,
   gzctnrVectorTypes,
   uzcdrawing,
   uzgldrawcontext,
@@ -34,8 +35,8 @@ uses
 type
   {REGISTEROBJECTTYPE rotate_com}
   rotate_com =  object(move_com)
-    function AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer; virtual;
-    procedure CommandContinue; virtual;
+    function AfterClick(const Context:TZCADCommandContext;wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer; virtual;
+    procedure CommandContinue(const Context:TZCADCommandContext); virtual;
     procedure rot(a:Double; button: Byte);
     procedure showprompt(mklick:integer);virtual;
   end;
@@ -43,14 +44,14 @@ var
   rotate:rotate_com;
 implementation
 
-procedure rotate_com.CommandContinue;
+procedure rotate_com.CommandContinue(const Context:TZCADCommandContext);
 var v1:vardesk;
     td:Double;
 begin
    if (commandmanager.GetValueHeap{-vs})>0 then
    begin
    v1:=commandmanager.PopValue;
-   td:=PDouble(v1.data.Addr.Instance)^*pi/180;
+   td:=DegToRad(PDouble(v1.data.Addr.Instance)^);
    rot(td,MZW_LBUTTON);
    end;
 end;
@@ -63,17 +64,22 @@ begin
 end;
 procedure rotate_com.rot(a:Double; button: Byte);
 var
-    dispmatr,im,rotmatr:DMatrix4D;
-    ir:itrec;
-    pcd:PTCopyObjectDesc;
-    //v1,v2:GDBVertex2d;
-    m:tmethod;
-    dc:TDrawContext;
+  dispmatr,im,rotmatr:DMatrix4D;
+  ir:itrec;
+  pcd:PTCopyObjectDesc;
+  m:tmethod;
+  dc:TDrawContext;
+  tr:GDBvertex;
 begin
-  dispmatr:=uzegeometry.CreateTranslationMatrix(createvertex(-t3dp.x,-t3dp.y,-t3dp.z));
-  rotmatr:=uzegeometry.CreateRotationMatrixZ(sin(a),cos(a));
+  if (drawings.GetCurrentDWG^.GetPcamera^.notuseLCS)or((button and MZW_LBUTTON)<>0) then
+    tr:=t3dp
+  else
+    tr:=t3dp+drawings.GetCurrentDWG^.GetPcamera^.CamCSOffset;
+
+  dispmatr:=uzegeometry.CreateTranslationMatrix(-tr);
+  rotmatr:=uzegeometry.CreateRotationMatrixZ(a);
   rotmatr:=uzegeometry.MatrixMultiply(dispmatr,rotmatr);
-  dispmatr:=uzegeometry.CreateTranslationMatrix(createvertex(t3dp.x,t3dp.y,t3dp.z));
+  dispmatr:=uzegeometry.CreateTranslationMatrix(tr);
   dispmatr:=uzegeometry.MatrixMultiply(rotmatr,dispmatr);
   dc:=drawings.GetCurrentDWG^.CreateDrawingRC;
 
@@ -94,7 +100,7 @@ if (button and MZW_LBUTTON)=0 then
                   im:=dispmatr;
                   uzegeometry.MatrixInvert(im);
                   PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack.PushStartMarker('Rotate');
-                  with PushCreateTGMultiObjectChangeCommand(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,dispmatr,im,pcoa^.Count) do
+                  with PushCreateTGMultiObjectChangeCommand(@PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,dispmatr,im,pcoa^.Count) do
                   begin
                    pcd:=pcoa^.beginiterate(ir);
                   if pcd<>nil then
@@ -117,13 +123,13 @@ if (button and MZW_LBUTTON)<>0 then
 begin
 drawings.GetCurrentROOT^.FormatAfterEdit(drawings.GetCurrentDWG^,dc);
 drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.free;
-commandend;
+//commandend;
 commandmanager.executecommandend;
 end;
 
 end;
 
-function rotate_com.AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer;
+function rotate_com.AfterClick(const Context:TZCADCommandContext;wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer;
 var
     //dispmatr,im,rotmatr:DMatrix4D;
     //ir:itrec;
@@ -144,18 +150,10 @@ begin
       result:=cmd_ok;
 end;
 
-procedure startup;
-begin
-rotate.init('Rotate',0,0);
-rotate.NotUseCommandLine:=false;
-end;
-procedure Finalize;
-begin
-end;
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-  startup;
+  rotate.init('Rotate',0,0);
+  rotate.NotUseCommandLine:=false;
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
-  finalize;
 end.

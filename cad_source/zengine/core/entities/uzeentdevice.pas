@@ -26,28 +26,27 @@ uses uzestyleslayers,uzepalette,uzeobjectextender,uabstractunit,uzeentityfactory
      uzeconsts,uzeentity,uzeentsubordinated,varmandef,
      uzegeometrytypes,uzeentblockinsert,uzbtypes,UGDBVisibleOpenArray,UGDBObjBlockdefArray,
      gzctnrVectorTypes,uzeblockdef,uzeffdxfsupport,UGDBSelectedObjArray,uzeentitiestree,
-     LazLogger,uzestrconsts,uzctnrvectorpgdbaseobjects,uzglviewareadata,uzeSnap;
+     LazLogger,uzestrconsts,uzglviewareadata,uzeSnap,
+     uzCtnrVectorpBaseEntity;
 
 type
-{EXPORT+}
 PGDBObjDevice=^GDBObjDevice;
-{REGISTEROBJECTTYPE GDBObjDevice}
 GDBObjDevice= object(GDBObjBlockInsert)
-                   VarObjArray:GDBObjEntityOpenArray;(*oi_readonly*)(*hidden_in_objinsp*)
-                   lstonmouse:PGDBObjEntity;(*oi_readonly*)(*hidden_in_objinsp*)
+                   VarObjArray:GDBObjEntityOpenArray;
+                   lstonmouse:PGDBObjEntity;
                    function Clone(own:Pointer):PGDBObjEntity;virtual;
                    constructor initnul;
                    constructor init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt);
                    destructor done;virtual;
-                   function CalcInFrustum(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
-                   function CalcTrueInFrustum(frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
+                   function CalcInFrustum(const frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
+                   function CalcTrueInFrustum(const frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
                    procedure FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext;Stage:TEFStages=EFAllStages);virtual;
                    function IsStagedFormatEntity:boolean;virtual;
                    procedure FormatFeatures(var drawing:TDrawingDef);virtual;
                    procedure DrawGeometry(lw:Integer;var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
                    procedure DrawOnlyGeometry(lw:Integer;var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
                    procedure renderfeedbac(infrustumactualy:TActulity;pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;
-                   function onmouse(var popa:TZctnrVectorPGDBaseObjects;const MF:ClipArray;InSubEntry:Boolean):Boolean;virtual;
+                   function onmouse(var popa:TZctnrVectorPGDBaseEntity;const MF:ClipArray;InSubEntry:Boolean):Boolean;virtual;
                    function ReturnLastOnMouse(InSubEntry:Boolean):PGDBObjEntity;virtual;
                    procedure ImEdited(pobj:PGDBObjSubordinated;pobjinarray:Integer;var drawing:TDrawingDef);virtual;
                    procedure DeSelect(var SelectedObjCount:Integer;ds2s:TDeSelect2Stage);virtual;
@@ -83,7 +82,6 @@ GDBObjDevice= object(GDBObjBlockInsert)
                    procedure GoodRemoveMiFromArray(const obj:PGDBObjSubordinated;const drawing:TDrawingDef);virtual;
 
              end;
-{EXPORT-}
 var
     GDBObjDeviceDXFFeatures:TDXFEntIODataManager;
 implementation
@@ -193,6 +191,8 @@ begin
      //pobj^.bp.PSelfInOwnerArray:=ObjArray.getDataMutable(ObjArray.add(pobj));
      VarObjArray.AddPEntity(pGDBObjEntity(ppointer(pobj)^)^);
      pGDBObjEntity(ppointer(pobj)^).bp.ListPos.Owner:=@self;
+     if assigned(pGDBObjEntity(ppointer(pobj)^).EntExtensions)then
+       pGDBObjEntity(ppointer(pobj)^).EntExtensions.RunSetRoot(pobj,GetMainOwner{ @self});
 end;
 destructor GDBObjDevice.done;
 begin
@@ -227,14 +227,20 @@ begin
      m4:={self.ObjMatrix; //}getmatrix^;
      //MatrixInvert(m4);
      dc:=drawing.createdrawingrc;
+
+     //пытался так починить https://github.com/zamtmn/zcad/issues/141
+     //но это ведет https://github.com/zamtmn/zcad/issues/143
+     {dc.Options:=dc.Options-[DCODrawable];}
+     //пока просто чищу списки на присоединение примитивов при закрытии чертежа
+
      pv:=VarObjArray.beginiterate(ir);
      if pv<>nil then
      repeat
          pvc:=pv^.Clone(@self{.bp.Owner});
          pvc2:=pv^.Clone(@self{.bp.Owner});
          //historyoutstr(pv^.ObjToString('','')+'  cloned obj='+pvc^.ObjToString('',''));
-         if pvc^.GetObjType=GDBTextID then
-            pvc:=pvc;
+//         if pvc^.GetObjType=GDBTextID then
+//            pvc:=pvc;
 
          pvc^.bp.ListPos.Owner:=@self;
 
@@ -556,7 +562,7 @@ begin
           if not PBlockDefArray(PGDBObjBlockdefArray(drawing.GetBlockDefArraySimple).parray)^[index].Formated then
                                                                                PBlockDefArray(PGDBObjBlockdefArray(drawing.GetBlockDefArraySimple).parray)^[index].formatEntity(drawing,dc);
           //index:=gdb.GetCurrentDWG.BlockDefArray.getindex(pansichar(name));
-          index:=PGDBObjBlockdefArray(drawing.GetBlockDefArraySimple).getindex(pansichar(name));
+          index:=PGDBObjBlockdefArray(drawing.GetBlockDefArraySimple).getindex(name);
           assert((index>=0) and (index<PGDBObjBlockdefArray(drawing.GetBlockDefArraySimple).count), rsWrongBlockDefIndex);
           ConstObjArray.free;
           //pblockdef:=gdb.GetCurrentDWG.BlockDefArray.getDataMutable(index);
@@ -643,7 +649,7 @@ constructor GDBObjDevice.init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt)
 begin
   inherited init(own,layeraddres,LW);
   //vp.ID:=GDBDeviceID;
-  VarObjArray.init(100);
+  VarObjArray.init(10);
   GetDXFIOFeatures.AddExtendersToEntity(@self);
 end;
 function GDBObjDevice.GetObjType;
@@ -654,7 +660,7 @@ constructor GDBObjDevice.initnul;
 begin
   inherited initnul;
   //vp.ID:=GDBDeviceID;
-  VarObjArray.init(100);
+  VarObjArray.init(10);
   //DType:=DT_Unknown;
   //DBorder:=DB_Empty;
   //DGroup:=DG_Unknown;
@@ -678,7 +684,7 @@ begin
     if assigned(EntExtensions)then
       EntExtensions.RunOnBeforeEntityFormat(@self,drawing,DC);
   end;
-  index:=PGDBObjBlockdefArray(drawing.GetBlockDefArraySimple).getindex(pansichar(name));
+  index:=PGDBObjBlockdefArray(drawing.GetBlockDefArraySimple).getindex(name);
   FormatFeatures(drawing);
   CalcObjMatrix(@drawing);
   ConstObjArray.FormatEntity(drawing,dc,stage);
@@ -700,7 +706,7 @@ begin
   result.initnul{(owner)};
   result.bp.ListPos.Owner:=owner;
 end;
-function AllocAndCreateDevice(owner:PGDBObjGenericWithSubordinated;args:array of const):PGDBObjBlockInsert;
+function AllocAndCreateDevice(owner:PGDBObjGenericWithSubordinated; const args:array of const):PGDBObjBlockInsert;
 begin
   result:=AllocAndInitDevice(owner);
   //owner^.AddMi(@result);
@@ -712,7 +718,7 @@ begin
 end;
 function UpgradeBlockInsert2Device(ptu:PTAbstractUnit;pent:PGDBObjBlockInsert;const drawing:TDrawingDef):PGDBObjDevice;
 begin
-     pent^.index:=PGDBObjBlockdefArray(drawing.GetBlockDefArraySimple).getindex(pansichar(pent^.name));
+     pent^.index:=PGDBObjBlockdefArray(drawing.GetBlockDefArraySimple).getindex(pent^.name);
      result:=nil;
      begin
           result:=AllocAndInitDevice(pent^.bp.ListPos.Owner);
@@ -729,7 +735,7 @@ begin
                                                               //PExtAttrib:=nil;
                                                               end;
           result^.name:=copy(result^.name,8,length(result^.name)-7);
-          result^.index:=PGDBObjBlockdefArray(drawing.GetBlockDefArraySimple).getindex(pansichar(result^.name));
+          result^.index:=PGDBObjBlockdefArray(drawing.GetBlockDefArraySimple).getindex(result^.name);
      end;
 end;
 class function GDBObjDevice.GetDXFIOFeatures:TDXFEntIODataManager;

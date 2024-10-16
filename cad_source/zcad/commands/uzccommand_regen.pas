@@ -22,21 +22,21 @@ unit uzccommand_regen;
 
 interface
 uses
-  uzcLog,uzbtypes,
+  uzcLog,//uzbtypes,
   uzccommandsabstract,uzccommandsimpl,
-  uzeentity,uzeentconnected,
-  gzctnrVectorTypes,
+  uzeentity,//uzeentconnected,
+  //gzctnrVectorTypes,
   uzedrawingsimple,uzcdrawings,
   uzcinterface,
   uzgldrawcontext,
   uzelongprocesssupport,
   uzeroot;
 
-function Regen_com(operands:TCommandOperands):TCommandResult;
+function Regen_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 
 implementation
 
-function Regen_com(operands:TCommandOperands):TCommandResult;
+function Regen_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var
   drawing:PTSimpleDrawing;
   DC:TDrawContext;
@@ -68,7 +68,7 @@ end;
 
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-  CreateCommandFastObjectPlugin(@Regen_com,'Regen',CADWG,0);
+  CreateZCADCommand(@Regen_com,'Regen',CADWG,0);
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
 end.

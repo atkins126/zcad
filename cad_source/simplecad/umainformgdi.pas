@@ -5,13 +5,15 @@ unit umainformGDI;
 interface
 
 uses
-  LCLType,Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs,
+  LCLType,Classes, SysUtils, FileUtil, Math,
+  Forms, Controls, Graphics, Dialogs,
   ExtCtrls, StdCtrls, Spin,
   {From ZCAD}
+  uzeffmanager,
                                                                          //zcad memorymanager
   uzbtypes, uzegeometrytypes,                                              //zcad basetypes
   uzegeometry,                                                                     //some mathematical and geometrical support
-  uzefontmanager,uzeffshx,                                                        //fonts manager and SHX fileformat support
+  uzefontmanager,uzeFontFileFormatSHX,                                                        //fonts manager and SHX fileformat support
   uzglviewareaabstract,uzglviewareageneral,uzgldrawcontext,                          //generic view areas support
   uzglviewareaogl,uzglviewareagdi,                                           //gdi and opengl wiewareas
   uzeentity,                                                                    //generic entitys objects parent
@@ -561,7 +563,7 @@ begin
     pobj^.textprop.size:=1+random(10);
     pobj^.textprop.justify:=b2j[1+random(11)];
     pobj^.textprop.wfactor:=0.3+random*0.7;
-    pobj^.textprop.oblique:=(random(30)-15)*pi/180;
+    pobj^.textprop.oblique:=DegToRad(random(30)-15);
     angl:=pi*random;
     //pobj^.textprop.angle:=angl;
     pobj^.local.basis.OX:=VectorTransform3D(PGDBObjText(pobj)^.local.basis.OX,uzegeometry.CreateAffineRotationMatrix(PGDBObjText(pobj)^.Local.basis.oz,-angl));
@@ -578,13 +580,15 @@ end;
 procedure TForm1.BtnOpenDXFClick(Sender: TObject);
 var
    dc:TDrawContext;
+   zdc:TZDrawingContext;
 begin
      {$ifdef dxfio}
      if OpenDialog1.Execute then
      begin
           _StartLongProcess(0,'Load dxf file');
           dc:=GetCurrentDrawing^.CreateDrawingRC;
-          addfromdxf(OpenDialog1.FileName,@GetCurrentDrawing^.pObjRoot^,TLOLoad,GetCurrentDrawing^);
+          zdc.CreateRec(GetCurrentDrawing^,GetCurrentDrawing^.pObjRoot^,TLOLoad,dc);
+          addfromdxf(OpenDialog1.FileName,zdc);
           GetCurrentDrawing^.pObjRoot^.FormatEntity(GetCurrentDrawing^,dc);
           GetCurrentDrawing^.pObjRoot^.ObjArray.ObjTree.maketreefrom(GetCurrentDrawing^.pObjRoot^.ObjArray,GetCurrentDrawing^.pObjRoot^.vp.BoundingBox,nil);
           //GetCurrentDrawing^.pObjRoot^.ObjArray.ObjTree:=createtree(GetCurrentDrawing^.pObjRoot^.ObjArray,GetCurrentDrawing^.pObjRoot^.vp.BoundingBox,@GetCurrentDrawing^.pObjRoot^.ObjArray.ObjTree,IninialNodeDepth,nil,TND_Root)^;

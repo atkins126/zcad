@@ -39,11 +39,14 @@ uses
 
   Interfaces,forms, classes,LCLVersion,
   uzclog,uzcreglog,
-  uzcfsplash,
+
+  uzcSysInfo,uzcfsplash,
   uzcsysvars,
 
-  uzcsysparams,uzcSysInfo,uzcPathMacros,
+  uzcsysparams,uzcPathMacros,
   uzbpaths,uzbCommandLineParser,uzcCommandLineParser,
+
+  uzcregMemProfiler,
 
   varman,
   //
@@ -67,40 +70,42 @@ uses
   {$INCLUDE allgeneratedfiles.inc}//correct defs in system.pas
   uzcregother,//setup SysVar
 
-  {$IFDEF WINDOWS}uMetaDarkStyle,uDarkStyleSchemes,uDarkStyleSchemesLoader,{$ENDIF}
+ {$IFDEF WINDOWS}
+  uMetaDarkStyle,uDarkStyleSchemes,uDarkStyleSchemesAdditional,
+  uDarkStyleSchemesLoader,
+ {$ENDIF}
 
   UUnitManager,
   uzefontmanager,
-  uzeffshx,uzeffttf,uzeffLibreDWG,uzeffLibreDWG2Ents,
+  uzeFontFileFormatSHX,
+  uzeFontFileFormatTTFBackendFTTest,uzeffttf,
+  uzeffLibreDWG,uzeffLibreDWG2Ents,
 
 
   uzcdrawings,
 
-  (*            //все нужные файлы перечислены в allgeneratedfiles.inc
-  {DXF entities}
-  GDBLine,
-  GDBText,
-  GDBMText,
-  GDBPolyLine,
-  GDBCircle,
-  GDBArc,
-  GDBLWPolyLine,
-  GDBPoint,
-  GDBBlockInsert,
-  gdbellipse,
-  gdbspline,
-  GDB3DFace,
-  GDBSolid,
-  gdbgenericdimension,
 
+  {DXF entities}
+  uzeent3dface,uzeentsolid,
+  uzeentcircle,uzeentarc,uzeentellipse,
+  uzeentblockinsert,uzeentdevice,
+  uzeentdimaligned,uzeentdimdiametric,uzeentdimension,
+  uzeentdimensiongeneric,uzeentdimradial,uzeentdimrotated,
+  uzeenthatch,
+  uzeentline,
+  uzeentlwpolyline,
+  uzeenttext,uzeentmtext,
+  uzeentpoint,
+  uzeentpolyline,
+  uzeentspline,
+  uzeenttable,
+
+  {$IFDEF ELECTROTECH}
   {ZCAD entities}
-  GDBCable,
-  GDBDevice,
-  gdbaligneddimension,
-  gdbrotateddimension,
-  gdbdiametricdimension,
-  gdbradialdimension,
-  *)
+  uzcentcable,
+  uzcentelleader,
+  uzcentnet,
+  {$ENDIF}
 
 
 
@@ -188,7 +193,7 @@ uses
   uzccommand_show,uzccommand_showtoolbar,
 
   uzccommand_setobjinsp,
-  uzccommand_dbgmemsummary,
+  uzccommand_dbgmemsummary,uzccommand_dbgMemProfiler,
   uzccommand_executefile,
   uzccommand_dbgClipboard,
   uzccommand_dbgCmdList,uzccommand_dbgBlocksList,
@@ -225,7 +230,7 @@ uses
   uzccommand_dataexport,uzccommand_dataimport,
   uzccommand_extdrentslist,uzccommand_extdralllist,uzccommand_extdrAdd,uzccommand_extdrRemove,
   uzccommand_DevDefSync,
-  uzccommand_VariablesAdd,
+  uzccommand_VariablesAdd,uzccommand_VarValueCopy,
 
   uzccommand_dbgRaiseException,uzccommand_dbgGetAV,uzccommand_dbgGetOutOfMem,uzccommand_dbgGetStackOverflow,
   uzccommand_dbgPlaceAllBlocks,
@@ -236,18 +241,22 @@ uses
   uzccommand_tstCmdLinePrompt,
   uzccommand_explDbCheck,
 
-  uzccommand_cfgAddSupportPath,
+  uzccommand_cfgAddSupportPath,uzccommand_cfgSetRendererBackEnd,
   uzccommand_DockingOptions,
   uzcCommand_MoveEntsByMouse,
-
+  uzcCommand_LPCSRun,
+  uzcCommand_Find,
+  uzcCommand_SpellCheck,
+  uzcCommand_Duplicate,
 
   uzcenitiesvariablesextender,uzcExtdrLayerControl,uzcExtdrSmartTextEnt,
   uzcExtdrIncludingVolume,uzcExtdrSCHConnection,uzcExtdrSCHConnector,
+  uzcExtdrReport,
 
   {$IFNDEF DARWIN}
   {$IFDEF ELECTROTECH}
   //**for velec func**//
-  uzccommand_drawsuperline,
+  uzccommand_drawsuperline,uzccommand_l2sl,
   uzvslagcab, //автопрокладка кабелей по именным суперлиниям
   uzvagslcom, //создания именных суперлиний в комнате между извещателями
   uzvstripmtext, //очистка мтекста, сделано плохо, в будущем надо переделывать мтекст и механизм.
@@ -258,14 +267,17 @@ uses
   uzvmanemcom, //управления и обработка полученой электрической модели
   uzvmanemschemalevelone, //создание одноуровневой схемы
   uzvmanemdialogcom,//запуск генератора схемы через диалоговое окно
-  uzvmodeltoxlsx,   //запуск экспорта информации из veb модели в xlsx
+  {$IFDEF WINDOWS}//uzvmodeltoxlsx,
+  uzvmodeltoxlsxfps, uzvdevtoxlsx, uzvxlsxtocad,uzvelectricalexcelcom,{$ENDIF}  //запуск экспорта информации из veb модели в xlsx на OLE
+
+  //uzvelectricalexcelcom,
   //**//
   {$ENDIF}
   {$ENDIF}
 
   //uzccomexample2,
   uzventsuperline,
-  uzccomobjectinspector,
+  //uzccomobjectinspector,
   //uzccomexperimental,
 
   {$IFDEF ELECTROTECH}
@@ -293,8 +305,8 @@ uses
   uzccommand_dbgappexplorer,
   uzelongprocesssupport;
 
-resourcestring
- rsStartAutorun='Execute *components\autorun.cmd';
+//resourcestring
+// rsStartAutorun='Execute *components\autorun.cmd';
 
 var
   lpsh:TLPSHandle;
@@ -310,7 +322,7 @@ begin
   lpsh:=LPS.StartLongProcess('Start program',@lpsh,0);
 {$IFDEF REPORTMMEMORYLEAKS}printleakedblock:=true;{$ENDIF}
 {$IFDEF REPORTMMEMORYLEAKS}
-       SetHeapTraceOutput(sysvar.PATH.Program_Run^+'log/memory-heaptrace.txt');
+       SetHeapTraceOutput(sysvar.PATH.Program_Run^+'/log/memory-heaptrace.txt');
        keepreleased:=true;
 {$ENDIF}
   //Application_Initialize перемещен в инициализацию uzcfsplash чтоб показать сплэш пораньше
@@ -318,7 +330,7 @@ begin
 
   //инициализация drawings
   FontManager.EnumerateFontFiles;
-  uzcdrawings.startup('*rtl/dwg/DrawingVars.pas','');
+  uzcdrawings.startup('$(ZCADPath)/rtl/dwg/DrawingVars.pas','');
   uzcdevicebase.startup;
   {$IF lcl_fullversion>2001200}
   {$ELSE}
@@ -336,9 +348,9 @@ begin
   ZCMsgCallBackInterface.TextMessage(format(rsZCADStarted,[programname,sysvar.SYS.SYS_Version^]),TMWOHistoryOut);
   application.ProcessMessages;
 
-  //SplashForm.TXTOut(rsStartAutorun,false);commandmanager.executefile('*components/autorun.cmd',drawings.GetCurrentDWG,nil);
+  ZCADMainWindow.SwithToProcessBar;
+
   FromDirsIterator(sysvar.PATH.Preload_Path^,'*.cmd','autorun.cmd',RunCmdFile,nil);
-  //*components/blockpreviewexport.cmd
   if CommandLineParser.HasOption(RunScript)then
     for i:=0 to CommandLineParser.OptionOperandsCount(RunScript)-1 do begin
       scrfile:=CommandLineParser.OptionOperand(RunScript,i);
@@ -349,6 +361,8 @@ begin
     commandmanager.executecommand('Load('+sysparam.notsaved.preloadedfile+')',drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
     sysparam.notsaved.preloadedfile:='';
   end;
+
+  ZCADMainWindow.SwithToHintText;
   //убираем сплэш
   ZCMsgCallBackInterface.Do_SetNormalFocus;
   removesplash;

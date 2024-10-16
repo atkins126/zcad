@@ -17,10 +17,12 @@
 }
 
 unit UGDBNamedObjectsArray;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 interface
 uses gzctnrVectorTypes,gzctnrVectorPObjects,sysutils,uzbtypes,uzegeometry,
-     uzeNamedObject,gzctnrVectorClass;
+     uzeNamedObject,//gzctnrVectorClass,
+     Strings;
 type
 {EXPORT+}
 TForCResult=(IsFounded(*'IsFounded'*)=1,
@@ -30,20 +32,18 @@ TForCResult=(IsFounded(*'IsFounded'*)=1,
 GDBNamedObjectsArray{-}<PTObj,TObj>{//}
                      = object(GZVectorPObects{-}<PTObj,TObj>{//})
                     constructor init(m:Integer);
-                    function getIndex(name: String):Integer;
-                    function getAddres(name: String):Pointer;
+                    function getIndex(const name: String):Integer;
+                    function getAddres(const name: String):Pointer;overload;
+                    function getAddres(const name: ShortString):Pointer;overload;
                     function GetIndexByPointer(p:PGDBNamedObject):Integer;
-                    function AddItem(name:String; out PItem:Pointer):TForCResult;
-                    function MergeItem(name:String;LoadMode:TLoadOpt):Pointer;
-                    function GetFreeName(NameFormat:String;firstindex:integer):String;
+                    function AddItem(const name:String; out PItem:Pointer):TForCResult;
+                    function MergeItem(const name:String;LoadMode:TLoadOpt):Pointer;
+                    function GetFreeName(const NameFormat:String;firstindex:integer):String;
                     procedure IterateCounter(PCounted:Pointer;var Counter:Integer;proc:TProcCounter);virtual;
               end;
 {EXPORT-}
 PTGenericNamedObjectsArray=^TGenericNamedObjectsArray;
 TGenericNamedObjectsArray=GDBNamedObjectsArray{-}<PGDBNamedObject,GDBNamedObject>{//};
-TNamedObjectsArray{-}<TCls:Class>{//}
-                     = class(GZVectorClass{-}<TCls>{//})
-              end;
 implementation
 procedure GDBNamedObjectsArray<PTObj,TObj>.IterateCounter(PCounted:Pointer;var Counter:Integer;proc:TProcCounter);
 var p:PGDBNamedObject;
@@ -57,7 +57,7 @@ begin
     p:=iterate(ir);
     until p=nil;
 end;
-function GDBNamedObjectsArray<PTObj,TObj>.GetFreeName(NameFormat:String;firstindex:integer):String;
+function GDBNamedObjectsArray<PTObj,TObj>.GetFreeName(const NameFormat:String;firstindex:integer):String;
 var
    counter,LoopCounter:integer;
    OldName:String;
@@ -86,7 +86,7 @@ begin
   OldName:=result;
   until getIndex(result)=-1;
 end;
-function GDBNamedObjectsArray<PTObj,TObj>.MergeItem(name:String;LoadMode:TLoadOpt):Pointer;
+function GDBNamedObjectsArray<PTObj,TObj>.MergeItem(const name:String;LoadMode:TLoadOpt):Pointer;
 begin
      if AddItem(name,result)=IsFounded then
                        begin
@@ -108,7 +108,7 @@ begin
        begin
        result:=IsFounded;
        repeat
-            if uppercase(p^.name) = uppercase(name) then
+         if (Length(p^.name)=Length(name)) and (StrLIComp(@p^.name[1], @name[1], Length(name))=0) then
                                                         begin
                                                              PItem:=p;
                                                              system.exit;
@@ -129,22 +129,25 @@ end;
 function GDBNamedObjectsArray<PTObj,TObj>.getIndex;
 var
   p:PGDBNamedObject;
-    ir:itrec;
+  ir:itrec;
 begin
   result := -1;
 
   p:=beginiterate(ir);
   if p<>nil then
-  repeat
-    if uppercase(p^.name) = uppercase(name) then
-    begin
-      result := ir.itc;
-      exit;
-    end;
-    p:=iterate(ir);
-  until p=nil;
+  begin
+    repeat
+      if (Length(p^.name)=Length(name)) and (StrLIComp(@p^.name[1], @name[1], Length(name))=0) then
+      begin
+        result := ir.itc;
+        exit;
+      end;
+      p:=iterate(ir);
+    until p=nil;
+  end;
 end;
-function GDBNamedObjectsArray<PTObj,TObj>.getAddres;
+
+function GDBNamedObjectsArray<PTObj,TObj>.getAddres(const name: String):Pointer;
 var
   p:PGDBNamedObject;
       ir:itrec;
@@ -152,15 +155,39 @@ begin
   result:=nil;
   p:=beginiterate(ir);
   if p<>nil then
-  repeat
-    if uppercase(p^.name) = uppercase(name) then
-    begin
-      result := p;
-      exit;
-    end;
-    p:=iterate(ir);
-  until p=nil;
+  begin
+    repeat
+      if (Length(p^.name)=Length(name)) and (StrLIComp(@p^.name[1], @name[1], Length(name))=0) then
+      begin
+        result := p;
+        exit;
+      end;
+      p:=iterate(ir);
+    until p=nil;
+  end;
 end;
+
+function GDBNamedObjectsArray<PTObj,TObj>.getAddres(const name: ShortString):Pointer;
+var
+  p:PGDBNamedObject;
+  ir:itrec;
+begin
+  result:=nil;
+  p:=beginiterate(ir);
+  if p<>nil then
+  begin
+    repeat
+      if (Length(p^.name)=Length(name)) and (StrLIComp(@p^.name[1], @name[1], Length(name))=0) then
+      begin
+        result := p;
+        exit;
+      end;
+      p:=iterate(ir);
+    until p=nil;
+  end;
+end;
+
+
 function GDBNamedObjectsArray<PTObj,TObj>.GetIndexByPointer(p:PGDBNamedObject):Integer;
 var
   _pobj:PGDBNamedObject;

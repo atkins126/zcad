@@ -17,6 +17,7 @@
 }
 
 unit uzcregnavigatordevices;
+{$Codepage UTF8}
 {$INCLUDE zengineconfig.inc}
 interface
 uses uzcfnavigatordevices,uzcfcommandline,uzbpaths,TypeDescriptors,uzctranslations,Forms,
@@ -125,7 +126,7 @@ begin
  TNavigatorRisers(result).BP.TreeBuildMap:=GetAnsiStringFromSavedUnit(FormName,TreeBuildMapSaveVarSuffix,'+@@[RiserName]');
  TNavigatorRisers(result).BP.IncludeEntities:=GetAnsiStringFromSavedUnit(FormName,IncludeEntitiesSaveVarSuffix,'IncludeEntityName(''Device'')');
  TNavigatorRisers(result).BP.IncludeProperties:=GetAnsiStringFromSavedUnit(FormName,IncludePropertiesSaveVarSuffix,'IncludeIfMask(%%(''Name''),''EL_CABLE_*'')');
- TNavigatorRisers(result).BP.TreeProperties:=GetAnsiStringFromSavedUnit(FormName,TreePropertiesSaveVarSuffix,'SetColumnsCount(3,0);'#10'SetColumnParams(0,''Tree'',''@@[RiserName]'',''tmpGUIParamSave_NavRis_C0'',1);'#10'SetColumnParams(1,''Elevation'',''@@[Elevation]'',''tmpGUIParamSave_NavRis_C1'',1);'#10'SetColumnParams(2,''Text'',''@@[Text]'',''tmpGUIParamSave_NavRis_C2'',1)');
+ TNavigatorRisers(result).BP.TreeProperties:=GetAnsiStringFromSavedUnit(FormName,TreePropertiesSaveVarSuffix,'SetColumnsCount(3,0);'#10'SetColumnParams(0,''Tree'',''@@[NMO_Name]'',''tmpGUIParamSave_NavRis_C0'',1);'#10'SetColumnParams(1,''Elevation'',''@@[Elevation]'',''tmpGUIParamSave_NavRis_C1'',1);'#10'SetColumnParams(2,''Text'',''@@[Text]'',''tmpGUIParamSave_NavRis_C2'',1)');
  TNavigatorRisers(result).BP.CreateRootNode:=GetBooleanFromSavedUnit(FormName,TreeCreateRootNode,False);
  TNavigatorRisers(result).BP.UseMainFunctions:=False;
 end;
@@ -142,7 +143,7 @@ begin
 end;
 
 initialization
-  units.CreateExtenalSystemVariable(SysVarUnit,SysVarN,GetSupportPath,expandpath('*rtl/system.pas'),InterfaceTranslate,'DSGN_NavigatorsUseMainFunction','Boolean',@UseMainFunction);
+  units.CreateExtenalSystemVariable(SysVarUnit,SysVarN,GetSupportPath,expandpath('$(ZCADPath)/rtl/system.pas'),InterfaceTranslate,'DSGN_NavigatorsUseMainFunction','Boolean',@UseMainFunction);
   ZCADGUIManager.RegisterZCADFormInfo('NavigatorDevices',rsDevices,TNavigatorDevices,rect(0,100,200,600),ZCADFormSetupProc,CreateNavigatorDevices,@NavigatorDevices,true);
   ZCADGUIManager.RegisterZCADFormInfo('NavigatorRisers',rsRisers,TNavigatorRisers,rect(0,100,200,600),ZCADFormSetupProc,CreateNavigatorRisers,@NavigatorRisers,true);
   ZCADGUIManager.RegisterZCADFormInfo('NavigatorCables',rsCables,TNavigatorCables,rect(0,100,200,600),ZCADFormSetupProc,CreateNavigatorCables,@NavigatorCables,true);

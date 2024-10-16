@@ -26,15 +26,15 @@ uses
   uzcLog,
   gzctnrVectorTypes,
   uzccommandsabstract,uzccommandsimpl,
-  uzestyleslayers,uzbtypes,
-  uzcstrconsts,uzccommandsmanager,uzcdrawings,uzeentity,uzccominteractivemanipulators,
+  uzestyleslayers,//uzbtypes,
+  {uzcstrconsts,}uzccommandsmanager,uzcdrawings,uzeentity,//uzccominteractivemanipulators,
   uzgldrawcontext,
   uzegeometrytypes,
   uzeentmtext,
   uzegeometry,
   uzcutils,
-  uzeentabstracttext,
-  uzeentpolyline,uzeconsts,
+  //uzeentabstracttext,
+  uzeentpolyline,//uzeconsts,
   uzglviewareageneral,
   Varman;
 
@@ -79,7 +79,7 @@ begin
 end;
 
 
-function MoveEntsByMouse_com(operands:TCommandOperands):TCommandResult;
+function MoveEntsByMouse_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var
   p1:GDBvertex;
   t_matrix:DMatrix4D;
@@ -116,7 +116,7 @@ end;
 
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-  CreateCommandFastObjectPlugin(@MoveEntsByMouse_com,'MoveEntsByMouse',CADWG,0)^.CEndActionAttr:=[CEDeSelect];
+  CreateZCADCommand(@MoveEntsByMouse_com,'MoveEntsByMouse',CADWG,0)^.CEndActionAttr:=[CEDeSelect];
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
 end.

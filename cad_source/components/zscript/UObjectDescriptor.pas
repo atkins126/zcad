@@ -55,31 +55,31 @@ ObjectDescriptor=object(RecordDescriptor)
                        PVMT:Pointer;
                        VMTCurrentOffset:Integer;
                        PDefaultConstructor:Pointer;
-                       SimpleMenods:{GDBOpenArrayOfObjects}TSimpleMenodsVector;
-                       LincedData:String;
-                       LincedObjects:Boolean;
+                       SimpleMenods:TSimpleMenodsVector;
+                       //LincedData:String;
+                       //LincedObjects:Boolean;
                        ColArray:TZctnrVectorBytes;
                        Properties:TPropertiesVector;
 
 
-                       constructor init(tname:string;pu:pointer);
-                       function CreateProperties(const f:TzeUnitsFormat;mode:PDMode;PPDA:PTPropertyDeskriptorArray;Name:TInternalScriptString;PCollapsed:Pointer;ownerattrib:Word;var bmode:Integer;const addr:Pointer;ValKey,ValType:TInternalScriptString):PTPropertyDeskriptorArray;virtual;
+                       constructor init(const tname:string;pu:pointer);
+                       function CreateProperties(const f:TzeUnitsFormat;mode:PDMode;PPDA:PTPropertyDeskriptorArray;const Name:TInternalScriptString;PCollapsed:Pointer;ownerattrib:Word;var bmode:Integer;const addr:Pointer;const ValKey,ValType:TInternalScriptString):PTPropertyDeskriptorArray;virtual;
                        procedure CopyTo(RD:PTUserTypeDescriptor);
                        procedure RegisterVMT(pv:Pointer);
                        procedure RegisterDefaultConstructor(pv:Pointer);
                        procedure RegisterObject(pv,pc:Pointer);
-                       procedure AddMetod(objname,mn,dt:TInternalScriptString;ma:Pointer;attr:GDBMetodModifier);
+                       procedure AddMetod(const objname,mn,dt:TInternalScriptString;ma:Pointer;attr:GDBMetodModifier);
                        procedure AddProperty(var pd:PropertyDescriptor);
-                       function FindMetod(mn:TInternalScriptString;obj:Pointer):PMetodDescriptor;virtual;
-                       function FindMetodAddr(mn:TInternalScriptString;obj:Pointer;out pmd:pMetodDescriptor):TMethod;virtual;
-                       procedure RunMetod(mn:TInternalScriptString;obj:Pointer);
-                       procedure SimpleRunMetodWithArg(mn:TInternalScriptString;obj,arg:Pointer);
+                       function FindMetod(const mn:TInternalScriptString;obj:Pointer):PMetodDescriptor;virtual;
+                       function FindMetodAddr(const mn:TInternalScriptString;obj:Pointer;out pmd:pMetodDescriptor):TMethod;virtual;
+                       procedure RunMetod(const mn:TInternalScriptString;obj:Pointer);
+                       procedure SimpleRunMetodWithArg(const mn:TInternalScriptString;obj,arg:Pointer);
                        procedure RunDefaultConstructor(PInstance:Pointer);
                        //function Serialize(PInstance:Pointer;SaveFlag:Word;var membuf:PTZctnrVectorBytes;var  linkbuf:PGDBOpenArrayOfTObjLinkRecord;var sub:integer):integer;virtual;
                        //function DeSerialize(PInstance:Pointer;SaveFlag:Word;var membuf:TZctnrVectorBytes;linkbuf:PGDBOpenArrayOfTObjLinkRecord):integer;virtual;
                        destructor Done;virtual;
                        function GetTypeAttributes:TTypeAttr;virtual;
-                       procedure SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;prefix:TInternalScriptString);virtual;
+                       procedure SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;const prefix:TInternalScriptString);virtual;
                        procedure MagicFreeInstance(PInstance:Pointer);virtual;
                        procedure RegisterTypeinfo(ti:PTypeInfo);virtual;
                        procedure CorrectFieldsOffset(ti: PTypeInfo);
@@ -116,8 +116,8 @@ begin
      MetodName:=mn;
      NameHash:=makehash(uppercase(MetodName));
      OperandsName:=dt;
-     if dt='(var obj):Integer;' then
-                                        dt:=dt;
+//     if dt='(var obj):Integer;' then
+//                                        dt:=dt;
 
      MetodAddr:=ma;
      Attributes:=attr;
@@ -170,10 +170,10 @@ begin
 end;
 procedure ObjectDescriptor.RegisterTypeinfo(ti:PTypeInfo);
 begin
-     if TypeName='TMSEditor' then begin
-          if TypeName='TMSEditor' then
-                    ti:=ti;
-     end;
+//     if TypeName='TMSEditor' then begin
+//          if TypeName='TMSEditor' then
+//                    ti:=ti;
+//     end;
      CorrectFieldsOffset(ti);
 end;
 procedure ObjectDescriptor.CorrectCurrentFieldsOffset(td:PTypeData;var i:integer);
@@ -210,10 +210,10 @@ end;
 procedure ObjectDescriptor.CorrectFieldsOffset(ti:PTypeInfo);
 var
    td:PTypeData;
-   mf: PManagedField;
-   i,j:integer;
-   etd:PRecordDescriptor;
-   pfd:pFieldDescriptor;
+   //mf: PManagedField;
+   i{,j}:integer;
+   //etd:PRecordDescriptor;
+   //pfd:pFieldDescriptor;
 begin
      td:=GetTypeData(ti);
      self.SizeInBytes:=td.RecSize;
@@ -231,7 +231,7 @@ begin
      //Pointer(pd.w):=nil;
 end;
 
-procedure ObjectDescriptor.SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;prefix:TInternalScriptString);
+procedure ObjectDescriptor.SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;const prefix:TInternalScriptString);
 //var pd:PFieldDescriptor;
 //    d:FieldDescriptor;
 //    ir:itrec;
@@ -381,7 +381,6 @@ begin
      //Properties.FreeAndDone;
      parent:=nil;
      ColArray.done;
-     LincedData:='';
      inherited;
 end;
 constructor ObjectDescriptor.init;
@@ -399,8 +398,6 @@ begin
      {$IFDEF CPU64}VMTCurrentOffset:=24{sizeof(VMT)};{$ENDIF}
      {$IFDEF DELPHI}VMTCurrentOffset:=0;{$ENDIF}
      PDefaultConstructor:=nil;
-     pointer(LincedData):=nil;
-     LincedObjects:=false;
      ColArray.init(200);
 end;
 procedure ObjectDescriptor.AddMetod;
@@ -415,8 +412,8 @@ begin
                                                        pcmd.init(objname,mn,dt,ma,attr,punit)
                                                    else
                                                        begin
-                                                            if uppercase(mn)='FORMAT' then
-                                                                                           mn:=mn;
+//                                                            if uppercase(mn)='FORMAT' then
+//                                                                                           mn:=mn;
                                                             pcmd.init(objname,mn,dt,pointer(vmtcurrentoffset),attr,punit);
                                                             inc(vmtcurrentoffset,{4 cpu64}sizeof(pointer));
                                                        end;
@@ -425,8 +422,8 @@ begin
                     begin
                          if (attr and m_virtual)=0 then
                                                         begin
-                                                             if uppercase(mn)='FORMAT' then
-                                                                                           mn:=mn;
+//                                                             if uppercase(mn)='FORMAT' then
+//                                                                                           mn:=mn;
                                                              pmd^.MetodAddr:=ma;
                                                         end;
                     end;
@@ -506,7 +503,7 @@ begin
            pmd:=SimpleMenods.iterate(ir);
      until pmd=nil;
 end;
-function ObjectDescriptor.FindMetodAddr(mn:TInternalScriptString;obj:Pointer;out pmd:pMetodDescriptor):TMethod;
+function ObjectDescriptor.FindMetodAddr(const mn:TInternalScriptString;obj:Pointer;out pmd:pMetodDescriptor):TMethod;
 begin
      pmd:=findmetod(mn,obj);
      if pmd<>nil then
@@ -529,7 +526,7 @@ begin
           result.Code:=nil;
      end;
 end;
-procedure ObjectDescriptor.SimpleRunMetodWithArg(mn:TInternalScriptString;obj,arg:Pointer);
+procedure ObjectDescriptor.SimpleRunMetodWithArg(const mn:TInternalScriptString;obj,arg:Pointer);
 var pmd:pMetodDescriptor;
     tm:tmethod;
 begin
@@ -663,10 +660,10 @@ var pcmd:PMetodDescriptor;
 begin
      zTraceLn('{T+}[ZSCRIPT]ObjectDescriptor.CopyTo(@%s)',[RD.TypeName]);
      //programlog.LogOutFormatStr('ObjectDescriptor.CopyTo(@%s)',[RD.TypeName],lp_IncPos,LM_Debug);
-     if self.TypeName='DeviceDbBaseObject' then
-                                               TypeName:=TypeName;
-     if rd^.TypeName='DbBaseObject' then
-                                               TypeName:=TypeName;
+//     if self.TypeName='DeviceDbBaseObject' then
+//                                               TypeName:=TypeName;
+//     if rd^.TypeName='DbBaseObject' then
+//                                               TypeName:=TypeName;
      inherited CopyTo(RD);
      pmd:=SimpleMenods.beginiterate(ir);
      if pmd<>nil then
@@ -707,23 +704,23 @@ begin
 end;
 function ObjectDescriptor.CreateProperties;
 var
-   pld:PtUserTypeDescriptor;
+   //pld:PtUserTypeDescriptor;
    p{,p2}:pointer;
    pp:PPropertyDescriptor;
-   objtypename,propname:string;
-   ir,ir2:itrec;
+   {objtypename,}propname:string;
+   ir{,ir2}:itrec;
    baddr{,b2addr,eaddr}:Pointer;
 //   ppd:PPropertyDeskriptor;
 //   PDA:PTPropertyDeskriptorArray;
 //   bmodesave:Integer;
-   ts:PTPropertyDeskriptorArray;
-   sca,sa:Integer;
-   pcol:pboolean;
+   //ts:PTPropertyDeskriptorArray;
+   //sca,sa:Integer;
+   //pcol:pboolean;
    ppd:PPropertyDeskriptor;
 begin
      baddr:=addr;
      //b2addr:=baddr;
-     ts:=inherited CreateProperties(f,PDM_Field,PPDA,Name,PCollapsed,ownerattrib,bmode,addr,valkey,valtype);
+     {ts:=}inherited CreateProperties(f,PDM_Field,PPDA,Name,PCollapsed,ownerattrib,bmode,addr,valkey,valtype);
      exit;
 
      pp:=Properties.beginiterate(ir);
@@ -758,104 +755,7 @@ begin
      //eaddr:=addr;
         if colarray.parray=nil then
                                    colarray.CreateArray;
-     if LincedObjects or(LincedData<>'') then begin
-        colarray.Count:=colarray.max;
-        sca:=colarray.max;
-        sa:={PGDBOpenArrayOfData}PTGenericVectorData(baddr)^.getcount;
-        if sa<=0 then exit;
-        if sca>sa then
-                      begin
-                           //colarray.SetSize(sa);
-                           fillchar(colarray.PArray^,sa,true);
-                      end
-                  else if sca=sa then
-                                     begin
-
-                                     end
-                  else
-                      begin
-                           colarray.SetSize(sa);
-                           //colarray.grow;
-                           fillchar(colarray.PArray^,sa,true);
-                      end;
-                  end;
         if ppointer(baddr)^=nil then exit;
-        if LincedData<>''then
-        begin
- (*       bmodesave:=property_build;
-     if PCollapsed<>field_no_attrib then
-     begin
-           ppd:=GetPPD(ppda,bmode);
-           ppd^.Name:='LincedData';
-           ppd^.Attr:=ownerattrib;
-           ppd^.Collapsed:=PCollapsed;
-           if bmode=property_build then
-           begin
-                Getmem(Pointer(pda),sizeof(TPropertyDeskriptorArray));
-                pda^.init(100);;
-                ppd^.SubProperty:=Pointer(pda);
-                ppda:=pda;
-           end else
-           begin
-                bmodesave:=bmode;
-                bmode:=0;
-                ppda:=PTPropertyDeskriptorArray(ppd^.subproperty);
-                ppd:=GetPPD(ppda,bmode);
-           end;
-     end;
-             if LincedData='TObjLinkRecord' then
-                                    LincedData:=LincedData;
- *)
-             pld:=pointer(SysUnit.TypeName2PTD(LincedData));
-             //pld:=pointer(PUserTypeDescriptor(SysUnit.InterfaceTypes.exttype.getDataMutable(SysUnit.InterfaceTypes._TypeName2Index(LincedData))^));
-             p:={PGDBOpenArrayOfData}PTGenericVectorData(baddr)^.beginiterate(ir);
-             pcol:=colarray.beginiterate(ir2);
-             if p<>nil then
-             repeat
-                   //b2addr:=p;
-                   //pcol^:=false;
-                   //---------------------------------if bmode=property_build then
-                                               pld^.CreateProperties(f,PDM_Field,{PPDA}ts,LincedData,pcol{PCollapsed}{field_no_attrib},ownerattrib,bmode,p,'','');
-                   //p:=b2addr;
-                   pcol:=colarray.iterate(ir2);
-                   p:={PGDBOpenArrayOfData}PTGenericVectorData(baddr)^.iterate(ir);
-                   //if (bmode<>property_build)then inc(bmode);
-             until p=nil;
-             //if bmodesave<>property_build then bmode:=bmodesave;
-        end;
-        if LincedObjects then
-        begin
-             //if assigned(sysvar.debug.ShowHiddenFieldInObjInsp) then
-             if not debugShowHiddenFieldInObjInsp{sysvar.debug.ShowHiddenFieldInObjInsp^} then
-                                                                exit;
-             p:={PGDBOpenArrayOfData}PTGenericVectorData(baddr)^.beginiterate(ir);
-             pcol:=colarray.beginiterate(ir2);
-             if p<>nil then
-             repeat
-                   objtypename:=PGDBaseObject(P)^.GetObjName{ObjToString('','')};
-                   pld:=pointer(SysUnit.TypeName2PTD(PGDBaseObject(P)^.GetObjTypeName));
-                   if bmode=property_build then
-                                               pld^.CreateProperties(f,PDM_Field,{PPDA}ts,objtypename,pcol{PCollapsed}{field_no_attrib},ownerattrib,bmode,p,'','');
-                   pcol:=colarray.iterate(ir2);
-                   p:={PGDBOpenArrayOfData}PTGenericVectorData(baddr)^.iterate(ir);
-             until p=nil;
-             {p:=PGDBOpenArrayOfGDBPointer(PInstance)^.beginiterate(ir);
-             if p<>nil then
-             repeat
-                   objtypename:=PGDBaseObject(P)^.GetObjTypeName;
-                   if objtypename<>ObjN_NotRecognized then
-                   begin
-                        if objtypename<>ObjN_GDBObjLine then
-                                                            objtypename:=objtypename;
-                        FundamentalStringDescriptorObj.Serialize(@objtypename,saveflag,membuf,linkbuf);
-                        pld:=pointer(PUserTypeDescriptor(SysUnit.InterfaceTypes.exttype.getDataMutable(SysUnit.InterfaceTypes._TypeName2Index(objtypename))^));
-                        pld^.Serialize(p,saveflag,membuf,linkbuf);
-                   end;
-                   p:=PGDBOpenArrayOfGDBPointer(PInstance)^.iterate(ir);
-             until p=nil;
-             objtypename:=ObjN_ArrayEnd;
-             FundamentalStringDescriptorObj.Serialize(@objtypename,saveflag,membuf,linkbuf);}
-     end;
 end;
 begin
 end.

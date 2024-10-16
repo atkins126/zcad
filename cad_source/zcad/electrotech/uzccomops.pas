@@ -11,7 +11,7 @@ interface
 uses
 
   uzctranslations,uzeentitiesmanager,uzeentity,uzglviewareaabstract,uzgldrawcontext,
-  uzeentabstracttext,uzeenttext,uzctnrvectorstrings,uzeentityfactory,uzcsysvars,uzbstrproc,
+  {uzeentabstracttext,}uzeenttext,uzctnrvectorstrings,uzeentityfactory,uzcsysvars,uzbstrproc,
   uzcinterface,uzccommandsmanager,
   uzccommandsabstract,uzccommandsimpl,uzbtypes,uzcdrawings,uzeutils,uzcutils,sysutils,
   varmandef,uzctnrVectorBytes,uzegeometry,uzeconsts,
@@ -19,7 +19,9 @@ uses
   uzegeometrytypes,varman,uzccablemanager,uzeentdevice,uzeentmtext,math,
   uzcenitiesvariablesextender,uzeroot,uzglviewareadata,uzcentcable,UUnitManager,
   gzctnrVectorTypes,uzccomelectrical,URecordDescriptor,TypeDescriptors,uzcLog,
-  uzcstrconsts,uzccmdfloatinsert,uzctnrvectorpgdbaseobjects;
+  uzcstrconsts,uzccmdfloatinsert,//uzctnrvectorpgdbaseobjects,
+  zUndoCmdChgTypes,zUndoCmdChgVariable,
+  uzcdrawing,uzCtnrVectorpBaseEntity;
 
 type
   TPlaceParam=record
@@ -58,7 +60,7 @@ type
   TAxisReduceDistanceMode=(TARDM_Nothing(*'Nothing'*),
                            TARDM_LongAxis(*'Long axis'*),
                            TARDM_ShortAxis(*'Short axis'*),
-                           TARDM_AllAxis(*'All xxis'*));
+                           TARDM_AllAxis(*'All axis'*));
   PTOPSPlaceSmokeDetectorOrtoParam=^TOPSPlaceSmokeDetectorOrtoParam;
   {REGISTERRECORDTYPE TOPSPlaceSmokeDetectorOrtoParam}
   TOPSPlaceSmokeDetectorOrtoParam=record
@@ -152,7 +154,7 @@ var
 procedure finalize;}
 
 implementation
-function docorrecttogrid(point:GDBVertex;need:Boolean):GDBVertex;
+function docorrecttogrid(const point:GDBVertex;need:Boolean):GDBVertex;
 var
    gr:Boolean;
 begin
@@ -386,7 +388,7 @@ begin
        end
   end;}
 end;
-function CommandStart(operands:pansichar):Integer;
+function CommandStart(const Context:TZCADCommandContext;operands:pansichar):Integer;
 begin
   drawings.AddBlockFromDBIfNeed(drawings.GetCurrentDWG,'DEVICE_PS_DAT_SMOKE');
   drawings.AddBlockFromDBIfNeed(drawings.GetCurrentDWG,'DEVICE_PS_DAT_TERMO');
@@ -395,7 +397,7 @@ begin
   zcShowCommandParams(SysUnit.TypeName2PTD('CommandRTEdObject'),pco);
   result:=cmd_ok;
 end;
-function BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): integer;
+function BeforeClick(const Context:TZCADCommandContext;wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): integer;
 begin
   result:=mclick;
   if (button and MZW_LBUTTON)<>0 then
@@ -405,7 +407,7 @@ begin
       t3dp:=wc;
     end;
 end;
-function AfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer):Integer;
+function AfterClick(const Context:TZCADCommandContext;wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer):Integer;
 var
 pl:pgdbobjline;
 //debug:string;
@@ -489,7 +491,7 @@ begin
                                                                     pf^.base.Attributes:=pf.base.Attributes or FA_READONLY;
                  end;
   end;
-     sdname:=sdname;
+//     sdname:=sdname;
      if OPSPlaceSmokeDetectorOrtoParam.DatType<>OPSPlaceSmokeDetectorOrtoParam.olddt then
      begin
           OPSPlaceSmokeDetectorOrtoParam.olddt:=OPSPlaceSmokeDetectorOrtoParam.DatType;
@@ -641,11 +643,11 @@ begin
   redrawoglwnd;
   result:=cmd_ok;
 end;}
-function OPS_Sensor_Mark_com(operands:TCommandOperands):TCommandResult;
+function OPS_Sensor_Mark_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var //i: Integer;
     pcabledesk:PTCableDesctiptor;
     ir,ir2,ir_inNodeArray:itrec;
-    pvd:pvardesk;
+    pvd,pvd1,pvd2,pvd3,pvd4:pvardesk;
     defaultunit:TUnit;
     currentunit:PTUnit;
     UManager:TUnitManager;
@@ -655,10 +657,12 @@ var //i: Integer;
     cman:TCableManager;
     SaveEntUName,SaveCabUName:String;
     cablemetric,devicemetric,numingroupmetric:String;
-    ProcessedDevices:TZctnrVectorPGDBaseObjects;
+    ProcessedDevices:TZctnrVectorPGDBaseEntity;
     name:String;
     DC:TDrawContext;
     pcablestartsegmentvarext,pptnownervarext:TVariablesExtender;
+    cpGC_NumberInGroup,cpGC_HeadDevice,cpGC_HDGroup,cpGC_HDShortName:UCmdChgVariable;
+    UndoStartMarkerPlaced:boolean;
 const
       DefNumMetric='default_num_in_group';
 function GetNumUnit(uname:String):PTUnit;
@@ -674,6 +678,7 @@ begin
 end;
 
 begin
+  UndoStartMarkerPlaced:=false;
   dc:=drawings.GetCurrentDWG^.CreateDrawingRC;
   if drawings.GetCurrentROOT.ObjArray.Count = 0 then exit;
   ProcessedDevices.init(100);
@@ -682,7 +687,7 @@ begin
   UManager.init;
 
   defaultunit.init(DefNumMetric);
-  units.loadunit(GetSupportPath,InterfaceTranslate,expandpath('*rtl/objcalc/opsmarkdef.pas'),(@defaultunit));
+  units.loadunit(GetSupportPath,InterfaceTranslate,expandpath('$(ZCADPath)/rtl/objcalc/opsmarkdef.pas'),(@defaultunit));
   pcabledesk:=cman.beginiterate(ir);
   if pcabledesk<>nil then
   repeat
@@ -759,7 +764,58 @@ begin
                          p:=@pptnownervarext.entityunit;
                          currentunit.InterfaceUses.PushBackIfNotPresent(p);
 
-                         units.loadunit(GetSupportPath,InterfaceTranslate,expandpath('*rtl/objcalc/opsmark.pas'),(currentunit));
+                         pvd1:=pptnownervarext.entityunit.FindVariable('GC_NumberInGroup');
+                         if pvd1<>nil then begin
+                           zcPlaceUndoStartMarkerIfNeed(UndoStartMarkerPlaced,'OPS_Sensor_Mark');
+                           cpGC_NumberInGroup:=UCmdChgVariable.CreateAndPush(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,
+                                                                             TChangedVariableDesc.CreateRec(pvd1^.data.PTD,pvd1^.data.Addr.GetInstance,'GC_NumberInGroup'),
+                                                                             TSharedPEntityData.CreateRec(PGDBObjEntity(ptn^.bp.ListPos.Owner)),
+                                                                             TAfterChangePDrawing.CreateRec(drawings.GetCurrentDWG));
+                           //cpGC_NumberInGroup.ChangedData.StoreUndoData(pvd1^.data.Addr.GetInstance);
+                         end;
+                         pvd2:=pptnownervarext.entityunit.FindVariable('GC_HeadDevice');
+                         if pvd2<>nil then begin
+                           zcPlaceUndoStartMarkerIfNeed(UndoStartMarkerPlaced,'OPS_Sensor_Mark');
+                           cpGC_HeadDevice:=UCmdChgVariable.CreateAndPush(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,
+                                                                          TChangedVariableDesc.CreateRec(pvd2^.data.PTD,pvd2^.data.Addr.GetInstance,'GC_HeadDevice'),
+                                                                          TSharedPEntityData.CreateRec(PGDBObjEntity(ptn^.bp.ListPos.Owner)),
+                                                                          TAfterChangePDrawing.CreateRec(drawings.GetCurrentDWG));
+                           //cpGC_HeadDevice.ChangedData.StoreUndoData(pvd2^.data.Addr.GetInstance);
+                         end;
+                         pvd3:=pptnownervarext.entityunit.FindVariable('GC_HDGroup');
+                         if pvd3<>nil then begin
+                           zcPlaceUndoStartMarkerIfNeed(UndoStartMarkerPlaced,'OPS_Sensor_Mark');
+                           cpGC_HDGroup:=UCmdChgVariable.CreateAndPush(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,
+                                                                       TChangedVariableDesc.CreateRec(pvd3^.data.PTD,pvd3^.data.Addr.GetInstance,'GC_HDGroup'),
+                                                                       TSharedPEntityData.CreateRec(PGDBObjEntity(ptn^.bp.ListPos.Owner)),
+                                                                       TAfterChangePDrawing.CreateRec(drawings.GetCurrentDWG));
+                           //cpGC_HDGroup.ChangedData.StoreUndoData(pvd3^.data.Addr.GetInstance);
+                         end;
+                         pvd4:=pptnownervarext.entityunit.FindVariable('GC_HDShortName');
+                         if pvd4<>nil then begin
+                           zcPlaceUndoStartMarkerIfNeed(UndoStartMarkerPlaced,'OPS_Sensor_Mark');
+                           cpGC_HDShortName:=UCmdChgVariable.CreateAndPush(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,
+                                                                           TChangedVariableDesc.CreateRec(pvd3^.data.PTD,pvd4^.data.Addr.GetInstance,'GC_HDShortName'),
+                                                                           TSharedPEntityData.CreateRec(PGDBObjEntity(ptn^.bp.ListPos.Owner)),
+                                                                           TAfterChangePDrawing.CreateRec(drawings.GetCurrentDWG));
+                           //cpGC_HDShortName.ChangedData.StoreUndoData(pvd4^.data.Addr.GetInstance);
+                         end;
+
+                         units.loadunit(GetSupportPath,InterfaceTranslate,expandpath('$(ZCADPath)/rtl/objcalc/opsmark.pas'),(currentunit));
+
+                         //if pvd1<>nil then begin
+                         //  cpGC_NumberInGroup.ChangedData.StoreDoData(pvd1^.data.Addr.GetInstance);;
+                         //end;
+                         //if pvd2<>nil then begin
+                         //  cpGC_HeadDevice.ChangedData.StoreDoData(pvd2^.data.Addr.GetInstance);;
+                         //end;
+                         //if pvd3<>nil then begin
+                         //  cpGC_HDGroup.ChangedData.StoreDoData(pvd3^.data.Addr.GetInstance);;
+                         //end;
+                         //if pvd4<>nil then begin
+                         //  cpGC_HDShortName.ChangedData.StoreDoData(pvd4^.data.Addr.GetInstance);
+                         //end;
+
 
                          ProcessedDevices.PushBackData(ptn^.bp.ListPos.Owner);
 
@@ -799,6 +855,7 @@ begin
   pcabledesk:=cman.iterate(ir);
   until pcabledesk=nil;
 
+  zcPlaceUndoEndMarkerIfNeed(UndoStartMarkerPlaced);
   defaultunit.done;
   UManager.done;
   cman.done;
@@ -1101,7 +1158,7 @@ begin
                        end;
      end;
 end;
-function PlCommandStart(operands:pansichar):Integer;
+function PlCommandStart(const Context:TZCADCommandContext;operands:pansichar):Integer;
 var //i: Integer;
     sd:TSelEntsDesk;
 begin
@@ -1131,7 +1188,7 @@ else if (sd.PFirstSelectedEnt^.GetObjType=GDBDeviceID) then
   zcShowCommandParams(SysUnit.TypeName2PTD('CommandRTEdObject'),pco2);
   OPSPlaceSmokeDetectorOrtoParam.DMC:=TOPSMDC_1_2;
 end;
-function PlBeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): integer;
+function PlBeforeClick(const Context:TZCADCommandContext;wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): integer;
 begin
   result:=mclick;
   if (button and MZW_LBUTTON)<>0 then
@@ -1219,7 +1276,7 @@ begin
        end
   end;
 end;
-function PlAfterClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): integer;
+function PlAfterClick(const Context:TZCADCommandContext;wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record;mclick:Integer): integer;
 var
 pl:pgdbobjline;
 //debug:string;
@@ -1330,7 +1387,7 @@ begin
                             ny:=OrtoDevPlaceParam.NY;
                        end;
      end;
-  if button=0 then
+  if button<>MZW_LBUTTON then
   begin
        placedev(@drawings.GetCurrentDWG.ConstructObjRoot.ObjArray,gdbobjline(pl^).CoordInWCS.lbegin, gdbobjline(pl^).CoordInWCS.lend, NX, NY,@OrtoDevPlaceParam.Name[1],OrtoDevPlaceParam.Angle,OrtoDevPlaceParam.AutoAngle,OrtoDevPlaceParam.NormalizePoint);
   end
@@ -1361,7 +1418,7 @@ begin
   OPS_SPBuild_com.init('OPS_SPBuild',0,0);
   //CreateCommandFastObjectPlugin(@OPS_SPBuild_com,'OPS_SPBuild',CADWG,0);
 
-  CreateCommandFastObjectPlugin(@OPS_Sensor_Mark_com,'OPS_Sensor_Mark',CADWG,0);
+  CreateZCADCommand(@OPS_Sensor_Mark_com,'OPS_Sensor_Mark',CADWG,0);
   pco:=CreateCommandRTEdObjectPlugin(@CommandStart,nil,nil,@commformat,@BeforeClick,@AfterClick,nil,nil,'PlaceSmokeDetectorOrto',0,0);
   pco^.SetCommandParam(@OPSPlaceSmokeDetectorOrtoParam,'PTOPSPlaceSmokeDetectorOrtoParam');
   OPSPlaceSmokeDetectorOrtoParam.InsertType:=TIT_Device;

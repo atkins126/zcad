@@ -53,7 +53,7 @@ TAbstractDrawing= object(TDrawingDef)
                        TextSize:Double;
 
                        procedure myGluProject2(objcoord:GDBVertex; out wincoord:GDBVertex);virtual;abstract;
-                       procedure myGluUnProject(win:GDBVertex;out obj:GDBvertex);virtual;abstract;
+                       procedure myGluUnProject(const win:GDBVertex;out obj:GDBvertex);virtual;abstract;
                        function GetPcamera:PGDBObjCamera;virtual;abstract;
                        function GetCurrentROOT:PGDBObjGenericSubEntry;virtual;abstract;
                        function GetConstructObjRoot:PGDBObjRoot;virtual;abstract;
@@ -68,6 +68,7 @@ TAbstractDrawing= object(TDrawingDef)
                        procedure SetUnitsFormat(f:TzeUnitsFormat);virtual;abstract;
                        procedure rtmodify(obj:PGDBObjEntity;md:Pointer;dist,wc:gdbvertex;save:Boolean);virtual;abstract;
                        procedure FillDrawingPartRC(var dc:TDrawContext);virtual;abstract;
+                       procedure DeSelectAll;virtual;abstract;
                  end;
 {EXPORT-}
 implementation

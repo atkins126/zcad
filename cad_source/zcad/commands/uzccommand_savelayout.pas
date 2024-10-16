@@ -57,14 +57,14 @@ begin
     XMLConfig.Free;
   end;
 end;
-function SaveLayout_com(operands:TCommandOperands):TCommandResult;
+function SaveLayout_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var
   XMLConfig: TXMLConfigStorage;
   filename:string;
 begin
   try
     // create a new xml config file
-    filename:=utf8tosys(ProgramPath+'components/defaultlayout.xml');
+    filename:=utf8tosys(ProgramPath+'/components/defaultlayout.xml');
     SaveLayoutToFile(filename);
     exit;
     XMLConfig:=TXMLConfigStorage.Create(filename,false);
@@ -87,7 +87,7 @@ end;
 
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-  CreateCommandFastObjectPlugin(@SaveLayout_com,'SaveLayout',0,0);
+  CreateZCADCommand(@SaveLayout_com,'SaveLayout',0,0);
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
 end.

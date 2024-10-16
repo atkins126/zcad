@@ -26,8 +26,9 @@ uses
   SysUtils,
   dwg,dwgproc,
   uzeffmanager,
-  uzelongprocesssupport,uzgldrawcontext,forms,
-  uzcstrconsts;
+  uzelongprocesssupport,{uzgldrawcontext,}forms,
+  uzcstrconsts,uzeLogIntf,
+  LazUTF8;
 
 type
 
@@ -61,12 +62,12 @@ begin
  lps.ProgressLongProcess(TLPSHandle(Data),Counter);
 end;
 
-procedure addfromdwg(filename:String;var ZCDCtx:TZDrawingContext{owner:PGDBObjGenericSubEntry;LoadMode:TLoadOpt;var drawing:TSimpleDrawing});
+procedure addfromdwg(const filename:String;var ZCDCtx:TZDrawingContext;const LogProc:TZELogProc=nil);
 var
   dwg:Dwg_Data;
   Success:integer;
   lph:TLPSHandle;
-  DC:TDrawContext;
+  //DC:TDrawContext;
 begin
   try
     DebugLn('{WH}%s',[rsNotYetImplemented]);
@@ -82,7 +83,11 @@ begin
     dwg.opts:=0;
     DebugLn(['{WH}try load file: ',ansistring(filename)]);
     lph:=lps.StartLongProcess('LibreDWG.dwg_read_file',nil);
+    {$IFDEF WINDOWS}
+    Success:=dwg_read_file(pchar(UTF8ToWinCP(filename)),@dwg);
+    {$ELSE WINDOWS}
     Success:=dwg_read_file(pchar(ansistring(filename)),@dwg);
+    {$ENDIF}
     lps.EndLongProcess(lph);
     DebugLn(['{WH}Success: ',Success]);
     DebugDWG(@dwg);
@@ -93,12 +98,12 @@ begin
   finally
   end;
 end;
-procedure addfromdxf(filename:String;var ZCDCtx:TZDrawingContext{owner:PGDBObjGenericSubEntry;LoadMode:TLoadOpt;var drawing:TSimpleDrawing});
+procedure addfromdxf(const filename:String;var ZCDCtx:TZDrawingContext;const LogProc:TZELogProc=nil);
 var
   dwg:Dwg_Data;
   Success:integer;
   lph:TLPSHandle;
-  DC:TDrawContext;
+  //DC:TDrawContext;
 begin
   try
     DebugLn('{WH}%s',[rsNotYetImplemented]);

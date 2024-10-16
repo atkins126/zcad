@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, ComCtrls,
   ActnList, laz.VirtualTrees,
-  uzbtypes,gzctnrVectorTypes,uzegeometrytypes ,uzegeometry, uzccommandsmanager,
+  {uzbtypes,}gzctnrVectorTypes,uzegeometrytypes ,uzegeometry, uzccommandsmanager,
   uzcinterface,uzeentity,uzcimagesmanager,uzcdrawings,
   varmandef,uzbstrproc,uzcnavigatorsnodedesk,LCLVersion;
 
@@ -77,7 +77,7 @@ begin
     if (pnd^.Ident.pent<>nil)and(pnd^.Ident.pent<>LastAutoselectedEnt) then begin
        LastAutoselectedEnt:=pnd^.Ident.pent;
        s:='SelectObjectByAddres('+inttostr(PtrUInt(pnd^.Ident.pent))+')';
-       commandmanager.executecommandsilent(@s[1],drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
+       commandmanager.executecommandsilent(s,drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
     end;
   end;
 end;

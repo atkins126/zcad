@@ -22,7 +22,7 @@ interface
 uses
   uzbCommandLineParser,uzcCommandLineParser,
   uzcsysparams,uzcsysvars,
-  uzbLogTypes,uzbLog,uzcLog,
+  {uzbLogTypes,}uzbLog,uzcLog,
   uzbPaths,
   Forms,{$IFNDEF DELPHI}LazUTF8,{$ENDIF}sysutils;
 resourcestring
@@ -71,7 +71,7 @@ var
    i,prm,operandsc:integer;
    pod:PTCLOptionData;
    mn:String;
-   ll:TLogLevel;
+   //ll:TLogLevel;
 begin
   with programlog.Enter('ProcessParamStr',LM_Info) do try
 
@@ -98,12 +98,14 @@ begin
     //начальные значения некоторых параметров и загрузка параметров
     SysParam.notsaved.otherinstancerun:=false;
     SysParam.saved.UniqueInstance:=true;
-    LoadParams(expandpath(ProgramPath+'rtl/config.xml'),SysParam.saved);
+    LoadParams(expandpath(ProgramPath+CParamsFile),SysParam.saved);
     SysParam.notsaved.PreloadedFile:='';
 
     //значения некоторых параметров из комстроки, если есть
     if CommandLineParser.HasOption(NOSPLASHHDL) then
       SysParam.saved.NoSplash:=true;
+    if CommandLineParser.HasOption(MemProfiling) then
+      SysParam.saved.MemProfiling:=true;
     if CommandLineParser.HasOption(UPDATEPOHDL) then
       SysParam.saved.UpdatePO:=true;
     if CommandLineParser.HasOption(NOLOADLAYOUTHDL) then

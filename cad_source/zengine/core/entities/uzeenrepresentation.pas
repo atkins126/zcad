@@ -25,9 +25,7 @@ uses uzgldrawcontext,uzgldrawerabstract,uzglvectorobject,
      uzegeomentitiestree,uzbtypes,
      gzctnrVectorTypes,uzgeomline3d,uzgeomproxy;
 type
-{Export+}
 PTZEntityRepresentation=^TZEntityRepresentation;
-{REGISTEROBJECTTYPE TZEntityRepresentation}
 TZEntityRepresentation= object(GDBaseObject)
                        {-}//private{//}
                        Graphix:ZGLGraphix;
@@ -36,7 +34,7 @@ TZEntityRepresentation= object(GDBaseObject)
                        constructor init();
                        destructor done;virtual;
 
-                       function CalcTrueInFrustum(frustum:ClipArray; FullCheck:boolean):TInBoundingVolume;
+                       function CalcTrueInFrustum(const frustum:ClipArray; FullCheck:boolean):TInBoundingVolume;
                        procedure DrawGeometry(var rc:TDrawContext);virtual;
                        procedure DrawNiceGeometry(var rc:TDrawContext);virtual;
                        procedure Clear;virtual;
@@ -53,7 +51,6 @@ TZEntityRepresentation= object(GDBaseObject)
                        procedure StartSurface;
                        procedure EndSurface;
                        end;
-{Export-}
 implementation
 function TZEntityRepresentation.GetGraphix:PZGLGraphix;
 begin
@@ -79,7 +76,7 @@ procedure TZEntityRepresentation.DrawNiceGeometry(var rc:TDrawContext);
 begin
   Graphix.DrawNiceGeometry(rc);
 end;
-function TZEntityRepresentation.CalcTrueInFrustum(frustum:ClipArray; FullCheck:boolean):TInBoundingVolume;
+function TZEntityRepresentation.CalcTrueInFrustum(const frustum:ClipArray; FullCheck:boolean):TInBoundingVolume;
 begin
   result:=Graphix.CalcTrueInFrustum(frustum,FullCheck);
 end;

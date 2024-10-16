@@ -10,7 +10,8 @@ uses
   ActnList, laz.VirtualTrees, gzctnrSTL,
   uzegeometry, uzccommandsmanager,
   uzcinterface, uzeentity, uzcimagesmanager,
-  uzcenitiesvariablesextender, varmandef, uzbstrproc,uzctreenode,
+  uzcenitiesvariablesextender,uzcExtdrSCHConnection,
+  varmandef, uzbstrproc,uzctreenode,
   Varman, uzcoimultiproperties,LCLType,LCLVersion;
 
 type
@@ -201,7 +202,23 @@ end;
 function GetEntityVariableValue(const pent:pGDBObjEntity;varname,defvalue:string):string;
 var
   EntVarExt:TVariablesExtender;
+  EntConnectionExt:TSCHConnectionExtender;
+  i:integer;
+  pvd:pvardesk;
 begin
+  EntConnectionExt:=pent^.GetExtension<TSCHConnectionExtender>;
+  if (EntConnectionExt<>nil)and(EntConnectionExt.Net<>nil) then begin
+    for i:=0 to EntConnectionExt.Net.Setters.Count-1 do begin
+      EntVarExt:=EntConnectionExt.Net.Setters.getDataMutable(i)^.pThisEntity^.GetExtension<TVariablesExtender>;
+      if EntVarExt<>nil then begin
+        pvd:=EntVarExt.EntityUnit.FindVariable(varname);
+        if pvd<>nil then
+          exit(pvd^.GetValueAsString);
+      end;
+    end;
+    exit('0x'+inttohex(PtrUInt(EntConnectionExt.Net)));
+  end;
+
   EntVarExt:=pent^.GetExtension<TVariablesExtender>;
   if EntVarExt<>nil then
     result:=GetVariableValue(EntVarExt,varname,defvalue)
@@ -318,28 +335,29 @@ end;
 
 function findin(Path:TNodePath;var StartInNodestates:integer;OpNod:TNodesStatesVector;Dist:Integer):boolean;
 var
-  i:integer;
-  deb:TNodeIdent;
+  i:SizeUInt;
+  //deb:TNodeIdent;
   IsEqual:Boolean;
 begin
   //dbg('Start compare ',Path);
-  for i:=0 to OpNod.VArray.Size-1 do
-  begin
-   //dbg('  compare with',OpNod.VArray[i]);
-   if Dist=0 then
-      IsEqual:=LeveMetric.Equaly(OpNod.VArray[i],Path)
-   else begin
-      if abs(integer(OpNod.VArray[i].Size-Path.Size))<2 then
-        IsEqual:=LeveMetric.LeveDist(OpNod.VArray[i],Path)<=Dist
-      else
-        IsEqual:=False;
-   end;
-   if IsEqual then begin
-     //ZCMsgCallBackInterface.TextMessage('yes!',TMWOHistoryOut);
-     exit(true);
-   end;
-  end;
-    result:=false;
+  if OpNod.VArray.Size>0 then
+    for i:=OpNod.VArray.Size-1 downto 0 do
+    begin
+     //dbg('  compare with',OpNod.VArray[i]);
+     if Dist=0 then
+        IsEqual:=LeveMetric.Equaly(OpNod.VArray[i],Path)
+     else begin
+        if abs(integer(OpNod.VArray[i].Size-Path.Size))<2 then
+          IsEqual:=LeveMetric.LeveDist(OpNod.VArray[i],Path)<=Dist
+        else
+          IsEqual:=False;
+     end;
+     if IsEqual then begin
+       //ZCMsgCallBackInterface.TextMessage('yes!',TMWOHistoryOut);
+       exit(true);
+     end;
+    end;
+      result:=false;
     //ZCMsgCallBackInterface.TextMessage('end((',TMWOHistoryOut);
 end;
 

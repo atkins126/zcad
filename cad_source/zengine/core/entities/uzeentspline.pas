@@ -25,28 +25,24 @@ uses LCLProc,uzegluinterface,uzeentityfactory,uzgldrawcontext,uzgloglstatemanage
      uzestyleslayers,uzeentsubordinated,uzeentcurve,
      uzeentity,uzctnrVectorBytes,uzbtypes,uzeconsts,uzglviewareadata,
      gzctnrVectorTypes,uzegeometrytypes,uzegeometry,uzeffdxfsupport,sysutils,
-     uzctnrvectorpgdbaseobjects;
+     uzMVReader,uzCtnrVectorpBaseEntity;
 type
-{Export+}
-{REGISTEROBJECTTYPE TKnotsVector}
 TKnotsVector= object(GZVector{-}<Single>{//})
                              end;
-{REGISTEROBJECTTYPE TCPVector}
 TCPVector= object(GZVector{-}<GDBvertex4S>{//})
                              end;
 PGDBObjSpline=^GDBObjSpline;
-{REGISTEROBJECTTYPE GDBObjSpline}
 GDBObjSpline= object(GDBObjCurve)
-                 ControlArrayInOCS:GDBPoint3dArray;(*saved_to_shd*)(*hidden_in_objinsp*)
-                 ControlArrayInWCS:GDBPoint3dArray;(*saved_to_shd*)(*hidden_in_objinsp*)
-                 Knots:{GDBOpenArrayOfData}TKnotsVector;(*saved_to_shd*)(*hidden_in_objinsp*)
-                 AproxPointInWCS:GDBPoint3dArray;(*saved_to_shd*)(*hidden_in_objinsp*)
-                 Closed:Boolean;(*saved_to_shd*)
-                 Degree:Integer;(*saved_to_shd*)
+                 ControlArrayInOCS:GDBPoint3dArray;
+                 ControlArrayInWCS:GDBPoint3dArray;
+                 Knots:TKnotsVector;
+                 AproxPointInWCS:GDBPoint3dArray;
+                 Closed:Boolean;
+                 Degree:Integer;
                  constructor init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt;c:Boolean);
                  constructor initnul(owner:PGDBObjGenericWithSubordinated);
                  destructor done;virtual;
-                 procedure LoadFromDXF(var f:TZctnrVectorBytes;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
+                 procedure LoadFromDXF(var f:TZMemReader;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
 
                  procedure FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext;Stage:TEFStages=EFAllStages);virtual;
                  procedure startsnap(out osp:os_record; out pdata:Pointer);virtual;
@@ -58,15 +54,14 @@ GDBObjSpline= object(GDBObjCurve)
                  function Clone(own:Pointer):PGDBObjEntity;virtual;
                  function GetObjTypeName:String;virtual;
                  function FromDXFPostProcessBeforeAdd(ptu:PExtensionData;const drawing:TDrawingDef):PGDBObjSubordinated;virtual;
-                 function onmouse(var popa:TZctnrVectorPGDBaseObjects;const MF:ClipArray;InSubEntry:Boolean):Boolean;virtual;
-                 function onpoint(var objects:TZctnrVectorPGDBaseObjects;const point:GDBVertex):Boolean;virtual;
+                 function onmouse(var popa:TZctnrVectorPGDBaseEntity;const MF:ClipArray;InSubEntry:Boolean):Boolean;virtual;
+                 function onpoint(var objects:TZctnrVectorPGDBaseEntity;const point:GDBVertex):Boolean;virtual;
                  procedure AddOnTrackAxis(var posr:os_record;const processaxis:taddotrac);virtual;
                  procedure getoutbound(var DC:TDrawContext);virtual;
 
                  function CreateInstance:PGDBObjSpline;static;
                  function GetObjType:TObjID;virtual;
            end;
-{Export-}
 implementation
 var
     parr:PGDBPoint3dArray;
@@ -91,7 +86,7 @@ begin
                                   end;
    result:={VertexArrayInWCS}AproxPointInWCS.onmouse(mf,closed);
 end;
-function GDBObjSpline.onpoint(var objects:TZctnrVectorPGDBaseObjects;const point:GDBVertex):Boolean;
+function GDBObjSpline.onpoint(var objects:TZctnrVectorPGDBaseEntity;const point:GDBVertex):Boolean;
 begin
      if VertexArrayInWCS.onpoint(point,closed) then
                                                 begin
@@ -376,7 +371,7 @@ begin
   tmpKnot:=0;
   tmpFlag:=0;
 
-  GroupCode:=readmystrtoint(f);
+  GroupCode:=f.ParseInteger;
   while GroupCode <> 0 do begin
     if not LoadFromDXFObjShared(f,GroupCode,ptu,drawing) then
        if dxfvertexload(f,10,GroupCode,tmpVertex) then begin
@@ -394,8 +389,8 @@ begin
                                                         Degree:=Degree;
                                                    end
 
-                                      else {s:= }f.readString;
-    GroupCode:=readmystrtoint(f);
+                                      else {s:= }f.SkipString;
+    GroupCode:=f.ParseInteger;
   end;
 vertexarrayinocs.Shrink;
 Knots.Shrink;

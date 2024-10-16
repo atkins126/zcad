@@ -17,51 +17,54 @@
 }
 
 unit uzestylestexts;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 interface
 uses LCLProc,uzbpaths,uzefontmanager,sysutils,uzbtypes,uzegeometry,
-     uzbstrproc,uzefont,uzestrconsts,UGDBNamedObjectsArray,uzeNamedObject;
+     uzbstrproc,uzefont,uzestrconsts,UGDBNamedObjectsArray,uzeNamedObject,
+     uzeLogIntf;
 type
   //ptextstyle = ^textstyle;
 {EXPORT+}
 PGDBTextStyleProp=^GDBTextStyleProp;
 {REGISTERRECORDTYPE GDBTextStyleProp}
   GDBTextStyleProp=record
-                    size:Double;(*saved_to_shd*)
-                    oblique:Double;(*saved_to_shd*)
-                    wfactor:Double;(*saved_to_shd*)
+                    size:Double;
+                    oblique:Double;
+                    wfactor:Double;
               end;
   PPGDBTextStyleObjInsp=^PGDBTextStyleObjInsp;
   PGDBTextStyleObjInsp=Pointer;
   PGDBTextStyle=^GDBTextStyle;
   {REGISTEROBJECTTYPE GDBTextStyle}
   GDBTextStyle = object(GDBNamedObject)
-    FontFile:String;(*saved_to_shd*)
-    FontFamily:String;(*saved_to_shd*)
+    FontFile:String;
+    FontFamily:String;
     pfont: PGDBfont;
-    prop:GDBTextStyleProp;(*saved_to_shd*)
+    prop:GDBTextStyleProp;
     UsedInLTYPE:Boolean;
     destructor Done;virtual;
   end;
 PGDBTextStyleArray=^GDBTextStyleArray;
 {REGISTEROBJECTTYPE GDBTextStyleArray}
-GDBTextStyleArray= object(GDBNamedObjectsArray{-}<PGDBTextStyle,GDBTextStyle>{//})(*OpenArrayOfData=GDBTextStyle*)
+GDBTextStyleArray= object(GDBNamedObjectsArray{-}<PGDBTextStyle,GDBTextStyle>{//})
                     constructor init(m:Integer);
                     constructor initnul;
 
-                    function addstyle(StyleName,AFontFile,AFontFamily:String;tp:GDBTextStyleProp;USedInLT:Boolean):PGDBTextStyle;
-                    function setstyle(StyleName,AFontFile,AFontFamily:String;tp:GDBTextStyleProp;USedInLT:Boolean):PGDBTextStyle;
-                    procedure internalsetstyle(var style:GDBTextStyle;AFontFile,AFontFamily:String;tp:GDBTextStyleProp;USedInLT:Boolean);
-                    function FindStyle(StyleName:String;ult:Boolean):PGDBTextStyle;
+                    function addstyle(const StyleName,AFontFile,AFontFamily:String;tp:GDBTextStyleProp;USedInLT:Boolean;const LogProc:TZELogProc=nil):PGDBTextStyle;
+                    function setstyle(const StyleName,AFontFile,AFontFamily:String;tp:GDBTextStyleProp;USedInLT:Boolean):PGDBTextStyle;
+                    procedure internalsetstyle(var style:GDBTextStyle;const AFontFile,AFontFamily:String;tp:GDBTextStyleProp;USedInLT:Boolean;const LogProc:TZELogProc=nil);
+                    function FindStyle(const StyleName:String;ult:Boolean):PGDBTextStyle;
                     procedure freeelement(PItem:PT);virtual;
+                    function CorrectNilledTextStyle(pts:PGDBTextStyle):PGDBTextStyle;
               end;
 {EXPORT-}
   TTextStyle = class(TNamedObject)
     public
-      FontFile:String;(*saved_to_shd*)
-      FontFamily:String;(*saved_to_shd*)
+      FontFile:String;
+      FontFamily:String;
       pfont: PGDBfont;
-      prop:GDBTextStyleProp;(*saved_to_shd*)
+      prop:GDBTextStyleProp;
       UsedInLTYPE:Boolean;
   end;
 implementation
@@ -90,34 +93,16 @@ begin
   //addlayer('0',cgdbwhile,lwgdbdefault);
 end;
 
-{procedure GDBLayerArray.clear;
-var i:Integer;
-    tlp:PGDBLayerProp;
+function GDBTextStyleArray.CorrectNilledTextStyle(pts:PGDBTextStyle):PGDBTextStyle;
 begin
-     if count>0 then
-     begin
-          tlp:=parray;
-          for i:=0 to count-1 do
-          begin
-               tlp^.name:='';
-               inc(tlp);
-          end;
-     end;
-  count:=0;
-end;}
-{function GDBLayerArray.getLayerIndex(name: String): Integer;
-var
-  i: Integer;
-begin
-  result := 0;
-  for i := 0 to count - 1 do
-    if PGDBLayerPropArray(Parray)^[i].name = name then
-    begin
-      result := i;
-      exit;
-    end;
-end;}
-procedure GDBTextStyleArray.internalsetstyle(var style:GDBTextStyle;AFontFile,AFontFamily:String;tp:GDBTextStyleProp;USedInLT:Boolean);
+  if pts<>nil then
+    result:=pts
+  else
+    result:=getAddres('Standard');
+    {todo: централизовать все строки с dxf терминами наподобии 'Standard'}
+end;
+
+procedure GDBTextStyleArray.internalsetstyle(var style:GDBTextStyle;const AFontFile,AFontFamily:String;tp:GDBTextStyleProp;USedInLT:Boolean;const LogProc:TZELogProc=nil);
 begin
   style.FontFile:=AFontFile;
   style.FontFamily:=AFontFamily;
@@ -128,16 +113,18 @@ begin
 
   style.pfont:=FontManager.addFont(AFontFile,AFontFamily);
   if not assigned(style.pfont) then
-    if USedInLT then
-      debugln('{WHM}'+fontnotfound,[Tria_AnsiToUtf8(style.Name),AFontFile,AFontFamily])
-    else begin
-      debugln('{WHM}'+fontnotfoundandreplace,[Tria_AnsiToUtf8(style.Name),AFontFile,AFontFamily]);
+    if USedInLT then begin
+      if @LogProc<>nil then
+        LogProc(ZESGeneral,ZEMsgWarning,format(fontnotfound,[Tria_AnsiToUtf8(style.Name),AFontFile,AFontFamily]))
+    end else begin
+      if @LogProc<>nil then
+        LogProc(ZESGeneral,ZEMsgWarning,format(fontnotfoundandreplace,[Tria_AnsiToUtf8(style.Name),AFontFile,AFontFamily]));
       style.pfont:=pbasefont;
     end;
   style.prop:=tp;
 end;
 
-function GDBTextStyleArray.setstyle(StyleName,AFontFile,AFontFamily:String;tp:GDBTextStyleProp;USedInLT:Boolean):PGDBTextStyle;
+function GDBTextStyleArray.setstyle(const StyleName,AFontFile,AFontFamily:String;tp:GDBTextStyleProp;USedInLT:Boolean):PGDBTextStyle;
 var
    ps:PGDBTextStyle;
 begin
@@ -146,12 +133,12 @@ begin
   if ps<>nil then
     internalsetstyle(ps^,AFontFile,AFontFamily,tp,USedInLT);
 end;
-function GDBTextStyleArray.addstyle(StyleName,AFontFile,AFontFamily:String;tp:GDBTextStyleProp;USedInLT:Boolean):{Integer}PGDBTextStyle;
+function GDBTextStyleArray.addstyle(const StyleName,AFontFile,AFontFamily:String;tp:GDBTextStyleProp;USedInLT:Boolean;const LogProc:TZELogProc=nil):PGDBTextStyle;
 var ts:PGDBTextStyle;
 begin
   Getmem(pointer(ts),sizeof(GDBTextStyle));
   ts.init(stylename);
-  internalsetstyle(ts^,AFontFile,AFontFamily,tp,USedInLT);
+  internalsetstyle(ts^,AFontFile,AFontFamily,tp,USedInLT,LogProc);
   result:=pointer(getDataMutable(PushBackData(ts)));
 end;
 function GDBTextStyleArray.FindStyle;

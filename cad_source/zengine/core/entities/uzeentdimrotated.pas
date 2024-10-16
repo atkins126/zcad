@@ -16,6 +16,7 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>)
 }
 unit uzeentdimrotated;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 
 interface
@@ -24,15 +25,13 @@ uses uzeentityfactory,uzeentdimaligned,uzeentdimension,uzestylesdim,
      uzegeometry,sysutils,uzeentity,uzbtypes,uzeconsts,uzeffdxfsupport,
      uzegeometrytypes,uzeentsubordinated;
 type
-{EXPORT+}
 PGDBObjRotatedDimension=^GDBObjRotatedDimension;
-{REGISTEROBJECTTYPE GDBObjRotatedDimension}
 GDBObjRotatedDimension= object(GDBObjAlignedDimension)
                         function GetObjTypeName:String;virtual;
                         procedure CalcDNVectors;virtual;
                         function Clone(own:Pointer):PGDBObjEntity;virtual;
-                        function P13ChangeTo(tv:GDBVertex):GDBVertex;virtual;
-                        function P14ChangeTo(tv:GDBVertex):GDBVertex;virtual;
+                        function P13ChangeTo(const tv:GDBVertex):GDBVertex;virtual;
+                        function P14ChangeTo(const tv:GDBVertex):GDBVertex;virtual;
                         procedure transform(const t_matrix:DMatrix4D);virtual;
                         procedure TransformAt(p:PGDBObjEntity;t_matrix:PDMatrix4D);virtual;
                         procedure SaveToDXF(var outhandle:{Integer}TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
@@ -40,7 +39,6 @@ GDBObjRotatedDimension= object(GDBObjAlignedDimension)
                         constructor initnul(owner:PGDBObjGenericWithSubordinated);
                         function GetObjType:TObjID;virtual;
                    end;
-{EXPORT-}
 implementation
 //uses log;
 constructor GDBObjRotatedDimension.initnul;
@@ -101,11 +99,11 @@ begin
   vectorN:=normalizevertex(vectorN);
   inherited;
 end;
-function GDBObjRotatedDimension.P13ChangeTo(tv:GDBVertex):GDBVertex;
+function GDBObjRotatedDimension.P13ChangeTo(const tv:GDBVertex):GDBVertex;
 begin
      result:=tv;
 end;
-function GDBObjRotatedDimension.P14ChangeTo(tv:GDBVertex):GDBVertex;
+function GDBObjRotatedDimension.P14ChangeTo(const tv:GDBVertex):GDBVertex;
 var
     tl:Double;
 begin

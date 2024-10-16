@@ -23,7 +23,7 @@ uses LCLProc,LazUTF8,Classes,gzctnrVector,sysutils,uzbtypes,
      uzegeometry,gzctnrVectorObjects,
      gzctnrVectorTypes,uzbstrproc,uzeStylesLineTypes,uzegeometrytypes,
      uzctnrVectorBytes,
-     uzeffdxfsupport,
+     uzeffdxfsupport,uzMVReader,
      Math;
 type
 {EXPORT+}
@@ -47,7 +47,7 @@ type
   end;
 {EXPORT-}
 
-function LoadPatternFromDXF(var PPattern:PTHatchPattern;var f:TZctnrVectorBytes;dxfcod:Integer;const MainAngle,MainScale:Double):Boolean;
+function LoadPatternFromDXF(var PPattern:PTHatchPattern;var f:TZMemReader;DXFCode:Integer;const MainAngle,MainScale:Double):Boolean;
 
 implementation
 
@@ -82,7 +82,7 @@ end;
 procedure THatchPattern.SaveToDXF(var outhandle:TZctnrVectorBytes;const MainAngle,MainScale:Double);
 var
    i,j: Integer;
-   pv:PGDBvertex2D;
+   //pv:PGDBvertex2D;
    psa:PTPatStrokesArray;
    angle:Double;
    sinA,cosA:Double;
@@ -95,8 +95,7 @@ begin
     dxfDoubleout(outhandle,44,psa^.Base.y*MainScale);
 
     angle:=DegToRad(MainAngle);
-    sinA:=sin(angle);
-    cosA:=cos(angle);
+    SinCos(angle,sinA,cosA);
 
     dxfDoubleout(outhandle,45,(psa^.offset.x*cosA-psa^.offset.y*sinA)*MainScale);
     dxfDoubleout(outhandle,46,(psa^.offset.y*cosA+psa^.offset.x*sinA)*MainScale);
@@ -108,7 +107,7 @@ begin
 end;
 
 
-function LoadPatternFromDXF(var PPattern:PTHatchPattern;var f:TZctnrVectorBytes;dxfcod:Integer;const MainAngle,MainScale:Double):Boolean;
+function LoadPatternFromDXF(var PPattern:PTHatchPattern;var f:TZMemReader;DXFCode:Integer;const MainAngle,MainScale:Double):Boolean;
 var
   i,j,patternscount,dashcount:Integer;
   angle,dash:Double;
@@ -116,29 +115,28 @@ var
   base,offset:GDBvertex2D;
   psa:PTPatStrokesArray;
 begin
-  result:=dxfIntegerload(f,78,dxfcod,patternscount);
+  result:=dxfIntegerload(f,78,DXFCode,patternscount);
   if result then begin
-    dxfcod:=readmystrtoint(f);
+    DXFCode:=f.ParseInteger;
     for i:=1 to patternscount do begin
-      if dxfdoubleload(f,53,dxfcod,angle) then dxfcod:=readmystrtoint(f);
-      if dxfdoubleload(f,43,dxfcod,base.x) then dxfcod:=readmystrtoint(f);
-      if dxfdoubleload(f,44,dxfcod,base.y) then dxfcod:=readmystrtoint(f);
-      if dxfdoubleload(f,45,dxfcod,offset.x) then dxfcod:=readmystrtoint(f);
-      if dxfdoubleload(f,46,dxfcod,offset.y) then dxfcod:=readmystrtoint(f);
+      if dxfdoubleload(f,53,DXFCode,angle) then DXFCode:=f.ParseInteger;
+      if dxfdoubleload(f,43,DXFCode,base.x) then DXFCode:=f.ParseInteger;
+      if dxfdoubleload(f,44,DXFCode,base.y) then DXFCode:=f.ParseInteger;
+      if dxfdoubleload(f,45,DXFCode,offset.x) then DXFCode:=f.ParseInteger;
+      if dxfdoubleload(f,46,DXFCode,offset.y) then DXFCode:=f.ParseInteger;
 
       if PPattern=nil then begin
         PPattern:=GetMem(sizeof(THatchPattern));
         PPattern^.init(patternscount);
       end;
 
-      if dxfintegerload(f,79,dxfcod,dashcount) then dxfcod:=readmystrtoint(f);
+      if dxfintegerload(f,79,DXFCode,dashcount) then DXFCode:=f.ParseInteger;
       psa:=PPattern^.CreateObject;
       psa^.init(dashcount);
       psa^.Angle:=angle-MainAngle;
 
       angle:=DegToRad(MainAngle);
-      sinA:=sin(-angle);
-      cosA:=cos(-angle);
+      SinCos(-angle,sinA,cosA);
       psa^.Base.x:=base.x/MainScale;
       psa^.Base.y:=base.y/MainScale;
 
@@ -147,12 +145,13 @@ begin
       //psa^.Offset:=offset;
 
       for j:=1 to dashcount do begin
-        if dxfdoubleload(f,49,dxfcod,dash) then begin
+        if dxfdoubleload(f,49,DXFCode,dash) then begin
           psa^.PushBackData(dash/MainScale);
-          dxfcod:=readmystrtoint(f);
+          DXFCode:=f.ParseInteger;
         end;
       end;
       psa^.format;
+      result:=false;
     end;
   end;
 end;

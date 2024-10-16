@@ -24,13 +24,13 @@ interface
 uses
   uzcLog,SysUtils,
   uzccommandsabstract,uzeentity,uzcdrawing,uzcdrawings,uzccommandsmanager,
-  uzcstrconsts,uzcutils,gzundoCmdChgData,uzccommandsimpl,
+  uzcstrconsts,uzcutils,zUndoCmdChgBaseTypes,zUndoCmdChgTypes,uzccommandsimpl,
   uzestyleslayers,uzcinterface;
 
 implementation
 const
   LayerOnCommandName='LayerOn';
-function LayerOn_com(operands:TCommandOperands):TCommandResult;
+function LayerOn_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var
   UndoStartMarkerPlaced:boolean;
   plp:PGDBLayerProp;
@@ -43,9 +43,14 @@ begin
       result:=cmd_error;
     end else begin
       zcPlaceUndoStartMarkerIfNeed(UndoStartMarkerPlaced,LayerOnCommandName,true);
-      with TBooleanChangeCommand.CreateAndPushIfNeed(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,plp^._on,nil,nil) do begin
+      with TBooleanChangeCommand.CreateAndPushIfNeed(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,
+                                                    TChangedBoolean.CreateRec(plp^._on),
+                                                    TSharedEmpty(Default(TEmpty)),
+                                                    TAfterChangeEmpty(Default(TEmpty)))do
+
+      begin
         plp^._on:=not plp^._on;
-        ComitFromObj;
+        //ComitFromObj;
       end;
       zcPlaceUndoEndMarkerIfNeed(UndoStartMarkerPlaced);
       result:=cmd_ok;
@@ -57,7 +62,7 @@ begin
 end;
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-  CreateCommandFastObjectPlugin(@LayerOn_com,LayerOnCommandName,CADWG,0);
+  CreateZCADCommand(@LayerOn_com,LayerOnCommandName,CADWG,0);
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
 end.

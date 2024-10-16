@@ -137,11 +137,11 @@ procedure isWindowsErrors;
 begin
 
      {$IFDEF WINDOWS}
-     code:=code;
+//     code:=code;
      code:=0;
      code:=GetLastError;
-     if code<>0 then
-                    code:=code;
+//     if code<>0 then
+//                    code:=code;
      SetLastError(0);
      code:=0;
      {$ENDIF}
@@ -283,10 +283,10 @@ begin
                                      FillChar(CurrentPaintGDIData^.DebugCounter,sizeof(CurrentPaintGDIData^.DebugCounter),0);
      CanvasDC:=0;
      isWindowsErrors;
-     if InPaintMessage then
-                           CanvasDC:=(canvas.Handle)
-                       else
-                           CanvasDC:=GetDC(panel.Handle);
+     if InPaintMessage and (canvas<>nil) then
+       CanvasDC:=(canvas.Handle)
+     else
+       CanvasDC:=GetDC(panel.Handle);
      createoffscreendc;
      isWindowsErrors;
      result:=CreateScrbuf;
@@ -605,7 +605,7 @@ begin
   if txtOblique<>0 then
                        _obliqueM[1].v[0]:=-cotan(txtOblique);
   _transplusM:=CreateTranslationMatrix(CreateVertex(x,y,0));
-  _rotateM:=CreateRotationMatrixZ(sin(-txtRotate),cos(-txtRotate));
+  _rotateM:=CreateRotationMatrixZ(-txtRotate);
 
   {$IF DEFINED(LCLQt) OR DEFINED(LCLQt5)}_transminusM:=MatrixMultiply(_transminusM,_transminusM2);{$ENDIF}
   _transminusM:=MatrixMultiply(_transminusM,_scaleM);

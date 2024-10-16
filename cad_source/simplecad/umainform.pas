@@ -6,13 +6,14 @@ interface
 
 uses
   uzbpaths,
-  LCLType,Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs,
+  LCLType,Classes, SysUtils, FileUtil, Math,
+  Forms, Controls, Graphics, Dialogs,
   ExtCtrls, StdCtrls, Spin,
   {From ZCAD}
                                                                          //zcad memorymanager
   uzbtypes, uzegeometrytypes,                                              //zcad basetypes
   uzegeometry,                                                                     //some mathematical and geometrical support
-  uzefontmanager,uzeffshx,                                                        //fonts manager and SHX fileformat support
+  uzefontmanager,uzeFontFileFormatSHX,                                                        //fonts manager and SHX fileformat support
   uzglviewareaabstract,uzglviewareageneral,uzgldrawcontext,                          //generic view areas support
   uzglviewareaogl,uzglviewareagdi,                                           //gdi and opengl wiewareas
   uzeentity,                                                                    //generic entitys objects parent
@@ -64,7 +65,7 @@ type
     Memo1: TMemo;
     OpenDialog1: TOpenDialog;
     Panel1: TPanel;
-    Panel2: TPanel;
+    PanelDown: TPanel;
     PanelUp: TPanel;
     SaveDialog1: TSaveDialog;
     SpinEdit1: TSpinEdit;
@@ -207,13 +208,13 @@ begin
      end;
 
 
-     ViewArea:=TGDIViewArea.Create(Panel2);//Create view area (GDI)
+     ViewArea:=TGDIViewArea.Create(PanelDown);//Create view area (GDI)
      WADrawControl:=ViewArea.getviewcontrol;//Get window which will be drawing
      pdrawing2^.wa:=ViewArea;//associate drwing with window
      ViewArea.PDWG:=pdrawing2;//associate window with drawing
 
      WADrawControl.align:=alClient;
-     WADrawControl.Parent:=Panel2;
+     WADrawControl.Parent:=PanelDown;
      WADrawControl.show;
 
      ViewArea.getareacaps;//setup internal view area params
@@ -634,7 +635,7 @@ begin
     pobj^.textprop.size:=1+random(10);
     pobj^.textprop.justify:=b2j[1+random(11)];
     pobj^.textprop.wfactor:=0.3+random*0.7;
-    pobj^.textprop.oblique:=(random(30)-15)*pi/180;
+    pobj^.textprop.oblique:=DegToRad(random(30)-15);
     angl:=pi*random;
     //pobj^.textprop.angle:=angl;
     pobj^.local.basis.OX:=VectorTransform3D(PGDBObjText(pobj)^.local.basis.OX,uzegeometry.CreateAffineRotationMatrix(PGDBObjText(pobj)^.Local.basis.oz,-angl));

@@ -17,6 +17,7 @@
 }
 
 unit uzefont;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 interface
 uses math,uzgldrawerabstract,uzgprimitivescreator,uzgprimitives,
@@ -32,10 +33,10 @@ GDBfont= object(GDBNamedObject)
     Internalname:String; // Международное полное имя с описанием авора
     family:String;
     fullname:String;
-    font:PBASEFont;
+    font:TZEBaseFontImpl;
     DummyDrawerHandle:{THandle}ptruint;
     constructor initnul;
-    constructor init(n:String);
+    constructor init(const n:String);
     //procedure ItSHX;
     //procedure ItFFT;
     destructor done;virtual;
@@ -71,12 +72,12 @@ var
   symoutbound:TBoundingBox;
   //offset:TEntIndexesOffsetData;
 begin
-  if _symbol=100 then
-                      _symbol:=_symbol;
+//  if _symbol=100 then
+//                      _symbol:=_symbol;
   {if _symbol<256 then
                     _symbol:=ach2uch(_symbol);}
-  if _symbol=32 then
-                      _symbol:=_symbol;
+//  if _symbol=32 then
+//                      _symbol:=_symbol;
   LLSymbolIndex:=-1;
   //trcount:=0;
   LLSymbolLineCreated:=false;
@@ -330,8 +331,8 @@ begin
     PLLSymbolLine:=pointer(geom.LLprimitives.getDataMutable(LLSymbolLineIndex));
     if LLSymbolLineCreated then
                                begin
-                                    PLLSymbolLine^.SymbolsParam.IsCanSystemDraw:=font^.IsCanSystemDraw;
-                                    font^.SetupSymbolLineParams(matr,PLLSymbolLine^.SymbolsParam);
+                                    PLLSymbolLine^.SymbolsParam.IsCanSystemDraw:=font.IsCanSystemDraw;
+                                    font.SetupSymbolLineParams(matr,PLLSymbolLine^.SymbolsParam);
                                     PLLSymbolLine^.SymbolsParam.pfont:=@self;
                                     (*if PLLSymbolLine^.SymbolsParam.IsCanSystemDraw then
                                     begin
@@ -384,10 +385,7 @@ begin
      family:='';
      fullname:='';
      if font<>nil then
-                      begin
-                           font.done;
-                           Freemem(pointer(font));
-                      end;
+       freeandnil(font);
      inherited;
 end;
 (*procedure GDBfont.ItSHX;

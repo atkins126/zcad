@@ -17,9 +17,10 @@
 }
 
 unit uzehelpobj;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 interface
-uses uzegeometrytypes,LazLogger,gzctnrVector;
+uses uzegeometrytypes,LazLogger,gzctnrVector,math;
 const
   CircleLODCount=100;
 type
@@ -41,8 +42,7 @@ begin
     pv.count:=-j;
     circlepointoflod[j].PushBackData(pv);
     for i:=1 to j do begin
-      pv.coord.x:=cos(i/j*2*pi);
-      pv.coord.y:=sin(i/j*2*pi);
+      SinCos(i/j*2*pi,pv.coord.y,pv.coord.x);
       pv.count:=i-j;
       circlepointoflod[j].PushBackData(pv);
     end;

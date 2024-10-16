@@ -16,29 +16,29 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 } 
 unit uzeentblockinsert;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
+{$PointerMath ON}
 
 interface
 uses uzeentity,uzgldrawcontext,uzeentityfactory,uzedrawingdef,uzestyleslayers,math,
      uzeentcomplex,sysutils,UGDBObjBlockdefArray,uzeblockdef,uzbtypes,
      uzeconsts,uzglviewareadata,uzegeometry,uzeffdxfsupport,uzeentsubordinated,
      gzctnrVectorTypes,uzegeometrytypes,uzctnrVectorBytes,uzestrconsts,LCLProc,
-     uzbLogIntf;
+     uzbLogIntf,uzMVReader;
 const zcadmetric='!!ZMODIFIER:';
 type
-{Export+}
-{REGISTEROBJECTTYPE GDBObjBlockInsert}
 PGDBObjBlockInsert=^GDBObjBlockInsert;
 GDBObjBlockInsert= object(GDBObjComplex)
-                     scale:GDBvertex;(*saved_to_shd*)
-                     rotate:Double;(*saved_to_shd*)
-                     index:Integer;(*saved_to_shd*)(*oi_readonly*)(*hidden_in_objinsp*)
-                     Name:AnsiString;(*saved_to_shd*)(*oi_readonly*)
-                     pattrib:Pointer;(*hidden_in_objinsp*)
-                     BlockDesc:TBlockDesc;(*'Block params'*)(*saved_to_shd*)(*oi_readonly*)
+                     scale:GDBvertex;
+                     rotate:Double;
+                     index:Integer;
+                     Name:AnsiString;
+                     pattrib:Pointer;
+                     BlockDesc:TBlockDesc;
                      constructor initnul;
                      constructor init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt);
-                     procedure LoadFromDXF(var f: TZctnrVectorBytes;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
+                     procedure LoadFromDXF(var f:TZMemReader;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
 
                      procedure SaveToDXF(var outhandle:{Integer}TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
                      procedure CalcObjMatrix(pdrawing:PTDrawingDef=nil);virtual;
@@ -67,8 +67,7 @@ GDBObjBlockInsert= object(GDBObjComplex)
                      function GetNameInBlockTable:String;virtual;
                      function GetObjType:TObjID;virtual;
                   end;
-{Export-}
-procedure SetBlockInsertGeomProps(PBlockInsert:PGDBObjBlockInsert;args:array of const);
+procedure SetBlockInsertGeomProps(PBlockInsert:PGDBObjBlockInsert; const args:array of const);
 implementation
 //uses log;
 (*Procedure QDUDecomposition (const m:DMatrix4D; out kQ:DMatrix3D;out kD,kU:DVector3D);
@@ -286,12 +285,14 @@ begin
 end;
 procedure GDBObjBlockInsert.setrot(r:Double);
 var m1:DMatrix4D;
+    sine,cosine:double;
 begin
 m1:=onematrix;
-m1[0].v[0]:=cos(r);
-m1[1].v[1]:=cos(r);
-m1[1].v[0]:=-sin(r);
-m1[0].v[1]:=sin(r);
+SinCos(r,sine,cosine);
+m1[0].v[0]:=cosine;
+m1[1].v[1]:=cosine;
+m1[1].v[0]:=-sine;
+m1[0].v[1]:=sine;
 objMatrix:=MatrixMultiply(m1,objMatrix);
 end;
 function GDBObjBlockInsert.getrot:Double;
@@ -460,14 +461,14 @@ begin
                          name:='_error_here';
           //index:=gdb.GetCurrentDWG.BlockDefArray.getindex(pansichar(name));
           index:=PGDBObjBlockdefArray(drawing.GetBlockDefArraySimple).getindex({pansichar(}name{)});
-          if index<0 then
-                         index:=index;
+//          if index<0 then
+//                         index:=index;
           assert((index>=0) and (index<PGDBObjBlockdefArray(drawing.GetBlockDefArraySimple).count), rsWrongBlockDefIndex);
 
-          if not PBlockDefArray(PGDBObjBlockdefArray(drawing.GetBlockDefArraySimple).parray)^[index].Formated then
+          if not PGDBObjBlockdef(PGDBObjBlockdefArray(drawing.GetBlockDefArraySimple).parray)[index].Formated then
                                                                                begin
                                                                                 dc:=drawing.CreateDrawingRC;
-                                                                                PBlockDefArray(PGDBObjBlockdefArray(drawing.GetBlockDefArraySimple).parray)^[index].FormatEntity(drawing,dc);
+                                                                                PGDBObjBlockdef(PGDBObjBlockdefArray(drawing.GetBlockDefArraySimple).parray)[index].FormatEntity(drawing,dc);
                                                                                end;
           mainowner:=getmainowner;
           if mainowner<>nil then
@@ -513,25 +514,23 @@ begin
 end;
 procedure GDBObjBlockInsert.LoadFromDXF;
 var
-  //s: String;
-  byt{, code, i}: Integer;
-  hlGDBWord: Integer;
-  attrcont: Boolean;
+  byt:Integer;
+  hlGDBWord:Integer;
+  attrcont:Boolean;
 begin
   hlGDBWord:=0;
   attrcont := false;
-  byt:=readmystrtoint(f);
+  byt:=f.ParseInteger;
   while byt <> 0 do
   begin
      if not LoadFromDXFObjShared(f,byt,ptu,drawing) then
      if not dxfvertexload(f,10,byt,Local.P_insert) then
      if not dxfvertexload1(f,41,byt,scale) then
-     if dxfDoubleload(f,50,byt,rotate) then begin
-                                                    rotate:=rotate*pi/180;
-                                               end
+     if dxfDoubleload(f,50,byt,rotate) then
+       rotate:=DegToRad(rotate)
 else if dxfIntegerload(f,71,byt,hlGDBWord)then begin if hlGDBWord = 1 then attrcont := true; end
-else if not dxfStringload(f,2,byt,name)then {s := }f.readString;
-    byt:=readmystrtoint(f);
+else if not dxfStringload(f,2,byt,name)then {s := }f.SkipString;
+    byt:=f.ParseInteger;
   end;
   if attrcont then ;
       {begin
@@ -657,12 +656,12 @@ else if not dxfStringload(f,2,byt,name)then {s := }f.readString;
           s := f.readworld(#10, #13);
         until s = 'SEQEND'
       end;}
-  zTraceLn('{D}[DXF_CONTENTS]Name='+name);
-  if name='EL_LIGHT_SWIITH' then
-    name:=name;
+  zTraceLn('{D}[DXF_CONTENTS]Name=%s',[name]);
+//  if name='EL_LIGHT_SWIITH' then
+//    name:=name;
       //programlog.LogOutFormatStr('BlockInsert name="%s" loaded',[name],lp_OldPos,LM_Debug);
       //index:=gdb.GetCurrentDWG.BlockDefArray.getindex(pansichar(name));
-      index:=PGDBObjBlockdefArray(drawing.GetBlockDefArraySimple).getindex(pansichar(name));
+      index:=PGDBObjBlockdefArray(drawing.GetBlockDefArraySimple).getindex(name);
       //format;
 end;
 procedure GDBObjBlockInsert.SaveToDXF(var outhandle:{Integer}TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);
@@ -693,7 +692,7 @@ begin
   result.initnul{(owner)};
   result.bp.ListPos.Owner:=owner;
 end;
-procedure SetBlockInsertGeomProps(PBlockInsert:PGDBObjBlockInsert;args:array of const);
+procedure SetBlockInsertGeomProps(PBlockInsert:PGDBObjBlockInsert; const args:array of const);
 var
    counter:integer;
    r:Double;
@@ -711,7 +710,7 @@ begin
   PBlockInsert^.setrot(r);
   PBlockInsert^.rotate:=r;
 end;
-function AllocAndCreateBlockInsert(owner:PGDBObjGenericWithSubordinated;args:array of const):PGDBObjBlockInsert;
+function AllocAndCreateBlockInsert(owner:PGDBObjGenericWithSubordinated; const args:array of const):PGDBObjBlockInsert;
 begin
   result:=AllocAndInitBlockInsert(owner);
   //owner^.AddMi(@result);

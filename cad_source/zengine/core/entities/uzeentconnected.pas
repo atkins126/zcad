@@ -19,15 +19,12 @@
 unit uzeentconnected;
 {$INCLUDE zengineconfig.inc}
 interface
-Uses uzeentity,uzeentgenericsubentry,UGDBOpenArrayOfPV,uzedrawingdef;
+Uses uzeentity,uzeentgenericsubentry,{UGDBOpenArrayOfPV,}uzedrawingdef;
 type
-{Export+}
 PGDBObjConnected=^GDBObjConnected;
-{REGISTEROBJECTTYPE GDBObjConnected}
 GDBObjConnected= object(GDBObjGenericSubEntry)
                       procedure connectedtogdb(ConnectedArea:PGDBObjGenericSubEntry;var drawing:TDrawingDef);virtual;abstract;
                 end;
-{Export-}
 implementation
 //uses {UGDBDescriptor,}log;
 begin

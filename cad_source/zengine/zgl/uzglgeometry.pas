@@ -17,6 +17,7 @@
 }
 
 unit uzglgeometry;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 interface
 uses uzgldrawergeneral,math,uzgldrawcontext,uzgldrawerabstract,uzgvertex3sarray,
@@ -72,7 +73,7 @@ ZGLGraphix= object(ZGLVectorObject)
 var
     sysvarDWGRotateTextInLT:boolean=true;
     SysVarRDMaxLTPatternsInEntity:integer=1000;
-function getsymbol_fromGDBText(s:TDXFEntsInternalStringType; i:integer;out l:integer;const fontunicode:Boolean):word;
+function getsymbol_fromGDBText(const s:TDXFEntsInternalStringType; i:integer;out l:integer;const fontunicode:Boolean):word;
 implementation
 {function ZGLGraphix.CanSimplyDrawInOCS(const DC:TDrawContext;const SqrParamSize,TargetSize:Double):Boolean;
 //false - не упрощать, true - упрощать. в GDBObjWithLocalCS.CanSimplyDrawInOCS наоборот
@@ -85,14 +86,14 @@ begin
                                result:=true;
 end;}
 
-function getsymbol_fromGDBText(s:TDXFEntsInternalStringType; i:integer;out l:integer;const fontunicode:Boolean):word;
+function getsymbol_fromGDBText(const s:TDXFEntsInternalStringType; i:integer;out l:integer;const fontunicode:Boolean):word;
 var
    ts:TDXFEntsInternalStringType;
    code:integer;
 begin
      if length(s)>=i+6 then
      if s[i]='\' then
-     if uppercase(s[i+1])='U' then
+     if s[i+1] in ['U','u'] then
      if s[i+2]='+' then
      begin
           ts:='$'+copy(s,i+3,4);
@@ -198,13 +199,13 @@ begin
   Bound.RT.x:=NegInfinity;
   Bound.RT.y:=NegInfinity;//-infinity;
 
-  matr:=matrixmultiply(DrawMatrix,objmatrix);
+  //matr:=matrixmultiply(DrawMatrix,objmatrix);
   matr:=DrawMatrix;
 
   i := 1;
   while i <= length(content) do
   begin
-    sym:=getsymbol_fromGDBText(content,i,symlen,pgdbfont(pfont)^.font.unicode);
+    sym:=getsymbol_fromGDBText(content,i,symlen,pgdbfont(pfont)^.font.IsUnicode);
     if sym=1 then
     begin
          ispl:=not(ispl);
@@ -414,9 +415,9 @@ begin
      dir:=pcurrsegment^.dir;
      angle:=Vertexangle(CreateVertex2D(0,0),CreateVertex2D(dir.x,dir.y));
      cp:=pcurrsegment^.startpoint;
-     end
-     else
-         pcurrsegment:=pcurrsegment;
+     end;
+//     else
+//         pcurrsegment:=pcurrsegment;
 end;
 procedure ZSegmentator.startdraw;
 begin
@@ -452,7 +453,7 @@ begin
      AddPoint(rc,p);
      //points.Add(@p);
 end;
-function creatematrix(PInsert:GDBVertex; //Точка вставки
+function creatematrix(const PInsert:GDBVertex; //Точка вставки
                       param:shxprop;     //Параметры текста
                       LineAngle,         //Угол линии
                       Scale:Double)   //Масштаб линии
@@ -465,9 +466,9 @@ begin
                     TACRel:a:=PSP^.param.Angle*pi/180-angle;
                     TACUpRight:a:=0;
                   end;}
-    mrot:=CreateRotationMatrixZ(Sin(param.Angle*pi/180), Cos(param.Angle*pi/180));
+    mrot:=CreateRotationMatrixZ(param.Angle*pi/180);
     if param.AD=TACRel then
-                           mentrot:=CreateRotationMatrixZ(Sin(LineAngle), Cos(LineAngle))
+                           mentrot:=CreateRotationMatrixZ(LineAngle)
                        else
                            mentrot:=onematrix;
     madd:=CreateTranslationMatrix(createvertex(param.x*Scale,param.y*Scale,0));
@@ -480,7 +481,7 @@ begin
     result:=MatrixMultiply(result,mentrot);
     result:=MatrixMultiply(result,mtrans);
 end;
-function CreateReadableMatrix(PInsert:GDBVertex; //Точка вставки
+function CreateReadableMatrix(const PInsert:GDBVertex; //Точка вставки
                       param:shxprop;     //Параметры текста
                       LineAngle,         //Угол линии
                       Scale:Double;
@@ -489,9 +490,9 @@ function CreateReadableMatrix(PInsert:GDBVertex; //Точка вставки
 var
     mrot,mrot2,mentrot,madd,madd2,madd3,mtrans,mscale:dmatrix4d;
 begin
-    mrot:=CreateRotationMatrixZ(Sin(param.Angle*pi/180), Cos(param.Angle*pi/180));
+    mrot:=CreateRotationMatrixZ(param.Angle*pi/180);
     if (param.AD<>TACAbs) then
-                           mentrot:=CreateRotationMatrixZ(Sin(LineAngle), Cos(LineAngle))
+                           mentrot:=CreateRotationMatrixZ(LineAngle)
                        else
                            mentrot:=onematrix;
     madd:=CreateTranslationMatrix(createvertex(param.x*Scale,param.y*Scale,0));
@@ -506,7 +507,7 @@ begin
     begin
     madd2:=CreateTranslationMatrix(createvertex(dx*Scale,dy*Scale,0));
     madd3:=CreateTranslationMatrix(createvertex(-dx*Scale,-dy*Scale,0));
-    mrot2:=CreateRotationMatrixZ(Sin(pi), Cos(pi));
+    mrot2:=CreateRotationMatrixZ(pi);
     result:=MatrixMultiply(result,madd3);
     result:=MatrixMultiply(result,mrot2);
     result:=MatrixMultiply(result,madd2);
@@ -551,7 +552,7 @@ sli:=-1;
 for j:=1 to (system.length(PTP^.Text)) do
 begin
      sym:=byte(PTP^.Text[j]);
-          if ptp.param.PStyle.pfont.font.unicode then
+          if ptp.param.PStyle.pfont.font.IsUnicode then
                                                      sym:=ach2uch(sym);
 PTP^.param.PStyle.pfont.CreateSymbol(drawer,self,sym,objmatrix,matr,Bound,sli);
 matr[3].v[0]:=matr[3].v[0]+PTP^.param.PStyle.pfont^.GetOrReplaceSymbolInfo(byte(PTP^.Text[j]){//-ttf-//,tdinfo}).NextSymX;
@@ -781,75 +782,70 @@ begin
 end;
 function ZGLGraphix.DrawLineWithLT(var rc:TDrawContext;const startpoint,endpoint:GDBVertex; const vp:GDBObjVisualProp):TLLDrawResult;
 var
-    scale,length:Double;
-    num,normalizedD,D,halfStroke,dend:Double;
-    ir3:itrec;
-    PStroke:PDouble;
-    lt:PGDBLtypeProp;
-    Segmentator:ZSegmentator;
-    supressfirstdash:boolean;
+  scale,length:Double;
+  num,normalizedD,D,halfStroke,dend:Double;
+  ir3:itrec;
+  PStroke:PDouble;
+  lt:PGDBLtypeProp;
+  Segmentator:ZSegmentator;
+  supressfirstdash:boolean;
 begin
-     result:=CreateLLDrawResult(LLprimitives);
-     LT:=getLTfromVP(vp);
-     if (LT=nil) or (LT.dasharray.Count=0) then
-     begin
-          DrawLineWithoutLT(rc,startpoint,endpoint,result);
-          result.Appearance:=TAMatching;
-     end
-     else
-     begin
-          //LT:=getLTfromVP(vp);
-          length := Vertexlength(startpoint,endpoint);//длина линии
-          scale:={SysVar.dwg.DWG_LTScale^}rc.DrawingContext.GlobalLTScale*vp.LineTypeScale;//фактический масштаб линии
-          num:=Length/(scale*LT.strokesarray.LengthFact);//количество повторений шаблона
-          if ((num<1)and(not LT^.WithoutLines))or(num>SysVarRDMaxLTPatternsInEntity) then
-          begin
-               DrawLineWithoutLT(rc,startpoint,endpoint,result); //не рисуем шаблон при большом количестве повторений
-               result.Appearance:=TAMatching;
-          end
-          else
-          begin
-               Segmentator.InitFromLine(startpoint,endpoint,length,@self);//длина линии
-               Segmentator.startdraw;
-               D:=(Length-(scale*LT.strokesarray.LengthFact)*trunc(num))/2; //длинна добавки для выравнивания
-               normalizedD:=D/Length;
+  result:=CreateLLDrawResult(LLprimitives);
+  LT:=getLTfromVP(vp);
+  if (LT=nil) or (LT.dasharray.Count=0) then begin
+    DrawLineWithoutLT(rc,startpoint,endpoint,result);
+    result.Appearance:=TAMatching;
+  end else begin
+    //LT:=getLTfromVP(vp);
+    length := Vertexlength(startpoint,endpoint);//длина линии
+    scale:={SysVar.dwg.DWG_LTScale^}rc.DrawingContext.GlobalLTScale*vp.LineTypeScale;//фактический масштаб линии
+    num:=Length/(scale*LT.strokesarray.LengthFact);//количество повторений шаблона
+    if ((num<1)and(not LT^.WithoutLines))or(num>SysVarRDMaxLTPatternsInEntity) then begin
+      DrawLineWithoutLT(rc,startpoint,endpoint,result); //не рисуем шаблон при большом количестве повторений
+      result.Appearance:=TAMatching;
+    end else begin
+      Segmentator.InitFromLine(startpoint,endpoint,length,@self);//длина линии
+      Segmentator.startdraw;
+      D:=(Length-(scale*LT.strokesarray.LengthFact)*trunc(num))/2; //длинна добавки для выравнивания
+      normalizedD:=D/Length;
 
-               PStroke:=LT^.strokesarray.beginiterate(ir3);//первый штрих
-               halfStroke:=(scale*abs(PStroke^/2))/length;//первый штрих
-               supressfirstdash:=false;
-               dend:=normalizedD-halfStroke;
-               if dend>eps then
-               case LT.FirstStroke of
-                            TODILine:Segmentator.draw(rc,dend,true,result);
-                           TODIPoint:
-                                     begin
-                                          DrawPointWithoutLT(rc,Segmentator.cp,result);
-                                          Segmentator.draw(rc,dend,false,result);
-                                          supressfirstdash:=true;
-                                     end;
-     TODIUnknown,TODIShape,TODIBlank:;//заглушка на варнинг
-               end;
-               PlaceNPatterns(rc,Segmentator,trunc(num),LT,scale,scale,length,result,supressfirstdash);//рисуем num паттернов
-               dend:=1-Segmentator.cdp;
-               if dend>eps then
-                               begin
-                                    //Segmentator.draw(rc,dend,true);
-                                    //дорисовываем окончание если надо
-                                    case LT.FirstStroke of
-                                                 TODILine:Segmentator.draw(rc,dend,true,result);
-                                                TODIPoint:
-                                                          begin
-                                                               //Segmentator.draw(rc,dend,false);
-                                                               DrawPointWithoutLT(rc,{Segmentator.cp}endpoint,result);
-                                                          end;
-                          TODIUnknown,TODIShape,TODIBlank:;//заглушка на варнинг
-                                    end;
-                               end;
-               Segmentator.done;
-         end;
-     end;
-     FinishLLDrawResult(LLprimitives,result);
-     Shrink;
+      PStroke:=LT^.strokesarray.beginiterate(ir3);//первый штрих
+      halfStroke:=(scale*abs(PStroke^/2))/length;//первый штрих
+      supressfirstdash:=false;
+      dend:=normalizedD-halfStroke;
+      if {dend>eps}lt^.LastStroke<>TODILine then
+        case LT.FirstStroke of
+                   TODILine:Segmentator.draw(rc,dend,true,result);
+                  TODIPoint:begin
+                              DrawPointWithoutLT(rc,Segmentator.cp,result);
+                              Segmentator.draw(rc,dend,false,result);
+                              supressfirstdash:=true;
+                            end;
+                TODIUnknown,
+                  TODIShape,
+                  TODIBlank:;//заглушка на варнинг
+      end;
+      PlaceNPatterns(rc,Segmentator,trunc(num),LT,scale,scale,length,result,supressfirstdash);//рисуем num паттернов
+      dend:=1-Segmentator.cdp;
+      if dend>eps then begin
+        //Segmentator.draw(rc,dend,true);
+        //дорисовываем окончание если надо
+        case LT.FirstStroke of
+                   TODILine:Segmentator.draw(rc,dend,true,result);
+                  TODIPoint:begin
+                              //Segmentator.draw(rc,dend,false);
+                              DrawPointWithoutLT(rc,{Segmentator.cp}endpoint,result);
+                            end;
+                TODIUnknown,
+                  TODIShape,
+                  TODIBlank:;//заглушка на варнинг
+        end;
+      end;
+      Segmentator.done;
+    end;
+  end;
+  FinishLLDrawResult(LLprimitives,result);
+  Shrink;
 end;
 
 procedure ZGLGraphix.drawgeometry;

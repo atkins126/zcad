@@ -17,12 +17,13 @@
 }
 
 unit uzestylesdim;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 interface
 uses uzepalette,uzeconsts,uzestyleslinetypes,uzestylestexts,usimplegenerics,
      uzedimensionaltypes,sysutils,uzbtypes,uzegeometry,
      gzctnrVectorTypes,uzbstrproc,UGDBNamedObjectsArray,uzeffdxfsupport,
-     uzeEntityStylesRegister,uzeNamedObject;
+     {uzeEntityStylesRegister,}uzeNamedObject;
 const
      DIMLWEDefaultValue=LnWtByBlock;
      DIMCLREDefaultValue=ClByBlock;
@@ -120,7 +121,7 @@ GDBDimStyle = object(GDBNamedObject)
              end;
 PGDBDimStyleArray=^GDBDimStyleArray;
 {REGISTEROBJECTTYPE GDBDimStyleArray}
-GDBDimStyleArray= object(GDBNamedObjectsArray{-}<PGDBDimStyle,GDBDimStyle>{//})(*OpenArrayOfData=GDBDimStyle*)
+GDBDimStyleArray= object(GDBNamedObjectsArray{-}<PGDBDimStyle,GDBDimStyle>{//})
                     constructor init(m:Integer);
                     constructor initnul;
                     procedure ResolveDXFHandles(const Handle2BlockName:TMapBlockHandle_BlockNames);

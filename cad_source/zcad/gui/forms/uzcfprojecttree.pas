@@ -349,7 +349,7 @@ begin
   BuildTreeByEQ(ProjectEquipmentN,PTZCADDrawing(drawings.GetCurrentDWG).DWGUnits.findunit(GetSupportPath,InterfaceTranslate,DrawingDeviceBaseUnitName),MenusManager.GetPopupMenu('PROJECTDBCXMENU',nil));
 
 end;
-function ProjectTree_com(Operands:pansichar):Integer;
+function ProjectTree_com(const Context:TZCADCommandContext;Operands:pansichar):Integer;
 begin
   if not assigned(ProjectTreeForm) then
                                   ProjectTreeForm:=TProjectTreeForm.mycreate(Application,@ProjectTreeForm);
@@ -361,9 +361,9 @@ begin
   ProjectTreeForm:=nil;
   BlockCategory.init(100);
   EqCategory.init(100);
-  BlockCategory.loadfromfile(expandpath('*rtl/BlockCategory.cat'));
-  EqCategory.loadfromfile(expandpath('*rtl/EqCategory.cat'));
-  CreateCommandFastObjectPlugin(@ProjectTree_com,'ProjectTree',CADWG,0);
+  BlockCategory.loadfromfile(expandpath('$(ZCADPath)/rtl/BlockCategory.cat'));
+  EqCategory.loadfromfile(expandpath('$(ZCADPath)/rtl/EqCategory.cat'));
+  CreateZCADCommand(@ProjectTree_com,'ProjectTree',CADWG,0);
 end;
 finalization
 begin

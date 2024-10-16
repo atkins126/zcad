@@ -17,6 +17,7 @@
 }
 
 unit uzeentgenericsubentry;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 
 interface
@@ -24,24 +25,19 @@ uses uzepalette,uzgldrawcontext,uzedrawingdef,uzecamera,uzestyleslayers,
      UGDBVisibleTreeArray,UGDBOpenArrayOfPV,
      uzeentwithmatrix,uzeentsubordinated,uzbtypes,uzegeometry,uzeentity,
      gzctnrVectorTypes,uzegeometrytypes,uzeconsts,uzeentitiestree,uzeffdxfsupport,
-     uzctnrvectorpgdbaseobjects;
+     uzCtnrVectorpBaseEntity;
 type
-//GDBObjGenericSubEntry=object(GDBObjWithLocalCS)
-//GDBObjGenericSubEntry=object(GDBObj3d)
-{Export+}
 PTDrawingPreCalcData=^TDrawingPreCalcData;
-{REGISTERRECORDTYPE TDrawingPreCalcData}
 TDrawingPreCalcData=record
                           InverseObjMatrix:DMatrix4D;
                     end;
 PGDBObjGenericSubEntry=^GDBObjGenericSubEntry;
-{REGISTEROBJECTTYPE GDBObjGenericSubEntry}
 GDBObjGenericSubEntry= object(GDBObjWithMatrix)
-                            ObjArray:GDBObjEntityTreeArray;(*saved_to_shd*)
+                            ObjArray:GDBObjEntityTreeArray;
                             ObjCasheArray:GDBObjOpenArrayOfPV;
                             ObjToConnectedArray:GDBObjOpenArrayOfPV;
                             lstonmouse:PGDBObjEntity;
-                            VisibleOBJBoundingBox:TBoundingBox;
+                            InFrustumAABB:TBoundingBox;
                             //ObjTree:TEntTreeNode;
                             function AddObjectToObjArray(p:Pointer):Integer;virtual;
                             procedure RemoveMiFromArray(pobj:PGDBObjSubordinated;pobjinarray:Integer;const drawing:TDrawingDef);virtual;
@@ -51,8 +47,8 @@ GDBObjGenericSubEntry= object(GDBObjWithMatrix)
                             //function CorrectNodeTreeBB(pobj:PGDBObjEntity):Integer;virtual;
                             constructor initnul(owner:PGDBObjGenericWithSubordinated);
                             procedure DrawGeometry(lw:Integer;var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
-                            function CalcInFrustum(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
-                            function onmouse(var popa:TZctnrVectorPGDBaseObjects;const MF:ClipArray;InSubEntry:Boolean):Boolean;virtual;
+                            function CalcInFrustum(const frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
+                            function onmouse(var popa:TZctnrVectorPGDBaseEntity;const MF:ClipArray;InSubEntry:Boolean):Boolean;virtual;
                             procedure FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext;Stage:TEFStages=EFAllStages);virtual;
                             procedure FormatAfterEdit(var drawing:TDrawingDef;var DC:TDrawContext;Stage:TEFStages=EFAllStages);virtual;
                             procedure restructure(var drawing:TDrawingDef);virtual;
@@ -83,7 +79,7 @@ GDBObjGenericSubEntry= object(GDBObjWithMatrix)
 
                             //procedure ProcessTree(const frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var enttree:TEntTreeNode;OwnerInFrustum:TInRect);
                             //function CalcVisibleByTree(frustum:ClipArray;infrustumactualy:TActulity;const enttree:TEntTreeNode):Boolean;virtual;
-                              function CalcVisibleByTree(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var enttree:TEntTreeNode;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
+                              function CalcVisibleByTree(const frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var enttree:TEntTreeNode;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
                               //function CalcInFrustumByTree(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var enttree:TEntTreeNode):Boolean;virtual;
                               procedure SetInFrustumFromTree(const frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double);virtual;
 
@@ -94,9 +90,9 @@ GDBObjGenericSubEntry= object(GDBObjWithMatrix)
                               function FindObjectsInPointInNode(const point:GDBVertex;const Node:TEntTreeNode;var Objects:GDBObjOpenArrayOfPV):Boolean;
                               function FindObjectsInVolumeInNode(const Volume:TBoundingBox;const Node:TEntTreeNode;var Objects:GDBObjOpenArrayOfPV):Boolean;
                               //function FindObjectsInPointDone(const point:GDBVertex):Boolean;virtual;
-                              function onpoint(var objects:TZctnrVectorPGDBaseObjects;const point:GDBVertex):Boolean;virtual;
+                              function onpoint(var objects:TZctnrVectorPGDBaseEntity;const point:GDBVertex):Boolean;virtual;
                               procedure correctsublayers(var la:GDBLayerArray);virtual;
-                              function CalcTrueInFrustum(frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
+                              function CalcTrueInFrustum(const frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
 
                               procedure IterateCounter(PCounted:Pointer;var Counter:Integer;proc:TProcCounter);virtual;
 
@@ -104,7 +100,6 @@ GDBObjGenericSubEntry= object(GDBObjWithMatrix)
                               function GetMainOwner:PGDBObjSubordinated;virtual;
 
                       end;
-{Export-}
 implementation
 function GDBObjGenericSubEntry.GetMainOwner:PGDBObjSubordinated;
 begin
@@ -305,7 +300,7 @@ end;
 begin
      ProcessTree(frustum,infrustumactualy,visibleactualy,enttree,IRPartially)
 end;*)
-function GDBObjGenericSubEntry.CalcVisibleByTree(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var enttree:TEntTreeNode;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;
+function GDBObjGenericSubEntry.CalcVisibleByTree(const frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var enttree:TEntTreeNode;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;
 begin
   visible:=visibleactualy;
      result:=true;
@@ -356,28 +351,28 @@ begin
   begin
 
   dc.drawer.SetColor(palette[{sysvar.SYS.SYS_SystmGeometryColor^+2}4].RGB);
-  dc.drawer.DrawAABB3DInModelSpace(VisibleOBJBoundingBox,dc.DrawingContext.matrixs);
+  dc.drawer.DrawAABB3DInModelSpace(InFrustumAABB,dc.DrawingContext.matrixs);
   {oglsm.myglbegin(GL_LINE_LOOP);
-     oglsm.myglVertex(VisibleOBJBoundingBox.LBN.x,VisibleOBJBoundingBox.LBN.y,VisibleOBJBoundingBox.LBN.Z);
-     oglsm.myglVertex(VisibleOBJBoundingBox.RTF.x,VisibleOBJBoundingBox.LBN.y,VisibleOBJBoundingBox.LBN.Z);
-     oglsm.myglVertex(VisibleOBJBoundingBox.RTF.x,VisibleOBJBoundingBox.RTF.y,VisibleOBJBoundingBox.LBN.Z);
-     oglsm.myglVertex(VisibleOBJBoundingBox.LBN.x,VisibleOBJBoundingBox.RTF.y,VisibleOBJBoundingBox.LBN.Z);
+     oglsm.myglVertex(InFrustumAABB.LBN.x,InFrustumAABB.LBN.y,InFrustumAABB.LBN.Z);
+     oglsm.myglVertex(InFrustumAABB.RTF.x,InFrustumAABB.LBN.y,InFrustumAABB.LBN.Z);
+     oglsm.myglVertex(InFrustumAABB.RTF.x,InFrustumAABB.RTF.y,InFrustumAABB.LBN.Z);
+     oglsm.myglVertex(InFrustumAABB.LBN.x,InFrustumAABB.RTF.y,InFrustumAABB.LBN.Z);
   oglsm.myglend();
   oglsm.myglbegin(GL_LINE_LOOP);
-     oglsm.myglVertex(VisibleOBJBoundingBox.LBN.x,VisibleOBJBoundingBox.LBN.y,VisibleOBJBoundingBox.RTF.Z);
-     oglsm.myglVertex(VisibleOBJBoundingBox.RTF.x,VisibleOBJBoundingBox.LBN.y,VisibleOBJBoundingBox.RTF.Z);
-     oglsm.myglVertex(VisibleOBJBoundingBox.RTF.x,VisibleOBJBoundingBox.RTF.y,VisibleOBJBoundingBox.RTF.Z);
-     oglsm.myglVertex(VisibleOBJBoundingBox.LBN.x,VisibleOBJBoundingBox.RTF.y,VisibleOBJBoundingBox.RTF.Z);
+     oglsm.myglVertex(InFrustumAABB.LBN.x,InFrustumAABB.LBN.y,InFrustumAABB.RTF.Z);
+     oglsm.myglVertex(InFrustumAABB.RTF.x,InFrustumAABB.LBN.y,InFrustumAABB.RTF.Z);
+     oglsm.myglVertex(InFrustumAABB.RTF.x,InFrustumAABB.RTF.y,InFrustumAABB.RTF.Z);
+     oglsm.myglVertex(InFrustumAABB.LBN.x,InFrustumAABB.RTF.y,InFrustumAABB.RTF.Z);
   oglsm.myglend();
   oglsm.myglbegin(GL_LINES);
-     oglsm.myglVertex(VisibleOBJBoundingBox.LBN.x,VisibleOBJBoundingBox.LBN.y,VisibleOBJBoundingBox.LBN.Z);
-     oglsm.myglVertex(VisibleOBJBoundingBox.LBN.x,VisibleOBJBoundingBox.LBN.y,VisibleOBJBoundingBox.RTF.Z);
-     oglsm.myglVertex(VisibleOBJBoundingBox.RTF.x,VisibleOBJBoundingBox.LBN.y,VisibleOBJBoundingBox.LBN.Z);
-     oglsm.myglVertex(VisibleOBJBoundingBox.RTF.x,VisibleOBJBoundingBox.LBN.y,VisibleOBJBoundingBox.RTF.Z);
-     oglsm.myglVertex(VisibleOBJBoundingBox.RTF.x,VisibleOBJBoundingBox.RTF.y,VisibleOBJBoundingBox.LBN.Z);
-     oglsm.myglVertex(VisibleOBJBoundingBox.RTF.x,VisibleOBJBoundingBox.RTF.y,VisibleOBJBoundingBox.RTF.Z);
-     oglsm.myglVertex(VisibleOBJBoundingBox.LBN.x,VisibleOBJBoundingBox.RTF.y,VisibleOBJBoundingBox.LBN.Z);
-     oglsm.myglVertex(VisibleOBJBoundingBox.LBN.x,VisibleOBJBoundingBox.RTF.y,VisibleOBJBoundingBox.RTF.Z);
+     oglsm.myglVertex(InFrustumAABB.LBN.x,InFrustumAABB.LBN.y,InFrustumAABB.LBN.Z);
+     oglsm.myglVertex(InFrustumAABB.LBN.x,InFrustumAABB.LBN.y,InFrustumAABB.RTF.Z);
+     oglsm.myglVertex(InFrustumAABB.RTF.x,InFrustumAABB.LBN.y,InFrustumAABB.LBN.Z);
+     oglsm.myglVertex(InFrustumAABB.RTF.x,InFrustumAABB.LBN.y,InFrustumAABB.RTF.Z);
+     oglsm.myglVertex(InFrustumAABB.RTF.x,InFrustumAABB.RTF.y,InFrustumAABB.LBN.Z);
+     oglsm.myglVertex(InFrustumAABB.RTF.x,InFrustumAABB.RTF.y,InFrustumAABB.RTF.Z);
+     oglsm.myglVertex(InFrustumAABB.LBN.x,InFrustumAABB.RTF.y,InFrustumAABB.LBN.Z);
+     oglsm.myglVertex(InFrustumAABB.LBN.x,InFrustumAABB.RTF.y,InFrustumAABB.RTF.Z);
   oglsm.myglend();}
   end;
 end;
@@ -488,6 +483,8 @@ begin
 end;
 destructor GDBObjGenericSubEntry.done;
 begin
+  ObjCasheArray.Clear;
+  ObjToConnectedArray.Clear;
   ObjArray.Done;
   ObjCasheArray.Done;
   ObjToConnectedArray.Done;
@@ -512,10 +509,10 @@ begin
      dec(dc.subrender);
   DrawBB(dc);
 end;
-function GDBObjGenericSubEntry.CalcInFrustum(frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;
+function GDBObjGenericSubEntry.CalcInFrustum(const frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;
 begin
      result:=ObjArray.calcvisible(frustum,infrustumactualy,visibleactualy,totalobj,infrustumobj, ProjectProc,zoom,currentdegradationfactor);
-     self.VisibleOBJBoundingBox:=ObjArray.calcvisbb({gdb.GetCurrentDWG.pcamera^.POSCOUNT}{visibleactualy}infrustumactualy);
+     self.InFrustumAABB:=ObjArray.calcvisbb({gdb.GetCurrentDWG.pcamera^.POSCOUNT}{visibleactualy}infrustumactualy);
      {ObjArray.calcvisible;
      visible:=true;}
 end;
@@ -553,7 +550,7 @@ procedure GDBObjGenericSubEntry.renderfeedbac(infrustumactualy:TActulity;pcount:
 begin
   ObjArray.renderfeedbac(infrustumactualy,pcount,camera,ProjectProc,dc);
 end;
-function GDBObjGenericSubEntry.onpoint(var objects:TZctnrVectorPGDBaseObjects;const point:GDBVertex):Boolean;
+function GDBObjGenericSubEntry.onpoint(var objects:TZctnrVectorPGDBaseEntity;const point:GDBVertex):Boolean;
 var //t,xx,yy:Double;
     i:Integer;
     p:pGDBObjEntity;

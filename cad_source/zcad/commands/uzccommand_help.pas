@@ -74,11 +74,11 @@ begin
     OpenDocument(AFile);
 end;
 
-function Help_com(operands:TCommandOperands):TCommandResult;
+function Help_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var
   htmlDoc:string;
 begin
-  htmlDoc:=ProgramPath+'help/userguide.ru.html';//todo: расхардкодить
+  htmlDoc:=ProgramPath+'/help/userguide.ru.html';//todo: расхардкодить
   if CommandManager.CommandsStack.isEmpty then
     OpenDocument(htmlDoc)
   else
@@ -88,7 +88,7 @@ end;
 
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-  CreateCommandFastObjectPlugin(@Help_com,'Help',0,0).overlay:=True;
+  CreateZCADCommand(@Help_com,'Help',0,0).overlay:=True;
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
 end.

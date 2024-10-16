@@ -62,7 +62,7 @@ begin
   result := s;
 end;
 
-function itString(expr: String): Boolean;
+function itString(const expr: String): Boolean;
 begin
   if (expr[1] = '"') and (expr[length(expr)] = '"') then
     result := true
@@ -70,7 +70,7 @@ begin
     result := false;
 end;
 
-function ithex(expr: String): Boolean;
+function ithex(const expr: String): Boolean;
 var
   i: Integer;
 begin
@@ -90,7 +90,7 @@ begin
   end;
 end;
 
-function itint(expr: String): Boolean;
+function itint(const expr: String): Boolean;
 var
   i: Integer;
 begin
@@ -105,7 +105,7 @@ begin
   result := false;
 end;
 
-function itreal(expr: String): Boolean;
+function itreal(const expr: String): Boolean;
 var
   i: Integer;
 begin
@@ -131,13 +131,13 @@ begin
   end;
   result := false;
 end;
-function itBoolean(expr: String): Boolean;
+function itBoolean(const expr: String): Boolean;
 begin
   if (uppercase(expr)='TRUE')or(uppercase(expr)='FALSE') then result := true
                                                          else result := false;
 end;
 
-function itconst(expr: String): Boolean;
+function itconst(const expr: String): Boolean;
 begin
   result := itString(expr) or ithex(expr) or itint(expr) or itreal(expr) or itBoolean(expr);
 end;
@@ -289,8 +289,8 @@ begin
         begin
           rez.name := '';
           expr := copy(expr, 2, length(expr) - 2);
-          if expr='34 2511' then
-                                expr:=expr;
+//          if expr='34 2511' then
+//                                expr:=expr;
           rez.SetInstance(FundamentalStringDescriptorObj.AllocAndInitInstance);
           pString(rez.data.Addr.Instance)^ := expr;
           expr:='';
@@ -299,8 +299,8 @@ begin
     else
       begin
         s := readGDBWord(expr);
-        if s='rp_21.Tu' then
-        s:=s;
+//        if s='rp_21.Tu' then
+//        s:=s;
 
         pvar := _unit{.InterfaceVariables}.FindVariable(s);
         if pvar <> nil then
@@ -317,7 +317,7 @@ begin
           if ithex(s) or itint(s) then
           begin
             createIntegervar(rez, s);
-            s:=s;
+//            s:=s;
           end
           else
             if itreal(s) then
@@ -327,7 +327,7 @@ begin
               createBooleanvar(rez, s)
                     else if pos('.',s)>0 then
         begin
-             s:=s;
+//             s:=s;
              s1:=copy(s,1,pos('.',s)-1);
              s2:=copy(s,pos('.',s)+1,length(s)-pos('.',s));
              pvar:=_unit{.InterfaceVariables}.FindVariable(s1);
@@ -335,7 +335,7 @@ begin
              begin
                   {PObjectDescriptor(PUserTypeDescriptor(Types.exttype.getDataMutable(pvar^.vartypecustom)^))}
                   PObjectDescriptor(pvar^.data.ptd)^.RunMetod(s2,pvar^.data.Addr.Instance);
-                  s:=s;
+//                  s:=s;
              end
         end
             else
@@ -399,14 +399,20 @@ begin
                 functionname := itbasicfunction(s);
                 if functionname > 0 then
                 begin
-                                                                                                                 //halt(0);
                   s := readsubexpr(expr);
                   i := pos(',', s);
                   while i > 0 do
                   begin
+                    s1:=copy(s,1,i-1);
+                    s:=copy(s,i+1,length(s)-i);
+
+                    inc(opstac.count);
+                    opstac.stack[opstac.count] := evaluate(s1,_unit);
+
+                    i:=pos(',', s);
                   end;
-                  inc(opstac.count);
-                  opstac.stack[opstac.count] := evaluate(s,_unit);
+                    inc(opstac.count);
+                    opstac.stack[opstac.count] := evaluate(s,_unit);
                   functiontype := findbasicfunction(basicfunctionname[functionname].name, opstac);
                   rez := basicfunctionparam[functiontype].addr(opstac);
                   for i:=1 to opstac.count do
@@ -415,7 +421,7 @@ begin
                 else
                 begin
                      rez.name:=s;
-                     s:=s;
+//                     s:=s;
                 end;
               end;
             end;

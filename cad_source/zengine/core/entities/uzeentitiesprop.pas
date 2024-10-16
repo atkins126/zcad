@@ -17,25 +17,22 @@
 }
 
 unit uzeentitiesprop;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 interface
 uses uzedimensionaltypes,uzepalette,uzestyleslinetypes,uzegeometrytypes,uzbtypes,uzegeometry,sysutils,
      uzctnrVectorBytes,uzestyleslayers;
 type
-//ID:TObjID;(*'Object type'*)(*oi_readonly*)(*hidden_in_objinsp*)
-{Export+}
 PGDBObjVisualProp=^GDBObjVisualProp;
-{REGISTERRECORDTYPE GDBObjVisualProp}
 GDBObjVisualProp=record
-                      Layer:{-}PGDBLayerProp{/PGDBLayerPropObjInsp/};(*'Layer'*)(*saved_to_shd*)
-                      LineWeight:TGDBLineWeight;(*'Line weight'*)(*saved_to_shd*)
-                      LineType:{-}PGDBLtypeProp{/PGDBLtypePropObjInsp/};(*'Line type'*)(*saved_to_shd*)
-                      LineTypeScale:GDBNonDimensionDouble;(*'Line type scale'*)(*saved_to_shd*)
-                      BoundingBox:TBoundingBox;(*'Bounding box'*)(*oi_readonly*)(*hidden_in_objinsp*)
-                      LastCameraPos:TActulity;(*oi_readonly*)(*hidden_in_objinsp*)
+                      Layer:PGDBLayerProp;
+                      LineWeight:TGDBLineWeight;
+                      LineType:PGDBLtypeProp;
+                      LineTypeScale:GDBNonDimensionDouble;
+                      BoundingBox:TBoundingBox;
+                      LastCameraPos:TActulity;
                       Color:TGDBPaletteColor;
                  end;
-{Export-}
 function getLTfromVP(const vp:GDBObjVisualProp):PGDBLtypeProp;
 implementation
 function getLTfromVP(const vp:GDBObjVisualProp):PGDBLtypeProp;

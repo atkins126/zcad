@@ -38,7 +38,7 @@ procedure DBLinkProcess(pEntity:PGDBObjEntity;const drawing:TDrawingDef);
 
 implementation
 
-function DBaseAdd_com(operands:TCommandOperands):TCommandResult;
+function DBaseAdd_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var //t:PUserTypeDescriptor;
     p:pointer;
     pu:ptunit;
@@ -62,7 +62,7 @@ begin
             ZCMsgCallBackInterface.TextMessage(rscmCommandOnlyCTXMenu,TMWOHistoryOut);
      result:=cmd_ok;
 end;
-function DBaseRename_com(operands:TCommandOperands):TCommandResult;
+function DBaseRename_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var
     pdbv:pvardesk;
     pu:ptunit;
@@ -146,7 +146,7 @@ begin
      if pvnt<>nil then
                       pstring(pvnt.data.Addr.Instance)^:='Error!!!'
 end;
-function DBaseLink_com(operands:TCommandOperands):TCommandResult;
+function DBaseLink_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var //t:PUserTypeDescriptor;
     pvd,pdbv:pvardesk;
     //pu:ptunit;
@@ -171,7 +171,8 @@ begin
                  repeat
                       if pv^.Selected then
                                           begin
-                                               pentvarext:=pv^.GetExtension<TVariablesExtender>;
+                                            pentvarext:=pv^.GetExtension<TVariablesExtender>;
+                                            if pentvarext<>nil then begin
                                                pvd:=pentvarext.entityunit.FindVariable('DB_link');
                                                if pvd<>nil then
                                                begin
@@ -179,6 +180,7 @@ begin
                                                     DBLinkProcess(pv,drawings.GetCurrentDWG^);
                                                     inc(c);
                                                end;
+                                            end;
                                           end;
                  pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
                  until pv=nil;
@@ -191,9 +193,9 @@ begin
 end;
 procedure startup;
 begin
-  CreateCommandFastObjectPlugin(@DBaseAdd_com,'DBaseAdd',CADWG,0);
-  CreateCommandFastObjectPlugin(@DBaseLink_com,'DBaseLink',CADWG,0);
-  CreateCommandFastObjectPlugin(@DBaseRename_com,'DBaseRename',CADWG,0);
+  CreateZCADCommand(@DBaseAdd_com,'DBaseAdd',CADWG,0);
+  CreateZCADCommand(@DBaseLink_com,'DBaseLink',CADWG,0);
+  CreateZCADCommand(@DBaseRename_com,'DBaseRename',CADWG,0);
 end;
 begin
      startup;

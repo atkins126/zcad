@@ -21,7 +21,7 @@ unit UPointerDescriptor;
 {$MODE DELPHI}
 interface
 uses types,TypeDescriptors,uzctnrVectorBytes,
-     uzedimensionaltypes,varmandef,uzbtypes,uzctnrvectorstrings,
+     uzedimensionaltypes,varmandef,{uzbtypes,}uzctnrvectorstrings,
      UBaseTypeDescriptor;
 resourcestring
   rsUnassigned='Unassigned';
@@ -32,13 +32,13 @@ type
     ReferType:String;
     //constructor init(var t:gdbtypedesk);
     constructor init(ptype:String;tname:string;pu:pointer);
-    function CreateProperties(const f:TzeUnitsFormat;mode:PDMode;PPDA:PTPropertyDeskriptorArray;Name:TInternalScriptString;PCollapsed:Pointer;ownerattrib:Word;var bmode:Integer;const addr:Pointer;ValKey,ValType:TInternalScriptString):PTPropertyDeskriptorArray;virtual;
+    function CreateProperties(const f:TzeUnitsFormat;mode:PDMode;PPDA:PTPropertyDeskriptorArray;const Name:TInternalScriptString;PCollapsed:Pointer;ownerattrib:Word;var bmode:Integer;const addr:Pointer;const ValKey,ValType:TInternalScriptString):PTPropertyDeskriptorArray;virtual;
     //function Serialize(PInstance:Pointer;SaveFlag:Word;var membuf:PTZctnrVectorBytes;var  linkbuf:PGDBOpenArrayOfTObjLinkRecord;var sub:integer):integer;virtual;
     //function DeSerialize(PInstance:Pointer;SaveFlag:Word;var membuf:TZctnrVectorBytes;linkbuf:PGDBOpenArrayOfTObjLinkRecord):integer;virtual;
     procedure Format;virtual;
     function GetTypeAttributes:TTypeAttr;virtual;
-    function CreateEditor(TheOwner:TPropEditorOwner;rect:trect{x,y,w,h:Integer};pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;InitialValue:TInternalScriptString;preferedHeight:integer):TEditorDesc{TPropEditor};virtual;
-    procedure SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;prefix:TInternalScriptString);virtual;
+    function CreateEditor(TheOwner:TPropEditorOwner;rect:trect{x,y,w,h:Integer};pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean; const InitialValue:TInternalScriptString;preferedHeight:integer;f:TzeUnitsFormat):TEditorDesc{TPropEditor};virtual;
+    procedure SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;const prefix:TInternalScriptString);virtual;
     destructor Done;virtual;
   end;
 
@@ -55,7 +55,7 @@ implementation
 uses
   varman;
 
-procedure GDBPointerDescriptor.SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;prefix:TInternalScriptString);
+procedure GDBPointerDescriptor.SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer; const prefix:TInternalScriptString);
 begin
 
 end;
@@ -71,7 +71,7 @@ function GDBPointerDescriptor.CreateEditor;
 begin
      if assigned(TypeOf)and assigned(pointer(pinstance^)) then
 
-     result:=TypeOf^.CreateEditor(theowner,rect,pointer(pinstance^),nil,FreeOnLostFocus,initialvalue,preferedHeight)
+     result:=TypeOf^.CreateEditor(theowner,rect,pointer(pinstance^),nil,FreeOnLostFocus,initialvalue,preferedHeight,f)
 end;
 
 constructor GDBPointerDescriptor.init;
@@ -96,8 +96,8 @@ begin
     bm2:=property_build;
     //if PTUserTypeDescriptor(PUserTypeDescriptor((TypeOf)))^.GetTypeAttributes=TA_COMPOUND then
     //                                                                                          ppd:=ppd;
-    if (assigned(ta))and(name='lstonmouse') then
-                                                       name:=name;
+//    if (assigned(ta))and(name='lstonmouse') then
+//                                                       name:=name;
 
     if assigned(ta) then
                         begin

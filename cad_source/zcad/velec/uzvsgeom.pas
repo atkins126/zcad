@@ -73,7 +73,7 @@ uses
                       //системные переменные
   //uzgldrawcontext,
   uzcinterface,
-  {}uzbtypes, //base types
+  //{}uzbtypes, //base types
                       //описания базовых типов
   //uzeconsts, //base constants
                       //описания базовых констант
@@ -261,8 +261,9 @@ end;
      //areaLine:TBoundingBox;
      //areaRect,areaTriangle,sumAreaTriangle:double; //площадь прямоугольника
      tempvert,tempVertex,newEdPtLine:GDBVertex;
-     xline,yline,xyline,angle,anglePerpendCos:double;
+     xline{,yline},xyline,angle,anglePerpendCos:double;
      vertexRectangleLine:TRectangleLine;
+     sine,cosine:double;
   begin
 
       result:=false;
@@ -284,12 +285,13 @@ end;
            if (linePt1.x <= linePt2.x) and (linePt1.y <= linePt2.y) then
               angle:=arccos(anglePerpendCos)+3*1.5707963267949;
 
-           newEdPtLine.x:=linePt1.X+ (linePt2.X-linePt1.X) * Cos(angle) + (linePt2.Y-linePt1.Y) * Sin(angle) ;
-           newEdPtLine.y:=linePt1.Y-(linePt2.X -linePt1.X)* Sin(angle) + (linePt2.Y -linePt1.Y)* Cos(angle);
+           SinCos(angle,sine,cosine);
+           newEdPtLine.x:=linePt1.X+ (linePt2.X-linePt1.X) * cosine + (linePt2.Y-linePt1.Y) * sine ;
+           newEdPtLine.y:=linePt1.Y-(linePt2.X -linePt1.X)* sine + (linePt2.Y -linePt1.Y)* cosine;
            newEdPtLine.z:=0;
 
-           tempvert.x:=linePt1.X+ (vertexPt.X-linePt1.X) * Cos(angle) + (vertexPt.Y-linePt1.Y) * Sin(angle) ;
-           tempvert.y:=linePt1.Y-(vertexPt.X -linePt1.X)* Sin(angle) + (vertexPt.Y -linePt1.Y)* Cos(angle);
+           tempvert.x:=linePt1.X+ (vertexPt.X-linePt1.X) * cosine + (vertexPt.Y-linePt1.Y) * sine ;
+           tempvert.y:=linePt1.Y-(vertexPt.X -linePt1.X)* sine + (vertexPt.Y -linePt1.Y)* cosine;
            tempvert.z:=0;
 
 

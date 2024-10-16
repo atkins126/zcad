@@ -40,6 +40,7 @@ var
   RD_ID_Enabled:Boolean;
   RD_ID_PrefferedRenderTime:Integer;
   RD_ID_MaxDegradationFactor:Double;
+  RD_UseLazFreeTypeImplementation:Boolean;
   DISP_RemoveSystemCursorFromWorkArea:Boolean;
   DSGN_SelNew:Boolean;
   DWG_EditInSubEntry:Boolean;
@@ -68,6 +69,8 @@ var
   DSGN_LCCable:TLayerControl;
   DSGN_LCLeader:TLayerControl;
   DSGN_SelSameName:Boolean;
+  DSGN_MaxSelectEntsCountWithObjInsp:Integer;
+  DSGN_MaxSelectEntsCountWithGrips:Integer;
   INTF_ShowScrollBars:Boolean;
   INTF_ShowDwgTabs:Boolean;
   INTF_DwgTabsPosition:TAlign;
@@ -141,11 +144,12 @@ begin
   RD_ID_Enabled:=False;
   RD_ID_PrefferedRenderTime:=20;
   RD_ID_MaxDegradationFactor:=0;
+  RD_UseLazFreeTypeImplementation:=False;
   DISP_RemoveSystemCursorFromWorkArea:=True;
   DSGN_SelNew:=False;
   DWG_EditInSubEntry:=False;
-  RD_SpatialNodeCount:=-1;
-  RD_SpatialNodesDepth:=16;
+  RD_SpatialNodeCount:=2000;
+  RD_SpatialNodesDepth:=8;
   DWG_RotateTextInLT:=True;
   RD_MaxLTPatternsInEntity:=10000;
   RD_PanObjectDegradation:=False;
@@ -172,6 +176,8 @@ begin
   DSGN_LCLeader.Enabled:=True;
   DSGN_LCLeader.LayerName:='TEXT';
   DSGN_SelSameName:=False;
+  DSGN_MaxSelectEntsCountWithObjInsp:=25000;
+  DSGN_MaxSelectEntsCountWithGrips:=100;
   INTF_ShowScrollBars:=True;
   INTF_ShowDwgTabs:=True;
   INTF_DwgTabsPosition:=TATop;
@@ -194,7 +200,7 @@ begin
   RD_VSync:=T3SB_Fale;
   SAVE_Auto_Interval:=300;
   SAVE_Auto_Current_Interval:=300;
-  SAVE_Auto_FileName:='$(ZCADPath)/autosave/autosave.dxf';
+  SAVE_Auto_FileName:='$(CurrentDrawingPath)/$(CurrentDrawingFileNameOnly)_autosave.dxf';
   SAVE_Auto_On:=True;
   SYS_RunTime:=0;
   SYS_Version:='';

@@ -31,48 +31,47 @@ type
 {EXPORT+}
   {REGISTEROBJECTTYPE FloatInsert_com}
   FloatInsert_com =  object(CommandRTEdObject)
-    procedure CommandStart(Operands:TCommandOperands); virtual;
-    procedure Build(Operands:TCommandOperands); virtual;
+    protected
+      FSelectInsertedEnts:boolean;
+    public
+    constructor init(cn:String;SA,DA:TCStartAttr;ASelectInsertedEnts:boolean=false);
+    procedure CommandStart(const Context:TZCADCommandContext;Operands:TCommandOperands); virtual;
+    procedure Build(const Context:TZCADCommandContext;Operands:TCommandOperands); virtual;
     procedure Command(Operands:TCommandOperands); virtual;abstract;
-    function DoEnd(pdata:Pointer):Boolean;virtual;
-    function BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer; virtual;
-  end;
-  TFIWPMode=(FIWPCustomize,FIWPRun);
-  {REGISTEROBJECTTYPE FloatInsertWithParams_com}
-  FloatInsertWithParams_com =  object(FloatInsert_com)
-    CMode:TFIWPMode;
-    procedure CommandStart(Operands:TCommandOperands); virtual;
-    procedure BuildDM(Operands:TCommandOperands); virtual;
-    procedure Run(pdata:PtrInt); virtual;
-    function MouseMoveCallback(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer; virtual;
-    //procedure Command(Operands:pansichar); virtual;abstract;
-    //function BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; button: Byte;osp:pos_record): Integer; virtual;
+    function DoEnd(Context:TZCADCommandContext;pdata:Pointer):Boolean;virtual;
+    function BeforeClick(const Context:TZCADCommandContext;wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer; virtual;
   end;
 {EXPORT-}
 
 implementation
-
-procedure FloatInsert_com.Build(Operands:TCommandOperands);
+constructor FloatInsert_com.init(cn:String;SA,DA:TCStartAttr;ASelectInsertedEnts:boolean=false);
 begin
-     Command(operands);
-     if drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.Count-drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.Deleted<=0
-     then
-         begin
-              commandmanager.executecommandend;
-         end
+  inherited init(cn,SA,DA);
+  FSelectInsertedEnts:=ASelectInsertedEnts;
+  if FSelectInsertedEnts then
+    CEndActionAttr:=CEndActionAttr-[CEDeSelect];
 end;
 
-procedure FloatInsert_com.CommandStart(Operands:TCommandOperands);
+procedure FloatInsert_com.Build(const Context:TZCADCommandContext;Operands:TCommandOperands);
 begin
-     inherited CommandStart(Operands);
-     build(operands);
+  Command(operands);
+  if drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.Count-drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.Deleted<=0 then
+    commandmanager.executecommandend
+  else
+    SimulateMouseMove(context);
 end;
-function FloatInsert_com.DoEnd(pdata:Pointer):Boolean;
+
+procedure FloatInsert_com.CommandStart(const Context:TZCADCommandContext;Operands:TCommandOperands);
+begin
+     inherited CommandStart(context,Operands);
+     build(context,operands);
+end;
+function FloatInsert_com.DoEnd(Context:TZCADCommandContext;pdata:Pointer):Boolean;
 begin
      result:=true;
 end;
 
-function FloatInsert_com.BeforeClick(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer;
+function FloatInsert_com.BeforeClick(const Context:TZCADCommandContext;wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer;
 var
     dist:gdbvertex;
     dispmatr:DMatrix4D;
@@ -94,6 +93,15 @@ begin
 
   if (button and MZW_LBUTTON)<>0 then
   begin
+    if FSelectInsertedEnts then begin
+      {todo: выделение\развыделение примитивов в командах нужно кудато вынести отдельно}
+      drawings.GetCurrentROOT.ObjArray.DeSelect(drawings.GetCurrentDWG.wa.param.SelDesc.Selectedobjcount,drawings.GetCurrentDWG^.deselector);
+      drawings.GetCurrentDWG.wa.param.SelDesc.LastSelectedObject := nil;
+      drawings.GetCurrentDWG.wa.param.SelDesc.OnMouseObject := nil;
+      drawings.GetCurrentDWG.wa.param.seldesc.Selectedobjcount:=0;
+      drawings.GetCurrentDWG.SelObjArray.Free;
+    end;
+
    pobj:=drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.beginiterate(ir);
    if pobj<>nil then
    repeat
@@ -115,6 +123,9 @@ begin
                      //comit;
                 end;
 
+                if FSelectInsertedEnts then
+                  tv^.SelectQuik;
+
               end;
           end;
           pobj:=drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.iterate(ir);
@@ -127,43 +138,13 @@ begin
 
    drawings.GetCurrentDWG^.ConstructObjRoot.ObjMatrix:=onematrix;
    //commandend;
-   if DoEnd(tv) then commandmanager.executecommandend;
+   if DoEnd(context,tv) then commandmanager.executecommandend;
   end;
   result:=cmd_ok;
 end;
 
-procedure FloatInsertWithParams_com.BuildDM(Operands:TCommandOperands);
-begin
-
-end;
-procedure FloatInsertWithParams_com.CommandStart(Operands:TCommandOperands);
-begin
-     CommandRTEdObject.CommandStart(Operands);
-     CMode:=FIWPCustomize;
-     BuildDM(Operands);
-end;
-procedure FloatInsertWithParams_com.Run(pdata:PtrInt);
-begin
-     cmode:=FIWPRun;
-     self.Build('');
-end;
-function FloatInsertWithParams_com.MouseMoveCallback(wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer;
-begin
-     if CMode=FIWPRun then
-                          inherited MouseMoveCallback(wc,mc,button,osp);
-     result:=cmd_ok;
-end;
-
-procedure startup;
-begin
-end;
-procedure finalize;
-begin
-end;
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-  startup;
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
-  finalize;
 end.

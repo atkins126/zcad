@@ -101,7 +101,7 @@ uses
                       //системные переменные
   uzgldrawcontext,
   uzcinterface,
-  uzbtypes, //base types
+  //uzbtypes, //base types
                       //описания базовых типов
   uzeconsts, //base constants
                       //описания базовых констант
@@ -650,7 +650,7 @@ var
         result:=cmd_ok;
  end;
 
-function TestModul_com(operands:TCommandOperands):TCommandResult;
+function TestModul_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var
  test:string;
  r:integer;
@@ -665,7 +665,7 @@ var
 
 
 initialization
-  CreateCommandFastObjectPlugin(@TestModul_com,'test45',CADWG,0);
+  CreateZCADCommand(@TestModul_com,'test45',CADWG,0);
 end.
 
 

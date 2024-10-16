@@ -18,7 +18,7 @@
 
 unit UBaseTypeDescriptor;
 
-{$MODE DELPHI}
+{$MODE DELPHI}{$Codepage UTF8}
 interface
 uses
       typinfo,LCLProc,Graphics,classes,Themes,
@@ -38,32 +38,45 @@ end;
 TOrdinalTypeManipulator<T>=class(TBaseTypeManipulator<T>)
   class function GetValueAsString(const data:T):TInternalScriptString;
   class function GetFormattedValueAsString(const data:T; const f:TzeUnitsFormat):TInternalScriptString;
-  class procedure SetValueFromString(var data:T;Value:TInternalScriptString);
+  class procedure setFormattedValueAsString(var data:T; const f:TzeUnitsFormat; const Value:TInternalScriptString);
+  class procedure SetValueFromString(var data:T; const Value:TInternalScriptString);
 end;
 TBoolTypeManipulator<T>=class(TBaseTypeManipulator<T>)
   class function GetValueAsString(const data:T):TInternalScriptString;
   class function GetFormattedValueAsString(const data:T; const f:TzeUnitsFormat):TInternalScriptString;
-  class procedure SetValueFromString(var data:T;Value:TInternalScriptString);
+  class procedure setFormattedValueAsString(var data:T; const f:TzeUnitsFormat; const Value:TInternalScriptString);
+  class procedure SetValueFromString(var data:T; const Value:TInternalScriptString);
 end;
 TFloatTypeManipulator<T>=class(TBaseTypeManipulator<T>)
   class function GetValueAsString(const data:T):TInternalScriptString;
   class function GetFormattedValueAsString(const data:T; const f:TzeUnitsFormat):TInternalScriptString;
-  class procedure SetValueFromString(var data:T;Value:TInternalScriptString);
+  class procedure setFormattedValueAsString(var data:T; const f:TzeUnitsFormat; const Value:TInternalScriptString);
+  class procedure SetValueFromString(var data:T; const Value:TInternalScriptString);
 end;
 TStringTypeManipulator<T>=class(TBaseTypeManipulator<T>)
   class function GetValueAsString(const data:T):TInternalScriptString;
   class function GetFormattedValueAsString(const data:T; const f:TzeUnitsFormat):TInternalScriptString;
-  class procedure SetValueFromString(var data:T;Value:TInternalScriptString);
+  class procedure setFormattedValueAsString(var data:T; const f:TzeUnitsFormat; const Value:TInternalScriptString);
+  class procedure SetValueFromString(var data:T; const Value:TInternalScriptString);
 end;
 TAnsiStringTypeManipulator<T>=class(TBaseTypeManipulator<T>)
   class function GetValueAsString(const data:T):TInternalScriptString;
   class function GetFormattedValueAsString(const data:T; const f:TzeUnitsFormat):TInternalScriptString;
-  class procedure SetValueFromString(var data:T;Value:TInternalScriptString);
+  class procedure setFormattedValueAsString(var data:T; const f:TzeUnitsFormat; const Value:TInternalScriptString);
+  class procedure SetValueFromString(var data:T; const Value:TInternalScriptString);
 end;
+TTempAnsiStringStoredIn1251TypeManipulator<T>=class(TBaseTypeManipulator<T>)
+  class function GetValueAsString(const data:T):TInternalScriptString;
+  class function GetFormattedValueAsString(const data:T; const f:TzeUnitsFormat):TInternalScriptString;
+  class procedure setFormattedValueAsString(var data:T; const f:TzeUnitsFormat; const Value:TInternalScriptString);
+  class procedure SetValueFromString(var data:T; const Value:TInternalScriptString);
+end;
+
 TPointerTypeManipulator<T>=class(TBaseTypeManipulator<T>)
   class function GetValueAsString(const data:T):TInternalScriptString;
   class function GetFormattedValueAsString(const data:T; const f:TzeUnitsFormat):TInternalScriptString;
-  class procedure SetValueFromString(var data:T;Value:TInternalScriptString);
+  class procedure setFormattedValueAsString(var data:T; const f:TzeUnitsFormat; const Value:TInternalScriptString);
+  class procedure SetValueFromString(var data:T; const Value:TInternalScriptString);
 end;
 PBaseTypeDescriptor=^{BaseTypeDescriptor}TUserTypeDescriptor;
 BaseTypeDescriptor<T,TManipulator>=object(TUserTypeDescriptor)
@@ -72,9 +85,10 @@ BaseTypeDescriptor<T,TManipulator>=object(TUserTypeDescriptor)
                          constructor init(tname:string;pu:pointer);
 
                          function GetValueAsString(pinstance:Pointer):TInternalScriptString;virtual;
-                         function GetFormattedValueAsString(PInstance:Pointer; const f:TzeUnitsFormat):TInternalScriptString;virtual;
-                         function CreateProperties(const f:TzeUnitsFormat;mode:PDMode;PPDA:PTPropertyDeskriptorArray;Name:TInternalScriptString;PCollapsed:Pointer;ownerattrib:Word;var bmode:Integer;const addr:Pointer;ValKey,ValType:TInternalScriptString):PTPropertyDeskriptorArray;virtual;
-                         procedure SetValueFromString(PInstance:Pointer;Value:TInternalScriptString);virtual;
+                         function GetFormattedValueAsString(PInstance:Pointer;const f:TzeUnitsFormat):TInternalScriptString;virtual;
+                         procedure SetFormattedValueFromString(PInstance:Pointer;const f:TzeUnitsFormat; const Value:TInternalScriptString);virtual;
+                         function CreateProperties(const f:TzeUnitsFormat;mode:PDMode;PPDA:PTPropertyDeskriptorArray;const Name:TInternalScriptString;PCollapsed:Pointer;ownerattrib:Word;var bmode:Integer;const addr:Pointer;const ValKey,ValType:TInternalScriptString):PTPropertyDeskriptorArray;virtual;
+                         procedure SetValueFromString(PInstance:Pointer; const Value:TInternalScriptString);virtual;
                          procedure InitInstance(PInstance:Pointer);virtual;
                          function AllocInstance:Pointer;virtual;
                    end;
@@ -124,12 +138,16 @@ GDBUnicodeStringDescriptor=object(StringGeneralDescriptor<UnicodeString,TSTM_Uni
                     end;
 TSTM_String=TStringTypeManipulator<String>;
 StringDescriptor=object(StringGeneralDescriptor<string,{TStringTypeManipulator<string>}TSTM_String>)
-                          procedure SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;prefix:TInternalScriptString);virtual;
+                          procedure SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;const prefix:TInternalScriptString);virtual;
                     end;
 TASTM_String=TAnsiStringTypeManipulator<String>;
 AnsiStringDescriptor=object(StringGeneralDescriptor<string,{TAnsiStringTypeManipulator<string>}TASTM_String>)
-                          procedure SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;prefix:TInternalScriptString);virtual;
+                          procedure SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;const prefix:TInternalScriptString);virtual;
                     end;
+TAS1251TM_String=TTempAnsiStringStoredIn1251TypeManipulator<String>;
+TempAnsiString1251Descriptor=object(StringGeneralDescriptor<string,TAS1251TM_String>)
+                       //procedure SavePasToMem(var membuf:TZctnrVectorBytes;PInstance:Pointer;prefix:TInternalScriptString);virtual;
+                     end;
 TPTM_Pointer=TPointerTypeManipulator<Pointer>;
 PointerDescriptor=object(BaseTypeDescriptor<pointer,{TPointerTypeManipulator<Pointer>}TPTM_Pointer>)
                     end;
@@ -137,16 +155,28 @@ TOTM_PtrUint=TOrdinalTypeManipulator<PtrUint>;
 TEnumDataDescriptor=object(BaseTypeDescriptor<TEnumData,{TOrdinalTypeManipulator<PtrUint>}TOTM_PtrUint>)
                      constructor init;
                      function GetValueAsString(pinstance:Pointer):TInternalScriptString;virtual;
-                     procedure SetValueFromString(PInstance:Pointer;_Value:TInternalScriptString);virtual;
-                     function CreateProperties(const f:TzeUnitsFormat;mode:PDMode;PPDA:PTPropertyDeskriptorArray;Name:TInternalScriptString;PCollapsed:Pointer;ownerattrib:Word;var bmode:Integer;const addr:Pointer;ValKey,ValType:TInternalScriptString):PTPropertyDeskriptorArray;virtual;
+                     function GetDecoratedValueAsString(pinstance:Pointer; const f:TzeUnitsFormat):TInternalScriptString;virtual;
+                     procedure SetValueFromString(PInstance:Pointer; const _Value:TInternalScriptString);virtual;
+                     function CreateProperties(const f:TzeUnitsFormat;mode:PDMode;PPDA:PTPropertyDeskriptorArray;const Name:TInternalScriptString;PCollapsed:Pointer;ownerattrib:Word;var bmode:Integer;const addr:Pointer;const ValKey,ValType:TInternalScriptString):PTPropertyDeskriptorArray;virtual;
                      destructor Done;virtual;
                end;
+TCalculatedStringDescriptor=object(BaseTypeDescriptor<TCalculatedString,TASTM_String>)
+  constructor init;
+  function GetEditableAsString(PInstance:Pointer; const f:TzeUnitsFormat):TInternalScriptString;virtual;
+  function GetValueAsString(pinstance:Pointer):TInternalScriptString;virtual;
+  procedure SetValueFromString(PInstance:Pointer; const _Value:TInternalScriptString);virtual;
+  procedure SetEditableFromString(PInstance:Pointer;const f:TzeUnitsFormat; const Value:TInternalScriptString);virtual;
+  function CreateProperties(const f:TzeUnitsFormat;mode:PDMode;PPDA:PTPropertyDeskriptorArray;const Name:TInternalScriptString;PCollapsed:Pointer;ownerattrib:Word;var bmode:Integer;const addr:Pointer;const ValKey,ValType:TInternalScriptString):PTPropertyDeskriptorArray;virtual;
+  //destructor Done;virtual;
+end;
+
 
 var
 FundamentalDoubleDescriptorObj:DoubleDescriptor;
 FundamentalUnicodeStringDescriptorObj:GDBUnicodeStringDescriptor;
 FundamentalStringDescriptorObj:StringDescriptor;
 FundamentalAnsiStringDescriptorObj:AnsiStringDescriptor;
+FundamentalTempAnsiString1251DescriptorObj:TempAnsiString1251Descriptor;
 FundamentalWordDescriptorObj:TFundamentalWordDescriptor;
 FundamentalLongIntDescriptorObj:TFundamentalLongIntDescriptor;
 FundamentalByteDescriptorObj:TFundamentalByteDescriptor;
@@ -159,6 +189,7 @@ FundamentalShortIntDescriptorObj:TFundamentalShortIntDescriptor;
 FundamentalBooleanDescriptorOdj:BooleanDescriptor;
 FundamentalPointerDescriptorOdj:PointerDescriptor;
 GDBEnumDataDescriptorObj:TEnumDataDescriptor;
+CalculatedStringDescriptor:TCalculatedStringDescriptor;
 
 AliasIntegerDescriptorOdj:GDBSinonimDescriptor;
 AliasCardinalDescriptorOdj:GDBSinonimDescriptor;
@@ -182,87 +213,27 @@ begin
 end;
 class procedure TBaseTypeManipulator<T>.Initialize(var Instance:T);
 begin
-   system.initialize(Instance);
+  system.initialize(Instance);
 end;
 
-(*function MyDataToStr(data:LongInt):string;overload;
-begin
-     result:=inttostr(data);
-end;
-function MyDataToStr(data:boolean):string;overload;
-begin
-     if data then
-     result := 'True'
-     else
-     result := 'False';
-end;
-function MyDataToStr(data:double):string;overload;
-begin
-    if isnan(data) then
-                             result := 'NAN'
-                         else
-                             begin
-                                  result := floattostr(data);
-                                      if pos('.',result)<1 then
-                                                               result:=result+'.0';
-                             end;
-
-end;
-function MyDataToStr(data:float):string;overload;
-begin
-    if isnan(data) then
-                             result := 'NAN'
-                         else
-                             begin
-                                  result := floattostr(data);
-                                      if pos('.',result)<1 then
-                                                               result:=result+'.0';
-                             end;
-
-end;
-function MyDataToStr(data:string):string;overload;
-begin
-     result := data;
-end;
-function MyDataToStr(data:pointer):string;overload;
-begin
-     if data<>nil then
-                      begin
-                           result := '$' + inttohex(int64(data), 8);
-                      end
-                  else result := 'nil';
-end;
-function MyDataToStr(data:TEnumData):string;overload;
-begin
-     if data.Selected>=data.Enums.Count then
-                                            result:='ENUMERROR'
-                                        else
-                                            result:=data.Enums.getData(data.Selected);
-end;*)
 function TEnumDataDescriptor.CreateProperties;
 var ppd:PPropertyDeskriptor;
 begin
-     zTraceLn('{T}[ZSCRIPT]TEnumDataDescriptor.CreateProperties(%s,ppda=%p)',[name,ppda]);
-     //programlog.LogOutFormatStr('TEnumDataDescriptor.CreateProperties(%s,ppda=%p)',[name,ppda],lp_OldPos,LM_Trace);
-     ppd:=GetPPD(ppda,bmode);
-     if ppd^._bmode=property_build then
-                                       ppd^._bmode:=bmode;
-     if bmode=property_build then
-                                 begin
-                                      ppd^._ppda:=ppda;
-                                      ppd^._bmode:=bmode;
-                                 end
-                             else
-                                 begin
-                                      if (ppd^._ppda<>ppda)
-                                      //or (ppd^._bmode<>bmode)
-                                                             then
-                                                             {IFDEF LOUDERRORS}
-                                                               //Raise Exception.Create('Something wrong');
-                                                             {ENDIF}
-
-
-                                 end;
+  zTraceLn('{T}[ZSCRIPT]TEnumDataDescriptor.CreateProperties(%s,ppda=%p)',[name,ppda]);
+  ppd:=GetPPD(ppda,bmode);
+  if ppd^._bmode=property_build then
+    ppd^._bmode:=bmode;
+  if bmode=property_build then begin
+    ppd^._ppda:=ppda;
+    ppd^._bmode:=bmode;
+  end else begin
+     if (ppd^._ppda<>ppda)
+   //or (ppd^._bmode<>bmode)
+                           then
+                               {IFDEF LOUDERRORS}
+                                 //Raise Exception.Create('Something wrong');
+                               {ENDIF}
+  end;
      ppd^.Name:=name;
      ppd^.ValType:=valtype;
      ppd^.ValKey:=valkey;
@@ -272,16 +243,11 @@ begin
      ppd^.Attr:=ownerattrib;
      ppd^.Collapsed:=PCollapsed;
      ppd^.valueAddres:=addr;
-     ppd^.value:=GetValueAsString(addr);
-     if ppd^.value='rp_21' then
-                               ppd^.value:=ppd^.value;
-           if ppd<>nil then
-                           begin
-                                //IncAddr(addr);
-                                //inc(PByte(addr),SizeInBytes);
-                                //if bmode=property_build then PPDA^.add(@ppd);
-                           end;
-     //IncAddr(addr);
+     if (ppd^.Attr and FA_DIFFERENT)=0 then
+       ppd^.value:=GetDecoratedValueAsString(addr,f)
+     else
+       ppd^.value:=rsDifferent;
+     //ppd^.value:=GetValueAsString(addr);
 end;
 class function TOrdinalTypeManipulator<T>.GetValueAsString(const data:T):TInternalScriptString;
 begin
@@ -289,7 +255,7 @@ begin
      //Str(data,result)
   //result:=inttostr(LongInt(data));
 end;
-class procedure TOrdinalTypeManipulator<T>.SetValueFromString(var data:T;Value:TInternalScriptString);
+class procedure TOrdinalTypeManipulator<T>.SetValueFromString(var data:T; const Value:TInternalScriptString);
 var
   td:T;
   e:integer;
@@ -302,6 +268,16 @@ class function TOrdinalTypeManipulator<T>.GetFormattedValueAsString(const data:T
 begin
    result:=GetValueAsString(data);
 end;
+class procedure TOrdinalTypeManipulator<T>.setFormattedValueAsString(var data:T; const f:TzeUnitsFormat; const Value:TInternalScriptString);
+var
+  td:T;
+  e:integer;
+begin
+  val(Value,td,e);
+  if e=0 then
+    data:=td;
+end;
+
 class function TFloatTypeManipulator<T>.GetValueAsString(const data:T):TInternalScriptString;
 begin
     //Str(data:10:10,result);
@@ -309,11 +285,12 @@ begin
     if pos('.',result)<1 then
                              result:=result+'.0';
 end;
+
 class function TFloatTypeManipulator<T>.GetFormattedValueAsString(const data:T; const f:TzeUnitsFormat):TInternalScriptString;
 begin
    result:=zeDimensionToString(data,f);
 end;
-class procedure TFloatTypeManipulator<T>.SetValueFromString(var data:T;Value:TInternalScriptString);
+class procedure TFloatTypeManipulator<T>.SetValueFromString(var data:T; const Value:TInternalScriptString);
 var
      td:T;
      error:integer;
@@ -322,45 +299,83 @@ begin
      if error=0 then
                     data:=td;
 end;
-
+class procedure TFloatTypeManipulator<T>.setFormattedValueAsString(var data:T; const f:TzeUnitsFormat; const Value:TInternalScriptString);
+var
+     td:T;
+     error:integer;
+begin
+     val(value,td,error);
+     if error=0 then
+                    data:=td;
+end;
 class function TStringTypeManipulator<T>.GetValueAsString(const data:T):TInternalScriptString;
 begin
-    result:=uni2cp(data);
+    result:={uni2cp}(data);
 end;
 class function TStringTypeManipulator<T>.GetFormattedValueAsString(const data:T; const f:TzeUnitsFormat):TInternalScriptString;
 begin
    result:=GetValueAsString(data);
 end;
-class procedure TStringTypeManipulator<T>.SetValueFromString(var data:T;Value:TInternalScriptString);
+class procedure TStringTypeManipulator<T>.SetValueFromString(var data:T; const Value:TInternalScriptString);
 begin
-     data:=cp2uni(Value);
+     data:={cp2uni}(Value);
 end;
-
+class procedure TStringTypeManipulator<T>.setFormattedValueAsString(var data:T; const f:TzeUnitsFormat; const Value:TInternalScriptString);
+begin
+     data:={cp2uni}(Value);
+end;
 
 class function TAnsiStringTypeManipulator<T>.GetValueAsString(const data:T):TInternalScriptString;
 begin
-    result:=ansi2cp(data);
+    result:={ansi2cp}(data);;
 end;
 class function TAnsiStringTypeManipulator<T>.GetFormattedValueAsString(const data:T; const f:TzeUnitsFormat):TInternalScriptString;
 begin
    result:=GetValueAsString(data);
 end;
-class procedure TAnsiStringTypeManipulator<T>.SetValueFromString(var data:T;Value:TInternalScriptString);
+class procedure TAnsiStringTypeManipulator<T>.SetValueFromString(var data:T; const Value:TInternalScriptString);
 begin
-     data:=cp2ansi(Value);
+     data:={cp2ansi}(Value);
 end;
+class procedure TAnsiStringTypeManipulator<T>.setFormattedValueAsString(var data:T; const f:TzeUnitsFormat; const Value:TInternalScriptString);
+begin
+     data:={cp2uni}(Value);
+end;
+
+
+class function TTempAnsiStringStoredIn1251TypeManipulator<T>.GetValueAsString(const data:T):TInternalScriptString;
+begin
+    result:=Tria_AnsiToUtf8(data);
+end;
+class function TTempAnsiStringStoredIn1251TypeManipulator<T>.GetFormattedValueAsString(const data:T; const f:TzeUnitsFormat):TInternalScriptString;
+begin
+   result:=GetValueAsString(data);
+end;
+class procedure TTempAnsiStringStoredIn1251TypeManipulator<T>.SetValueFromString(var data:T; const Value:TInternalScriptString);
+begin
+     data:=Tria_Utf8ToAnsi(Value);
+end;
+class procedure TTempAnsiStringStoredIn1251TypeManipulator<T>.setFormattedValueAsString(var data:T; const f:TzeUnitsFormat; const Value:TInternalScriptString);
+begin
+     data:=Tria_Utf8ToAnsi(Value);
+end;
+
 
 class function TBoolTypeManipulator<T>.GetValueAsString(const data:T):TInternalScriptString;
 begin
   result:=BoolToStr(data,'True','False');
 end;
-class procedure TBoolTypeManipulator<T>.SetValueFromString(var data:T;Value:TInternalScriptString);
+class procedure TBoolTypeManipulator<T>.SetValueFromString(var data:T; const Value:TInternalScriptString);
 begin
   data:=StrToBoolDef(Value,False);
 end;
 class function TBoolTypeManipulator<T>.GetFormattedValueAsString(const data:T; const f:TzeUnitsFormat):TInternalScriptString;
 begin
    result:=GetValueAsString(data);
+end;
+class procedure TBoolTypeManipulator<T>.setFormattedValueAsString(var data:T; const f:TzeUnitsFormat; const Value:TInternalScriptString);
+begin
+  data:=StrToBoolDef(Value,False);
 end;
 constructor BaseTypeDescriptor<T,TManipulator>.init(tname:string;pu:pointer);
 begin
@@ -425,6 +440,10 @@ procedure BaseTypeDescriptor<T,TManipulator>.SetValueFromString;
 begin
   TManipulator.SetValueFromString(TManipulator.pt(PInstance)^,Value);
 end;
+procedure BaseTypeDescriptor<T,TManipulator>.SetFormattedValueFromString(PInstance:Pointer;const f:TzeUnitsFormat; const Value:TInternalScriptString);
+begin
+  TManipulator.setFormattedValueAsString(TManipulator.pt(PInstance)^,f,Value);
+end;
 procedure BaseTypeDescriptor<T,TManipulator>.InitInstance(PInstance:Pointer);
 begin
   TManipulator.Initialize(TManipulator.pt(PInstance)^);
@@ -459,14 +478,17 @@ begin
                       end
                   else result := 'nil';
 end;
-class procedure TPointerTypeManipulator<T>.SetValueFromString(var data:T;Value:TInternalScriptString);
+class procedure TPointerTypeManipulator<T>.SetValueFromString(var data:T; const Value:TInternalScriptString);
+begin
+end;
+class procedure TPointerTypeManipulator<T>.setFormattedValueAsString(var data:T; const f:TzeUnitsFormat; const Value:TInternalScriptString);
 begin
 end;
 class function TPointerTypeManipulator<T>.GetFormattedValueAsString(const data:T; const f:TzeUnitsFormat):TInternalScriptString;
 begin
    result:=GetValueAsString(data);
 end;
-function IsNeedBase64(value:TInternalScriptString):boolean;
+function IsNeedBase64(const value:TInternalScriptString):boolean;
 var
   i:integer;
 begin
@@ -507,16 +529,17 @@ constructor TEnumDataDescriptor.init;
 begin
      inherited init('TEnumDataDescriptor',nil);
 end;
-procedure TEnumDataDescriptor.SetValueFromString(PInstance:Pointer;_Value:TInternalScriptString);
+procedure TEnumDataDescriptor.SetValueFromString(PInstance:Pointer; const _Value:TInternalScriptString);
 var
     p:pstring;
     ir:itrec;
+    uppercase_value:TInternalScriptString;
 begin
-     _value:=uppercase(_value);
+     uppercase_value:=uppercase(_value);
                              p:=PTEnumData(Pinstance)^.Enums.beginiterate(ir);
                              if p<>nil then
                              repeat
-                             if _value=uppercase(p^)then
+                             if uppercase_value=uppercase(p^)then
                              begin
                                   PTEnumData(Pinstance)^.Selected:=ir.itc;
                                   exit;
@@ -525,19 +548,68 @@ begin
                              until p=nil;
 end;
 function TEnumDataDescriptor.GetValueAsString;
-{var currval:LongWord;
-    p:Pointer;
-    found:Boolean;
-    i:Integer;
-    num:cardinal;}
 begin
-     if PTEnumData(Pinstance)^.Selected>=PTEnumData(Pinstance)^.Enums.Count then
-                                                                               result:='ENUMERROR'
-                                                                           else
-                                                                               result:=PTEnumData(Pinstance)^.Enums.getData(PTEnumData(Pinstance)^.Selected);
-     {GetNumberInArrays(pinstance,num);
-     result:=UserValue.getString(num)}
+  if PTEnumData(Pinstance)^.Selected>=PTEnumData(Pinstance)^.Enums.Count then
+    result:='ENUMERROR'
+  else
+    result:=PTEnumData(Pinstance)^.Enums.getData(PTEnumData(Pinstance)^.Selected);
 end;
+function TEnumDataDescriptor.GetDecoratedValueAsString(pinstance:Pointer; const f:TzeUnitsFormat):TInternalScriptString;
+begin
+  result:=GetValueAsString(pinstance);
+end;
+
+constructor TCalculatedStringDescriptor.init;
+begin
+  inherited init('TCalculatedStringDescriptor',nil);
+end;
+function TCalculatedStringDescriptor.GetValueAsString(pinstance:Pointer):TInternalScriptString;
+begin
+  result:=PTCalculatedString(pinstance)^.value;
+end;
+function TCalculatedStringDescriptor.GetEditableAsString(PInstance:Pointer; const f:TzeUnitsFormat):TInternalScriptString;
+begin
+  result:=PTCalculatedString(pinstance)^.format;
+end;
+procedure TCalculatedStringDescriptor.SetEditableFromString(PInstance:Pointer;const f:TzeUnitsFormat; const Value:TInternalScriptString);
+begin
+  PTCalculatedString(pinstance)^.format:=Value;
+end;
+procedure TCalculatedStringDescriptor.SetValueFromString(PInstance:Pointer; const _Value:TInternalScriptString);
+begin
+  PTCalculatedString(pinstance)^.format:=_Value;
+end;
+
+//procedure TCalculatedStringDescriptor.SetValueFromString(PInstance:Pointer;_Value:TInternalScriptString);
+//begin
+//end;
+function TCalculatedStringDescriptor.CreateProperties(const f:TzeUnitsFormat;mode:PDMode;PPDA:PTPropertyDeskriptorArray;const Name:TInternalScriptString;PCollapsed:Pointer;ownerattrib:Word;var bmode:Integer;const addr:Pointer;const ValKey,ValType:TInternalScriptString):PTPropertyDeskriptorArray;
+var ppd:PPropertyDeskriptor;
+begin
+  zTraceLn('{T}[ZSCRIPT]TEnumDataDescriptor.CreateProperties(%s,ppda=%p)',[name,ppda]);
+  ppd:=GetPPD(ppda,bmode);
+  if ppd^._bmode=property_build then
+    ppd^._bmode:=bmode;
+  if bmode=property_build then begin
+    ppd^._ppda:=ppda;
+    ppd^._bmode:=bmode;
+  end;
+  ppd^.Name:=name;
+  ppd^.ValType:=valtype;
+  ppd^.ValKey:=valkey;
+  ppd^.PTypeManager:=@self;
+  ppd^.Decorators:=Decorators;
+  convertToRunTime(FastEditors,ppd^.FastEditors);
+  ppd^.Attr:=ownerattrib;
+  ppd^.Collapsed:=PCollapsed;
+  ppd^.valueAddres:=addr;
+  if (ppd^.Attr and FA_DIFFERENT)=0 then
+    ppd^.value:=GetDecoratedValueAsString(addr,f)
+  else
+    ppd^.value:=rsDifferent;
+  //ppd^.value:=GetValueAsString(addr);
+end;
+
 begin
      FundamentalLongIntDescriptorObj.init('LongInt',nil);
      FundamentalLongWordDescriptorObj.init('LongWord',nil);
@@ -553,6 +625,7 @@ begin
      FundamentalStringDescriptorObj.init('String',nil);
      FundamentalUnicodeStringDescriptorObj.init('UnicodeString',nil);
      FundamentalAnsiStringDescriptorObj.init('AnsiString',nil);
+     FundamentalTempAnsiString1251DescriptorObj.init('AnsiString1251',nil);
 
      FundamentalDoubleDescriptorObj.init('Double',nil);
      FundamentalSingleDescriptorObj.init('Single',nil);
@@ -574,4 +647,5 @@ begin
 
 
      GDBEnumDataDescriptorObj.init;
+     CalculatedStringDescriptor.init;
 end.

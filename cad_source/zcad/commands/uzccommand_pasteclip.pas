@@ -16,7 +16,7 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
 {$MODE OBJFPC}{$H+}
-unit uzccommand_PasteClip;
+unit uzcCommand_PasteClip;
 {$INCLUDE zengineconfig.inc}
 
 interface
@@ -28,7 +28,7 @@ uses
   uzeentity,uzcLog,
   uzcstrconsts,uzeconsts,
   uzcinterface,
-  uzccommand_copyclip,
+  uzccommand_copyclip,uzccmdload,
   uzccmdfloatinsert,
   Clipbrd,
   LCLType,
@@ -37,7 +37,9 @@ uses
   LazUTF8,
   SysUtils,
   uzbtypes,
-  uzeffdxf;
+  uzeffdxf
+  //,uzcutils
+  ;
 
 type
   PasteClip_com =  object(FloatInsert_com)
@@ -72,7 +74,7 @@ begin
     end;
     if fileexists(utf8tosys(tmpStr)) then begin
       zdctx.CreateRec(drawings.GetCurrentDWG^,drawings.GetCurrentDWG^.ConstructObjRoot,TLOMerge,drawings.GetCurrentDWG^.CreateDrawingRC);
-      addfromdxf(tmpStr,zdctx);
+      addfromdxf(tmpStr,zdctx,@DXFLoadCallBack);
     end;
     drawings.GetCurrentDWG^.wa.SetMouseMode((MGet3DPoint) or (MMoveCamera) or (MRotateCamera));
     ZCMsgCallBackInterface.TextMessage(rscmNewBasePoint,TMWOHistoryOut);
@@ -80,18 +82,9 @@ begin
     ZCMsgCallBackInterface.TextMessage(rsClipboardIsEmpty,TMWOHistoryOut);
 end;
 
-
-procedure startup;
-begin
-  PasteClip.init('PasteClip',0,0);
-end;
-procedure Finalize;
-begin
-end;
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-  startup;
+  PasteClip.init('PasteClip',0,0,true);
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
-  finalize;
 end.

@@ -16,11 +16,13 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
 
-unit uzcsysparams;
+unit uzcSysParams;
 {$INCLUDE zengineconfig.inc}
 interface
 uses XMLConf,XMLPropStorage,LazConfigStorage,fileutil,
   LCLProc,uzclog,uzbpaths,Forms{$IFNDEF DELPHI},LazUTF8{$ENDIF},sysutils;
+const
+  CParamsFile='/rtl/config.xml';
 type
 {EXPORT+}
   {REGISTERRECORDTYPE TmyFileVersionInfo}
@@ -35,6 +37,10 @@ type
     NoSplash:Boolean;(*'No splash screen'*)
     NoLoadLayout:Boolean;(*'No load layout'*)
     UpdatePO:Boolean;(*'Update PO file'*)
+    MemProfiling:Boolean;(*'Internal memory profiler'*)
+    LangOverride:string;(*'Language override'*)
+    DictionariesPath:string;(*'Dictionaries path'*)
+    LastAutoSaveFile:string;(*'Last autosave file'*)
   end;
   {REGISTERRECORDTYPE tnotsavedparams}
   tnotsavedparams=record
@@ -56,7 +62,11 @@ const
   DefaultSavedParams:tsavedparams=(UniqueInstance:true;
                                    NoSplash:false;
                                    NoLoadLayout:false;
-                                   UpdatePO:false);
+                                   UpdatePO:false;
+                                   MemProfiling:false;
+                                   LangOverride:'';
+                                   DictionariesPath:'ru=$(ZCADDictionariesPath)/ru_RU.dic|en=$(ZCADDictionariesPath)/en_US.dic;$(ZCADDictionariesPath)/en_US_interface.dic|abbrv=$(ZCADDictionariesPath)/abbrv.dic';
+                                   LastAutoSaveFile:'noAutoSaveFile');
   zcaduniqueinstanceid='zcad unique instance';
 var
   SysParam: tsysparam;
@@ -71,6 +81,10 @@ begin
   Config.SetDeleteValue('NoSplash',Params.NoSplash,DefaultSavedParams.NoSplash);
   Config.SetDeleteValue('NoLoadLayout',Params.NoLoadLayout,DefaultSavedParams.NoLoadLayout);
   Config.SetDeleteValue('UpdatePO',Params.UpdatePO,DefaultSavedParams.UpdatePO);
+  Config.SetDeleteValue('MemProfiling',Params.MemProfiling,DefaultSavedParams.MemProfiling);
+  Config.SetDeleteValue('LangOverride',Params.LangOverride,DefaultSavedParams.LangOverride);
+  Config.SetDeleteValue('DictionariesPath',Params.DictionariesPath,DefaultSavedParams.DictionariesPath);
+  Config.SetDeleteValue('LastAutoSaveFile',Params.LastAutoSaveFile,DefaultSavedParams.LastAutoSaveFile);
   Config.UndoAppendBasePath;
 end;
 
@@ -108,6 +122,10 @@ begin
   Params.NoSplash:=XMLConfig.GetValue('NoSplash',DefaultSavedParams.NoSplash);
   Params.NoLoadLayout:=XMLConfig.GetValue('NoLoadLayout',DefaultSavedParams.NoLoadLayout);
   Params.UpdatePO:=XMLConfig.GetValue('UpdatePO',DefaultSavedParams.UpdatePO);
+  Params.MemProfiling:=XMLConfig.GetValue('MemProfiling',DefaultSavedParams.MemProfiling);
+  Params.LangOverride:=XMLConfig.GetValue('LangOverride',DefaultSavedParams.LangOverride);
+  Params.DictionariesPath:=XMLConfig.GetValue('DictionariesPath',DefaultSavedParams.DictionariesPath);
+  Params.LastAutoSaveFile:=XMLConfig.GetValue('LastAutoSaveFile',DefaultSavedParams.LastAutoSaveFile);
   XMLConfig.CloseKey;
   FreeAndNil(XMLConfig);
 end;

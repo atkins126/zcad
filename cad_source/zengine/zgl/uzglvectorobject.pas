@@ -17,6 +17,7 @@
 }
 
 unit uzglvectorobject;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 interface
 uses uzgldrawerabstract,uzgldrawcontext,uzgprimitives,uzglgeomdata,uzgprimitivessarray,
@@ -50,8 +51,8 @@ ZGLVectorObject= object(GDBaseObject)
                                  destructor done;virtual;
                                  procedure Clear;virtual;
                                  procedure Shrink;virtual;
-                                 function CalcTrueInFrustum(frustum:ClipArray; FullCheck:boolean):TInBoundingVolume;virtual;
-                                 function CalcCountedTrueInFrustum(frustum:ClipArray; FullCheck:boolean;StartOffset,Count:Integer):TInBoundingVolume;virtual;
+                                 function CalcTrueInFrustum(const frustum:ClipArray; FullCheck:boolean):TInBoundingVolume;virtual;
+                                 function CalcCountedTrueInFrustum(const frustum:ClipArray; FullCheck:boolean;StartOffset,Count:Integer):TInBoundingVolume;virtual;
                                  function GetCopyParam(LLPStartIndex,LLPCount:Integer):TZGLVectorDataCopyParam;virtual;
                                  function CopyTo(var dest:ZGLVectorObject;CopyParam:TZGLVectorDataCopyParam):TZGLVectorDataCopyParam;virtual;
                                  procedure CorrectIndexes(LLPrimitivesStartIndex:Integer;LLPCount:Integer;IndexesStartIndex:Integer;IndexesCount:Integer;offset:TEntIndexesOffsetData);virtual;
@@ -292,7 +293,7 @@ begin
        inc(p);
      end;
 end;
-function ZGLVectorObject.CalcCountedTrueInFrustum(frustum:ClipArray; FullCheck:boolean;StartOffset,Count:Integer):TInBoundingVolume;
+function ZGLVectorObject.CalcCountedTrueInFrustum(const frustum:ClipArray; FullCheck:boolean;StartOffset,Count:Integer):TInBoundingVolume;
 var
   //subresult:TInBoundingVolume;
   PPrimitive:PTLLPrimitive;
@@ -342,7 +343,7 @@ begin
   end;
 end;
 
-function ZGLVectorObject.CalcTrueInFrustum(frustum:ClipArray; FullCheck:boolean):TInBoundingVolume;
+function ZGLVectorObject.CalcTrueInFrustum(const frustum:ClipArray; FullCheck:boolean):TInBoundingVolume;
 var
   //subresult:TInBoundingVolume;
   PPrimitive:PTLLPrimitive;
@@ -363,7 +364,7 @@ begin
   begin
        CurrentSize:=LLprimitives.Align(PPrimitive.CalcTrueInFrustum(frustum,GeomData,result));
        if not FullCheck then
-         if result<>IREmpty then
+         if (result<>IREmpty)and(result<>IRNotAplicable) then
                                 begin
                                      result:=IRPartially;
                                      exit;

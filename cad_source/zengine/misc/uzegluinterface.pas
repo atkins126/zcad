@@ -31,6 +31,7 @@ const
       GLU_TESS_BEGIN_DATA={$IFNDEF DELPHI}glu.{$ELSE}dglOpenGL.{$ENDIF}GLU_TESS_BEGIN_DATA;
       GLU_TESS_ERROR_DATA={$IFNDEF DELPHI}glu.{$ELSE}dglOpenGL.{$ENDIF}GLU_TESS_ERROR_DATA;
       GLU_TESS_COMBINE={$IFNDEF DELPHI}glu.{$ELSE}dglOpenGL.{$ENDIF}GLU_TESS_COMBINE;
+      GLU_TESS_COMBINE_DATA={$IFNDEF DELPHI}glu.{$ELSE}dglOpenGL.{$ENDIF}GLU_TESS_COMBINE_DATA;
       GLU_EXTENSIONS={$IFNDEF DELPHI}glu.{$ELSE}dglOpenGL.{$ENDIF}GLU_EXTENSIONS;
       GLU_NURBS_VERTEX_EXT={$IFNDEF DELPHI}glu.{$ELSE}dglOpenGL.{$ENDIF}GLU_NURBS_VERTEX_EXT;
       GLU_NURBS_MODE_EXT={$IFNDEF DELPHI}glu.{$ELSE}dglOpenGL.{$ENDIF}GLU_NURBS_MODE_EXT;
@@ -57,7 +58,7 @@ type
                            procedure TessEndPolygon(tess:TessObj);
                            procedure TessBeginContour(tess:TessObj);
                            procedure TessEndContour(tess:TessObj);
-                           procedure TessVertex(tess:TessObj; location:PGDBVertex; data:pointer);
+                           procedure TessVertex(tess:TessObj; location:PGDBVertex; data:PtrInt);
                            procedure TessCallback(tess:TessObj; which:GLenum; CallBackFunc:_GLUfuncptr);
 
                            function NewNurbsRenderer:GLUnurbsObj;
@@ -151,7 +152,7 @@ begin
      gluTessCallback(tess,which,CallBackFunc);
 end;
 
-procedure TGLUInterface.TessVertex(tess:TessObj; location:PGDBVertex; data:pointer);
+procedure TGLUInterface.TessVertex(tess:TessObj; location:PGDBVertex; data:PtrInt);
 {type
     PT3darray=^T3darray;}
 //var
@@ -160,7 +161,7 @@ begin
      //tv.x:=location.x;
      //tv.y:=location.y;
      //tv.z:=0;
-     gluTessVertex(tess,{PT3darray(@tv)^}pointer(location),data);
+     gluTessVertex(tess,{PT3darray(@tv)^}pointer(location),pointer(data));
 end;
 
 constructor TGLUInterface.init;

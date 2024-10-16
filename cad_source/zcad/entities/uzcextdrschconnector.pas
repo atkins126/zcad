@@ -19,14 +19,16 @@ unit uzcExtdrSCHConnector;
 {$INCLUDE zengineconfig.inc}
 
 interface
-uses sysutils,uzedrawingdef,uzeentityextender,
-     uzeentgenericsubentry,uzeentline,uzegeometry,
-     uzeentdevice,TypeDescriptors,uzctnrVectorBytes,
-     uzbtypes,uzeentsubordinated,uzeentity,uzeblockdef,
-     usimplegenerics,uzeffdxfsupport,
-     gzctnrVectorTypes,uzeBaseExtender,uzgldrawcontext,
-     uzcsysvars,gzctnrVectorSimple,gzctnrVectorP,UGDBOpenArrayOfPV,
-     gzctnrVector;
+uses
+  sysutils,uzedrawingdef,uzeExtdrAbstractEntityExtender,
+  uzeExtdrBaseEntityExtender,
+  uzeentgenericsubentry,uzeentline,uzegeometry,
+  uzeentdevice,TypeDescriptors,uzctnrVectorBytes,
+  uzbtypes,uzeentsubordinated,uzeentity,uzeblockdef,
+  usimplegenerics,uzeffdxfsupport,
+  gzctnrVectorTypes,uzeBaseExtender,uzgldrawcontext,
+  uzcsysvars,gzctnrVectorSimple,gzctnrVectorP,UGDBOpenArrayOfPV,
+  gzctnrVector;
 const
   ConnectionExtenderName='extdrSCHConnector';
 type
@@ -34,7 +36,6 @@ type
   TNet=class;
   TBaseSCHConnectExtender=class(TBaseEntityExtender)
     Net:TNet;
-    pThisEntity:PGDBObjEntity;
     constructor Create(pEntity:Pointer);override;
     destructor Destroy;override;
   end;
@@ -120,8 +121,9 @@ const
 
 constructor TBaseSCHConnectExtender.Create(pEntity:Pointer);
 begin
+  inherited;
   Net:=nil;
-  pThisEntity:=pEntity;
+  //pThisEntity:=pEntity;
 end;
 destructor TBaseSCHConnectExtender.Destroy;
 begin
@@ -327,19 +329,19 @@ procedure TSCHConnectorExtender.onEntityClone(pSourceEntity,pDestEntity:pointer)
 var
   NetConnectorExtender:TSCHConnectorExtender;
 begin
-  NetConnectorExtender:=PGDBObjEntity(pDestEntity)^.EntExtensions.GetExtension<TSCHConnectorExtender>;
+  NetConnectorExtender:=PGDBObjEntity(pDestEntity)^.EntExtensions.GetExtensionOf<TSCHConnectorExtender>;
   if NetConnectorExtender=nil then
     NetConnectorExtender:=AddConnectorExtenderToEntity(pDestEntity);
-  NetConnectorExtender.Assign(PGDBObjEntity(pSourceEntity)^.EntExtensions.GetExtension<TSCHConnectorExtender>);
+  NetConnectorExtender.Assign(PGDBObjEntity(pSourceEntity)^.EntExtensions.GetExtensionOf<TSCHConnectorExtender>);
 end;
 procedure TSCHConnectorExtender.onEntityBuildVarGeometry(pEntity:pointer;const drawing:TDrawingDef);
 begin
 end;
 
 procedure TSCHConnectorExtender.AddToDWGPostProcs(pEntity:Pointer;const drawing:TDrawingDef);
-var
-  p:PGDBObjLine;
-  ir:itrec;
+//var
+//  p:PGDBObjLine;
+//  ir:itrec;
 begin
   if Assigned(Net) then
     Net.AddToDWGPostProcs(pEntity,drawing);

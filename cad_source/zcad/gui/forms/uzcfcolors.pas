@@ -96,7 +96,11 @@ begin
                        ClByBlock:
                            result:=rsByBlock;
                        else
-                           result:=palette[ColorInfex].name+' '+'(Red='+inttostr(palette[ColorInfex].RGB.r)+' Green='+inttostr(palette[ColorInfex].RGB.g)+' Blue='+inttostr(palette[ColorInfex].RGB.b)+')';
+                           result:=palette[ColorInfex].name+'(#'
+                                   +IntToHex(palette[ColorInfex].RGB.r,2)
+                                   +IntToHex(palette[ColorInfex].RGB.g,2)
+                                   +IntToHex(palette[ColorInfex].RGB.b,2)
+                                   +')';
      end;
 end;
 
@@ -150,8 +154,8 @@ procedure TColorSelectForm.PalettePainter(canvas:Tcanvas; StartIndex,IncIndex,st
 var
   x,y,xcoord,ycoord,cindex:integer;
 begin
-     if dy<0 then
-                 dy:=dy;
+//     if dy<0 then
+//                 dy:=dy;
      canvas.Pen.Width:=2;
      cindex:=StartIndex;
      for x:=0 to cx-1 do

@@ -14,18 +14,16 @@ uses uzcinterface,uzeobjectextender,uzeentityfactory,Varman,uzgldrawcontext,uzes
      varmandef,uzegeometry,uzbtypes,UGDBGraf,uzeentsubordinated,uunitmanager,
      gzctnrVectorTypes,uzegeometrytypes,sysutils,
      uzcenitiesvariablesextender,uzeentline,uzeffdxfsupport,math,uzclog,
-     uzctnrvectorpgdbaseobjects;
+     uzCtnrVectorpBaseEntity;
 resourcestring
   rscannotbeconnected='Can not be connected';
 const
      UNNAMEDNET='NET';
 type
-{Export+}
 PGDBObjNet=^GDBObjNet;
-{REGISTEROBJECTTYPE GDBObjNet}
 GDBObjNet= object(GDBObjConnected)
                  graf:GDBGraf;
-                 riserarray:TZctnrVectorPGDBaseObjects;
+                 riserarray:TZctnrVectorPGDBaseEntity;
                  constructor initnul(owner:PGDBObjGenericWithSubordinated);
                  function CanAddGDBObj(pobj:PGDBObjEntity):Boolean;virtual;
                  function EubEntryType:Integer;virtual;
@@ -56,7 +54,6 @@ GDBObjNet= object(GDBObjConnected)
                  class function GetDXFIOFeatures:TDXFEntIODataManager;static;
                  function GetObjType:TObjID;virtual;
            end;
-{Export-}
 var
     GDBObjNetDXFFeatures:TDXFEntIODataManager;
 implementation
@@ -515,8 +512,8 @@ begin
      if graf.divide then
      begin
           Getmem(Pointer(TempNet),sizeof(GDBObjNet));
-          if PtrUInt(tempnet)=$229FEF0 then
-                                  tempnet:=tempnet;
+//          if PtrUInt(tempnet)=$229FEF0 then
+//                                  tempnet:=tempnet;
           TempNet^.initnul(nil);
           pentvarexttempnet:=tempnet.GetExtension<TVariablesExtender>;
 

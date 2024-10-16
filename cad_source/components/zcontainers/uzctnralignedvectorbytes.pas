@@ -20,12 +20,12 @@ unit uzctnrAlignedVectorBytes;
 interface
 uses gzctnrVector,sysutils,gzctnrVectorTypes;
 const
-  ObjAlign=4;
+  ObjAlign=SizeOf(Pointer);
 type
 {Export+}
 {----REGISTEROBJECTTYPE TZctnrAlignedVectorBytes}
 TZctnrAlignedVectorBytes=
-  object(GZVector{-}<Byte>{//})(*OpenArrayOfData=Byte*)
+  object(GZVector{-}<Byte>{//})
                 function beginiterate(out ir:itrec):Pointer;virtual;
                 function iterate(var ir:itrec):Pointer;virtual;
 

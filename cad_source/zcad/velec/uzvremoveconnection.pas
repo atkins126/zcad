@@ -40,13 +40,13 @@ uses
 
 implementation
 
-function uzvremoveconnection_com(operands:TCommandOperands):TCommandResult;
+function uzvremoveconnection_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var
   Varext:TVariablesExtender;
   //pe:PGDBObjEntity;
   pvd,pvdadd:pvardesk;
   pu:PTSimpleUnit;
-  vd:vardesk;
+  //vd:vardesk;
   ir,iradd:itrec;
   varName:string;
   countEnt,countDev,numConnect:integer;
@@ -119,7 +119,7 @@ end;
 
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-  CreateCommandFastObjectPlugin(@uzvremoveconnection_com,'uzvremoveconnection',CADWG,0);
+  CreateZCADCommand(@uzvremoveconnection_com,'uzvremoveconnection',CADWG,0);
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
 end.

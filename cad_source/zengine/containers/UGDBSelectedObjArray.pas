@@ -17,6 +17,7 @@
 }
 
 unit UGDBSelectedObjArray;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 interface
 uses uzegeometrytypes,uzepalette,uzgldrawcontext,uzecamera,uzeentwithmatrix,uzeentity,
@@ -36,6 +37,7 @@ GDBSelectedObjArray= object(GZVector{-}<selectedobjdesc>{//})
                           SelectedCount:Integer;
 
                           function addobject(PEntity:PGDBObjEntity):pselectedobjdesc;virtual;
+                          procedure pushobject(PEntity:PGDBObjEntity);
                           procedure free;virtual;
                           procedure remappoints(pcount:TActulity;ScrollMode:Boolean;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;
                           procedure drawpoint(var DC:TDrawContext;const GripSize:Integer; const SelColor,UnSelColor:TRGB);virtual;
@@ -47,14 +49,14 @@ GDBSelectedObjArray= object(GZVector{-}<selectedobjdesc>{//})
                           procedure RenderFeedBack(pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;
                           //destructor done;virtual;
                           procedure freeclones;
-                          procedure Transform(dispmatr:DMatrix4D);
-                          procedure SetRotate(minusd,plusd,rm:DMatrix4D;x,y,z:GDBVertex);
-                          procedure SetRotateObj(minusd,plusd,rm:DMatrix4D;x,y,z:GDBVertex);
-                          procedure TransformObj(dispmatr:DMatrix4D);
+                          procedure Transform(const dispmatr:DMatrix4D);
+                          procedure SetRotate(const minusd,plusd,rm:DMatrix4D;const x,y,z:GDBVertex);
+                          procedure SetRotateObj(const minusd,plusd,rm:DMatrix4D;const x,y,z:GDBVertex);
+                          procedure TransformObj(const dispmatr:DMatrix4D);
 
                           procedure drawobj(var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
                           procedure freeelement(PItem:PT);virtual;
-                          procedure calcvisible(frustum:cliparray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double);virtual;
+                          procedure calcvisible(const frustum:cliparray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double);virtual;
                           procedure resprojparam(pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);
                     end;
 {EXPORT-}
@@ -112,6 +114,15 @@ begin
                 i:=PushBackData(dummyseldesc);
               end;
   result:=@PArray^[i];}
+end;
+procedure GDBSelectedObjArray.pushobject(PEntity:PGDBObjEntity);
+var
+  dummyseldesc:selectedobjdesc;
+begin
+  dummyseldesc.objaddr:=PEntity;
+  dummyseldesc.pcontrolpoint:=nil;
+  dummyseldesc.ptempobj:=nil;
+  PushBackData(dummyseldesc);
 end;
 procedure GDBSelectedObjArray.free;
 var tdesc:pselectedobjdesc;
@@ -278,7 +289,7 @@ begin
 end;
 
 *)
-procedure processobject(pobj:PGDBObjEntity;minusd,plusd,rm:DMatrix4D;x,y,z:GDBVertex);
+procedure processobject(pobj:PGDBObjEntity;const minusd,plusd,rm:DMatrix4D;const x,y,z:GDBVertex);
 var //i: Integer;
   m{,oplus,ominus}:DMatrix4D;
   {tv,}P_insert_in_OCS,P_insert_in_WCS:gdbvertex;
@@ -351,7 +362,7 @@ begin
   PGDBObjWithMatrix(pobj)^.Format;}
 end;
 *)
-procedure GDBSelectedObjArray.SetRotate(minusd,plusd,rm:DMatrix4D;x,y,z:GDBVertex);
+procedure GDBSelectedObjArray.SetRotate(const minusd,plusd,rm:DMatrix4D;const x,y,z:GDBVertex);
 var i: Integer;
 //  d: Double;
 //  td:tcontrolpointdist;
@@ -375,7 +386,7 @@ begin
   {if save then
               gdb.GetCurrentROOT.FormatAfterEdit;}
 end;
-procedure GDBSelectedObjArray.SetRotateObj(minusd,plusd,rm:DMatrix4D;x,y,z:GDBVertex);
+procedure GDBSelectedObjArray.SetRotateObj(const minusd,plusd,rm:DMatrix4D;const x,y,z:GDBVertex);
 var i: Integer;
 //  d: Double;
 //  td:tcontrolpointdist;
@@ -409,7 +420,7 @@ begin
               gdb.GetCurrentROOT.FormatAfterEdit;}
 end;
 
-procedure GDBSelectedObjArray.Transform(dispmatr:DMatrix4D);
+procedure GDBSelectedObjArray.Transform(const dispmatr:DMatrix4D);
 var i: Integer;
 //  d: Double;
 //  td:tcontrolpointdist;
@@ -436,7 +447,7 @@ begin
   {if save then
               gdb.GetCurrentROOT.FormatAfterEdit;}
 end;
-procedure GDBSelectedObjArray.TransformObj(dispmatr:DMatrix4D);
+procedure GDBSelectedObjArray.TransformObj(const dispmatr:DMatrix4D);
 var i: Integer;
   tdesc:pselectedobjdesc;
 begin

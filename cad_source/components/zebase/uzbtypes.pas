@@ -55,7 +55,7 @@ TObjID=Word;
 PGDBaseObject=^GDBaseObject;
 {----REGISTEROBJECTTYPE GDBaseObject----}
 GDBaseObject=object
-    function ObjToString(prefix,sufix:String):String; virtual;
+    function ObjToString(const prefix,sufix:String):String; virtual;
     function GetObjType:TObjID;virtual;
     //procedure Format;virtual;
     procedure FormatAfterFielfmod(PField,PTypeDescriptor:Pointer);virtual;
@@ -63,8 +63,6 @@ GDBaseObject=object
     function GetObjName:String;virtual;
     constructor initnul;
     destructor Done;virtual;{ abstract;}
-    function IsEntity:Boolean;virtual;
-
   end;
 TActulity=Integer;
 TEntUpgradeInfo=LongWord;
@@ -179,11 +177,34 @@ TImageDegradation=record
                         RD_ID_PrefferedRenderTime:PInteger;(*'Prefered rendertime'*)
                     end;
 PExtensionData=Pointer;
+TDCableMountingMethod={-}type {//}string;
+PTCalculatedString=^TCalculatedString;
+{REGISTERRECORDTYPE TCalculatedString}
+TCalculatedString=record
+  value:string;
+  format:string;
+end;
+TOSnapModeControl=(On,Off,AsOwner);
+TTextJustify=(jstl(*'TopLeft'*),
+              jstc(*'TopCenter'*),
+              jstr(*'TopRight'*),
+              jsml(*'MiddleLeft'*),
+              jsmc(*'MiddleCenter'*), //СерединаЦентр
+              jsmr(*'MiddleRight'*),
+              jsbl(*'BottomLeft'*),
+              jsbc(*'BottomCenter'*),
+              jsbr(*'BottomRight'*),
+              jsbtl(*'Left'*),
+              jsbtc(*'Center'*),
+              jsbtr(*'Right'*));
+
+PTZColor=^TZColor;
+TZColor={-}type {//}Integer;
 {EXPORT-}
 function IsIt(PType,PChecedType:Pointer):Boolean;
 
 {$IFDEF DELPHI}
-function StrToQWord(sh:string):UInt64;
+function StrToQWord(const sh:string):UInt64;
 {$ENDIF}
 implementation
 
@@ -191,16 +212,12 @@ function GDBaseObject.GetObjType:Word;
 begin
      result:=GDBBaseObjectID;
 end;
-function GDBaseObject.ObjToString(prefix,sufix:String):String;
+function GDBaseObject.ObjToString(const prefix,sufix:String):String;
 begin
      result:=prefix+GetObjTypeName+sufix;
 end;
 constructor GDBaseObject.initnul;
 begin
-end;
-function GDBaseObject.IsEntity:Boolean;
-begin
-     result:=false;
 end;
 destructor GDBaseObject.Done;
 begin
@@ -250,7 +267,7 @@ begin
   result:=IsIt({$ifdef VER3_0}CurrParent{$else}CurrParent^{$endif},PChecedType);
 end;
 {$IFDEF DELPHI}
-function StrToQWord(sh:string):UInt64;
+function StrToQWord(const sh:string):UInt64;
 begin
       result:=strtoint(sh);
 end;

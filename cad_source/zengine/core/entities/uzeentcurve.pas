@@ -17,6 +17,7 @@
 }
 
 unit uzeentcurve;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 
 interface
@@ -25,17 +26,14 @@ uses uzgldrawcontext,uzedrawingdef,uzecamera,
      UGDBSelectedObjArray,uzeent3d,uzeentity,UGDBPolyLine2DArray,UGDBPoint3DArray,
      uzbtypes,uzegeometry,uzeconsts,uzglviewareadata,uzeffdxfsupport,sysutils,
      gzctnrVectorTypes,uzegeometrytypes,uzeentsubordinated,
-     uzctnrvectorpgdbaseobjects,uzeSnap;
+     uzeSnap,uzCtnrVectorpBaseEntity;
 type
-//------------snaparray:GDBVectorSnapArray;(*hidden_in_objinsp*)
-{Export+}
 PGDBObjCurve=^GDBObjCurve;
-{REGISTEROBJECTTYPE GDBObjCurve}
 GDBObjCurve= object(GDBObj3d)
-                 VertexArrayInOCS:GDBPoint3dArray;(*saved_to_shd*)(*hidden_in_objinsp*)
-                 VertexArrayInWCS:GDBPoint3dArray;(*saved_to_shd*)(*hidden_in_objinsp*)
+                 VertexArrayInOCS:GDBPoint3dArray;
+                 VertexArrayInWCS:GDBPoint3dArray;
                  length:Double;
-                 PProjPoint:PGDBpolyline2DArray;(*hidden_in_objinsp*)
+                 PProjPoint:PGDBpolyline2DArray;
                  constructor init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt);
                  constructor initnul(owner:PGDBObjGenericWithSubordinated);
                  procedure FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext;Stage:TEFStages=EFAllStages);virtual;
@@ -44,8 +42,8 @@ GDBObjCurve= object(GDBObj3d)
                  function Clone(own:Pointer):PGDBObjEntity;virtual;
                  procedure rtsave(refp:Pointer);virtual;
                  procedure RenderFeedback(pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;
-                 function onmouse(var popa:TZctnrVectorPGDBaseObjects;const MF:ClipArray;InSubEntry:Boolean):Boolean;virtual;
-                 function onpoint(var objects:TZctnrVectorPGDBaseObjects;const point:GDBVertex):Boolean;virtual;
+                 function onmouse(var popa:TZctnrVectorPGDBaseEntity;const MF:ClipArray;InSubEntry:Boolean):Boolean;virtual;
+                 function onpoint(var objects:TZctnrVectorPGDBaseEntity;const point:GDBVertex):Boolean;virtual;
                  procedure rtmodifyonepoint(const rtmod:TRTModifyData);virtual;
                  procedure remaponecontrolpoint(pdesc:pcontrolpointdesc);virtual;
                  procedure addcontrolpoints(tdesc:Pointer);virtual;
@@ -57,32 +55,31 @@ GDBObjCurve= object(GDBObj3d)
                  function GetObjTypeName:String;virtual;
                  procedure getoutbound(var DC:TDrawContext);virtual;
 
-                 procedure AddVertex(Vertex:GDBVertex);virtual;
+                 procedure AddVertex(const Vertex:GDBVertex);virtual;
 
                  procedure SaveToDXFfollow(var outhandle:{Integer}TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
                  procedure TransformAt(p:PGDBObjEntity;t_matrix:PDMatrix4D);virtual;
                  procedure transform(const t_matrix:DMatrix4D);virtual;
 
-                 function CalcTrueInFrustum(frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
+                 function CalcTrueInFrustum(const frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
                  procedure AddOnTrackAxis(var posr:os_record;const processaxis:taddotrac);virtual;
                  procedure InsertVertex(const PolyData:TPolyData);
                  procedure DeleteVertex(const PolyData:TPolyData);
 
                  function GetLength:Double;virtual;
            end;
-{Export-}
 procedure BuildSnapArray(const VertexArrayInWCS:GDBPoint3dArray;var snaparray:GDBVectorSnapArray;const closed:Boolean);
 function GDBPoint3dArraygetsnap(const VertexArrayInWCS:GDBPoint3dArray; const PProjPoint:PGDBpolyline2DArray; const snaparray:GDBVectorSnapArray; var osp:os_record;const closed:Boolean; const param:OGLWndtype; ProjectProc:GDBProjectProc;SnapMode:TGDBOSMode):Boolean;
 procedure GDBPoint3dArrayAddOnTrackAxis(const VertexArrayInWCS:GDBPoint3dArray;var posr:os_record;const processaxis:taddotrac;const closed:Boolean);
 function GetDirInPoint(const VertexArrayInWCS:GDBPoint3dArray;point:GDBVertex;closed:Boolean):GDBVertex;
-procedure FastAddVertex(Vertex:GDBVertex);
+procedure FastAddVertex(const Vertex:GDBVertex);
 
 var
   curveVertexArrayInWCS:GDBPoint3dArray;
 
 implementation
 
-procedure FastAddVertex(Vertex:GDBVertex);
+procedure FastAddVertex(const Vertex:GDBVertex);
 begin
   curveVertexArrayInWCS.PushBackData(vertex);
 end;
@@ -200,7 +197,7 @@ begin
 end;
 function GDBObjCurve.CalcTrueInFrustum;
 begin
-      result:=VertexArrayInWCS.CalcTrueInFrustum(frustum);
+      result:=VertexArrayInWCS.CalcTrueInFrustum(frustum,false);
 end;
 procedure GDBObjCurve.SaveToDXFFollow;
 var
@@ -218,7 +215,7 @@ begin
   until ptv=nil;
   SaveToDXFObjPrefix(outhandle,'SEQEND','',IODXFContext,true);
 end;
-procedure GDBObjCurve.AddVertex(Vertex:GDBVertex);
+procedure GDBObjCurve.AddVertex(const Vertex:GDBVertex);
 begin
      vertexarrayinocs.PushBackData(vertex);
 end;
@@ -247,8 +244,8 @@ constructor GDBObjCurve.init;
 begin
   inherited init(own,layeraddres, lw);
   //vp.ID := GDBPolylineID;
-  VertexArrayInWCS.init(1000);
-  vertexarrayinocs.init(1000);
+  VertexArrayInWCS.init(10);
+  vertexarrayinocs.init(10);
   //------------snaparray.init(100);
   PProjPoint:=nil;
   //Format;
@@ -258,8 +255,8 @@ begin
   inherited initnul(nil);
   bp.ListPos.Owner:=owner;
   //vp.ID := GDBPolylineID;
-  VertexArrayInWCS.init(1000);
-  vertexarrayinocs.init(1000);
+  VertexArrayInWCS.init(10);
+  vertexarrayinocs.init(10);
   //------------snaparray.init(100);
   PProjPoint:=nil;
 end;
@@ -460,7 +457,7 @@ begin
                                   end;
    result:=VertexArrayInWCS.onmouse(mf,false);
 end;
-function GDBObjCurve.onpoint(var objects:TZctnrVectorPGDBaseObjects;const point:GDBVertex):Boolean;
+function GDBObjCurve.onpoint(var objects:TZctnrVectorPGDBaseEntity;const point:GDBVertex):Boolean;
 begin
      if VertexArrayInWCS.onpoint(point,false) then
                                                 begin

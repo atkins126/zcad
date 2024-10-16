@@ -22,7 +22,7 @@ unit uzcoimultipropertiesutil;
 interface
 uses
   uzctnrVectorPointers,uzbstrproc,uzctnrvectorstrings,uzepalette,sysutils,uzeentityfactory,
-  uzegeometrytypes,uzbtypes,
+  uzegeometrytypes,//uzbtypes,
   varmandef,
   uzeentity,
   
@@ -31,7 +31,8 @@ uses
   uzeentcircle,uzeentarc,uzeentline,uzeentblockinsert,
   uzeenttext,uzeentmtext,uzeentpolyline,uzegeometry,uzcoimultiproperties,uzcLog,
   uzcstrconsts,
-  gzctnrSTL,gzctnrVectorTypes,uzeNamedObject;
+  gzctnrSTL,gzctnrVectorTypes,uzeNamedObject,zUndoCmdChgVariable,
+  uzcutils,uzcdrawing,uzcdrawings,zUndoCmdChgTypes,uzeExtdrAbstractEntityExtender;
 type
   PTOneVarData=^TOneVarData;
   TOneVarData=record
@@ -51,6 +52,14 @@ type
   PTPointerCounterData=^TPointerCounterData;
   TPointerCounterData=record
                     counter:TPointerCounter;
+                    totalcount:integer;
+                    //PVarDesc:pvardesk;
+                    VDAddr:TInVectorAddr;
+              end;
+  TTObjectCounter=TMyMapCounter<TObject>;
+  PTTObjectCounterData=^TTObjectCounterData;
+  TTObjectCounterData=record
+                    counter:TTObjectCounter;
                     totalcount:integer;
                     //PVarDesc:pvardesk;
                     VDAddr:TInVectorAddr;
@@ -75,24 +84,27 @@ type
 function GetOneVarData(mp:TMultiProperty;pu:PTEntityUnit):Pointer;
 function GetStringCounterData(mp:TMultiProperty;pu:PTEntityUnit):Pointer;
 function GetPointerCounterData(mp:TMultiProperty;pu:PTEntityUnit):Pointer;
+function GetExtenderCounterData(mp:TMultiProperty;pu:PTEntityUnit):Pointer;
 function GetVertex3DControlData(mp:TMultiProperty;pu:PTEntityUnit):Pointer;
 procedure FreeOneVarData(piteratedata:Pointer;mp:TMultiProperty);
 procedure FreeStringCounterData(piteratedata:Pointer;mp:TMultiProperty);
 procedure FreePNamedObjectCounterData(piteratedata:Pointer;mp:TMultiProperty);
+procedure FreeExtendersCounterData(piteratedata:Pointer;mp:TMultiProperty);
 procedure FreePNamedObjectCounterDataUTF8(piteratedata:Pointer;mp:TMultiProperty);
 procedure FreeVertex3DControlData(piteratedata:Pointer;mp:TMultiProperty);
 procedure GeneralEntIterateProc(pdata:Pointer;ChangedData:TChangedData;mp:TMultiProperty;fistrun:boolean;ecp:TEntChangeProc; const f:TzeUnitsFormat);
 procedure EntityNameEntIterateProc(pdata:Pointer;ChangedData:TChangedData;mp:TMultiProperty;fistrun:boolean;ecp:TEntChangeProc; const f:TzeUnitsFormat);
 procedure EntityAddressEntIterateProc(pdata:Pointer;ChangedData:TChangedData;mp:TMultiProperty;fistrun:boolean;ecp:TEntChangeProc; const f:TzeUnitsFormat);
 procedure PolylineVertex3DControlEntIterateProc(pdata:Pointer;ChangedData:TChangedData;mp:TMultiProperty;fistrun:boolean;ecp:TEntChangeProc; const f:TzeUnitsFormat);
-procedure PolylineVertex3DControlFromVarEntChangeProc(pu:PTEntityUnit;pdata:PVarDesk;ChangedData:TChangedData;mp:TMultiProperty);
+procedure PolylineVertex3DControlFromVarEntChangeProc(var UMPlaced:boolean;pu:PTEntityUnit;pdata:PVarDesk;ChangedData:TChangedData;mp:TMultiProperty);
 procedure Double2SumEntIterateProc(pdata:Pointer;ChangedData:TChangedData;mp:TMultiProperty;fistrun:boolean;ecp:TEntChangeProc; const f:TzeUnitsFormat);
 procedure TArrayIndex2SumEntIterateProc(pdata:Pointer;ChangedData:TChangedData;mp:TMultiProperty;fistrun:boolean;ecp:TEntChangeProc; const f:TzeUnitsFormat);
 procedure Blockname2BlockNameCounterIterateProc(pdata:Pointer;ChangedData:TChangedData;mp:TMultiProperty;fistrun:boolean;ecp:TEntChangeProc; const f:TzeUnitsFormat);
 procedure PStyle2PStyleCounterIterateProc(pdata:Pointer;ChangedData:TChangedData;mp:TMultiProperty;fistrun:boolean;ecp:TEntChangeProc; const f:TzeUnitsFormat);
+procedure Extendrs2ExtendersCounterIterateProc(pdata:Pointer;ChangedData:TChangedData;mp:TMultiProperty;fistrun:boolean;ecp:TEntChangeProc; const f:TzeUnitsFormat);
 procedure PolylineVertex3DControlBeforeEntIterateProc(pdata:Pointer;ChangedData:TChangedData);
 function CreateChangedData(pentity:pointer;GSData:TGetSetData):TChangedData;
-procedure GeneralFromVarEntChangeProc(pu:PTEntityUnit;pdata:PVarDesk;ChangedData:TChangedData;mp:TMultiProperty);
+procedure GeneralFromVarEntChangeProc(var UMPlaced:boolean;pu:PTEntityUnit;pdata:PVarDesk;ChangedData:TChangedData;mp:TMultiProperty);
 const
   OneVarDataMIPD:TMainIterateProcsData=(BeforeIterateProc:GetOneVarData;
                                         AfterIterateProc:FreeOneVarData);
@@ -109,8 +121,17 @@ implementation
 var
    Vertex3DControl:TArrayIndex=0;
 
-procedure GeneralFromVarEntChangeProc(pu:PTEntityUnit;pdata:PVarDesk;ChangedData:TChangedData;mp:TMultiProperty);
+procedure GeneralFromVarEntChangeProc(var UMPlaced:boolean;pu:PTEntityUnit;pdata:PVarDesk;ChangedData:TChangedData;mp:TMultiProperty);
+var
+  cp:UCmdChgField;
 begin
+  zcPlaceUndoStartMarkerIfNeed(UMPlaced,'Property changed');
+
+  cp:=UCmdChgField.CreateAndPush(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,
+                                 TChangedFieldDesc.CreateRec(pvardesk(pdata)^.data.PTD,ChangedData.PSetDataInEtity,ChangedData.PSetDataInEtity),
+                                 TSharedPEntityData.CreateRec(ChangedData.PEntity),
+                                 TAfterChangePDrawing.CreateRec(drawings.GetCurrentDWG));
+
      mp.MPType^.CopyInstanceTo(pvardesk(pdata)^.data.Addr.Instance,ChangedData.PSetDataInEtity);
      ProcessVariableAttributes(pvardesk(pdata)^.attrib,0,vda_approximately or vda_different);
 end;
@@ -193,6 +214,28 @@ begin
     end;
 end;
 
+function GetExtenderCounterData(mp:TMultiProperty;pu:PTEntityUnit):Pointer;
+{
+создает структуру с описанием переменной осуществляющей подсчет расширений примитивов
+mp - описание мультипроперти
+pu - модуль в котором будет создана переменная для мультипроперти
+возвращает указатель на созданную структуру
+}
+var
+  PVD:pvardesk;
+  t:PTEnumDataWithOtherPointers;
+begin
+    Getmem(result,sizeof(TTObjectCounterData));
+    PTTObjectCounterData(result)^.counter:=TTObjectCounter.Create;
+    if FindOrCreateVar(pu,mp.MPName,mp.MPUserName,mp.MPType^.TypeName,PTTObjectCounterData(result).VDAddr) then begin
+      PVD:=PTTObjectCounterData(result).VDAddr.Instance;
+      t:=PVD^.data.Addr.Instance;
+      t^.Enums.init(10);
+      PTTObjectCounterData(result)^.totalcount:=0;
+      t^.Selected:=0;
+      t^.Pointers.init(10);
+    end;
+end;
 
 function GetVertex3DControlData(mp:TMultiProperty;pu:PTEntityUnit):Pointer;
 {
@@ -283,6 +326,45 @@ begin
   Freemem(piteratedata);
 end;
 
+procedure FreeExtendersCounterData(piteratedata:Pointer;mp:TMultiProperty);
+var
+  pair:TTObjectCounter.TDictionaryPair;
+   s:TMetaEntityExtender;
+   c:integer;
+   name:string;
+   PVD:pvardesk;
+   t:PTEnumDataWithOtherPointers;
+{уничтожает созданную GetExtenderCounterData структуру}
+begin
+  PVD:=PTTObjectCounterData(piteratedata)^.VDAddr.Instance;
+  t:=PVD^.data.Addr.Instance;
+  t^.Enums.PushBackData(format('Total (%d)',[PTTObjectCounterData(piteratedata)^.totalcount]));
+  t^.Pointers.PushBackData(nil);
+  for pair in PTTObjectCounterData(piteratedata)^.counter do begin
+    s:=TMetaEntityExtender(pair.Key);
+    c:=pair.Value;
+    if assigned(s) then
+      name:=s.getExtenderName
+    else
+      name:='nil';
+    t^.Enums.PushBackData(format('%s (%d)',[name,c]));
+    t^.Pointers.PushBackData(s);
+  end;
+  PTTObjectCounterData(piteratedata)^.counter.Free;
+  Freemem(piteratedata);
+end;
+
+{Getmem(result,sizeof(TTObjectCounterData));
+PTTObjectCounterData(result)^.counter:=TTObjectCounter.Create;
+if FindOrCreateVar(pu,mp.MPName,mp.MPUserName,mp.MPType^.TypeName,PTTObjectCounterData(result).VDAddr) then begin
+  PVD:=PTTObjectCounterData(result).VDAddr.Instance;
+  t:=PVD^.data.Addr.Instance;
+  t^.Enums.init(10);
+  PTTObjectCounterData(result)^.totalcount:=0;
+  t^.Selected:=0;
+  t^.Pointers.init(10);
+end;}
+
 procedure FreePNamedObjectCounterDataUTF8(piteratedata:Pointer;mp:TMultiProperty);
 var
   pair:TPointerCounter.TDictionaryPair;
@@ -335,8 +417,8 @@ var
    tv:PGDBVertex;
    cc:TArrayIndex;
 begin
-     if fistrun then
-                    fistrun:=fistrun;
+//     if fistrun then
+//                    fistrun:=fistrun;
      if @ecp=nil then
                      begin
                           ProcessVariableAttributes(pvardesk(PTVertex3DControlVarData(pdata).XVarDescAddr.Instance).attrib,vda_RO,0);
@@ -378,7 +460,7 @@ begin
                             ProcessVariableAttributes(pvardesk(PTVertex3DControlVarData(pdata).ZVarDescAddr.Instance)^.attrib,vda_different,vda_approximately);
                     end;
 end;
-procedure PolylineVertex3DControlFromVarEntChangeProc(pu:PTEntityUnit;pdata:PVarDesk;ChangedData:TChangedData;mp:TMultiProperty);
+procedure PolylineVertex3DControlFromVarEntChangeProc(var UMPlaced:boolean;pu:PTEntityUnit;pdata:PVarDesk;ChangedData:TChangedData;mp:TMultiProperty);
 var
    tv:PGDBVertex;
    v:GDBVertex;
@@ -557,6 +639,21 @@ begin
   p:=pointer(ppointer(ChangedData.PGetDataInEtity)^);
      PTPointerCounterData(pdata)^.counter.CountKey(pointer(ppointer(ChangedData.PGetDataInEtity)^),1);
      inc(PTPointerCounterData(pdata)^.totalcount);
+end;
+procedure Extendrs2ExtendersCounterIterateProc(pdata:Pointer;ChangedData:TChangedData;mp:TMultiProperty;fistrun:boolean;ecp:TEntChangeProc; const f:TzeUnitsFormat);
+var
+  p:TEntityExtensions;
+  i:integer;
+begin
+  p:=pointer(ppointer(ChangedData.PGetDataInEtity)^);
+  if p<>nil then begin
+    if assigned(p.fEntityExtensions)then
+      for i:=0 to p.fEntityExtensions.Size-1 do
+        if p.fEntityExtensions[i]<>nil then begin
+          PTPointerCounterData(pdata)^.counter.CountKey(p.fEntityExtensions[i].ClassType,1);
+          inc(PTPointerCounterData(pdata)^.totalcount);
+        end;
+  end;
 end;
 function CreateChangedData(pentity:pointer;GSData:TGetSetData):TChangedData;
 begin

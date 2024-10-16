@@ -18,6 +18,7 @@
 {$MODE OBJFPC}{$H+}
 unit uzccomdraw;
 {$INCLUDE zengineconfig.inc}
+{$ModeSwitch advancedrecords}
 
 interface
 uses
@@ -54,7 +55,7 @@ const
      modelspacename:String='**Модель**';
 type
 TDummyClass=class
-  procedure RunBEdit(Data:PtrInt);
+  procedure RunBEdit(const Context:TZCADCommandContext);
 end;
 {EXPORT+}
          BRMode=(
@@ -66,19 +67,19 @@ end;
          {REGISTERRECORDTYPE TBlockScaleParams}
          TBlockScaleParams=record
                              Scale:GDBVertex;(*'New scale'*)
-                             Absolytly:Boolean;(*'Absolytly'*)
+                             Absolutely:Boolean;(*'Absolutely'*)
                            end;
          PTBlockRotateParams=^TBlockRotateParams;
          {REGISTERRECORDTYPE TBlockRotateParams}
          TBlockRotateParams=record
                              Rotate:Double;(*'Rotation angle'*)
-                             Absolytly:Boolean;(*'Absolytly'*)
+                             Absolutely:Boolean;(*'Absolutely'*)
                            end;
          {TSetVarStyle=packed record
                             ent:TMSType;(*'Entity'*)
                             CurrentFindBlock:String;(*'**CurrentFind'*)
                              Scale:GDBVertex;(*'New scale'*)
-                             Absolytly:Boolean;(*'Absolytly'*)
+                             Absolutely:Boolean;(*'Absolutely'*)
                            end;}
          PTExportDevWithAxisParams=^TExportDevWithAxisParams;
          {REGISTERRECORDTYPE TExportDevWithAxisParams}
@@ -97,20 +98,20 @@ end;
               GZVector{-}<TCopyObjectDesc>{//};
   {REGISTEROBJECTTYPE BlockScale_com}
   BlockScale_com= object(CommandRTEdObject)
-                         procedure CommandStart(Operands:TCommandOperands); virtual;
-                         procedure BuildDM(Operands:TCommandOperands); virtual;
-                         procedure Run(pdata:{pointer}PtrInt); virtual;
+                         procedure CommandStart(const Context:TZCADCommandContext;Operands:TCommandOperands); virtual;
+                         procedure BuildDM(const Context:TZCADCommandContext;Operands:TCommandOperands); virtual;
+                         procedure Run(const Context:TZCADCommandContext); virtual;
                    end;
   {REGISTEROBJECTTYPE BlockRotate_com}
   BlockRotate_com= object(CommandRTEdObject)
-                         procedure CommandStart(Operands:TCommandOperands); virtual;
-                         procedure BuildDM(Operands:TCommandOperands); virtual;
-                         procedure Run(pdata:{pointer}PtrInt); virtual;
+                         procedure CommandStart(const Context:TZCADCommandContext;Operands:TCommandOperands); virtual;
+                         procedure BuildDM(const Context:TZCADCommandContext;Operands:TCommandOperands); virtual;
+                         procedure Run(const Context:TZCADCommandContext); virtual;
                    end;
   {REGISTEROBJECTTYPE ATO_com}
   ATO_com= object(CommandRTEdObject)
                          powner:PGDBObjDevice;
-                         procedure CommandStart(Operands:TCommandOperands); virtual;
+                         procedure CommandStart(const Context:TZCADCommandContext;Operands:TCommandOperands); virtual;
                          procedure ShowMenu;virtual;
                          procedure Run(pdata:PtrInt); virtual;
           end;
@@ -121,7 +122,7 @@ end;
           end;
   {REGISTEROBJECTTYPE ExportDevWithAxis_com}
   ExportDevWithAxis_com= object(CommandRTEdObject)
-                         procedure CommandStart(Operands:TCommandOperands); virtual;
+                         procedure CommandStart(const Context:TZCADCommandContext;Operands:TCommandOperands); virtual;
                          procedure ShowMenu;virtual;
                          procedure Run(pdata:PtrInt); virtual;
              end;
@@ -135,16 +136,18 @@ taxisdesc=record
               d0:double;
               Name:String;
         end;
-tdevcoord=record
-              coord:GDBVertex;
-              pdev:PGDBObjDevice;
-        end;
+  tdevcoord=record
+    coord:GDBVertex;
+    pdev:PGDBObjDevice;
+    constructor CreateRec(const ACoord:GDBVertex;const APDev:PGDBObjDevice);
+  end;
 tdevname=record
               name:String;
               pdev:PGDBObjDevice;
         end;
 TGDBVertexLess=class
-                    class var DeadBand:Double;
+                    class var DeadBandX:Double;
+                    class var DeadBandY:Double;
                     class function c(a,b:tdevcoord):boolean;{inline;}
                end;
 TGDBNameLess=class
@@ -191,9 +194,14 @@ var
    ExportDevWithAxisParams:TExportDevWithAxisParams;
    dummyclass:tdummyclass;
 
-//procedure startup;
-//procedure Finalize;
 implementation
+
+
+constructor tdevcoord.CreateRec(const ACoord:GDBVertex;const APDev:PGDBObjDevice);
+begin
+  coord:=ACoord;
+  pdev:=APDev;
+end;
 
 function GetBlockDefNames(var BDefNames:TZctnrVectorStrings;selname:String;filter:String=''):Integer;
 var
@@ -292,7 +300,7 @@ end;
                        procedure BuildDM(Operands:pansichar); virtual;
                        procedure Run(pdata:PtrInt); virtual;
                  end;}
-procedure BlockRotate_com.CommandStart(Operands:TCommandOperands);
+procedure BlockRotate_com.CommandStart(const Context:TZCADCommandContext;Operands:TCommandOperands);
 var //pb:PGDBObjBlockdef;
     pobj:PGDBObjBlockInsert;
     ir:itrec;
@@ -316,15 +324,15 @@ begin
                             commandmanager.executecommandend;
                             exit;
                       end;
-   BuildDM(Operands);
+   BuildDM(context,Operands);
           inherited;
 end;
-procedure BlockRotate_com.BuildDM(Operands:TCommandOperands);
+procedure BlockRotate_com.BuildDM(const Context:TZCADCommandContext;Operands:TCommandOperands);
 begin
   commandmanager.DMAddMethod(rscmChange,'Change rotate selected blocks',@run);
   commandmanager.DMShow;
 end;
-procedure BlockRotate_com.Run(pdata:{pointer}PtrInt);
+procedure BlockRotate_com.Run(const Context:TZCADCommandContext);
 var pb:PGDBObjBlockInsert;
     ir:itrec;
     {i,}result:Integer;
@@ -341,7 +349,7 @@ begin
           repeat
                 if (pb^.Selected)and((pb^.GetObjType=GDBDeviceID)or(pb^.GetObjType=GDBBlockInsertID)) then
                 begin
-                case BlockRotateParams.Absolytly of
+                case BlockRotateParams.Absolutely of
                             true:begin
                                       pb^.rotate:=BlockRotateParams.Rotate;
                                  end;
@@ -354,13 +362,13 @@ begin
                 pb:=poa^.iterate(ir);
           until pb=nil;
           Prompt(sysutils.format(rscmNEntitiesProcessed,[result]));
-          Regen_com(EmptyCommandOperands);
+          Regen_com(Context,EmptyCommandOperands);
           commandmanager.executecommandend;
      end;
 end;
 
 
-procedure BlockScale_com.CommandStart(Operands:TCommandOperands);
+procedure BlockScale_com.CommandStart(const Context:TZCADCommandContext;Operands:TCommandOperands);
 var //pb:PGDBObjBlockdef;
     pobj:PGDBObjBlockInsert;
     ir:itrec;
@@ -384,17 +392,17 @@ begin
                             commandmanager.executecommandend;
                             exit;
                       end;
-   BuildDM(Operands);
+   BuildDM(Context,Operands);
           inherited;
 end;
-procedure BlockScale_com.BuildDM(Operands:TCommandOperands);
+procedure BlockScale_com.BuildDM(const Context:TZCADCommandContext;Operands:TCommandOperands);
 begin
   commandmanager.DMAddMethod(rscmChange,'Change scale selected blocks',@run);
   commandmanager.DMShow;
 end;
 
 
-procedure BlockScale_com.Run(pdata:{pointer}PtrInt);
+procedure BlockScale_com.Run(const Context:TZCADCommandContext);
 var pb:PGDBObjBlockInsert;
     ir:itrec;
     {i,}result:Integer;
@@ -411,7 +419,7 @@ begin
           repeat
                 if (pb^.Selected)and((pb^.GetObjType=GDBDeviceID)or(pb^.GetObjType=GDBBlockInsertID)) then
                 begin
-                case BlockScaleParams.Absolytly of
+                case BlockScaleParams.Absolutely of
                             true:begin
                                       pb^.scale:=BlockScaleParams.Scale;
                                  end;
@@ -427,7 +435,7 @@ begin
                 pb:=poa^.iterate(ir);
           until pb=nil;
           Prompt(sysutils.format(rscmNEntitiesProcessed,[result]));
-          Regen_com(EmptyCommandOperands);
+          Regen_com(context,EmptyCommandOperands);
           commandmanager.executecommandend;
      end;
 end;
@@ -487,13 +495,13 @@ begin
      powner:=nil;
      Commandmanager.executecommandend;
 end;
-procedure ExportDevWithAxis_com.CommandStart(Operands:TCommandOperands);
+procedure ExportDevWithAxis_com.CommandStart(const Context:TZCADCommandContext;Operands:TCommandOperands);
 begin
   self.savemousemode:=drawings.GetCurrentDWG^.wa.param.md.mode;
   if drawings.GetCurrentDWG^.SelObjArray.Count>0 then
   begin
        showmenu;
-       inherited CommandStart('');
+       inherited CommandStart(context,'');
   end
   else
   begin
@@ -710,7 +718,7 @@ begin
   commandmanager.DMShow;
 end;
 
-procedure ATO_com.CommandStart(Operands:TCommandOperands);
+procedure ATO_com.CommandStart(const Context:TZCADCommandContext;Operands:TCommandOperands);
 var
    test:boolean;
 begin
@@ -724,7 +732,7 @@ begin
   begin
        showmenu;
        powner:=drawings.GetCurrentDWG^.wa.param.seldesc.LastSelectedObject;
-       inherited CommandStart('');
+       inherited CommandStart(context,'');
   end
   else
   begin
@@ -770,7 +778,7 @@ begin
      Commandmanager.executecommandend;
 end;
 
-function Insert2_com(operands:TCommandOperands):TCommandResult;
+function Insert2_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var
     s:String;
 begin
@@ -828,7 +836,7 @@ begin
   //redrawoglwnd;
 end;
 
-procedure TDummyClass.RunBEdit(Data:PtrInt);
+procedure TDummyClass.RunBEdit(const Context:TZCADCommandContext);
 var
   nname:String;
 begin
@@ -841,21 +849,23 @@ begin
       drawings.GetCurrentDWG^.pObjRoot:=drawings.GetCurrentDWG^.BlockDefArray.getblockdef(Tria_Utf8ToAnsi(nname))
     else
       drawings.GetCurrentDWG^.pObjRoot:=@drawings.GetCurrentDWG^.mainObjRoot;
-    Regen_com(EmptyCommandOperands);
-    RebuildTree_com(EmptyCommandOperands);
+    Regen_com(Context,EmptyCommandOperands);
+    RebuildTree_com(Context,EmptyCommandOperands);
     ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIActionRedraw);
     zcRedrawCurrentDrawing;
   end;
 end;
 
-procedure bedit_format(_self:pointer);
+procedure bedit_format(const Context:TZCADCommandContext;_self:pointer);
+type
+ TMethodWithPointer=procedure(pdata:ptrint)of object;
 var
   i:integer;
-  sd:TSelEntsDesk;
+  //sd:TSelEntsDesk;
   //tn:String;
 begin
   if _self=@BEditParam.Blocks then
-    Application.QueueAsyncCall(@DummyClass.RunBEdit,0)
+    Application.QueueAsyncCall(TMethodWithPointer(@DummyClass.RunBEdit),ptrint(@context))
   else begin
     BEditParam.Blocks.Enums.free;
     i:=GetBlockDefNames(BEditParam.Blocks.Enums,BEditParam.CurrentEditBlock,BEditParam.Filter);
@@ -870,24 +880,28 @@ begin
         BEditParam.Blocks.Selected:=i
   end;
 end;
-function bedit_com(operands:TCommandOperands):TCommandResult;
+function bedit_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var
   i:integer;
   sd:TSelEntsDesk;
   tn:String;
+  filter:string;
 begin
   tn:=operands;
   sd:=zcGetSelEntsDeskInCurrentRoot;
+  filter:='';
   if (sd.PFirstSelectedEnt<>nil)and(sd.SelectedEntsCount=1) then begin
     if (sd.PFirstSelectedEnt^.GetObjType=GDBBlockInsertID) then begin
       tn:=PGDBObjBlockInsert(sd.PFirstSelectedEnt)^.name;
     end else if (sd.PFirstSelectedEnt^.GetObjType=GDBDeviceID) then begin
       tn:=DevicePrefix+PGDBObjBlockInsert(sd.PFirstSelectedEnt)^.name;
-    end;
-  end;
+    end else
+      filter:=BEditParam.Filter;
+  end else
+    filter:=BEditParam.Filter;
 
   BEditParam.Blocks.Enums.free;
-  i:=GetBlockDefNames(BEditParam.Blocks.Enums,tn,BEditParam.Filter);
+  i:=GetBlockDefNames(BEditParam.Blocks.Enums,tn,filter);
   BEditParam.Blocks.Enums.PushBackData(modelspacename);
 
   if BEditParam.CurrentEditBlock=modelspacename then begin
@@ -900,7 +914,7 @@ begin
   end;
 
   if BEditParam.Blocks.Enums.Count>1 then begin
-    if i>0 then
+    if i>-1 then
       BEditParam.Blocks.Selected:=i
     else
       if length(operands)<>0 then begin
@@ -911,11 +925,11 @@ begin
     if tn='' then
       ZCMsgCallBackInterface.Do_PrepareObject(nil,drawings.GetUnitsFormat,SysUnit^.TypeName2PTD('CommandRTEdObject'),pbeditcom,drawings.GetCurrentDWG);
     drawings.GetCurrentDWG^.SelObjArray.Free;
-    drawings.GetCurrentROOT^.ObjArray.DeSelect(drawings.GetCurrentDWG^.wa.param.SelDesc.Selectedobjcount,@drawings.GetCurrentDWG^.deselector);
+    drawings.GetCurrentROOT^.ObjArray.DeSelect(drawings.GetCurrentDWG^.wa.param.SelDesc.Selectedobjcount,@drawings.GetCurrentDWG^.DeSelector);
     //result:=cmd_ok;
     //zcRedrawCurrentDrawing;
     if tn<>'' then
-       DummyClass.RunBEdit(0);//bedit_format(nil);
+       DummyClass.RunBEdit(context);//bedit_format(nil);
   end else begin
     ZCMsgCallBackInterface.TextMessage('BEdit:'+rscmInDwgBlockDefNotDeffined,TMWOHistoryOut);
     commandmanager.executecommandend;
@@ -1081,7 +1095,7 @@ begin
     PCreatedGDBPoint^.P_insertInOCS:=point;
     PCreatedGDBPoint^.FormatEntity(drawings.GetCurrentDWG^);}
 end;
-function FindAllIntersections_com(operands:TCommandOperands):TCommandResult;
+function FindAllIntersections_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var
     lineAABBtests,linelinetests,intersectcount,lm,lc:integer;
     parray:GDBPoint3dArray;
@@ -1145,15 +1159,15 @@ begin
 end;
 class function TGDBVertexLess.c(a,b:tdevcoord):boolean;
 begin
-     if a.coord.y<b.coord.y-DeadBand then
+     if a.coord.y<b.coord.y-DeadBandY then
                     result:=true
                 else
-                    if abs(a.coord.y-b.coord.y)>DeadBand then
+                    if abs(a.coord.y-b.coord.y)>DeadBandY then
                                    begin
                                    result:=false;
                                    end
                 else
-                    if a.coord.x<b.coord.x-DeadBand then
+                    if a.coord.x<b.coord.x-DeadBandX then
                                    result:=true
                 else
                     begin
@@ -1164,7 +1178,7 @@ end;
 
 procedure startup;
 begin
-  CreateCommandFastObjectPlugin(@Insert2_com,'Insert2',CADWG,0);
+  CreateZCADCommand(@Insert2_com,'Insert2',CADWG,0);
   //CreateCommandFastObjectPlugin(@bedit_com,'BEdit');
   pbeditcom:=CreateCommandRTEdObjectPlugin(@bedit_com,nil,nil,@bedit_format,nil,nil,nil,nil,'BEdit',0,0);
   BEditParam.Blocks.Enums.init(100);
@@ -1183,20 +1197,20 @@ begin
   BlockScale.init('BlockScale',0,0);
   BlockScale.CEndActionAttr:=[];
   BlockScaleParams.Scale:=uzegeometry.CreateVertex(1,1,1);
-  BlockScaleParams.Absolytly:=true;
+  BlockScaleParams.Absolutely:=true;
   BlockScale.SetCommandParam(@BlockScaleParams,'PTBlockScaleParams');
 
   BlockRotate.init('BlockRotate',0,0);
   BlockRotate.CEndActionAttr:=[];
   BlockRotateParams.Rotate:=0;
-  BlockRotateParams.Absolytly:=true;
+  BlockRotateParams.Absolutely:=true;
   BlockRotate.SetCommandParam(@BlockRotateParams,'PTBlockRotateParams');
 
 
   InsertTestTable.init('InsertTestTable',0,0);
   //CreateCommandFastObjectPlugin(@InsertTestTable_com,'InsertTestTable',0,0);
 
-  CreateCommandFastObjectPlugin(@FindAllIntersections_com,'FindAllIntersections',CADWG,0);
+  CreateZCADCommand(@FindAllIntersections_com,'FindAllIntersections',CADWG,0);
 end;
 procedure Finalize;
 begin

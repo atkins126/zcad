@@ -344,7 +344,7 @@ begin
   {if pent^.GetObjTypeName<>ObjN_GDBObjDevice then
       exit(false);}
 
-  if not EntsTypeFilter.IsEntytyTypeAccepted(pent^.GetObjType)then
+  if not EntsTypeFilter.IsEntytyAccepted(pent)then
     exit(false);
   if assigned(EntityIncluder) then begin
     propdata.CurrentEntity:=pent;
@@ -389,7 +389,7 @@ begin
     MainFunction:=GetMainFunction(pent);
     if mainfunction<>nil then
     begin
-       mainfunction:=mainfunction;
+//       mainfunction:=mainfunction;
        if Ent2NodeMap.TryGetValue(MainFunction,mainfuncnode) then
          basenode:=mainfuncnode.Parent
        else begin
@@ -478,7 +478,7 @@ var
   s:string;
 begin
     PtrInt(s):=Data;
-    commandmanager.executecommandsilent(@s[1],drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
+    commandmanager.executecommandsilent(s,drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
 end;
 
 procedure TNavigatorDevices.VTFocuschanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
@@ -486,24 +486,26 @@ var
   pnd:PTNodeData;
   s:string;
 begin
-  pnd := Sender.GetNodeData(Node);
-  if assigned(pnd) then begin
-    if pnd^.Ident.pent<>nil then
-      begin
-       CurrentSel:=pnd^;
-       if LastAutoselectedEnt<>pnd^.Ident.pent then begin
-         s:='SelectObjectByAddres('+inttostr(PtrUInt(pnd^.Ident.pent))+')';
-         //commandmanager.executecommandsilent(@s[1],drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
-         Application.QueueAsyncCall(AsyncRunCommand,PtrInt(@s[1]));
-         pointer(s):=nil;
-         LastAutoselectedEnt:=pnd^.Ident.pent;
-       end else begin
-         //if not LastAutoselectedEnt^.Selected then
-         //  LastAutoselectedEnt:=nil;
-       end;
-      end else
-        CurrentSel.Ident.pent:=nil;
-  end
+  if Sender.Focused then begin
+    pnd := Sender.GetNodeData(Node);
+    if assigned(pnd) then begin
+      if pnd^.Ident.pent<>nil then
+        begin
+         CurrentSel:=pnd^;
+         if (LastAutoselectedEnt<>pnd^.Ident.pent)and( not pnd^.Ident.pent^.Selected) then begin
+           s:='SelectObjectByAddres('+inttostr(PtrUInt(pnd^.Ident.pent))+')';
+           //commandmanager.executecommandsilent(@s[1],drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
+           Application.QueueAsyncCall(AsyncRunCommand,PtrInt(@s[1]));
+           pointer(s):=nil;
+           LastAutoselectedEnt:=pnd^.Ident.pent;
+         end else begin
+           //if not LastAutoselectedEnt^.Selected then
+           //  LastAutoselectedEnt:=nil;
+         end;
+        end else
+          CurrentSel.Ident.pent:=nil;
+    end
+  end;
 end;
 function TNavigatorDevices.GetPartsCount(const parts:string):integer;
 begin
@@ -575,7 +577,7 @@ begin
     else
       parts:=parts+'|'+partsarray[i]
   end;
-  parts:=parts;
+//  parts:=parts;
 end;
 
 function RunEditor(const cpt,BoundsSaveName:string;var AText:string):boolean;
@@ -886,34 +888,28 @@ var
   ir:itrec;
   lpsh:TLPSHandle;
   HaveErrors:boolean;
-  NScrollInfo:TScrollInfo;
 begin
-   if not isvisible then exit;
-   HaveErrors:=false;
-
-   //TreeEnabler.Height:=MainToolBar.Height;
-
-   NavTree.BeginUpdate;
-
-   lpsh:=LPS.StartLongProcess('NavigatorEntities.RefreshTree',@self);
-   EraseRoots;
-   CreateRoots;
-
-   try
-     if drawings.GetCurrentDWG<>nil then
-     begin
-       pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
-       if pv<>nil then
-       repeat
-         {if assigned(CombinedNode)then
-           CombinedNode.ProcessEntity(pv,EntsFilter,TraceEntity);}
-         if assigned(StandaloneNode)then
-           StandaloneNode.ProcessEntity(self.CreateEntityNode,pv,EntsFilter,TraceEntity);
-         pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
-       until pv=nil;
-     end;
-   except
-     on
+  NavTree.BeginUpdate;
+  lpsh:=LPS.StartLongProcess('NavigatorEntities.RefreshTree',@self,0,LPSOSilent or LPSONoProgressBar);
+  EraseRoots;
+  CreateRoots;
+  try
+    if not isvisible then exit;
+    HaveErrors:=false;
+    try
+      if drawings.GetCurrentDWG<>nil then begin
+        pv:=drawings.GetCurrentROOT.ObjArray.beginiterate(ir);
+        if pv<>nil then
+        repeat
+          {if assigned(CombinedNode)then
+          CombinedNode.ProcessEntity(pv,EntsFilter,TraceEntity);}
+          if assigned(StandaloneNode)then
+             StandaloneNode.ProcessEntity(self.CreateEntityNode,pv,EntsFilter,TraceEntity);
+          pv:=drawings.GetCurrentROOT.ObjArray.iterate(ir);
+        until pv=nil;
+      end;
+    except
+      on
         E:Exception do begin
           programlog.LogOutStr('Error in TNavigatorDevices.RefreshTree '+E.Message,LM_Error);
           if NDMsgCtx=nil then
@@ -921,21 +917,22 @@ begin
           {dr:=}zcMsgDlg('Error in TNavigatorDevices.RefreshTree '+E.Message,zcdiError,[],true,NDMsgCtx);
           HaveErrors:=true;
         end;
-   end;
-   if not HaveErrors then
-     if assigned(NDMsgCtx) then
-       NDMsgCtx.clear;
+    end;
+    if not HaveErrors then
+      if assigned(NDMsgCtx) then
+        NDMsgCtx.clear;
 
-   if assigned(StandaloneNodeStates) then
-   begin
-     StandaloneNode.RestoreState(StandaloneNodeStates,Dist);
-     NavTree.OffsetXY:=StandaloneNodeStates.SaveOffset;
-     FreeAndNil(StandaloneNodeStates);
-   end;
-   PostProcessTree;
-   Filter(FilterBtn);
-   LPS.EndLongProcess(lpsh);
-   NavTree.EndUpdate;
+    if assigned(StandaloneNodeStates) then begin
+      StandaloneNode.RestoreState(StandaloneNodeStates,Dist);
+      NavTree.OffsetXY:=StandaloneNodeStates.SaveOffset;
+      FreeAndNil(StandaloneNodeStates);
+    end;
+    PostProcessTree;
+    Filter(FilterBtn);
+  finally
+    LPS.EndLongProcess(lpsh);
+    NavTree.EndUpdate;
+  end;
 end;
 procedure TNavigatorDevices.RefreshTree(Sender: TObject);
 begin
@@ -1044,7 +1041,7 @@ begin
   c:=a.FileName<b.FileName;
 end;
 
-procedure EnumerateCfgs(filename:String;pdata:pointer);
+procedure EnumerateCfgs(const filename:String;pdata:pointer);
 var
   fd:TCfgFileDesk;
 begin
@@ -1352,7 +1349,7 @@ begin
   end;
 end;
 
-function NavSelectSubNodes_com(operands:TCommandOperands):TCommandResult;
+function NavSelectSubNodes_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var
   pnode:PVirtualNode;
   nav:{$IF DECLARED(TVirtualStringTree)}TVirtualStringTree{$ELSE}TLazVirtualStringTree{$ENDIF};
@@ -1368,7 +1365,7 @@ begin
 end;
 
 initialization
-  CreateCommandFastObjectPlugin(@NavSelectSubNodes_com,'NavSelectSubNodes',CADWG,0);
+  CreateZCADCommand(@NavSelectSubNodes_com,'NavSelectSubNodes',CADWG,0);
   NavGroupIconIndex:=-1;
   NavAutoGroupIconIndex:=-1;
 finalization

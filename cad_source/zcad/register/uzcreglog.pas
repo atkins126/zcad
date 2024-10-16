@@ -31,12 +31,12 @@ implementation
 
 type
   TLogHelper=class
-    class procedure EndLongProcessHandler(LPHandle:TLPSHandle;TotalLPTime:TDateTime);
+    class procedure EndLongProcessHandler(LPHandle:TLPSHandle;TotalLPTime:TDateTime;Options:TLPOpt);
     class procedure LCLOnDebugLN(Sender: TObject; S: string; var Handled: Boolean);
   end;
 
   TLogerMBoxBackend=object(TLogerBaseBackend)
-    procedure doLog(msg:TLogMsg;MsgOptions:TMsgOpt;LogMode:TLogLevel;LMDI:TModuleDesk);virtual;
+    procedure doLog(const msg:TLogMsg;MsgOptions:TMsgOpt;LogMode:TLogLevel;LMDI:TModuleDesk);virtual;
     constructor init;
   end;
 
@@ -47,11 +47,11 @@ var
   LPSTIMINGModuleDeskIndex:TModuleDesk;
   LogerMBoxBackend:TLogerMBoxBackend;
 
-class procedure TLogHelper.EndLongProcessHandler(LPHandle:TLPSHandle;TotalLPTime:TDateTime);
+class procedure TLogHelper.EndLongProcessHandler(LPHandle:TLPSHandle;TotalLPTime:TDateTime;Options:TLPOpt);
 var
    ts:string;
 begin
-  str((TotalLPTime*10e4):3:2,ts);
+  str((TotalLPTime*10e4):3:3,ts);
   programlog.LogOutFormatStr('LongProcess "%s" finished: %s second',[lps.getLPName(LPHandle),ts],LM_Necessarily,LPSTIMINGModuleDeskIndex)
 end;
 
@@ -61,25 +61,25 @@ begin
 end;
 
 procedure ShowMessageForLog(errstr:String);
-var
-   dr:TZCMsgDialogResult;
+//var
+//   dr:TZCMsgDialogResult;
 begin
-  dr:=zcMsgDlg(ErrStr,zcdiInformation,[],true);
+  {dr:=}zcMsgDlg(ErrStr,zcdiInformation,[],true);
 end;
 procedure ShowWarningForLog(errstr:String);
-var
-   dr:TZCMsgDialogResult;
+//var
+//   dr:TZCMsgDialogResult;
 begin
-  dr:=zcMsgDlg(ErrStr,zcdiWarning,[],true);
+  {dr:=}zcMsgDlg(ErrStr,zcdiWarning,[],true);
 end;
 procedure ShowErrorForLog(errstr:String);
-var
-   dr:TZCMsgDialogResult;
+//var
+//   dr:TZCMsgDialogResult;
 begin
-  dr:=zcMsgDlg(ErrStr,zcdiError,[],true);
+  {dr:=}zcMsgDlg(ErrStr,zcdiError,[],true);
 end;
 
-procedure TLogerMBoxBackend.doLog(msg:TLogMsg;MsgOptions:TMsgOpt;LogMode:TLogLevel;LMDI:TModuleDesk);
+procedure TLogerMBoxBackend.doLog(const msg:TLogMsg;MsgOptions:TMsgOpt;LogMode:TLogLevel;LMDI:TModuleDesk);
 begin
   if ((MO_SM and MsgOptions)<>0)and((ZCMsgCallBackInterface.GetState and ZState_Busy)=0) then begin
        case ProgramLog.GetMutableLogLevelData(LogMode)^.LogLevelType of

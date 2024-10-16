@@ -29,7 +29,8 @@ uses
   uzeffdxfsupport,
   uzeentdevice,uzeentsubordinated,uzeentity,uzeentabstracttext,uzeenttext,
   uzeblockdef,uzeentmtext,uzeentwithlocalcs,uzeentblockinsert,
-  uzeentityextender,uzeBaseExtender,uzbtypes,uzegeometrytypes,uzeconsts;
+  uzeExtdrAbstractEntityExtender,uzeExtdrBaseEntityExtender,
+  uzeBaseExtender,uzbtypes,uzegeometrytypes,uzeconsts;
 
 type
   TDummyDtawer=procedure(var IODXFContext:TIODXFContext;var outhandle:TZctnrVectorBytes;pEntity:PGDBObjEntity;const p1,p2:GDBvertex;const drawing:TDrawingDef;var DC:TDrawContext);
@@ -118,6 +119,8 @@ type
 
       class function EntIOLoadSmartTextEntExtenderDefault(_Name,_Value:String;ptu:PExtensionData;const drawing:TDrawingDef;PEnt:pointer):boolean;
 
+      class function CanBeAddedTo(pEntity:Pointer):Boolean;override;
+
       //property ExtensionLine:Boolean read FExtensionLine write FExtensionLine default true;
       //property BaseLine:Boolean read FBaseLine write FBaseLine default true;
   end;
@@ -157,6 +160,13 @@ begin
   dxfStringout(outhandle,1002,'}');
 end;
 
+class function TSmartTextEntExtender.CanBeAddedTo(pEntity:Pointer):Boolean;
+var
+  pt:pointer;
+begin
+  pt:=typeof(PGDBObjEntity(pEntity)^);
+  result:=(pt=TypeOf(GDBObjText))or(pt=TypeOf(GDBObjMText));
+end;
 
 function TSmartTextEntExtender.isDefault:boolean;
 begin
@@ -184,6 +194,7 @@ end;
 
 constructor TSmartTextEntExtender.Create(pEntity:Pointer);
 begin
+  inherited;
   FExtensionLine:=true;
   FBaseLine:=true;
   FExtensionLineStartShift:=ExtensionLineStartShiftDef;
@@ -222,18 +233,18 @@ begin
     result:=PGDBObjMText(pEntity).text.Count;
 end;
 
-function getXsign(p:GDBvertex):integer;
+function getXsign(const p:GDBvertex):integer;
 begin
   result:=-sign(p.x);
 end;
-function getYsign(p:GDBvertex):integer;
+function getYsign(const p:GDBvertex):integer;
 begin
   result:=-sign(p.y);
 end;
 
 function TSmartTextEntExtender.getBaseLineStartPoint(pEntity:Pointer):GDBVertex;
 var
-  t,n:GDBvertex;
+  t{,n}:GDBvertex;
   dx:double;
 begin
   result:=getTextInsertPoint(pEntity);
@@ -378,9 +389,10 @@ procedure TSmartTextEntExtender.onBeforeEntityFormat(pEntity:Pointer;const drawi
 var
   currXDir,currYDir,newXDir,newYDir:integer;
   PD2J:PDir2J;
-  v1,v2:GDBVertex;
+  v1{,v2}:GDBVertex;
   l0:Double;
   a:double;
+  sine,cosine:double;
 begin
   if ESCalcWithoutOwner in PGDBObjEntity(pEntity)^.State then
     exit;
@@ -391,7 +403,8 @@ begin
         if PGDBObjEntity(pEntity)^.bp.ListPos.owner<>nil then begin
           V1:=PGDBvertex(@PGDBObjEntity(pEntity)^.bp.ListPos.owner^.GetMatrix^[0])^;
           a:=FRotateOverrideValue*pi/180;
-          l0:=scalardot(NormalizeVertex(V1),createvertex(cos(a),sin(a),0));
+          SinCos(a,sine,cosine);
+          l0:=scalardot(NormalizeVertex(V1),createvertex(cosine,sine,0));
           l0:=arccos(l0);
           if v1.y<-eps then l0:=2*pi-l0;
         end else
@@ -474,8 +487,11 @@ end;
 
 function AddSmartTextEntExtenderToEntity(PEnt:PGDBObjEntity):TSmartTextEntExtender;
 begin
-  result:=TSmartTextEntExtender.Create(PEnt);
-  PEnt^.AddExtension(result);
+  if TSmartTextEntExtender.CanBeAddedTo(PEnt) then begin
+    result:=TSmartTextEntExtender.Create(PEnt);
+    PEnt^.AddExtension(result);
+  end else
+    result:=nil;
 end;
 
 
@@ -486,7 +502,8 @@ begin
   STEExtdr:=PGDBObjEntity(PEnt)^.GetExtension<TSmartTextEntExtender>;
   if STEExtdr=nil then
     STEExtdr:=AddSmartTextEntExtenderToEntity(PEnt);
-  STEExtdr.FExtensionLine:=false;
+  if STEExtdr<>nil then
+    STEExtdr.FExtensionLine:=false;
   result:=true;
 end;
 
@@ -497,7 +514,8 @@ begin
   STEExtdr:=PGDBObjEntity(PEnt)^.GetExtension<TSmartTextEntExtender>;
   if STEExtdr=nil then
     STEExtdr:=AddSmartTextEntExtenderToEntity(PEnt);
-  STEExtdr.FBaseLine:=false;
+  if STEExtdr<>nil then
+    STEExtdr.FBaseLine:=false;
   result:=true;
 end;
 
@@ -508,7 +526,8 @@ begin
   STEExtdr:=PGDBObjEntity(PEnt)^.GetExtension<TSmartTextEntExtender>;
   if STEExtdr=nil then
     STEExtdr:=AddSmartTextEntExtenderToEntity(PEnt);
-  STEExtdr.FExtensionLineStartShift:=StrToFloat(_Value);
+  if STEExtdr<>nil then
+    STEExtdr.FExtensionLineStartShift:=StrToFloat(_Value);
   result:=true;
 end;
 
@@ -519,7 +538,8 @@ begin
   STEExtdr:=PGDBObjEntity(PEnt)^.GetExtension<TSmartTextEntExtender>;
   if STEExtdr=nil then
     STEExtdr:=AddSmartTextEntExtenderToEntity(PEnt);
-  STEExtdr.FLeaderStartDrawDist:=StrToFloat(_Value);
+  if STEExtdr<>nil then
+    STEExtdr.FLeaderStartDrawDist:=StrToFloat(_Value);
   result:=true;
 end;
 
@@ -530,7 +550,8 @@ begin
   STEExtdr:=PGDBObjEntity(PEnt)^.GetExtension<TSmartTextEntExtender>;
   if STEExtdr=nil then
     STEExtdr:=AddSmartTextEntExtenderToEntity(PEnt);
-  STEExtdr.FTextHeightOverride:=StrToFloat(_Value);
+  if STEExtdr<>nil then
+    STEExtdr.FTextHeightOverride:=StrToFloat(_Value);
   result:=true;
 end;
 
@@ -541,7 +562,8 @@ begin
   STEExtdr:=PGDBObjEntity(PEnt)^.GetExtension<TSmartTextEntExtender>;
   if STEExtdr=nil then
     STEExtdr:=AddSmartTextEntExtenderToEntity(PEnt);
-  STEExtdr.FBaseLineOffset.x:=StrToFloat(_Value);
+  if STEExtdr<>nil then
+    STEExtdr.FBaseLineOffset.x:=StrToFloat(_Value);
   result:=true;
 end;
 
@@ -552,7 +574,8 @@ begin
   STEExtdr:=PGDBObjEntity(PEnt)^.GetExtension<TSmartTextEntExtender>;
   if STEExtdr=nil then
     STEExtdr:=AddSmartTextEntExtenderToEntity(PEnt);
-  STEExtdr.FBaseLineOffset.y:=StrToFloat(_Value);
+  if STEExtdr<>nil then
+    STEExtdr.FBaseLineOffset.y:=StrToFloat(_Value);
   result:=true;
 end;
 
@@ -563,7 +586,8 @@ begin
   STEExtdr:=PGDBObjEntity(PEnt)^.GetExtension<TSmartTextEntExtender>;
   if STEExtdr=nil then
     STEExtdr:=AddSmartTextEntExtenderToEntity(PEnt);
-  STEExtdr.FHJOverride:=false;
+  if STEExtdr<>nil then
+    STEExtdr.FHJOverride:=false;
   result:=true;
 end;
 
@@ -574,7 +598,8 @@ begin
   STEExtdr:=PGDBObjEntity(PEnt)^.GetExtension<TSmartTextEntExtender>;
   if STEExtdr=nil then
     STEExtdr:=AddSmartTextEntExtenderToEntity(PEnt);
-  STEExtdr.FVJOverride:=false;
+  if STEExtdr<>nil then
+    STEExtdr.FVJOverride:=false;
   result:=true;
 end;
 
@@ -585,7 +610,8 @@ begin
   STEExtdr:=PGDBObjEntity(PEnt)^.GetExtension<TSmartTextEntExtender>;
   if STEExtdr=nil then
     STEExtdr:=AddSmartTextEntExtenderToEntity(PEnt);
-  STEExtdr.FRotateOverride:=false;
+  if STEExtdr<>nil then
+    STEExtdr.FRotateOverride:=false;
   result:=true;
 end;
 
@@ -596,7 +622,8 @@ begin
   STEExtdr:=PGDBObjEntity(PEnt)^.GetExtension<TSmartTextEntExtender>;
   if STEExtdr=nil then
     STEExtdr:=AddSmartTextEntExtenderToEntity(PEnt);
-  STEExtdr.FRotateOverrideValue:=StrToFloat(_Value);
+  if STEExtdr<>nil then
+    STEExtdr.FRotateOverrideValue:=StrToFloat(_Value);
   result:=true;
 end;
 
@@ -607,7 +634,8 @@ begin
   STEExtdr:=PGDBObjEntity(PEnt)^.GetExtension<TSmartTextEntExtender>;
   if STEExtdr=nil then
     STEExtdr:=AddSmartTextEntExtenderToEntity(PEnt);
-  result:=true;
+  if STEExtdr<>nil then
+    result:=true;
 end;
 
 procedure TSmartTextEntExtender.PostLoad(var context:TIODXFLoadContext);

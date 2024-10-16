@@ -22,7 +22,7 @@ unit uzeffmanager;
 interface
 uses
   uzbnamedhandles,uzbnamedhandleswithdata,uzbtypes,uzeentgenericsubentry,
-  uzedrawingsimple,sysutils,gzctnrSTL,LazLogger,uzgldrawcontext;
+  uzedrawingsimple,sysutils,gzctnrSTL,LazLogger,uzgldrawcontext,uzeLogIntf;
 
 type
   TExt2LoadProcMap<GFileProcessProc>=class
@@ -61,7 +61,7 @@ type
     DC:TDrawContext;
     procedure CreateRec(var ADrawing:TSimpleDrawing;var AOwner:GDBObjGenericSubEntry;ALoadMode:TLoadOpt;constref ADC:TDrawContext);
   end;
-  TFileLoadProcedure=procedure(name: String;var ZCDCtx:TZDrawingContext{owner:PGDBObjGenericSubEntry;LoadMode:TLoadOpt;var drawing:TSimpleDrawing});
+  TFileLoadProcedure=procedure(const name: String;var ZCDCtx:TZDrawingContext;const LogProc:TZELogProc=nil);
   TLoadFomats=TExt2LoadProcMap<TFileLoadProcedure>;
 var
     Ext2LoadProcMap:TLoadFomats;
@@ -94,7 +94,7 @@ end;
 function TExt2LoadProcMap<GFileProcessProc>.GetLoadProc(const _Wxt:String):TFileLoadProcedure;
 var
   ExtHandle:TFileFormatHandle;
-  _key:String;
+  //_key:String;
 begin
   ExtHandle:=GetDefaultFileFormatHandle(_Wxt);
   if ExtHandle>=0 then
@@ -118,14 +118,14 @@ end;
 
 procedure TExt2LoadProcMap<GFileProcessProc>.RegisterExt(const _Wxt:String; const _FormatDesk:String; _FileLoadProcedure:GFileProcessProc; const DefaultForThisExt:boolean=false);
 var
-  FileFormatData:TFileFormatData;
+  //FileFormatData:TFileFormatData;
   StandartizedName:string;
   ExtHandle:integer;
   PValue:TExt2LoadProcMapGen.PValue;
   PData:PTFileFormatData;
 begin
   StandartizedName:=vec.StandartizeName(_Wxt);
-  if map.MyGetMutableValue(StandartizedName,PValue) then begin
+  if map.tryGetMutableValue(StandartizedName,PValue) then begin
     ExtHandle:=vec.CreateHandle;
     PData:=vec.GetPLincedData(ExtHandle);
     PData^.FormatDesk:=_FormatDesk;

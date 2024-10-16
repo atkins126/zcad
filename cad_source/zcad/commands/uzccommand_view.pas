@@ -30,7 +30,7 @@ uses
 
 implementation
 
-function view_com(operands:TCommandOperands):TCommandResult;
+function view_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 var
    s:string;
    ox,oy,oz:gdbvertex;
@@ -61,32 +61,32 @@ begin
   end else if s='NEISO' then begin
     ox:=createvertex(1,0,0);
     oy:=createvertex(0,1,0);
-    m:=uzegeometry.MatrixMultiply(CreateRotationMatrixX(sin(pi/2+pi/6),cos(pi/2+pi/6)),
-                                  CreateRotationMatrixZ(sin(-pi/4),cos(-pi/4)));
+    m:=uzegeometry.MatrixMultiply(CreateRotationMatrixX(pi/2+pi/6),
+                                  CreateRotationMatrixZ(-pi/4));
     ox:=VectorTransform3D(ox,m);
     oy:=VectorTransform3D(oy,m);
   end else if s='SEISO' then begin
     ox:=createvertex(1,0,0);
     oy:=createvertex(0,1,0);
 
-    m:=uzegeometry.MatrixMultiply(CreateRotationMatrixX(sin(pi/2+pi/6),cos(pi/2+pi/6)),
-                                  CreateRotationMatrixZ(sin(pi+pi/4),cos(pi+pi/4)));
+    m:=uzegeometry.MatrixMultiply(CreateRotationMatrixX(pi/2+pi/6),
+                                  CreateRotationMatrixZ(pi+pi/4));
     ox:=VectorTransform3D(ox,m);
     oy:=VectorTransform3D(oy,m);
   end else if s='NWISO' then begin
     ox:=createvertex(1,0,0);
     oy:=createvertex(0,1,0);
 
-    m:=uzegeometry.MatrixMultiply(CreateRotationMatrixX(sin(pi/2+pi/6),cos(pi/2+pi/6)),
-                                  CreateRotationMatrixZ(sin({pi+}pi/4),cos({pi+}pi/4)));
+    m:=uzegeometry.MatrixMultiply(CreateRotationMatrixX(pi/2+pi/6),
+                                  CreateRotationMatrixZ({pi+}pi/4));
     ox:=VectorTransform3D(ox,m);
     oy:=VectorTransform3D(oy,m);
   end else if s='SWISO' then begin
     ox:=createvertex(1,0,0);
     oy:=createvertex(0,1,0);
 
-    m:=uzegeometry.MatrixMultiply(CreateRotationMatrixX(sin(pi/2+pi/6),cos(pi/2+pi/6)),
-                                  CreateRotationMatrixZ(sin(pi-pi/4),cos(pi-pi/4)));
+    m:=uzegeometry.MatrixMultiply(CreateRotationMatrixX(pi/2+pi/6),
+                                  CreateRotationMatrixZ(pi-pi/4));
     ox:=VectorTransform3D(ox,m);
     oy:=VectorTransform3D(oy,m);
   end else if s='RL' then begin
@@ -124,7 +124,7 @@ end;
 
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-  CreateCommandFastObjectPlugin(@view_com,'View',CADWG,0).overlay:=true;
+  CreateZCADCommand(@view_com,'View',CADWG,0).overlay:=true;
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
 end.

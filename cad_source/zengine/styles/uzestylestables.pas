@@ -17,6 +17,7 @@
 }
 
 unit uzestylestables;
+{$Mode delphi}{$H+}
 {$INCLUDE zengineconfig.inc}
 interface
 uses sysutils,uzbtypes,uzegeometry,
@@ -33,7 +34,7 @@ TGDBTableCellStyle=record
                           CF:TTableCellJustify;
                     end;
 {REGISTEROBJECTTYPE GDBCellFormatArray}
-GDBCellFormatArray= object(GZVector{-}<TGDBTableCellStyle>{//})(*OpenArrayOfData=TGDBTableCellStyle*)
+GDBCellFormatArray= object(GZVector{-}<TGDBTableCellStyle>{//})
                    end;
 PTGDBTableStyle=^TGDBTableStyle;
 {REGISTEROBJECTTYPE TGDBTableStyle}
@@ -42,15 +43,15 @@ TGDBTableStyle= object(GDBNamedObject)
                      textheight:Double;
                      tblformat:GDBCellFormatArray;
                      HeadBlockName:String;
-                     constructor Init(n:String);
+                     constructor Init(const n:String);
                      destructor Done;virtual;
                end;
 PGDBTableStyleArray=^GDBTableStyleArray;
 {REGISTEROBJECTTYPE GDBTableStyleArray}
-GDBTableStyleArray= object(GDBNamedObjectsArray{-}<PTGDBTableStyle,TGDBTableStyle>{//})(*OpenArrayOfData=TGDBTableStyle*)
+GDBTableStyleArray= object(GDBNamedObjectsArray{-}<PTGDBTableStyle,TGDBTableStyle>{//})
                     constructor init(m:Integer);
                     constructor initnul;
-                    function AddStyle(name:String):PTGDBTableStyle;
+                    function AddStyle(const name:String):PTGDBTableStyle;
               end;
 {EXPORT-}
 var

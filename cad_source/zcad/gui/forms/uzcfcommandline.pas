@@ -59,10 +59,6 @@ var
   LastHistoryMsg:string='';
   LastSuffixMsg:string='';
   LastHistoryMsgRepeatCounter:integer=0;
-
-  HintText:TLabel;
-  //historychanged:boolean;
-
 implementation
 
 procedure TCLine.mypaint(sender:tobject);
@@ -174,7 +170,7 @@ end;
 
 procedure TCLine.SetPrompt(APrompt:String{;ATPromptResults:TCommandLinePrompt.TPromptResults});
 begin
-  prompt.SetHighLightedText(APrompt,[],-1);
+  prompt.SetHighLightedText(APrompt,[]{,-1});
   HandleCmdLine(ZMsgID_GUICMDLineCheck);
 end;
 
@@ -185,7 +181,7 @@ var
 begin
   pt:=TCommandLinePromptOption.Create;
   ts:=APrompt.GetResult(pt);
-  prompt.SetHighLightedText(ts,pt.Parts.arr,pt.Parts.Size-1);
+  prompt.SetHighLightedText(ts,pt.Parts.Mutable[0][0..pt.Parts.Size-1]);
   pt.Free;
   HandleCmdLine(ZMsgID_GUICMDLineCheck);
 end;
@@ -304,7 +300,7 @@ begin
     //---------------BevelOuter:=bvnone;
 
     aliases.init(100);
-    aliases.loadfromfile(expandpath('*menu/default.cla'));
+    aliases.loadfromfile(expandpath('$(ZCADPath)/menu/default.cla'));
 
     //DMenu:=TDMenuWnd.Create(self);
 
@@ -406,12 +402,6 @@ begin
     end;
   end;
 end;
-procedure StatusLineTextOut(s:String);
-begin
-     if assigned(HintText) then
-     HintText.caption:=(s);
-     //HintText.{Update}repaint;
-end;
 procedure LogError(errstr:String); export;
 begin
      {errstr:=rserrorprefix+errstr;
@@ -429,8 +419,6 @@ begin
   //uzcinterface.HistoryOutStr:=HistoryOutStr;
 
   ZCMsgCallBackInterface.RegisterHandler_GUIMode(HandleCmdLine);
-
-  ZCMsgCallBackInterface.RegisterHandler_StatusLineTextOut(StatusLineTextOut);
   //uzcinterface.StatusLineTextOut:=StatusLineTextOut;
   ZCMsgCallBackInterface.RegisterHandler_LogError(LogError);
   ZCMsgCallBackInterface.RegisterHandler_GetFocusedControl(CLine.GetCLineFocusPriority);

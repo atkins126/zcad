@@ -304,13 +304,13 @@ var
 begin
   if ResultParam.P.CodeUnitPos=OnlyGetLength then begin
     if mp<>nil then begin
-      if mp.MPObjectsData.MyGetValue(TObjIDWithExtender.Create(0,nil),mpd) then begin
+      if mp.MPObjectsData.tryGetValue(TObjIDWithExtender.Create(0,nil),mpd) then begin
         ChangedData:=CreateChangedData(data.CurrentEntity,mpd.GSData);
         if @mpd.EntBeforeIterateProc<>nil then
           mpd.EntBeforeIterateProc({bip}mp.PIiterateData,ChangedData);
         mpd.EntIterateProc({bip}mp.PIiterateData,ChangedData,mp,true,mpd.EntChangeProc,data.f);
         tempresult:=mp.MPType.GetDecoratedValueAsString(PVarDesk(PTOneVarData(mp.PIiterateData)^.VDAddr.Instance).data.Addr.Instance,data.f);
-      end else if mp.MPObjectsData.MyGetValue(TObjIDWithExtender.Create(PGDBObjEntity(data.CurrentEntity)^.GetObjType,nil),mpd) then begin
+      end else if mp.MPObjectsData.tryGetValue(TObjIDWithExtender.Create(PGDBObjEntity(data.CurrentEntity)^.GetObjType,nil),mpd) then begin
         ChangedData:=CreateChangedData(data.CurrentEntity,mpd.GSData);
         if @mpd.EntBeforeIterateProc<>nil then
           mpd.EntBeforeIterateProc({bip}mp.PIiterateData,ChangedData);
@@ -396,7 +396,7 @@ begin
 end;
 
 
-function DataExport_com(operands:TCommandOperands):TCommandResult;
+function DataExport_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 type
   TCmdMode=(CMEmpty,CMWaitFile,CMOptions,CMOptions1,CMOptions2,CMOptions3,CMExport);
 var
@@ -533,7 +533,7 @@ begin
          pv:=drawings.GetCurrentROOT^.ObjArray.beginiterate(ir);
          if pv<>nil then
          repeat
-           if EntsTypeFilter.IsEntytyTypeAccepted(pv^.GetObjType) then begin
+           if EntsTypeFilter.IsEntytyAccepted(pv) then begin
              if assigned(EntityIncluder) then begin
                propdata.CurrentEntity:=pv;
                propdata.IncludeEntity:=T3SB_Default;
@@ -588,7 +588,7 @@ initialization
   SysUnit^.RegisterType(TypeInfo(TDataExportParam));//регистрируем тип данных в зкадном RTTI
   SysUnit^.SetTypeDesk(TypeInfo(TDataExportParam),['EntFilter','PropFilter','Exporter','FileName'],[FNProgram]);//Даем програмные имена параметрам, по идее это должно быть в ртти, но ненашел
 
-  CreateCommandFastObjectPlugin(@DataExport_com,'DataExport',  CADWG,0);
+  CreateZCADCommand(@DataExport_com,'DataExport',  CADWG,0);
 
 
   ExporterParser:=TExporterParser.create;

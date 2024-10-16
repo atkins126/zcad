@@ -10,7 +10,7 @@ interface
 uses uzcenitiesvariablesextender,uzcvariablesutils,Varman,uzbstrproc,uzcentcable,
      uzeentdevice,uzeconsts,gzctnrVectorObjects,
      gzctnrVectorTypes,SysUtils,uzbtypes,varmandef,uzcdrawings,
-     uzcstrconsts,uzctnrvectorpgdbaseobjects;
+     uzcstrconsts{,uzctnrvectorpgdbaseobjects},uzCtnrVectorpBaseEntity;
 resourcestring
      DefCableName='Created. Not named';
 type
@@ -19,10 +19,10 @@ type
     {REGISTEROBJECTTYPE TCableDesctiptor}
     TCableDesctiptor= object(GDBaseObject)
                      Name:String;
-                     Segments:TZctnrVectorPGDBaseObjects;   // сборщик всех кабелей с одинаковым именем (ШС..)
+                     Segments:TZctnrVectorPGDBaseEntity;   // сборщик всех кабелей с одинаковым именем (ШС..)
                      StartDevice,EndDevice:PGDBObjDevice;
                      StartSegment:PGDBObjCable;
-                     Devices:TZctnrVectorPGDBaseObjects;
+                     Devices:TZctnrVectorPGDBaseEntity;
                      length:Double;
                      constructor init;
                      destructor done;virtual;
@@ -32,7 +32,7 @@ type
 
     PTCableManager=^TCableManager;
     {---REGISTEROBJECTTYPE TCableManager}
-    TCableManager= object(GZVectorObjects<TCableDesctiptor>)(*OpenArrayOfPObj*)
+    TCableManager= object(GZVectorObjects<TCableDesctiptor>)
                        constructor init;
                        destructor done;virtual;
                        procedure build;virtual;
@@ -99,8 +99,8 @@ begin
                                 sname:=pString(pvn^.data.Addr.Instance)^
                             else
                                 sname:=rsNameAbsent;
-                if sname='RS' then
-                               sname:=sname;
+//                if sname='RS' then
+//                               sname:=sname;
                 pcd:=FindOrCreate(sname);                                         //поиск или создание нового элемента в списки. Если такое имя в списке есть, то возвращает указатель на него, если нет то создает новый.
                 pcd^.Segments.PushBackData(pobj);                                 //добавляем к сегменту новый кабель
                 //pvn:=PTEntityUnit(pobj^.ou.Instance)^.FindVariable('AmountD');
