@@ -17,10 +17,11 @@
 }
 
 unit uzegluinterface;
-{$INCLUDE zengineconfig.inc}
+{$Mode delphi}{$H+}
+{$Include zengineconfig.inc}
 
 interface
-uses LCLProc,uzepalette,{$IFNDEF DELPHI}LCLType,{$ENDIF}
+uses LCLProc,{$IFNDEF DELPHI}LCLType,{$ENDIF}
      {$IFNDEF DELPHI}glu,gl,{$ELSE}dglOpenGL,windows,{$ENDIF}
      {$IFDEF SLINUX}glx,{$ENDIF}
      uzegeometrytypes,sysutils,uzegeometry;
@@ -43,9 +44,18 @@ const
       GLU_NURBS_END_EXT={$IFNDEF DELPHI}glu.{$ELSE}dglOpenGL.{$ENDIF}GLU_NURBS_END_EXT;
       GLU_NURBS_ERROR={$IFNDEF DELPHI}glu.{$ELSE}dglOpenGL.{$ENDIF}GLU_NURBS_ERROR;
       GLU_AUTO_LOAD_MATRIX={$IFNDEF DELPHI}glu.{$ELSE}dglOpenGL.{$ENDIF}GLU_AUTO_LOAD_MATRIX;
+
+      GLU_NURBS_BEGIN_DATA_EXT={$IFNDEF DELPHI}glu.{$ELSE}dglOpenGL.{$ENDIF}GLU_NURBS_BEGIN_DATA_EXT;
+      GLU_NURBS_END_DATA_EXT={$IFNDEF DELPHI}glu.{$ELSE}dglOpenGL.{$ENDIF}GLU_NURBS_END_DATA_EXT;
+      GLU_NURBS_VERTEX_DATA_EXT={$IFNDEF DELPHI}glu.{$ELSE}dglOpenGL.{$ENDIF}GLU_NURBS_VERTEX_DATA_EXT;
+
+      GLUIntf_GL_FALSE=gl.GL_FALSE;
+      GLUIntf_GL_TRUE=gl.GL_TRUE;
+      GLUIntf_GL_MAP1_VERTEX_4=gl.GL_MAP1_VERTEX_4;
 type
     PTViewPortArray=^TViewPortArray;
 
+    TGLUIntf_GLenum=GLenum;
     TessObj=Pointer;
     GLUnurbsObj=Pointer;
     PTGLUInterface=^TGLUInterface;
@@ -59,18 +69,19 @@ type
                            procedure TessBeginContour(tess:TessObj);
                            procedure TessEndContour(tess:TessObj);
                            procedure TessVertex(tess:TessObj; location:PGDBVertex; data:PtrInt);
-                           procedure TessCallback(tess:TessObj; which:GLenum; CallBackFunc:_GLUfuncptr);
+                           procedure TessCallback(tess:TessObj; which:TGLUIntf_GLenum; CallBackFunc:_GLUfuncptr);
 
                            function NewNurbsRenderer:GLUnurbsObj;
                            procedure DeleteNurbsRenderer(renderer:GLUnurbsObj);
-                           procedure NurbsCallback(nurb:GLUnurbsObj; which:GLenum; CallBackFunc:_GLUfuncptr);
+                           procedure NurbsCallback(nurb:GLUnurbsObj; which:TGLUIntf_GLenum; CallBackFunc:_GLUfuncptr);
                            procedure BeginCurve(renderer:GLUnurbsObj);
 	                   procedure EndCurve(renderer:GLUnurbsObj);
                            procedure NurbsCurve(nurb:PGLUnurbs; knotCount:GLint; knots:PGLfloat; stride:GLint; control:PGLfloat;
-                                                order:GLint; _type:GLenum);
-                           procedure NurbsProperty(nurb:PGLUnurbs; _property:GLenum; value:GLfloat);
-                           function ErrorString(error:GLenum):glu.PGLubyte;
-                           function mygluGetString(name: GLenum): PAnsiChar;
+                                                order:GLint; _type:TGLUIntf_GLenum);
+                           procedure NurbsProperty(nurb:PGLUnurbs; _property:TGLUIntf_GLenum; value:GLfloat);
+                           procedure NurbsCallbackData(nurb:PGLUnurbs; userData:Pointer);
+                           function ErrorString(error:TGLUIntf_GLenum):glu.PGLubyte;
+                           function mygluGetString(name: TGLUIntf_GLenum): PAnsiChar;
                            procedure mygluPickMatrix(x:GLdouble; y:GLdouble; delX:GLdouble; delY:GLdouble; viewport:PGLint);
                            procedure mygluLoadSamplingMatrices(renderer:GLUnurbsObj;const model,perspective:PGLfloat;view:PGLint);
     end;
@@ -79,7 +90,7 @@ var
    GLUIntrf:TGLUInterface;
    GLUVersion,GLUExtensions:String;
 implementation
-function TGLUInterface.mygluGetString(name: GLenum): PAnsiChar;
+function TGLUInterface.mygluGetString(name: TGLUIntf_GLenum): PAnsiChar;
 begin
      result:=gluGetString(name);
 end;
@@ -99,7 +110,7 @@ procedure TGLUInterface.DeleteNurbsRenderer(renderer:GLUnurbsObj);
 begin
      gluDeleteNurbsRenderer(renderer)
 end;
-procedure TGLUInterface.NurbsCallback(nurb:GLUnurbsObj; which:GLenum; CallBackFunc:_GLUfuncptr);
+procedure TGLUInterface.NurbsCallback(nurb:GLUnurbsObj; which:TGLUIntf_GLenum; CallBackFunc:_GLUfuncptr);
 begin
      gluNurbsCallback(nurb,which,CallBackFunc);
 end;
@@ -111,15 +122,19 @@ procedure TGLUInterface.EndCurve(renderer:GLUnurbsObj);
 begin
      gluEndCurve(renderer);
 end;
-procedure TGLUInterface.NurbsCurve(nurb:PGLUnurbs; knotCount:GLint; knots:PGLfloat; stride:GLint; control:PGLfloat;order:GLint; _type:GLenum);
+procedure TGLUInterface.NurbsCurve(nurb:PGLUnurbs; knotCount:GLint; knots:PGLfloat; stride:GLint; control:PGLfloat;order:GLint; _type:TGLUIntf_GLenum);
 begin
      gluNurbsCurve(nurb,knotCount,knots,stride,control,order,_type);
 end;
-procedure TGLUInterface.NurbsProperty(nurb:PGLUnurbs; _property:GLenum; value:GLfloat);
+procedure TGLUInterface.NurbsProperty(nurb:PGLUnurbs; _property:TGLUIntf_GLenum; value:GLfloat);
 begin
      gluNurbsProperty(nurb,_property,value);
 end;
-function TGLUInterface.ErrorString(error:GLenum):glu.PGLubyte;
+procedure TGLUInterface.NurbsCallbackData(nurb:PGLUnurbs; userData:Pointer);
+begin
+  gluNurbsCallbackData(nurb,userData);
+end;
+function TGLUInterface.ErrorString(error:TGLUIntf_GLenum):glu.PGLubyte;
 begin
      result:=gluErrorString(error);
 end;
@@ -147,7 +162,7 @@ procedure TGLUInterface.TessEndContour(tess:TessObj);
 begin
      gluTessEndContour(tess);
 end;
-procedure TGLUInterface.TessCallback(tess:TessObj; which:GLenum; CallBackFunc:_GLUfuncptr);
+procedure TGLUInterface.TessCallback(tess:TessObj; which:TGLUIntf_GLenum; CallBackFunc:_GLUfuncptr);
 begin
      gluTessCallback(tess,which,CallBackFunc);
 end;
@@ -156,7 +171,7 @@ procedure TGLUInterface.TessVertex(tess:TessObj; location:PGDBVertex; data:PtrIn
 {type
     PT3darray=^T3darray;}
 //var
-//   tv:gdbvertex;
+//   tv:GDBvertex;
 begin
      //tv.x:=location.x;
      //tv.y:=location.y;
