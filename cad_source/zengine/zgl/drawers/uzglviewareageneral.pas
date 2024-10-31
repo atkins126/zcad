@@ -21,7 +21,7 @@ unit uzglviewareageneral;
 {$INCLUDE zengineconfig.inc}
 interface
 uses
-     gzctnrVectorTypes,uzegeometrytypes,LCLProc,uzemathutils,uzepalette,
+     gzctnrVectorTypes,uzegeometrytypes,uzemathutils,uzepalette,
      uzeentsubordinated,uzegeometry,uzbtypes,UGDBSelectedObjArray,
      uzglviewareadata,uzgldrawcontext,uzeentity,uzedrawingabstract,UGDBPoint3DArray,uzeentitiestree,
      uzeconsts,uzestrconsts,UGDBTracePropArray,math,sysutils,uzedrawingdef,uzbstrproc,
@@ -1144,7 +1144,7 @@ begin
      begin
           if psa^.Count=0 then
                               begin
-                                   DebugLn('{WH}'+'ZoomSel: Ничего не выбрано?');
+                                   zDebugLn('{WH}'+'ZoomSel: Ничего не выбрано?');
                                    //historyout('ZoomSel: Ничего не выбрано?');
                                    exit;
                               end;
@@ -1175,10 +1175,10 @@ procedure TGeneralViewArea.ZoomToVolume(Volume:TBoundingBox);
     if param.projtype = PROJPerspective then
                                             begin
                                                  //historyout('Zoom: Works only for parallel projection!');
-                                                 DebugLn('{WH}Zoom:'+rswonlyparallel);
+                                                 zDebugLn('{WH}Zoom:'+rswonlyparallel);
                                             end;
     //historyout('Zoom: Works only for top view!');
-    DebugLn('{WH}Zoom:'+rswonlytop);
+    zDebugLn('{WH}Zoom:'+rswonlytop);
 
 
 
@@ -1223,7 +1223,7 @@ procedure TGeneralViewArea.ZoomToVolume(Volume:TBoundingBox);
     if (abs(wcsRTF.x-wcsLBN.x)<eps)and(abs(wcsRTF.y-wcsLBN.y)<eps) then
                                                                       begin
                                                                            //historyout('ZoomToVolume: Пустой чертеж?');
-                                                                           DebugLn('{WH}'+'ZoomToVolume: Пустой чертеж?');
+                                                                           zDebugLn('{WH}'+'ZoomToVolume: Пустой чертеж?');
                                                                            exit;
                                                                       end;
     //без этого разделения камера уползает по Z
@@ -2600,8 +2600,8 @@ begin
                                  begin
                                       if abs(ccsLBN.z)>eps then
                                       begin
-                                      ccsLBN.z:=ccsLBN.z/10;
-                                      ccsRTF.z:=ccsRTF.z*10;
+                                      ccsLBN.z:=ccsLBN.z+abs(ccsLBN.z/10);
+                                      ccsRTF.z:=ccsRTF.z-abs(ccsRTF.z/10);
                                       end
                                       else
                                       begin
@@ -2643,13 +2643,13 @@ begin
                                       end;
   if param.projtype = ProjParallel then
                                       begin
-                                           if {uzegeometry.oneVertexlength(pcamera^.CamCSOffset)>1000000}true then
+                                           //if uzegeometry.oneVertexlength(pcamera^.CamCSOffset)>1000000 then
                                            begin
                                                 LCS.CurrentCamCSOffset:=pcamera^.CamCSOffset;
                                                 LCS.CurrentCamCSOffsetS:=VertexD2S(LCS.CurrentCamCSOffset);
                                                 LCS.notuseLCS:=pcamera^.notuseLCS;
                                            end
-                                           else LCS.notuseLCS:=true;
+                                           //else LCS.notuseLCS:=true;
                                       end
                                   else
                                       begin
@@ -3384,7 +3384,7 @@ begin
                                                    begin
                                                         //if sysvar.DWG.DWG_DrawGrid<>nil then
                                                         if pdwg^.DrawGrid then
-                                                                                        DebugLn('{WH}'+rsGridTooDensity);
+                                                          zDebugLn('{WH}'+rsGridTooDensity);
                                                         param.md.WPPointUR.z:=-1;
                                                    end;
      param.md.WPPointLU:=vertexmulonsc(vertexsub(param.md.WPPointLU,param.md.WPPointBL),1/pv);
