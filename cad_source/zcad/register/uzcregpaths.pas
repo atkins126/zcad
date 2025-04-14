@@ -20,17 +20,20 @@ unit uzcregpaths;
 {$INCLUDE zengineconfig.inc}
 interface
 uses
-  uzcsysvars,uzbpaths,uzctranslations,UUnitManager,Varman,
+  uzcsysvars,uzbPaths,uzctranslations,UUnitManager,Varman,
   TypeDescriptors,uzcLog,uzcsysparams;
 implementation
 
 initialization
-  units.CreateExtenalSystemVariable(SysVarUnit,SysVarN,GetSupportPath,expandpath('$(ZCADPath)/rtl/system.pas'),InterfaceTranslate,'PATH_Support_Path','String',GeAddrSupportPath);
-  sysvar.PATH.Dictionaries:=@SysParam.saved.DictionariesPath;
-  sysvar.PATH.Program_Run:=@ProgramPath;
-  sysvar.PATH.Support_Path:=GeAddrSupportPath;
-  sysvar.PATH.AdditionalSupport_Path:=@AdditionalSupportPath;
-  sysvar.PATH.Temp_files:=@TempPath;
+  units.CreateExtenalSystemVariable(SysVarUnit,SysVarN,GetSupportPaths,expandpath('$(DistribPath)/rtl/system.pas'),InterfaceTranslate,'PATH_Support_Path','String',@SupportPaths);
+  sysvar.PATH.Dictionaries:=@ZCSysParams.saved.DictionariesPath;
+  sysvar.PATH.RoCfg_Path:=@GetRoCfgsPath;
+  sysvar.PATH.WrCfg_Path:=@GetWrCfgsPath;
+  sysvar.PATH.Support_Paths:=@SupportPaths;
+  sysvar.PATH.Distrib_Path:=@GetDistribPath;
+  sysvar.PATH.PreferedDistrib_Path:=@ZCSysParams.saved.PreferredDistribPath;
+  sysvar.PATH.AdditionalSupport_Paths:=@GetAdditionalSupportPaths;
+  sysvar.PATH.Temp_Path:=@GetTempPath;
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
 end.

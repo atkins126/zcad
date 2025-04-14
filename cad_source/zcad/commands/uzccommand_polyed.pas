@@ -410,33 +410,15 @@ begin
   end
 end;
 
-{function _3DPolyEd_com_AfterClick(wc: GDBvertex; mc: GDBvertex2DI; button: Byte;osp:pos_record;mclick:Integer): Integer;
-var po:PGDBObjSubordinated;
-begin
-  exit;
-  result:=mclick;
-  p3dpl^.vp.Layer :=drawings.LayerTable.GetCurrentLayer;
-  p3dpl^.vp.lineweight := sysvar.dwg.DWG_CLinew^;
-  //p3dpl^.CoordInOCS.lEnd:= wc;
-  p3dpl^.Format;
-  if button = 1 then
-  begin
-    p3dpl^.AddVertex(wc);
-    p3dpl^.RenderFeedback;
-    drawings.GetCurrentDWG^.ConstructObjRoot.Count := 0;
-    result:=1;
-    redrawoglwnd;
-  end;
-end;}
-
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
   PEProp.Action:=TSPE_Insert;
-  SysUnit^.RegisterType(TypeInfo(TPolyEdit));//регистрируем тип данных в зкадном RTTI
-  SysUnit^.SetTypeDesk(TypeInfo(TPolyEdit),['Action','Mode','vdist','ldist','nearestvertex','nearestline','dir','setpoint','vvertex','lvertex1','lvertex2']);//Даем програмные имена параметрам, по идее это должно быть в ртти, но ненашел
-  SysUnit^.SetTypeDesk(TypeInfo(TSubPolyEdit),['TSPE_Insert','TSPE_Remove','TSPE_Scissor']);//Даем человечьи имена параметрам
-  SysUnit^.SetTypeDesk(TypeInfo(TPolyEditMode),['TPEM_Nearest','TPEM_Select']);//Даем человечьи имена параметрам
-
+  if SysUnit<>nil then begin
+    SysUnit^.RegisterType(TypeInfo(TPolyEdit));//регистрируем тип данных в зкадном RTTI
+    SysUnit^.SetTypeDesk(TypeInfo(TPolyEdit),['Action','Mode','vdist','ldist','nearestvertex','nearestline','dir','setpoint','vvertex','lvertex1','lvertex2']);//Даем програмные имена параметрам, по идее это должно быть в ртти, но ненашел
+    SysUnit^.SetTypeDesk(TypeInfo(TSubPolyEdit),['TSPE_Insert','TSPE_Remove','TSPE_Scissor']);//Даем человечьи имена параметрам
+    SysUnit^.SetTypeDesk(TypeInfo(TPolyEditMode),['TPEM_Nearest','TPEM_Select']);//Даем человечьи имена параметрам
+  end;
   CreateCommandRTEdObjectPlugin(@_3DPolyEd_com_CommandStart,nil,nil,nil,@_3DPolyEd_com_BeforeClick,@_3DPolyEd_com_BeforeClick,nil,nil,'PolyEd',0,0);
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);

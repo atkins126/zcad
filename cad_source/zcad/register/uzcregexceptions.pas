@@ -60,6 +60,7 @@ begin
   setlength(LatestLogStrings,MaxLLStrings);
   LatestLogStringsCount:=0;
   TotalLogStringsCount:=0;
+  inherited init;
 end;
 
 destructor TLatestMsgsBackend.done;
@@ -146,8 +147,8 @@ begin
   Write(f,  '  Compile time: ');WriteLn(f,sysvar.SYS.SSY_CompileInfo.SYS_CompileTime);
   Write(f,  '  LCL version: ');WriteLn(f,sysvar.SYS.SSY_CompileInfo.SYS_LCLVersion);
   Write(f,  '  Environment version: ');WriteLn(f,sysvar.SYS.SSY_CompileInfo.SYS_EnvironmentVersion);
-  Write(f,  '  Program  path: ');WriteLn(f,ProgramPath);
-  Write(f,  '  Temporary  path: ');WriteLn(f,TempPath);
+  Write(f,  '  Read only cfg path: ');WriteLn(f,GetRoCfgsPath);
+  Write(f,  '  Temporary  path: ');WriteLn(f,GetTempPath);
   WriteLn(f,'end.');
 end;
 

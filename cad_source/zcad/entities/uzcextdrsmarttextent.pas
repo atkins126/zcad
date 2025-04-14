@@ -129,7 +129,7 @@ implementation
 
 procedure DrawLine(var IODXFContext:TIODXFContext;var outhandle:TZctnrVectorBytes;pEntity:PGDBObjEntity;const p1,p2:GDBvertex;const drawing:TDrawingDef;var DC:TDrawContext);
 begin
-  pEntity.Representation.DrawLineWithLT(DC,p1,p2,pEntity.vp);
+  pEntity.Representation.DrawLineWithLT(pEntity^,onematrix,DC,p1,p2,pEntity.vp);
 end;
 
 procedure SaveLine(var IODXFContext:TIODXFContext;var outhandle:TZctnrVectorBytes;pEntity:PGDBObjEntity;const p1,p2:GDBvertex;const drawing:TDrawingDef;var DC:TDrawContext);
@@ -310,12 +310,12 @@ end;
 
 function TSmartTextEntExtender.getTextTangent(pEntity:Pointer):GDBVertex;
 begin
-  Result:=PGDBvertex(@PGDBObjMText(pEntity)^.ObjMatrix[0])^.NormalizeVertex;
+  Result:=PGDBvertex(@PGDBObjMText(pEntity)^.ObjMatrix.mtr[0])^.NormalizeVertex;
 end;
 
 function TSmartTextEntExtender.getTextNormal(pEntity:Pointer):GDBVertex;
 begin
-  Result:=PGDBvertex(@PGDBObjMText(pEntity)^.ObjMatrix[1])^.NormalizeVertex;
+  Result:=PGDBvertex(@PGDBObjMText(pEntity)^.ObjMatrix.mtr[1])^.NormalizeVertex;
 end;
 
 function TSmartTextEntExtender.getTextHeight(pEntity:Pointer):Double;
@@ -401,7 +401,7 @@ begin
       if PGDBObjEntity(pEntity)^.bp.ListPos.owner<>nil then begin
 
         if PGDBObjEntity(pEntity)^.bp.ListPos.owner<>nil then begin
-          V1:=PGDBvertex(@PGDBObjEntity(pEntity)^.bp.ListPos.owner^.GetMatrix^[0])^;
+          V1:=PGDBvertex(@PGDBObjEntity(pEntity)^.bp.ListPos.owner^.GetMatrix^.mtr[0])^;
           a:=FRotateOverrideValue*pi/180;
           SinCos(a,sine,cosine);
           l0:=scalardot(NormalizeVertex(V1),createvertex(cosine,sine,0));

@@ -21,7 +21,7 @@ uses
   gzctnrVectorTypes,uzccomelectrical,URecordDescriptor,TypeDescriptors,uzcLog,
   uzcstrconsts,uzccmdfloatinsert,//uzctnrvectorpgdbaseobjects,
   zUndoCmdChgTypes,zUndoCmdChgVariable,
-  uzcdrawing,uzCtnrVectorpBaseEntity;
+  uzcdrawing,uzCtnrVectorpBaseEntity,UGDBVisibleTreeArray;
 
 type
   TPlaceParam=record
@@ -217,7 +217,7 @@ begin
             end;
      end;
 end;
-procedure place2(pva:PGDBObjEntityOpenArray;basepoint, dir: gdbvertex; count: integer; length,sd,dd: Double; name: pansichar;angle:Double;norm:Boolean;scaleblock:Double;ps:TPlaceSensorsStrategy);
+procedure place2(pva:PGDBObjEntityTreeArray;basepoint, dir: gdbvertex; count: integer; length,sd,dd: Double; name: pansichar;angle:Double;norm:Boolean;scaleblock:Double;ps:TPlaceSensorsStrategy);
 var //line2: GDBLineOps;
     i: integer;
     d: TPlaceParam;
@@ -248,7 +248,7 @@ begin
          end;
      end;
 end;
-procedure placedatcic(pva:PGDBObjEntityOpenArray;p1, p2: gdbvertex; InitialSD, InitialDD: Double; name: pansichar;norm:Boolean;scaleblock: Double;ps:TPlaceSensorsStrategy);
+procedure placedatcic(pva:PGDBObjEntityTreeArray;p1, p2: gdbvertex; InitialSD, InitialDD: Double; name: pansichar;norm:Boolean;scaleblock: Double;ps:TPlaceSensorsStrategy);
 var dx, dy: Double;
   FirstLine, SecondLine: GDBLineOps;
   FirstCount, SecondCount, i: integer;
@@ -471,24 +471,27 @@ var s:String;
     pcfd:PRecordDescriptor;
     pf:PfieldDescriptor;
 begin
-  pcfd:=pointer(SysUnit.TypeName2PTD('TOPSPlaceSmokeDetectorOrtoParam'));
+  if SysUnit<>nil then
+    pcfd:=pointer(SysUnit.TypeName2PTD('TOPSPlaceSmokeDetectorOrtoParam'))
+  else
+    pcfd:=nil;
   if pcfd<>nil then
   begin
   pf:=pcfd^.FindField('SensorSensorDistance');
   if pf<>nil then
                  begin
                     if OPSPlaceSmokeDetectorOrtoParam.StartAuto then
-                                                                    pf^.base.Attributes:=pf.base.Attributes and (not FA_READONLY)
+                                                                    pf^.base.Attributes:=pf.base.Attributes-[fldaReadOnly]
                                                                 else
-                                                                    pf^.base.Attributes:=pf.base.Attributes or FA_READONLY;
+                                                                    pf^.base.Attributes:=pf.base.Attributes+[fldaReadOnly];
                  end;
   pf:=pcfd^.FindField('SensorWallDistance');
   if pf<>nil then
                  begin
                     if OPSPlaceSmokeDetectorOrtoParam.StartAuto then
-                                                                    pf^.base.Attributes:=pf.base.Attributes and (not FA_READONLY)
+                                                                    pf^.base.Attributes:=pf.base.Attributes-[fldaReadOnly]
                                                                 else
-                                                                    pf^.base.Attributes:=pf.base.Attributes or FA_READONLY;
+                                                                    pf^.base.Attributes:=pf.base.Attributes+[fldaReadOnly];
                  end;
   end;
 //     sdname:=sdname;
@@ -661,7 +664,7 @@ var //i: Integer;
     name:String;
     DC:TDrawContext;
     pcablestartsegmentvarext,pptnownervarext:TVariablesExtender;
-    cpGC_NumberInGroup,cpGC_HeadDevice,cpGC_HDGroup,cpGC_HDShortName:UCmdChgVariable;
+    //cpGC_NumberInGroup,cpGC_HeadDevice,cpGC_HDGroup,cpGC_HDShortName:UCmdChgVariable;
     UndoStartMarkerPlaced:boolean;
 const
       DefNumMetric='default_num_in_group';
@@ -687,7 +690,7 @@ begin
   UManager.init;
 
   defaultunit.init(DefNumMetric);
-  units.loadunit(GetSupportPath,InterfaceTranslate,expandpath('$(ZCADPath)/rtl/objcalc/opsmarkdef.pas'),(@defaultunit));
+  units.loadunit(GetSupportPaths,InterfaceTranslate,expandpath('$(DistribPath)/rtl/objcalc/opsmarkdef.pas'),(@defaultunit));
   pcabledesk:=cman.beginiterate(ir);
   if pcabledesk<>nil then
   repeat
@@ -767,7 +770,7 @@ begin
                          pvd1:=pptnownervarext.entityunit.FindVariable('GC_NumberInGroup');
                          if pvd1<>nil then begin
                            zcPlaceUndoStartMarkerIfNeed(UndoStartMarkerPlaced,'OPS_Sensor_Mark');
-                           cpGC_NumberInGroup:=UCmdChgVariable.CreateAndPush(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,
+                           {cpGC_NumberInGroup:=}UCmdChgVariable.CreateAndPush(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,
                                                                              TChangedVariableDesc.CreateRec(pvd1^.data.PTD,pvd1^.data.Addr.GetInstance,'GC_NumberInGroup'),
                                                                              TSharedPEntityData.CreateRec(PGDBObjEntity(ptn^.bp.ListPos.Owner)),
                                                                              TAfterChangePDrawing.CreateRec(drawings.GetCurrentDWG));
@@ -776,7 +779,7 @@ begin
                          pvd2:=pptnownervarext.entityunit.FindVariable('GC_HeadDevice');
                          if pvd2<>nil then begin
                            zcPlaceUndoStartMarkerIfNeed(UndoStartMarkerPlaced,'OPS_Sensor_Mark');
-                           cpGC_HeadDevice:=UCmdChgVariable.CreateAndPush(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,
+                           {cpGC_HeadDevice:=}UCmdChgVariable.CreateAndPush(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,
                                                                           TChangedVariableDesc.CreateRec(pvd2^.data.PTD,pvd2^.data.Addr.GetInstance,'GC_HeadDevice'),
                                                                           TSharedPEntityData.CreateRec(PGDBObjEntity(ptn^.bp.ListPos.Owner)),
                                                                           TAfterChangePDrawing.CreateRec(drawings.GetCurrentDWG));
@@ -785,7 +788,7 @@ begin
                          pvd3:=pptnownervarext.entityunit.FindVariable('GC_HDGroup');
                          if pvd3<>nil then begin
                            zcPlaceUndoStartMarkerIfNeed(UndoStartMarkerPlaced,'OPS_Sensor_Mark');
-                           cpGC_HDGroup:=UCmdChgVariable.CreateAndPush(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,
+                           {cpGC_HDGroup:=}UCmdChgVariable.CreateAndPush(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,
                                                                        TChangedVariableDesc.CreateRec(pvd3^.data.PTD,pvd3^.data.Addr.GetInstance,'GC_HDGroup'),
                                                                        TSharedPEntityData.CreateRec(PGDBObjEntity(ptn^.bp.ListPos.Owner)),
                                                                        TAfterChangePDrawing.CreateRec(drawings.GetCurrentDWG));
@@ -794,14 +797,14 @@ begin
                          pvd4:=pptnownervarext.entityunit.FindVariable('GC_HDShortName');
                          if pvd4<>nil then begin
                            zcPlaceUndoStartMarkerIfNeed(UndoStartMarkerPlaced,'OPS_Sensor_Mark');
-                           cpGC_HDShortName:=UCmdChgVariable.CreateAndPush(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,
+                           {cpGC_HDShortName:=}UCmdChgVariable.CreateAndPush(PTZCADDrawing(drawings.GetCurrentDWG)^.UndoStack,
                                                                            TChangedVariableDesc.CreateRec(pvd3^.data.PTD,pvd4^.data.Addr.GetInstance,'GC_HDShortName'),
                                                                            TSharedPEntityData.CreateRec(PGDBObjEntity(ptn^.bp.ListPos.Owner)),
                                                                            TAfterChangePDrawing.CreateRec(drawings.GetCurrentDWG));
                            //cpGC_HDShortName.ChangedData.StoreUndoData(pvd4^.data.Addr.GetInstance);
                          end;
 
-                         units.loadunit(GetSupportPath,InterfaceTranslate,expandpath('$(ZCADPath)/rtl/objcalc/opsmark.pas'),(currentunit));
+                         units.loadunit(GetSupportPaths,InterfaceTranslate,expandpath('$(DistribPath)/rtl/objcalc/opsmark.pas'),(currentunit));
 
                          //if pvd1<>nil then begin
                          //  cpGC_NumberInGroup.ChangedData.StoreDoData(pvd1^.data.Addr.GetInstance);;
@@ -1128,33 +1131,36 @@ var
    pcfd:PRecordDescriptor;
    pf:PfieldDescriptor;
 begin
-   pcfd:=pointer(SysUnit.TypeName2PTD('TOrtoDevPlaceParam'));
+  if SysUnit<>nil then
+    pcfd:=pointer(SysUnit.TypeName2PTD('TOrtoDevPlaceParam'))
+  else
+    pcfd:=nil;
    if pcfd<>nil then
 
      case OrtoDevPlaceParam.CountType of
           TODPCT_by_Count:begin
                                pf:=pcfd^.FindField('NX');
                                if pf<>nil then
-                                              pf^.base.Attributes:=pf.base.Attributes or FA_READONLY;
+                                              pf^.base.Attributes:=pf.base.Attributes+[fldaReadOnly];
 
                                pf:=pcfd^.FindField('NY');
                                if pf<>nil then
-                                              pf^.base.Attributes:=pf.base.Attributes or FA_READONLY;
+                                              pf^.base.Attributes:=pf.base.Attributes+[fldaReadOnly];
                                pf:=pcfd^.FindField('Count');
                                if pf<>nil then
-                                              pf^.base.Attributes:=pf.base.Attributes and (not FA_READONLY);
+                                              pf^.base.Attributes:=pf.base.Attributes-[fldaReadOnly];
                           end;
           TODPCT_by_XY:begin
                                pf:=pcfd^.FindField('NX');
                                if pf<>nil then
-                                              pf^.base.Attributes:=pf.base.Attributes and (not FA_READONLY);
+                                              pf^.base.Attributes:=pf.base.Attributes-[fldaReadOnly];
 
                                pf:=pcfd^.FindField('NY');
                                if pf<>nil then
-                                              pf^.base.Attributes:=pf.base.Attributes and (not FA_READONLY);
+                                              pf^.base.Attributes:=pf.base.Attributes-[fldaReadOnly];
                                pf:=pcfd^.FindField('Count');
                                if pf<>nil then
-                                              pf^.base.Attributes:=pf.base.Attributes or FA_READONLY;
+                                              pf^.base.Attributes:=pf.base.Attributes+[fldaReadOnly];
                        end;
      end;
 end;
@@ -1197,7 +1203,7 @@ begin
       t3dp:=wc;
     end
 end;
-procedure placedev(pva:PGDBObjEntityOpenArray;p1, p2: gdbvertex; nmax, nmin: Integer; name: pansichar;a:Double;aa:Boolean;Norm:Boolean);
+procedure placedev(pva:PGDBObjEntityTreeArray;p1, p2: gdbvertex; nmax, nmin: Integer; name: pansichar;a:Double;aa:Boolean;Norm:Boolean);
 var dx, dy: Double;
   line1, line2: GDBLineOps;
   l1, l2, i: integer;

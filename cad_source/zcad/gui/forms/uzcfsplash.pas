@@ -23,6 +23,7 @@ uses
  uzcsysparams,uzbpaths,uniqueinstanceraw,uzcstrconsts,uzbstrproc,Forms,
  stdctrls, Controls, Graphics,ExtCtrls,LazUTF8,sysutils,
  uzbLogTypes,uzbLogDecorators,
+ uzcFileStructure,
  uzcLog;
 type
   TSplashForm = class(TForm)
@@ -43,7 +44,6 @@ implementation
 type
   TLogerSplashBackend=object(TLogerBaseBackend)
     procedure doLog(const msg:TLogMsg;MsgOptions:TMsgOpt;LogMode:TLogLevel;LMDI:TModuleDesk);virtual;
-    constructor init;
   end;
 
 var
@@ -64,13 +64,16 @@ begin
                self.txt.repaint;
 end;
 procedure TSplashForm.AfterConstruction;
+var
+  fLogo:string;
 begin
   inherited;
   self.DoubleBuffered:=true;
   Logo:=TImage.create(self);
   Logo.Align:=alclient;
-  if FileExists({$IFNDEF DELPHI}utf8tosys{$ENDIF}(ProgramPath)+'/components/logo.png') then
-                                                                 Logo.Picture.LoadFromFile((ProgramPath)+'/components/logo.png');
+  flogo:=ConcatPaths([GetRoCfgsPath,CFScomponentsDir,CFSlogopngFile]);
+  if FileExists(flogo) then
+    Logo.Picture.LoadFromFile(flogo);
   Logo.Parent:=self;
   self.BorderStyle:=bsNone;
   self.Color:=clNone;
@@ -90,18 +93,18 @@ end;
 procedure createsplash;
 begin
      if RunUniqueInstance then
-       sysparam.notsaved.otherinstancerun:=InstanceRunning(zcaduniqueinstanceid,true,true);
+       ZCSysParams.notsaved.otherinstancerun:=InstanceRunning(zcaduniqueinstanceid,true,true);
      SplashForm:=TSplashForm.CreateNew(nil);
      //SplashForm.cb:=TComboBox.CreateParented(SplashForm.Handle);
      SplashForm.cb:=TComboBox.Create(NIL);
      SplashForm.cb.ParentWindow := SplashForm.Handle;
 
      SplashForm.cb.hide;
-     if not sysparam.notsaved.otherinstancerun then
-     if not sysparam.saved.nosplash then
+     if not ZCSysParams.notsaved.otherinstancerun then
+     if not ZCSysParams.saved.nosplash then
                                   SplashForm.show;
      application.ProcessMessages;
-     sysparam.notsaved.defaultheight:=SplashForm.cb.Height;
+     ZCSysParams.notsaved.defaultheight:=SplashForm.cb.Height;
 end;
 procedure removesplash;
 begin
@@ -118,13 +121,10 @@ begin
   if (lp_IncPos and MsgOptions)<>0 then
   SplashTextOutProc(msg,false);
 end;
-constructor TLogerSplashBackend.init;
-begin
-end;
 
 initialization
   Application.Initialize;
-  createsplash(SysParam.saved.UniqueInstance);
+  createsplash(ZCSysParams.saved.UniqueInstance);
   LogerSplashBackend.init;
   ProgramLog.addBackend(LogerSplashBackend,'',[]);
 finalization

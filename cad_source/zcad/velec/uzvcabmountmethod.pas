@@ -77,7 +77,7 @@ begin
      begin
        MountingMethodsTreeSelector:=TStringsTreeSelector.create(application.MainForm);//создаем форму
        //восстанавливаем размеры формы
-       MountingMethodsTreeSelector.BoundsRect:=GetBoundsFromSavedUnit('MountingMethodsTreeSelectorWND',SysParam.notsaved.ScreenX,SysParam.notsaved.Screeny);
+       MountingMethodsTreeSelector.BoundsRect:=GetBoundsFromSavedUnit('MountingMethodsTreeSelectorWND',ZCSysParams.notsaved.ScreenX,ZCSysParams.notsaved.Screeny);
      end;
      MountingMethodsTreeSelector.clear;//очищаем
      MountingMethodsTreeSelector.fill(MountingMethodsTree.BlobTree);//заполняем
@@ -94,11 +94,11 @@ end;
 
 initialization
   MountingMethodsTree:=TTreePropManager.Create('~','MountingMethodsRoot');//создаем экземпляр, указываем разделитель и имя корневого узла
-  MountingMethodsTree.LoadTree(expandpath('$(ZCADPath)/rtl/velec/mountingmethodss.xml'),InterfaceTranslate);//грузим файл передаем путь  и переводчика
+  MountingMethodsTree.LoadTree(expandpath('$(DistribPath)/rtl/velec/mountingmethodss.xml'),InterfaceTranslate);//грузим файл передаем путь  и переводчика
   CreateZCADCommand(@MountingMethodsTest_com,'mt',CADWG,0);//тестовая команда, вызывает окно с твоим деревом
 
 
-  AddFastEditorToType(units.findunit(GetSupportPath,InterfaceTranslate,'cables').TypeName2PTD('TDCableMountingMethod'),//привязка быстрого редактора, я вяжу к String, ты поставишь свой тип
+  AddFastEditorToType(units.findunit(GetSupportPaths,InterfaceTranslate,'cables').TypeName2PTD('TDCableMountingMethod'),//привязка быстрого редактора, я вяжу к String, ты поставишь свой тип
                       @OIUI_FE_ButtonGetPrefferedSize,//процедура определяющая размер кнопки в инспекторе
                       @OIUI_FE_ButtonMultiplyDraw,//процедура рисующая кнопку в инспекторе
                       @RunMountingMethodsFastEditor);//запуск  редактора  и  возврат  значения

@@ -93,7 +93,7 @@ type
                           procedure sendpoint2command(const p3d:gdbvertex; const p2d:gdbvertex2di; var mode:Byte;osp:pos_record;const drawing:TDrawingDef);virtual;
                           procedure CommandRegister(pc:PCommandObjectDef);virtual;
                           procedure run(pc:PCommandObjectDef;operands:String;pdrawing:PTDrawingDef);virtual;
-                          destructor done;virtual;
+                          procedure done;virtual;
                           procedure cleareraseobj;virtual;
                           procedure DMShow;
                           procedure DMHide;
@@ -155,13 +155,13 @@ implementation
 function GDBcommandmanager.MacroFuncsCurrentMacrosPath (const {%H-}Param: string; const Data: PtrInt;
                                                         var {%H-}Abort: boolean): string;
 begin
-  result:=ExtractFilePath(currMacros);
+  result:=ExcludeTrailingPathDelimiter(ExtractFilePath(currMacros));
 end;
 
 function GDBcommandmanager.MacroFuncsCurrentMacrosFile (const {%H-}Param: string; const Data: PtrInt;
                                                         var {%H-}Abort: boolean): string;
 begin
-  result:=ExtractFileName(currMacros);
+  result:=ExcludeTrailingPathDelimiter(ExtractFileName(currMacros));
 end;
 
 procedure GDBcommandmanager.AddClPrompt(CLP:ICommandLinePrompt);
@@ -566,7 +566,7 @@ begin
      vd.SetInstance(nil);
      //vd.Instance:=nil;
      varstack.createvariable(varname,vd);
-     vd.data.PTD.CopyInstanceTo(instance,vd.data.Addr.Instance);
+     vd.data.PTD.CopyValueToInstance(instance,vd.data.Addr.Instance);
 end;
 function GDBcommandmanager.GetValue:vardesk;
 var
@@ -668,8 +668,8 @@ begin
                                                     execute(p^,false,{pdrawing}drawings.GetCurrentDWG,POGLWndParam)
                                                 else
                                                     begin
-                                                         if not sysparam.saved.nosplash then
-                                                         if sysparam.notsaved.preloadedfile='' then
+                                                         if not ZCSysParams.saved.nosplash then
+                                                         if ZCSysParams.notsaved.preloadedfile='' then
                                                                                       execute(p^,false,pdrawing,POGLWndParam)
                                                     end;
         p:=sa.iterate(ir);
@@ -1072,7 +1072,7 @@ begin
      pvardesk(p)^.vartypecustom:=0;
      Freemem(pvardesk(p)^.pvalue);}
 end;
-destructor GDBcommandmanager.done;
+procedure GDBcommandmanager.done;
 begin
   cleareraseobj;
   lastcommand:='';

@@ -33,7 +33,7 @@ PGDBObjSolid=^GDBObjSolid;
 GDBObjSolid= object(GDBObjWithLocalCS)
                  PInOCS:OutBound4V;
                  PInWCS:OutBound4V;
-                 PInDCS:OutBound4V;
+                 //PInDCS:OutBound4V;
                  normal:GDBVertex;
                  triangle:Boolean;
                  n,p1,p2,p3:GDBVertex3S;
@@ -41,18 +41,17 @@ GDBObjSolid= object(GDBObjWithLocalCS)
                  constructor init(own:Pointer;layeraddres:PGDBLayerProp;LW:SmallInt;p:GDBvertex);
                  constructor initnul(owner:PGDBObjGenericWithSubordinated);
                  procedure LoadFromDXF(var f:TZMemReader;ptu:PExtensionData;var drawing:TDrawingDef);virtual;
-                 procedure SaveToDXF(var outhandle:{Integer}TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
+                 procedure SaveToDXF(var outhandle:TZctnrVectorBytes;var drawing:TDrawingDef;var IODXFContext:TIODXFContext);virtual;
                  procedure FormatEntity(var drawing:TDrawingDef;var DC:TDrawContext;Stage:TEFStages=EFAllStages);virtual;
                  procedure createpoint;virtual;
 
-                 procedure DrawGeometry(lw:Integer;var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
-                 function calcinfrustum(const frustum:ClipArray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
-                 procedure RenderFeedback(pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;
+                 procedure DrawGeometry(lw:Integer;var DC:TDrawContext);virtual;
+                 function calcinfrustum(const frustum:ClipArray;const Actuality:TVisActuality;var Counters:TCameraCounters; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double):Boolean;virtual;
                  //function getsnap(var osp:os_record):Boolean;virtual;
                  function onmouse(var popa:TZctnrVectorPGDBaseEntity;const MF:ClipArray;InSubEntry:Boolean):Boolean;virtual;
-                 function CalcTrueInFrustum(const frustum:ClipArray;visibleactualy:TActulity):TInBoundingVolume;virtual;
+                 function CalcTrueInFrustum(const frustum:ClipArray):TInBoundingVolume;virtual;
                  procedure addcontrolpoints(tdesc:Pointer);virtual;
-                 procedure remaponecontrolpoint(pdesc:pcontrolpointdesc);virtual;
+                 procedure remaponecontrolpoint(pdesc:pcontrolpointdesc;ProjectProc:GDBProjectProc);virtual;
                  procedure rtmodifyonepoint(const rtmod:TRTModifyData);virtual;
                  function Clone(own:Pointer):PGDBObjEntity;virtual;
                  procedure rtsave(refp:Pointer);virtual;
@@ -110,6 +109,7 @@ begin
                                                 else
                                                     triangle:=false;
   calcbb(dc);
+  CalcActualVisible(dc.DrawingContext.VActuality);
    if assigned(EntExtensions)then
      EntExtensions.RunOnAfterEntityFormat(@self,drawing,DC);
 end;
@@ -272,17 +272,6 @@ begin
       end;
       end;
 end;
-procedure GDBObjSolid.RenderFeedback;
-//var //pm:DMatrix4D;
-    //tv:GDBvertex;
-begin
-           inherited;
-           //pm:=gdb.GetCurrentDWG.pcamera^.modelMatrix;
-           ProjectProc(PInWCS[0],PInDCS[0]);
-           ProjectProc(PInWCS[1],PInDCS[1]);
-           ProjectProc(PInWCS[2],PInDCS[2]);
-           ProjectProc(PInWCS[3],PInDCS[3]);
-end;
 
 {function GDBObjSolid.getsnap;
 
@@ -329,14 +318,15 @@ function GDBObjSolid.CalcTrueInFrustum;
 begin
       result:=CalcOutBound4VInFrustum(PInWCS,frustum);
 end;
-procedure GDBObjSolid.remaponecontrolpoint(pdesc:pcontrolpointdesc);
-var vertexnumber:Integer;
+procedure GDBObjSolid.remaponecontrolpoint(pdesc:pcontrolpointdesc;ProjectProc:GDBProjectProc);
+var
+  vertexnumber:Integer;
+  tv:GDBvertex;
 begin
-     vertexnumber:=pdesc^.vertexnum;
-     pdesc.worldcoord:=PInWCS[vertexnumber];
-     pdesc.dispcoord.x:=round(PInDCS[vertexnumber].x);
-     pdesc.dispcoord.y:=round(PInDCS[vertexnumber].y);
-
+  vertexnumber:=pdesc^.vertexnum;
+  pdesc.worldcoord:=PInWCS[vertexnumber];
+  ProjectProc(pdesc.worldcoord,tv);
+  pdesc.dispcoord:=ToVertex2DI(tv);
 end;
 
 procedure GDBObjSolid.addcontrolpoints(tdesc:Pointer);
@@ -398,7 +388,6 @@ begin
   tvo^.bp.ListPos.Owner:=own;
   tvo^.PInOCS:=PInOCS;
   tvo^.PInWCS:=PInWCS;
-  tvo^.PInDCS:=PInDCS;
   result := tvo;
 end;
 procedure GDBObjSolid.rtsave;

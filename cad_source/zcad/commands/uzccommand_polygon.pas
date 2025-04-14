@@ -33,7 +33,7 @@ uses
   uzcutils,
   //uzbtypes,
   uzegeometry,
-  URecordDescriptor,typedescriptors,Varman;
+  URecordDescriptor,typedescriptors,Varman,varmandef;
 
 type
 //** Перечислимый тип для отображения в инспекторе режима создания прямоугольника (из 3DPolyLine или LWPolyLine, составная часть TRectangParam)
@@ -76,23 +76,23 @@ begin
 
    PInternalRTTITypeDesk:=pointer(SysUnit^.TypeName2PTD('TPolygonParam'));//находим описание типа TRectangParam, мы сразу знаем что это описание записи, поэтому нужно привести тип
    pf:=PInternalRTTITypeDesk^.FindField('ET'); //находим описание поля ET
-   pf^.base.Attributes:=pf^.base.Attributes and (not FA_READONLY);//сбрасываем ему флаг ридонли
+   pf^.base.Attributes:=pf^.base.Attributes-[fldaReadOnly];//сбрасываем ему флаг ридонли
    pf:=PInternalRTTITypeDesk^.FindField('PolyWidth'); //находим описание поля ET
-   pf^.base.Attributes:=pf^.base.Attributes and (not FA_READONLY);//сбрасываем ему флаг ридонли
+   pf^.base.Attributes:=pf^.base.Attributes-[fldaReadOnly];//сбрасываем ему флаг ридонли
    pf:=PInternalRTTITypeDesk^.FindField('VNum'); //находим описание поля ET
-   pf^.base.Attributes:=pf^.base.Attributes and (not FA_READONLY);//сбрасываем ему флаг ридонли
+   pf^.base.Attributes:=pf^.base.Attributes-[fldaReadOnly];//сбрасываем ему флаг ридонли
    //pf:=PInternalRTTITypeDesk^.FindField('VNum');//находим описание поля VNum
-   //pf^.base.Attributes:=pf^.base.Attributes or FA_HIDDEN_IN_OBJ_INSP;//устанавливаем ему флаг cкрытности
+   //pf^.base.Attributes:=pf^.base.Attributes or fldaHidden;//устанавливаем ему флаг cкрытности
    zcShowCommandParams(PInternalRTTITypeDesk,@PolygonParam);
 
    if commandmanager.get3dpoint(rscmSpecifyFirstPoint,pe.p1)=GRNormal then
    begin
       pf:=PInternalRTTITypeDesk^.FindField('ET');//находим описание поля ET
-      pf^.base.Attributes:=pf^.base.Attributes or FA_READONLY;//устанавливаем ему флаг ридонли
+      pf^.base.Attributes:=pf^.base.Attributes+[fldaReadOnly];//устанавливаем ему флаг ридонли
       pf:=PInternalRTTITypeDesk^.FindField('PolyWidth');//находим описание поля ET
-      pf^.base.Attributes:=pf^.base.Attributes or FA_READONLY;//устанавливаем ему флаг ридонли
+      pf^.base.Attributes:=pf^.base.Attributes+[fldaReadOnly];//устанавливаем ему флаг ридонли
       pf:=PInternalRTTITypeDesk^.FindField('VNum'); //находим описание поля ET
-      pf^.base.Attributes:=pf^.base.Attributes or FA_READONLY;//устанавливаем ему флаг ридонли
+      pf^.base.Attributes:=pf^.base.Attributes+[fldaReadOnly];//устанавливаем ему флаг ридонли
 
       polygonDrawModePentity.npoint:=PolygonParam.VNum;
       polygonDrawModePentity.typeLWPoly:=false;
@@ -157,10 +157,12 @@ end;
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
 
-  SysUnit.RegisterType(TypeInfo(TPolygonParam));//регистрируем тип данных в зкадном RTTI
-  SysUnit.SetTypeDesk(TypeInfo(TPolygonParam),['ET','VNum','PolyWidth'],[FNProgram]);//Даем програмные имена параметрам, по идее это должно быть в ртти, но ненашел
-  SysUnit.SetTypeDesk(TypeInfo(TPolygonParam),['Entity type','Number of vertices','Polyline width'],[FNUser]);//Даем человечьи имена параметрам
-  SysUnit.SetTypeDesk(TypeInfo(TRectangEntType),['3DPoly','LWPoly'],[FNUser]);//Даем человечьи имена параметрам
+  if SysUnit<>nil then begin
+    SysUnit.RegisterType(TypeInfo(TPolygonParam));//регистрируем тип данных в зкадном RTTI
+    SysUnit.SetTypeDesk(TypeInfo(TPolygonParam),['ET','VNum','PolyWidth'],[FNProgram]);//Даем програмные имена параметрам, по идее это должно быть в ртти, но ненашел
+    SysUnit.SetTypeDesk(TypeInfo(TPolygonParam),['Entity type','Number of vertices','Polyline width'],[FNUser]);//Даем человечьи имена параметрам
+    SysUnit.SetTypeDesk(TypeInfo(TRectangEntType),['3DPoly','LWPoly'],[FNUser]);//Даем человечьи имена параметрам
+  end;
 
   CreateZCADCommand(@DrawPolygon_com,'Polygon',CADWG,0);
 

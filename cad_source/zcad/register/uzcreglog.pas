@@ -20,11 +20,17 @@ unit uzcreglog;
 {$mode delphi}
 {$INCLUDE zengineconfig.inc}
 interface
-uses uzbLogTypes,uzbLog,uzcLog,LazLogger,uzcinterface,uzcuidialogs,uzcuitypes,uzelongprocesssupport,
-     {$IFNDEF DELPHI}LCLtype,{$ELSE}windows,{$ENDIF}LCLProc,Forms,sysutils,LazUTF8,
-     uzbLogDecorators,uzbLogFileBackend,
-     LazLoggerBase,uzbLogIntf,
-     uzbCommandLineParser,uzcCommandLineParser;
+uses
+  uzbPaths,uzbLogTypes,uzbLog,uzcLog,LazLogger,uzcinterface,uzcuidialogs,
+  uzcuitypes,uzelongprocesssupport,
+  LCLtype,LCLProc,Forms,sysutils,LazUTF8,
+  uzbLogDecorators,uzbLogFileBackend,
+  LazLoggerBase,uzbLogIntf,
+  uzbCommandLineParser,uzcCommandLineParser;
+
+const
+  filelog='zcad.log';
+
 var
   MO_SM,MO_SH:TMsgOpt;
 implementation
@@ -37,7 +43,6 @@ type
 
   TLogerMBoxBackend=object(TLogerBaseBackend)
     procedure doLog(const msg:TLogMsg;MsgOptions:TMsgOpt;LogMode:TLogLevel;LMDI:TModuleDesk);virtual;
-    constructor init;
   end;
 
 const
@@ -92,10 +97,6 @@ begin
     ZCMsgCallBackInterface.Do_HistoryOut(msg);
 end;
 
-constructor TLogerMBoxBackend.init;
-begin
-end;
-
 var
   lz:TLazLogger;
   FileLogBackend:TLogFileBackend;
@@ -124,7 +125,7 @@ initialization
   PositionDecorator.init;
   PositionDecoratorHandle:=ProgramLog.addDecorator(PositionDecorator);
 
-  LogFileName:=SysToUTF8(ExtractFilePath(paramstr(0)))+filelog;
+  LogFileName:=ConcatPaths([GetTempPath,filelog]);
   if CommandLineParser.HasOption(LOGFILEHDL)then
   for i:=0 to CommandLineParser.OptionOperandsCount(LOGFILEHDL)-1 do
     LogFileName:=CommandLineParser.OptionOperand(LOGFILEHDL,i);

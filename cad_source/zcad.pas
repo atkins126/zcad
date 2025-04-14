@@ -233,7 +233,7 @@ uses
   uzccommand_VariablesAdd,uzccommand_VarValueCopy,
 
   uzccommand_dbgRaiseException,uzccommand_dbgGetAV,uzccommand_dbgGetOutOfMem,uzccommand_dbgGetStackOverflow,
-  uzccommand_dbgPlaceAllBlocks,
+  uzccommand_dbgPlaceAllBlocks,uzcCommand_dbgSelectEnts,
   uzccommand_Insert,uzccommand_BlockReplace,
 
   uzccommand_NumDevices,
@@ -296,7 +296,8 @@ uses
   uzcregisterenitiesextenders,
   uzcoiregistermultiproperties,
   uzclibraryblocksregister,
-  {$IF not((DEFINED(WINDOWS))and(DEFINED(LCLQT5)))}uzglviewareaogl,{$ENDIF}uzglviewareagdi,uzglviewareacanvas,
+  {$IF not((DEFINED(WINDOWS))and(DEFINED(LCLQT5)))}uzglviewareaogl,uzglviewareaoglmodern,{$ENDIF}
+  uzglviewareagdi,uzglviewareacanvas,
   {$IFDEF WINDOWS}{uzglviewareadx,}{$ENDIF}
 
   uzctbexttoolbars, uzctbextmenus, uzctbextpalettes,
@@ -317,12 +318,12 @@ var
 
 begin
   programlog.logoutstr('<<<<<<<<<<<<<<<End units initialization',0,LM_Debug);
-     if sysparam.notsaved.otherinstancerun then
+     if ZCSysParams.notsaved.otherinstancerun then
                                       exit;
   lpsh:=LPS.StartLongProcess('Start program',@lpsh,0);
 {$IFDEF REPORTMMEMORYLEAKS}printleakedblock:=true;{$ENDIF}
 {$IFDEF REPORTMMEMORYLEAKS}
-       SetHeapTraceOutput(sysvar.PATH.Program_Run^+'/log/memory-heaptrace.txt');
+       SetHeapTraceOutput(ConcatPaths([GetTempPath,'memory-heaptrace.txt']));
        keepreleased:=true;
 {$ENDIF}
   //Application_Initialize перемещен в инициализацию uzcfsplash чтоб показать сплэш пораньше
@@ -330,7 +331,7 @@ begin
 
   //инициализация drawings
   FontManager.EnumerateFontFiles;
-  uzcdrawings.startup('$(ZCADPath)/rtl/dwg/DrawingVars.pas','');
+  uzcdrawings.startup('$(DistribPath)/rtl/dwg/DrawingVars.pas','');
   uzcdevicebase.startup;
   {$IF lcl_fullversion>2001200}
   {$ELSE}
@@ -339,7 +340,8 @@ begin
   //создание окна программы
   {$IF DEFINED(MSWINDOWS)}
   LoadLResources;
-  ApplyMetaDarkStyle(GetScheme(SysVar.INTF.INTF_ColorScheme^));
+  if SysVar.INTF.INTF_ColorScheme<>nil then
+    ApplyMetaDarkStyle(GetScheme(SysVar.INTF.INTF_ColorScheme^));
   {$ENDIF}
   Application.CreateForm(TZCADMainWindow,ZCADMainWindow);
   ZCADMainWindow.show;
@@ -350,16 +352,16 @@ begin
 
   ZCADMainWindow.SwithToProcessBar;
 
-  FromDirsIterator(sysvar.PATH.Preload_Path^,'*.cmd','autorun.cmd',RunCmdFile,nil);
+  FromDirsIterator(sysvar.PATH.Preload_Paths^,'*.cmd','autorun.cmd',RunCmdFile,nil);
   if CommandLineParser.HasOption(RunScript)then
     for i:=0 to CommandLineParser.OptionOperandsCount(RunScript)-1 do begin
       scrfile:=CommandLineParser.OptionOperand(RunScript,i);
       commandmanager.executefile(scrfile,drawings.GetCurrentDWG,nil);
     end;
 
-  if sysparam.notsaved.preloadedfile<>'' then begin
-    commandmanager.executecommand('Load('+sysparam.notsaved.preloadedfile+')',drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
-    sysparam.notsaved.preloadedfile:='';
+  if ZCSysParams.notsaved.preloadedfile<>'' then begin
+    commandmanager.executecommand('Load('+ZCSysParams.notsaved.preloadedfile+')',drawings.GetCurrentDWG,drawings.GetCurrentOGLWParam);
+    ZCSysParams.notsaved.preloadedfile:='';
   end;
 
   ZCADMainWindow.SwithToHintText;

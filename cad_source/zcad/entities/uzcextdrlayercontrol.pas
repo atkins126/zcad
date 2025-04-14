@@ -27,7 +27,7 @@ uses
   uzbtypes,uzeentsubordinated,uzeentity,uzeenttext,uzeblockdef,
   varmandef,Varman,UUnitManager,URecordDescriptor,UBaseTypeDescriptor,
   uzeffdxfsupport,uzcvariablesutils,usimplegenerics,
-  uzeBaseExtender,uzgldrawcontext,fpexprpars,LCLProc;
+  uzeBaseExtender,uzgldrawcontext,fpexprpars,uzcLog,uzcreglog;
 const
   LayerControlExtenderName='extdrLayerControl';
   //добавить это расширение к примитиву можно командой
@@ -46,6 +46,7 @@ type
       function GetExpression:String;
       class function getExtenderName:string;override;
       constructor Create(pEntity:Pointer);override;
+      destructor Destroy;override;
       procedure Assign(Source:TBaseExtender);override;
       procedure onEntityClone(pSourceEntity,pDestEntity:pointer);override;
       procedure CopyExt2Ent(pSourceEntity,pDestEntity:pointer);override;
@@ -120,6 +121,14 @@ begin
   BadLayer:='SYS_METRIC';
   FExpression:='Test';
   FParser:=nil;
+end;
+destructor TLayerControlExtender.Destroy;
+begin
+  GoodLayer:='';
+  BadLayer:='';
+  FExpression:='';
+  FParser.Free;
+  inherited;
 end;
 
 procedure TLayerControlExtender.onAfterEntityFormat(pEntity:Pointer;const drawing:TDrawingDef;var DC:TDrawContext);
@@ -272,7 +281,7 @@ begin
       end;
     except
        on E:Exception do
-            DbgOut('{EM}Entity"%p".TLayerControlExtender.Expr="%s" raise "%s"',[pEntity,Expr,E.Message]);
+            programlog.LogOutFormatStr('Entity"%p".TLayerControlExtender.Expr="%s" raise "%s"',[pEntity,Expr,E.Message],LM_Error,1,MO_SH or MO_SM);
          //raise ELayerControlExtender.CreateFmt('TLayerControlExtender error for expression "%s": %s',[Expr,E.Message]);
     end;
   finally

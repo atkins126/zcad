@@ -26,7 +26,6 @@ uses LCLProc,LazUTF8,Classes,gzctnrVector,sysutils,uzbtypes,
      uzeffdxfsupport,uzMVReader,
      Math;
 type
-{EXPORT+}
   PTPatStrokesArray=^TPatStrokesArray;
   TPatStrokesArray=object(TStrokesArray)
     fAngle:Double;
@@ -45,7 +44,6 @@ type
   THatchPattern=object(GZVectorObjects<TPatStrokesArray>)
     procedure SaveToDXF(var outhandle:TZctnrVectorBytes;const MainAngle,MainScale:Double);
   end;
-{EXPORT-}
 
 function LoadPatternFromDXF(var PPattern:PTHatchPattern;var f:TZMemReader;DXFCode:Integer;const MainAngle,MainScale:Double):Boolean;
 
@@ -70,7 +68,7 @@ begin
 end;
 function TPatStrokesArray.CopyTo(var dest:GZVector<Double>):Integer;
 begin
-  inherited;
+  result:=inherited;
   if IsIt(TypeOf(dest),TypeOf(TPatStrokesArray)) then begin
     PTPatStrokesArray(@dest)^.fAngle:=fAngle;
     PTPatStrokesArray(@dest)^.Base:=Base;

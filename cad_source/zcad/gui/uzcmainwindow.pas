@@ -48,6 +48,8 @@ uses
   uzcimagesmanager,usupportgui,uzcuidialogs,
   uzcActionsManager,
 
+  uzcFileStructure,
+
   //это разделять нельзя, иначе загрузятся невыровенные рекорды
   {$INCLUDE allgeneratedfiles.inc}uzcregother,
 
@@ -389,10 +391,6 @@ begin
 end;
 
 procedure TZCADMainWindow.setvisualprop(sender:TObject;GUIAction:TZMessageID);
-const IntEmpty=-1000;
-      IntDifferent=-10001;
-      PEmpty=pointer(0);
-      PDifferent=pointer(1);
 var lw:Integer;
     color:Integer;
     layer:pgdblayerprop;
@@ -404,22 +402,22 @@ var lw:Integer;
 begin
   if GUIAction<>ZMsgID_GUIActionRebuild then
     exit;
-  if drawings.GetCurrentDWG=nil then
+  if drawings.GetCurrentDWG=nil then begin
+    IVars.CColor:=IntEmpty;
+    IVars.CLWeight:=IntEmpty;
+    IVars.CLayer:=PEmpty;
+    IVars.CLType:=PEmpty;
+    IVars.CTStyle:=PEmpty;
+    IVars.CDimStyle:=PEmpty;
     exit;
-  if drawings.GetCurrentDWG.wa.param.seldesc.Selectedobjcount=0
-  then
-      begin
-           {if assigned(LinewBox) then
-           if sysvar.dwg.DWG_CLinew^<0 then LineWbox.ItemIndex:=(sysvar.dwg.DWG_CLinew^+3)
-                                       else LinewBox.ItemIndex:=((sysvar.dwg.DWG_CLinew^ div 10)+3);}
-           {if assigned(LayerBox) then
-           LayerBox.ItemIndex:=getsortedindex(SysVar.dwg.DWG_CLayer^);}
-           IVars.CColor:=sysvar.dwg.DWG_CColor^;
-           IVars.CLWeight:=sysvar.dwg.DWG_CLinew^;
-           ivars.CLayer:={drawings.GetCurrentDWG.LayerTable.getDataMutable}(sysvar.dwg.DWG_CLayer^);
-           ivars.CLType:={drawings.GetCurrentDWG.LTypeStyleTable.getDataMutable}(sysvar.dwg.DWG_CLType^);
-           ivars.CTStyle:=sysvar.dwg.DWG_CTStyle^;
-           ivars.CDimStyle:=sysvar.dwg.DWG_CDimStyle^;
+  end;
+  if drawings.GetCurrentDWG.wa.param.seldesc.Selectedobjcount=0 then begin
+    IVars.CColor:=sysvar.dwg.DWG_CColor^;
+    IVars.CLWeight:=sysvar.dwg.DWG_CLinew^;
+    IVars.CLayer:=sysvar.dwg.DWG_CLayer^;
+    IVars.CLType:=sysvar.dwg.DWG_CLType^;
+    IVars.CTStyle:=sysvar.dwg.DWG_CTStyle^;
+    IVars.CDimStyle:=sysvar.dwg.DWG_CDimStyle^;
       end
   else
       begin
@@ -654,7 +652,7 @@ begin
 
           (*mem.init(1024);
           SavedUnit^.SavePasToMem(mem);
-          mem.SaveToFile(expandpath(ProgramPath+'rtl'+PathDelim+'savedvar.pas'));
+          mem.SaveToFile(expandpath(DataPath+'rtl'+PathDelim+'savedvar.pas'));
           mem.done;*)
           end;
      end
@@ -755,9 +753,9 @@ procedure TZCADMainWindow.LoadActions;
 var
    i:integer;
 begin
-  //ToolBarsManager.LoadActions(ProgramPath+'menu/actionscontent.xml');
-  //ToolBarsManager.LoadActions(ProgramPath+'menu/electrotechactionscontent.xml');
-  //ToolBarsManager.LoadActions(ProgramPath+'menu/velecactionscontent.xml');
+  //ToolBarsManager.LoadActions(DataPath+'menu/actionscontent.xml');
+  //ToolBarsManager.LoadActions(DataPath+'menu/electrotechactionscontent.xml');
+  //ToolBarsManager.LoadActions(DataPath+'menu/velecactionscontent.xml');
   StandartActions.OnUpdate:=ActionUpdate;
 
   for i:=low(FileHistory) to high(FileHistory) do
@@ -830,10 +828,10 @@ begin
   DockMaster.MakeDockPanel(DockPanel,admrpChild);
   HardcodedButtonSize:=21;
   {Грузим раскладку окон}
-  if not sysparam.saved.noloadlayout then
+  if not ZCSysParams.saved.noloadlayout then
     LoadLayout_com(TZCADCommandContext.CreateRec,EmptyCommandOperands);
 
-  if sysparam.saved.noloadlayout then
+  if ZCSysParams.saved.noloadlayout then
   begin
        DockMaster.ShowControl('CommandLine', true);
        DockMaster.ShowControl('ObjectInspector', true);
@@ -1017,12 +1015,12 @@ begin
   TZGuiExceptionsHandler.InstallHandler(ZcadException);
 
   SuppressedShortcuts:=TXMLConfig.Create(nil);
-  SuppressedShortcuts.Filename:=ProgramPath+'/components/suppressedshortcuts.xml';
+  SuppressedShortcuts.Filename:=ConcatPaths([GetRoCfgsPath,CFScomponentsDir,CFSsuppressedshortcutsxmlFile]);
 
-  if SysParam.saved.UniqueInstance then
+  if ZCSysParams.saved.UniqueInstance then
     CreateOrRunFIPCServer;
-
-  sysvar.INTF.INTF_DefaultControlHeight^:=sysparam.notsaved.defaultheight;
+  if sysvar.INTF.INTF_DefaultControlHeight<>nil then
+    sysvar.INTF.INTF_DefaultControlHeight^:=ZCSysParams.notsaved.defaultheight;
 
   //DecorateSysTypes;
   self.onclose:=self.FormClose;
@@ -1036,15 +1034,15 @@ begin
 
   InitSystemCalls;
 
-  ImagesManager.ScanDir(ProgramPath+'/images/');
-  ImagesManager.LoadAliasesDir(ProgramPath+'/images/navigator.ima');
+  ImagesManager.ScanDir(ConcatPaths([expandpath('$(DistribPath)'),CFSimagesDir]));
+  ImagesManager.LoadAliasesDir(ConcatPaths([expandpath('$(DistribPath)'),CFSimagesDir,CFSnavigatorimaFile]));
 
   //StandartActions:=TActionList.Create(self);
   InsertComponent(StandartActions);
 
   if not assigned(StandartActions.Images) then
                              StandartActions.Images:={TImageList.Create(StandartActions)}ImagesManager.IconList;
-  brocenicon:=StandartActions.LoadImage(ProgramPath+'/menu/BMP/noimage.bmp');
+  brocenicon:=ImagesManager.DefaultImageIndex;
 
 
   ToolBarsManager.setup(self,StandartActions,sysvar.INTF.INTF_DefaultControlHeight^);
@@ -1055,13 +1053,14 @@ begin
   RegisterGeneralContextCheckFunc('ShiftPressed',@GMCCFShiftPressed);
   RegisterGeneralContextCheckFunc('AltPressed',@GMCCFAltPressed);
   RegisterGeneralContextCheckFunc('ActiveDrawing',@GMCCFActiveDrawing);
+  RegisterGeneralContextCheckFunc('DebugUI',@GMCCFDebugUI);
 
   LoadActions;
   toolbars:=tstringlist.Create;
   toolbars.Sorted:=true;
   CreateInterfaceLists;
 
-  FromDirsIterator(sysvar.PATH.Preload_Path^,'*.cmd0','stage0.cmd0',RunCmdFile,nil);
+  FromDirsIterator(sysvar.PATH.Preload_Paths^,'*.cmd0','stage0.cmd0',RunCmdFile,nil);
 
   CreateAnchorDockingInterface;
   ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIActionRedraw);
@@ -1807,7 +1806,7 @@ procedure TZCADMainWindow.WaShowCursor(Sender:TAbstractViewArea;var DC:TDrawCont
 begin
      if sender.param.lastonmouseobject<>nil then
                                            begin
-                                             PGDBObjEntity(sender.param.lastonmouseobject)^.RenderFeedBack(sender.pdwg.GetPcamera^.POSCOUNT,sender.pdwg^.GetPcamera^, sender.pdwg^.myGluProject2,dc);
+                                             //PGDBObjEntity(sender.param.lastonmouseobject)^.RenderFeedBack(sender.pdwg.GetPcamera^.POSCOUNT,sender.pdwg^.GetPcamera^, sender.pdwg^.myGluProject2,dc);
                                              pGDBObjEntity(sender.param.lastonmouseobject)^.higlight(dc);
                                            end;
 end;
@@ -1822,10 +1821,10 @@ begin
     sender_wa:=sender as TAbstractViewArea
   else
     exit;
-  if sysvar.INTF.INTF_OBJINSP_Properties.INTF_ObjInsp_AlwaysUseMultiSelectWrapper^then
-                                                                                      objcount:=0
-                                                                                  else
-                                                                                      objcount:=1;
+  if sysvar.DWG.DWG_AlwaysUseMultiSelectWrapper^then
+    objcount:=0
+  else
+    objcount:=1;
   if sender_wa.param.SelDesc.Selectedobjcount>objcount then begin
     if drawings.GetCurrentDWG.SelObjArray.Count>0 then begin
       //commandmanager.ExecuteCommandSilent('MultiSelect2ObjIbsp',sender_wa.pdwg,@sender_wa.param)
@@ -1999,14 +1998,14 @@ begin
   else
     FIPCServerRunning:=false;
 
-  if (FIPCServerRunning xor SysParam.saved.UniqueInstance) then
-    case SysParam.saved.UniqueInstance of
+  if (FIPCServerRunning xor ZCSysParams.saved.UniqueInstance) then
+    case ZCSysParams.saved.UniqueInstance of
       false:begin
               UniqueInstanceBase.FIPCServer.StopServer;
             end;
        true:begin
               if CreateOrRunFIPCServer then begin
-                SysParam.saved.UniqueInstance:=false;
+                ZCSysParams.saved.UniqueInstance:=false;
                 ZCMsgCallBackInterface.TextMessage('Other unique instance found',TMWOShowError);
               end;
             end;

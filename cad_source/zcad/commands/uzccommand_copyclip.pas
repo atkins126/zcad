@@ -32,7 +32,8 @@ uses
   uzgldrawcontext,
   uzcdrawings,
   uzccommandsabstract,uzccommandsimpl,
-  uzegeometry,uzegeometrytypes,uzcCommand_Duplicate;
+  uzegeometry,uzegeometrytypes,uzcCommand_Duplicate,
+  uzcFileStructure;
 
 const
   ZCAD_DXF_CLIPBOARD_NAME='DXF2000@ZCADv0.9';
@@ -54,12 +55,13 @@ var
 begin
   if fileexists(utf8tosys(CopyClipFile)) then
     SysUtils.deletefile(CopyClipFile);
-  s:=temppath+'Z$C'+inttohex(random(15),1)+inttohex(random(15),1)+inttohex(random(15),1)+inttohex(random(15),1)
-     +inttohex(random(15),1)+inttohex(random(15),1)+inttohex(random(15),1)+inttohex(random(15),1)+'.dxf';
+  s:=GetTempFileName(GetTempPath,'Z$C','dxf');
+  //s:=GetTempPath+'Z$C'+inttohex(random(15),1)+inttohex(random(15),1)+inttohex(random(15),1)+inttohex(random(15),1)
+  //   +inttohex(random(15),1)+inttohex(random(15),1)+inttohex(random(15),1)+inttohex(random(15),1)+'.dxf';
   CopyClipFile:=s;
-  savedxf2000(s,ProgramPath + '/components/empty.dxf',ClipboardDWG^);
+  savedxf2000(s,ConcatPaths([GetRoCfgsPath,CFScomponentsDir,CFSemptydxfFile]),ClipboardDWG^);
   s:=s+#0;
-  suni:=s;
+  suni:=unicodestring(s);
   Clipboard.Open;
   Clipboard.Clear;
   zcformat:=RegisterClipboardFormat(ZCAD_DXF_CLIPBOARD_NAME);
@@ -79,7 +81,7 @@ begin
     ClipboardDWG.done;
     Freemem(ClipboardDWG);
   end;
-  ClipboardDWG:=drawings.CreateDWG('$(ZCADPath)/rtl/dwg/DrawingVars.pas','');
+  ClipboardDWG:=drawings.CreateDWG('$(DistribPath)/rtl/dwg/DrawingVars.pas','');
   //ClipboardDWG.DimStyleTable.AddItem('Standart',pds);
 end;
 

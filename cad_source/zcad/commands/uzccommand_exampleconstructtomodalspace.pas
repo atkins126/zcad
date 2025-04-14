@@ -24,14 +24,16 @@ interface
 uses
   uzcLog,
   uzccommandsabstract,uzccommandsimpl,
-  uzestyleslayers,uzbtypes,
-  uzcstrconsts,uzccommandsmanager,{uzcdrawings,}uzeentity,//uzccominteractivemanipulators,
+  uzestyleslayers,uzbtypes,gzctnrVectorTypes,UGDBSelectedObjArray,
+  uzcstrconsts,uzccommandsmanager,uzcdrawings,uzeentity,//uzccominteractivemanipulators,
   uzegeometrytypes,
   uzeentmtext,
   uzegeometry,
   uzcutils,
   uzeentabstracttext,
-  uzeentpolyline,uzeconsts,
+  uzeentpolyline,uzeentline,
+  uzeconsts,
+  uzgldrawcontext,
   Varman;
 
 resourcestring
@@ -108,14 +110,43 @@ begin
     zcMoveEntsFromConstructRootToCurrentDrawingWithUndo('ExampleConstructToModalSpace'); //если все ок, копируем в чертеж
   result:=cmd_ok;
 end;
-
+function ExampleRandomizeLines_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
+const
+  ldelta=1000;
+  ldelta2=2000;
+var
+  pv:pGDBObjEntity;
+  ir:itrec;
+  Count:integer;
+  domethod,undomethod:tmethod;
+  psd:PSelectedObjDesc;
+  rc:TDrawContext;
+begin
+  rc:=drawings.GetCurrentDWG^.CreateDrawingRC;
+  psd:=drawings.GetCurrentDWG^.SelObjArray.beginiterate(ir);
+  if psd<>nil then repeat
+    pv:=psd^.objaddr;
+    if pv^.GetObjType=GDBLineID then begin
+      PGDBObjLine(pv)^.CoordInOCS.lBegin.x:=PGDBObjLine(pv)^.CoordInOCS.lBegin.x+ldelta-ldelta2*random;
+      PGDBObjLine(pv)^.CoordInOCS.lBegin.y:=PGDBObjLine(pv)^.CoordInOCS.lBegin.y+ldelta-ldelta2*random;
+      PGDBObjLine(pv)^.CoordInOCS.lEnd.x:=PGDBObjLine(pv)^.CoordInOCS.lEnd.x+ldelta-ldelta2*random;
+      PGDBObjLine(pv)^.CoordInOCS.lEnd.y:=PGDBObjLine(pv)^.CoordInOCS.lEnd.y+ldelta-ldelta2*random;
+      PGDBObjLine(pv)^.FormatAfterEdit(drawings.GetCurrentDWG^,rc);
+    end;
+    psd:=drawings.GetCurrentDWG^.SelObjArray.iterate(ir);
+  until psd=nil;
+  result:=cmd_ok;
+end;
 
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-  SysUnit^.RegisterType(TypeInfo(TCmdProp));
-  SysUnit^.SetTypeDesk(TypeInfo(TCmdProp),['параметры']);
+  if SysUnit<>nil then begin
+    SysUnit^.RegisterType(TypeInfo(TCmdProp));
+    SysUnit^.SetTypeDesk(TypeInfo(TCmdProp),['параметры']);
+  end;
   CmdProp.props.init('test');
   CreateZCADCommand(@ExampleConstructToModalSpace_com,'ExampleConstructToModalSpace',CADWG,0);
+  CreateZCADCommand(@ExampleRandomizeLines_com,'ExampleRandomizeLines',CADWG,0);
 finalization
   ProgramLog.LogOutFormatStr('Unit "%s" finalization',[{$INCLUDE %FILE%}],LM_Info,UnitsFinalizeLMId);
   CmdProp.props.free;

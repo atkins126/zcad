@@ -57,7 +57,7 @@ begin
      if not assigned(StringsTreeSelector) then
      begin
      StringsTreeSelector:=TStringsTreeSelector.create(application.MainForm);
-     StringsTreeSelector.BoundsRect:=GetBoundsFromSavedUnit('StringsTreeSelectorWND',SysParam.notsaved.ScreenX,SysParam.notsaved.Screeny);
+     StringsTreeSelector.BoundsRect:=GetBoundsFromSavedUnit('StringsTreeSelectorWND',ZCSysParams.notsaved.ScreenX,ZCSysParams.notsaved.Screeny);
      end;
      StringsTreeSelector.clear;
      StringsTreeSelector.fill(RepresentationsTree.BlobTree);
@@ -76,7 +76,7 @@ begin
      if not assigned(StringsTreeSelector) then
      begin
      StringsTreeSelector:=TStringsTreeSelector.create(application.MainForm);
-     StringsTreeSelector.BoundsRect:=GetBoundsFromSavedUnit('StringsTreeSelectorWND',SysParam.notsaved.ScreenX,SysParam.notsaved.Screeny);
+     StringsTreeSelector.BoundsRect:=GetBoundsFromSavedUnit('StringsTreeSelectorWND',ZCSysParams.notsaved.ScreenX,ZCSysParams.notsaved.Screeny);
      end;
      StringsTreeSelector.clear;
      StringsTreeSelector.fill(FunctionsTree.BlobTree);
@@ -91,8 +91,8 @@ end;
 
 
 initialization;
-  FunctionsTree.LoadTree(expandpath('$(ZCADPath)/rtl/functions.xml'),InterfaceTranslate);
-  RepresentationsTree.LoadTree(expandpath('$(ZCADPath)/rtl/representations.xml'),InterfaceTranslate);
+  FunctionsTree.LoadTree(expandpath('$(DistribPath)/rtl/functions.xml'),InterfaceTranslate);
+  RepresentationsTree.LoadTree(expandpath('$(DistribPath)/rtl/representations.xml'),InterfaceTranslate);
 
   CreateZCADCommand(@FunctionsTest_com,'ft',CADWG,0);
   CreateZCADCommand(@RepresentationsTest_com,'rt',CADWG,0);

@@ -42,7 +42,7 @@ var
    cleaned:integer;
    s:string;
 begin
-     if sysparam.saved.updatepo then
+     if ZCSysParams.saved.updatepo then
      begin
           begin
                cleaned:=RunTimePO.exportcompileritems(actualypo);
@@ -51,9 +51,9 @@ begin
            +#13#10'File zcadrt.po must be rewriten. Confirm?';
                if ZCMsgCallBackInterface.TextQuestion('UpdatePO',s)=zccbNo then
                  exit;
-               RunTimePO.SaveToFile(expandpath(PODirectory + ZCADRTBackupPOFileName));
-               actualypo.SaveToFile(expandpath(PODirectory + ZCADRTPOFileName));
-               sysparam.saved.updatepo:=false
+               RunTimePO.SaveToFile(expandpath(ConcatPaths([PODirectory,ZCADRTBackupPOFileName])));
+               actualypo.SaveToFile(expandpath(ConcatPaths([PODirectory,ZCADRTPOFileName])));
+               ZCSysParams.saved.updatepo:=false
           end;
      end
         else ZCMsgCallBackInterface.TextMessage(rsAboutCLSwithUpdatePO,TMWOShowError);

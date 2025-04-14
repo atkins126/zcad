@@ -285,6 +285,7 @@ var
    accum:byte;
    pv,pm:pbyte;
    i:integer;
+   tempboolean:boolean;
 begin
   result:=true;
   pvd:=nil;
@@ -292,14 +293,13 @@ begin
   pvd:=DWGUnit^.InterfaceVariables.findvardesc(FVariable);
   if pvd=nil then
   pvd:=SysVarUnit^.InterfaceVariables.findvardesc(FVariable);
-     if pvd<>nil then
-     begin
-          if pvd^.data.PTD.getfacttypedef=@FundamentalBooleanDescriptorOdj then
-                                                        begin
-                                                             PBoolean(pvd^.data.Addr.Instance)^:=not PBoolean(pvd^.data.Addr.Instance)^;
-                                                             Checked:=PBoolean(pvd^.data.Addr.Instance)^;
-                                                        end
-          else if fmask<>0 then
+     if pvd<>nil then begin
+       if pvd^.data.PTD.getfacttypedef=@FundamentalBooleanDescriptorOdj then begin
+         pvd^.data.PTD.GetSuperOrSelfTypedef.CopyInstanceToValue(pvd^.data.Addr.Instance,@tempboolean);
+         tempboolean:=not tempboolean;
+         pvd^.data.PTD.GetSuperOrSelfTypedef.CopyValueToInstance(@tempboolean,pvd^.data.Addr.Instance);
+         Checked:=tempboolean;
+       end else if fmask<>0 then
                                begin
                                     pv:=pvd^.data.Addr.Instance;
                                     pm:=@Fmask;
@@ -348,29 +348,26 @@ end;
 
 procedure TmyVariableAction.AssignToVar(varname:string;mask:DWord);
 var
-   pvd:pvardesk;
-   accum:byte;
-   pv,pm:pbyte;
-   i:integer;
-   tBufer:DWord;
+  pvd:pvardesk;
+  accum:byte;
+  pv,pm:pbyte;
+  i:integer;
+  tBufer:DWord;
+  tempboolean:boolean;
 begin
-//     if varname='DWG_DrawMode' then
-//                                     varname:=varname;
-     FVariable:=varname;
-     Fmask:=mask;
-     pvd:=nil;
-     if DWGUnit<>nil then
-     pvd:=DWGUnit^.InterfaceVariables.findvardesc(FVariable);
-     if pvd=nil then
-     pvd:=SysVarUnit^.InterfaceVariables.findvardesc(FVariable);
-     if pvd<>nil then
-     begin
-          enabled:=true;
-          if pvd^.data.PTD=@FundamentalBooleanDescriptorOdj then
-                                                        begin
-                                                             Checked:=PBoolean(pvd^.data.Addr.Instance)^;
-                                                        end
-          else if fmask<>0 then
+  FVariable:=varname;
+  Fmask:=mask;
+  pvd:=nil;
+  if DWGUnit<>nil then
+  pvd:=DWGUnit^.InterfaceVariables.findvardesc(FVariable);
+  if pvd=nil then
+  pvd:=SysVarUnit^.InterfaceVariables.findvardesc(FVariable);
+  if pvd<>nil then begin
+    enabled:=true;
+    if pvd^.data.PTD.GetFactTypedef=@FundamentalBooleanDescriptorOdj then begin
+      pvd^.data.PTD.GetSuperOrSelfTypedef.CopyInstanceToValue(pvd^.data.Addr.Instance,@tempboolean);
+      Checked:=tempboolean;
+    end else if fmask<>0 then
                                begin
                                     pv:=pvd^.data.Addr.Instance;
                                     pm:=@Fmask;
@@ -442,46 +439,19 @@ begin
 end;
 
 procedure TMyActionListHelper.SetImage(img,identifer:string;var action:TZAction);
-//var
-    //bmp:TBitmap;
 begin
-     if length(img)>1 then
-     begin
-          if img[1]<>'#' then
-                              begin
-                              action.imgstr:='';
-                              action.ImageIndex:=LoadImage(ProgramPath+'/menu/BMP/'+img);
-                              if action.ImageIndex=-1 then
-                                                  begin
-                                                       action.ImageIndex:=brocenicon;
-                                                  end;
-                              if action.ImageIndex=-1 then
-                                                  begin
-                                                       action.imgstr:=img;
-                                                  end;
-
-                              {img:=sysparam.programpath+'menu/BMP/'+img;
-                              if fileexists(img) then
-                              begin
-                              bmp:=TBitmap.create;
-                              bmp.LoadFromFile(img);
-                              bmp.Transparent:=true;
-                              if not assigned(Images) then
-                                                          Images:=TImageList.Create(self);
-                              action.ImageIndex:=Images.Add(bmp,nil);
-                              freeandnil(bmp);
-                              action.imgstr:='';
-                              end
-                              else
-                              begin
-                              end;}
-                              end
-                          else
-                              begin
-                              //action.imgstr:=(system.copy(img,2,length(img)-1));
-                              action.imgstr:=InterfaceTranslate(identifer,system.copy(img,2,length(img)-1));
-                              end;
-     end;
+  if length(img)>1 then begin
+    if img[1]<>'#' then begin
+      action.imgstr:='';
+      action.ImageIndex:=LoadImage(ConcatPaths([GetRoCfgsPath,'menu/BMP',img]));
+      if action.ImageIndex=-1 then
+        action.ImageIndex:=brocenicon;
+      if action.ImageIndex=-1 then
+        action.imgstr:=img;
+    end else begin
+      action.imgstr:=InterfaceTranslate(identifer,system.copy(img,2,length(img)-1));
+    end;
+  end;
 end;
 function FindControlByType(_parent:TWinControl;_class:TClass):TControl;
 var

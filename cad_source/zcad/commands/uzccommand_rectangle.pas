@@ -34,7 +34,7 @@ uses
   //uzbtypes,
   uzegeometry,
   uzccommand_polygon,
-  URecordDescriptor,typedescriptors,Varman;
+  URecordDescriptor,typedescriptors,Varman,varmandef;
 
 type
   //** Тип данных для отображения в инспекторе опций команды Rectangle
@@ -63,20 +63,20 @@ var
   begin
      PInternalRTTITypeDesk:=pointer(SysUnit^.TypeName2PTD('TRectangParam'));//находим описание типа TRectangParam, мы сразу знаем что это описание записи, поэтому нужно привести тип
      pf:=PInternalRTTITypeDesk^.FindField('ET'); //находим описание поля ET
-     pf^.base.Attributes:=pf^.base.Attributes and (not FA_READONLY);//сбрасываем ему флаг ридонли
+     pf^.base.Attributes:=pf^.base.Attributes-[fldaReadOnly];//сбрасываем ему флаг ридонли
      pf:=PInternalRTTITypeDesk^.FindField('PolyWidth'); //находим описание поля ET
-     //pf^.base.Attributes:=pf^.base.Attributes and (not FA_READONLY);//сбрасываем ему флаг ридонли
+     //pf^.base.Attributes:=pf^.base.Attributes and (not fldaReadOnly);//сбрасываем ему флаг ридонли
      //pf:=PInternalRTTITypeDesk^.FindField('VNum');//находим описание поля VNum
-     //pf^.base.Attributes:=pf^.base.Attributes or FA_HIDDEN_IN_OBJ_INSP;//устанавливаем ему флаг cкрытности
-     //pf^.base.Attributes:=pf^.base.Attributes and (not FA_READONLY);//сбрасываем ему флаг ридонли
+     //pf^.base.Attributes:=pf^.base.Attributes or fldaHidden;//устанавливаем ему флаг cкрытности
+     //pf^.base.Attributes:=pf^.base.Attributes and (not fldaReadOnly);//сбрасываем ему флаг ридонли
      zcShowCommandParams(PInternalRTTITypeDesk,@RectangParam);
 
      if commandmanager.get3dpoint(rscmSpecifyFirstPoint,pe.p1)=GRNormal then
      begin
         pf:=PInternalRTTITypeDesk^.FindField('ET');//находим описание поля ET
-        pf^.base.Attributes:=pf^.base.Attributes or FA_READONLY;//устанавливаем ему флаг ридонли
+        pf^.base.Attributes:=pf^.base.Attributes+[fldaReadOnly];//устанавливаем ему флаг ридонли
         pf:=PInternalRTTITypeDesk^.FindField('PolyWidth');//находим описание поля ET
-        pf^.base.Attributes:=pf^.base.Attributes or FA_READONLY;//устанавливаем ему флаг ридонли
+        pf^.base.Attributes:=pf^.base.Attributes+[fldaReadOnly];//устанавливаем ему флаг ридонли
 
        //Создаем сразу 4-е точки прямоугольника, что бы в манипуляторе только управльть их координатами
         widthObj.endw:=RectangParam.PolyWidth;
@@ -138,10 +138,11 @@ var
 
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-
-  SysUnit.RegisterType(TypeInfo(TRectangParam));//регистрируем тип данных в зкадном RTTI
-  SysUnit.SetTypeDesk(TypeInfo(TRectangParam),['ET','PolyWidth'],[FNProgram]);//Даем програмные имена параметрам, по идее это должно быть в ртти, но ненашел
-  SysUnit.SetTypeDesk(TypeInfo(TRectangParam),['Entity type','Polyline width'],[FNUser]);//Даем человечьи имена параметрам
+  if SysUnit<>nil then begin
+    SysUnit.RegisterType(TypeInfo(TRectangParam));//регистрируем тип данных в зкадном RTTI
+    SysUnit.SetTypeDesk(TypeInfo(TRectangParam),['ET','PolyWidth'],[FNProgram]);//Даем програмные имена параметрам, по идее это должно быть в ртти, но ненашел
+    SysUnit.SetTypeDesk(TypeInfo(TRectangParam),['Entity type','Polyline width'],[FNUser]);//Даем человечьи имена параметрам
+  end;
 
   CreateZCADCommand(@DrawRectangle_com,'Rectangle',CADWG,0);
   RectangParam.ET:=RET_3DPoly;

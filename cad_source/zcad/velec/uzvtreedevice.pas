@@ -930,7 +930,7 @@ end;
 //      pvarext:=cableLine^.specialize GetExtension<TVariablesExtender>; //подклчаемся к инспектору
 //      if pvarext<>nil then
 //      begin
-//        psu:=units.findunit(SupportPath,@InterfaceTranslate,'cable'); //
+//        psu:=units.findunit(SupportPaths,@InterfaceTranslate,'cable'); //
 //        if psu<>nil then
 //          pvarext.entityunit.copyfrom(psu);
 //      end;
@@ -1218,10 +1218,10 @@ var
          cableLine^.VertexArrayInOCS.PushBackData(listVertexEdge.listVertex[listInteger[i]].centerPoint);
 
      //**добавление кабельных свойств
-      pvarext:=cableLine^.specialize GetExtension<TVariablesExtender>; //подклчаемся к инспектору
+      pvarext:=cableLine^.specialize GetExtension<TVariablesExtender>; //подключаемся к инспектору
       if pvarext<>nil then
       begin
-        psu:=units.findunit(GetSupportPath,@InterfaceTranslate,'cable'); //
+        psu:=units.findunit(GetSupportPaths,@InterfaceTranslate,'cable'); //
         if psu<>nil then
           pvarext.entityunit.copyfrom(psu);
       end;
@@ -1466,7 +1466,7 @@ begin
                 //**получаем обход графа
                 VPath:=TClassList.Create;
                 listMasterDevice.mutable[i]^.LGroup.mutable[j]^.AllTreeDev.TreeTraversal(tvertex(listMasterDevice[i].LGroup[j].AllTreeDev.Root), VPath); //получаем путь обхода графа
-                //listMasterDevice.mutable[i]^.LGroup.mutable[j].
+                //listMasterDevice.mutable[i]^.LGroup.mutable[j].   globalGraph
                 listInteger:=TVectorofInteger.Create;
 
                 CabellingMountigName:=velec_cableMountingNon;
@@ -1562,6 +1562,17 @@ begin
 
                    //ZCMsgCallBackInterface.TextMessage('вершина отец - '+inttostr(tvertex(VPath[l]).Parent.AsInt32[vGGIndex]),TMWOHistoryOut);
 
+                   //Еще один костыль который решает вопрос методов прокладки, наверное все правильно))))
+                   superlinedev:=PGDBObjSuperLine(listMasterDevice[i].LGroup[j].AllTreeDev.GetEdge(tvertex(VPath[l]).Parent,tvertex(VPath[l])).AsPointer[vGPGDBObjEdge]);
+                   if superlinedev<>nil then
+                       begin
+                         CabellingMountigNamePVD:=FindVariableInEnt(superlinedev,velec_cableMounting);
+                         if CabellingMountigNamePVD<>nil then
+                         begin
+                           CabellingMountigName:=pString(CabellingMountigNamePVD^.data.Addr.Instance)^;
+                           //ZCMsgCallBackInterface.TextMessage('superlinedev<>nil CabellingMountigName=' + CabellingMountigName,TMWOHistoryOut);
+                         end;
+                       end;
 
                   // //Создаем список точек кабеля который передадим в отрисовку кабельной линии
                    if needParent then begin
@@ -1571,12 +1582,17 @@ begin
                        if superlinedev<>nil then
                        begin
                          CabellingMountigNamePVD:=FindVariableInEnt(superlinedev,velec_cableMounting);
+
                          if CabellingMountigNamePVD<>nil then
+                         begin
                            CabellingMountigName:=pString(CabellingMountigNamePVD^.data.Addr.Instance)^;
+                           //ZCMsgCallBackInterface.TextMessage('superlinedev<>nil CabellingMountigName=' + CabellingMountigName,TMWOHistoryOut);
+                         end;
                        end
                        else
                        begin
                          CabellingMountigName:=velec_cableMountingNon;
+                         //ZCMsgCallBackInterface.TextMessage('CabellingMountigName=' + CabellingMountigName,TMWOHistoryOut);
                          superlinedevoneDOcount:=0;
                        end;
                        beforeCabellingMountigName:=CabellingMountigName;
@@ -1610,6 +1626,8 @@ begin
                         begin
                           if (uzvslagcabComParams.settingVizCab.vizFullTreeCab = true) then
                             ZCMsgCallBackInterface.TextMessage('ребро - '+listMasterDevice[i].LGroup[j].AllTreeDev.GetEdge(tvertex(VPath[l-1]),tvertex(VPath[l])).AsString[vGInfoEdge],TMWOHistoryOut);
+
+                          //ZCMsgCallBackInterface.TextMessage('ребро - '+listMasterDevice[i].LGroup[j].AllTreeDev.GetEdge(tvertex(VPath[l-1]),tvertex(VPath[l])).AsString[vGInfoEdge],TMWOHistoryOut);
 
                           //ZCMsgCallBackInterface.TextMessage('ребро - '+listMasterDevice[i].LGroup[j].AllTreeDev.GetEdge(tvertex(VPath[l-1]),tvertex(VPath[l])).AsString[vGInfoEdge],TMWOHistoryOut);
                           //superlinedev:=PGDBObjSuperLine(listMasterDevice[i].LGroup[j].AllTreeDev.GetEdge(tvertex(VPath[l-1]),tvertex(VPath[l])).AsPointer[vGPGDBObjEdge]);
@@ -1646,9 +1664,11 @@ begin
 
                       ///**** костыль что бы первй кабель от ГУ был имел такоеже метод прокладки как и следующий после него
                       //ZCMsgCallBackInterface.TextMessage('superlinedevoneDO ='+ inttostr(superlinedevoneDOcount) + '         beforeCabellingMountigName='+beforeCabellingMountigName+'        CabellingMountigName=' + CabellingMountigName,TMWOHistoryOut);
+//
                       if superlinedevoneDOcount < 2 then
                          beforeCabellingMountigName:=CabellingMountigName;
                       inc(superlinedevoneDOcount);
+
                       //ZCMsgCallBackInterface.TextMessage('222superlinedevoneDO ='+ inttostr(superlinedevoneDOcount) + '         beforeCabellingMountigName='+beforeCabellingMountigName+'        CabellingMountigName=' + CabellingMountigName,TMWOHistoryOut);
 
 

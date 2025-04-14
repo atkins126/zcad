@@ -352,7 +352,7 @@ begin
       pvd:=EntityUnit.FindVariable('VariablesContentReplaceFrom',true);
       if pvd<>nil then
         if pvd^.data.PTD=@FundamentalStringDescriptorObj then begin
-          uou:=pointer(units.findunit(GetSupportPath,InterfaceTranslate,pvd^.GetValueAsString));
+          uou:=pointer(units.findunit(GetSupportPaths,InterfaceTranslate,pvd^.GetValueAsString));
           if uou<>nil then begin
             EntityUnit.free;
             EntityUnit.CopyFrom(uou);
@@ -380,6 +380,7 @@ class function TVariablesExtender.EntIOLoadDollar(_Name,_Value:String;ptu:PExten
 var
     svn,vn,vv:String;
     pvd:pvardesk;
+    pinstance:Pointer;
     offset:Integer;
     tc:PUserTypeDescriptor;
     vardata:TVariablesExtender;
@@ -387,10 +388,12 @@ begin
      extractvarfromdxfstring2(_Value,vn,svn,vv);
      vardata:=PGDBObjEntity(PEnt)^.GetExtension<TVariablesExtender>;
      pvd:=vardata.entityunit.InterfaceVariables.findvardesc(vn);
-     offset:=PtrInt(pvd.data.Addr.Instance);
+     pinstance:=pvd.data.Addr.Instance;
+     offset:=0;
      if pvd<>nil then
        PRecordDescriptor(pvd^.data.PTD)^.ApplyOperator('.',svn,offset,tc);
-     PBaseTypeDescriptor(tc)^.SetValueFromString(pointer(offset),vv);
+     pinstance:=pinstance+offset;
+     PBaseTypeDescriptor(tc)^.SetValueFromString(pinstance,vv);
      result:=true;
 end;
 class function TVariablesExtender.EntIOLoadAmpersand(_Name,_Value:String;ptu:PExtensionData;const drawing:TDrawingDef;PEnt:pointer):boolean;
@@ -432,7 +435,7 @@ var
     vardata:TVariablesExtender;
 begin
      vardata:=PGDBObjEntity(PEnt)^.GetExtension<TVariablesExtender>;
-     usedunit:=pointer(units.findunit(GetSupportPath,InterfaceTranslate,_Value));
+     usedunit:=pointer(units.findunit(GetSupportPaths,InterfaceTranslate,_Value));
      if vardata=nil then
      begin
           vardata:=addvariablestoentity(PEnt);

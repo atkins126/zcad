@@ -42,7 +42,7 @@ TZCADDrawingsManager= object(TZctnrVectorPGDBaseObjects)
                     FileNameCounter:integer;
                     constructor init;
                     constructor initnul;
-                    destructor done;virtual;
+                    procedure done;virtual;
                     //function AfterDeSerialize(SaveFlag:Word; membuf:Pointer):integer;virtual;
 
                     function GetCurrentROOT:PGDBObjGenericSubEntry;
@@ -122,21 +122,23 @@ end;
 
 procedure TZCADDrawingsManager.redrawoglwnd(Sender:TObject;GUIAction:TZMessageID);
 var
-   pdwg:PTSimpleDrawing;
-   DC:TDrawContext;
+  pdwg:PTSimpleDrawing;
+  DC:TDrawContext;
+  Actlt:TVisActuality;
 begin
   if GUIAction=ZMsgID_GUIActionRedrawContent then
   begin
     pdwg:=drawings.GetCurrentDWG;
     if pdwg<>nil then begin
       DC:=pdwg^.CreateDrawingRC;
+      drawings.GetCurrentDWG.UpdateActuality;
       drawings.GetCurrentRoot.FormatAfterEdit(pdwg^,dc);
       pdwg.wa.param.firstdraw := TRUE;
       pdwg.wa.CalcOptimalMatrix;
-      pdwg.pcamera^.totalobj:=0;
-      pdwg.pcamera^.infrustum:=0;
-      drawings.GetCurrentROOT.CalcVisibleByTree(drawings.GetCurrentDWG.pcamera^.frustum,drawings.GetCurrentDWG.pcamera.POSCOUNT,drawings.GetCurrentDWG.pcamera.VISCOUNT,drawings.GetCurrentROOT.ObjArray.ObjTree,pdwg.pcamera^.totalobj,pdwg.pcamera^.infrustum,pdwg^.myGluProject2,pdwg.pcamera.prop.zoom,SysVarRDImageDegradationCurrentDegradationFactor);
-      pdwg.ConstructObjRoot.calcvisible(drawings.GetCurrentDWG.pcamera^.frustum,drawings.GetCurrentDWG.pcamera.POSCOUNT,drawings.GetCurrentDWG.pcamera.VISCOUNT,pdwg.pcamera^.totalobj,pdwg.pcamera^.infrustum,pdwg.myGluProject2,pdwg.getpcamera.prop.zoom,SysVarRDImageDegradationCurrentDegradationFactor);
+      pdwg.pcamera^.Counters.CreateRec(0,0);
+      Actlt.CreateRec(pdwg.pcamera^.VISCOUNT,pdwg.pcamera^.POSCOUNT);
+      drawings.GetCurrentROOT.CalcVisibleByTree(drawings.GetCurrentDWG.pcamera^.frustum,Actlt,drawings.GetCurrentROOT.ObjArray.ObjTree,pdwg.pcamera^.Counters,pdwg^.myGluProject2,pdwg.pcamera.prop.zoom,SysVarRDImageDegradationCurrentDegradationFactor);
+      pdwg.ConstructObjRoot.calcvisible(drawings.GetCurrentDWG.pcamera^.frustum,Actlt,pdwg.pcamera^.Counters,pdwg.myGluProject2,pdwg.getpcamera.prop.zoom,SysVarRDImageDegradationCurrentDegradationFactor);
       pdwg.wa.calcgrid;
       pdwg.wa.draworinvalidate;
     end;
@@ -374,8 +376,8 @@ begin
    { TODO : переделать }
    if typeof(CurrentDWG^)=typeof(TZCADDrawing) then
    begin
-   DWGDBUnit:=PTZCADDrawing(CurrentDWG).DWGUnits.findunit(GetSupportPath,InterfaceTranslate,DrawingDeviceBaseUnitName);
-   DWGUnit:=PTZCADDrawing(CurrentDWG).DWGUnits.findunit(GetSupportPath,InterfaceTranslate,'DrawingVars');
+   DWGDBUnit:=PTZCADDrawing(CurrentDWG).DWGUnits.findunit(GetSupportPaths,InterfaceTranslate,DrawingDeviceBaseUnitName);
+   DWGUnit:=PTZCADDrawing(CurrentDWG).DWGUnits.findunit(GetSupportPaths,InterfaceTranslate,'DrawingVars');
    //DWGUnit.AssignToSymbol(SysVar.DWG.DWG_SnapGrid,'DWG_SnapGrid');
    SysVar.dwg.DWG_SnapGrid:=@CurrentDWG.SnapGrid;
    //DWGUnit.AssignToSymbol(SysVar.DWG.DWG_DrawGrid,'DWG_DrawGrid');
@@ -530,11 +532,11 @@ begin
        CurrentDWG.init(@ProjectUnits);
        dc:=CurrentDWG^.CreateDrawingRC;
        CurrentDWG.pObjRoot^.FormatEntity(CurrentDWG^,dc);
-       //addfromdxf(sysvar.path.Program_Run^+'blocks\el\general\_connector.dxf',@CurrentDWG.ObjRoot);
-       //addfromdxf(sysvar.path.Program_Run^+'blocks\el\general\_nok.dxf',@CurrentDWG.ObjRoot);
-       //addfromdxf(sysvar.path.Program_Run^+'blocks\el\general\_OPS.dxf',@CurrentDWG.ObjRoot);
-       //addfromdxf(sysvar.path.Program_Run^+'sample\test_dxf\teapot.dxf',@CurrentDWG.ObjRoot);
-       //addfromdxf(sysvar.path.Program_Run^+'sample\test_dxf\shema_Poly_Line_Text_Circle_Arc.dxf',@CurrentDWG.ObjRoot);
+       //addfromdxf(sysvar.path.Program_Data^+'blocks\el\general\_connector.dxf',@CurrentDWG.ObjRoot);
+       //addfromdxf(sysvar.path.Program_Data^+'blocks\el\general\_nok.dxf',@CurrentDWG.ObjRoot);
+       //addfromdxf(sysvar.path.Program_Data^+'blocks\el\general\_OPS.dxf',@CurrentDWG.ObjRoot);
+       //addfromdxf(sysvar.path.Program_Data^+'sample\test_dxf\teapot.dxf',@CurrentDWG.ObjRoot);
+       //addfromdxf(sysvar.path.Program_Data^+'sample\test_dxf\shema_Poly_Line_Text_Circle_Arc.dxf',@CurrentDWG.ObjRoot);
   end;
   MainBlockCreateProc:=AddBlockFromDBIfNeed;
   ZCMsgCallBackInterface.RegisterHandler_GUIAction(redrawoglwnd);
@@ -565,7 +567,7 @@ end;*)
 //procedure TZCADDrawing.SetEntFromOriginal(_dest,_source:PGDBObjEntity;PCD_dest,PCD_source:PTDrawingPreCalcData);
 //begin
 //end;
-destructor TZCADDrawingsManager.done;
+procedure TZCADDrawingsManager.done;
 begin
     CurrentDWG:=nil;
     inherited;
@@ -987,7 +989,7 @@ begin
 
   LTypeManager.init(100);
 
-  LTypeManager.LoadFromFile(FindInPaths(GetSupportPath,'zcad.lin'),TLOLoad);
+  LTypeManager.LoadFromFile(FindInPaths(GetSupportPaths,'zcad.lin'),TLOLoad);
 
 
   //FromDirIterator({sysparam.programpath+'fonts/'}'C:\Program Files\AutoCAD 2010\Fonts\','*.shx','',addf,nil);

@@ -21,34 +21,35 @@ unit uzcreginterface;
 interface
 uses uzcsysvars,uzbpaths,uzctranslations,UUnitManager,TypeDescriptors,
      Varman,uzcoidecorations,uzegluinterface,uzcLog,uzccommandlineutil,
-     uzcsysparams;
+     uzeSysParams,uzcSysParams;
 implementation
 var
   system_pas_path:string;
 
 initialization
   DecorateSysTypes;
-  system_pas_path:=expandpath('$(ZCADPath)/rtl/system.pas');
-  units.CreateExtenalSystemVariable(SysVarNotSavedUnit,SysVarNSN,GetSupportPath,system_pas_path,InterfaceTranslate,'RD_GLUVersion','String',@GLUVersion);
+  system_pas_path:=expandpath('$(DistribPath)/rtl/system.pas');
+  units.CreateExtenalSystemVariable(SysVarNotSavedUnit,SysVarNSN,GetSupportPaths,system_pas_path,InterfaceTranslate,'RD_GLUVersion','String',@GLUVersion);
   SysVarNotSavedUnit.AssignToSymbol(SysVar.RD.RD_GLUVersion,'RD_GLUVersion');
   sysvar.RD.RD_GLUVersion^:=GLUVersion;
 
-  units.CreateExtenalSystemVariable(SysVarNotSavedUnit,SysVarNSN,GetSupportPath,system_pas_path,InterfaceTranslate,'RD_GLUExtensions','String',@GLUExtensions);
+  units.CreateExtenalSystemVariable(SysVarNotSavedUnit,SysVarNSN,GetSupportPaths,system_pas_path,InterfaceTranslate,'RD_GLUExtensions','String',@GLUExtensions);
   SysVarNotSavedUnit.AssignToSymbol(SysVar.RD.RD_GLUExtensions,'RD_GLUExtensions');
   sysvar.RD.RD_GLUExtensions^:=GLUExtensions;
 
-  units.CreateExtenalSystemVariable(SysVarUnit,SysVarN,GetSupportPath,system_pas_path,InterfaceTranslate,'INTF_CommandLineEnabled','Boolean',@INTFCommandLineEnabled);
+  units.CreateExtenalSystemVariable(SysVarUnit,SysVarN,GetSupportPaths,system_pas_path,InterfaceTranslate,'INTF_CommandLineEnabled','Boolean',@INTFCommandLineEnabled);
   SysVarUnit.AssignToSymbol(SysVar.INTF.INTF_CommandLineEnabled,'INTF_CommandLineEnabled');
 
-  units.CreateExtenalSystemVariable(SysVarUnit,SysVarN,GetSupportPath,system_pas_path,InterfaceTranslate,'INTF_MessagesSuppressDoubles','TGDB3StateBool',@INTFMessagesSuppressDoubles);
+  units.CreateExtenalSystemVariable(SysVarUnit,SysVarN,GetSupportPaths,system_pas_path,InterfaceTranslate,'INTF_MessagesSuppressDoubles','TGDB3StateBool',@INTFMessagesSuppressDoubles);
   SysVarUnit.AssignToSymbol(SysVar.INTF.INTF_MESSAGES_Properties.INTF_Messages_SuppressDoubles,'INTF_MessagesSuppressDoubles');
 
-  SysVar.sys.SYS_UniqueInstance:=@SysParam.saved.UniqueInstance;
-  SysVar.sys.SYS_NoSplash:=@SysParam.saved.NoSplash;
-  SysVar.sys.SYS_NoLoadLayout:=@SysParam.saved.NoLoadLayout;
-  SysVar.sys.SYS_UpdatePO:=@SysParam.saved.UpdatePO;
-  SysVar.sys.SYS_MemProfiling:=@SysParam.saved.MemProfiling;
-  SysVar.INTF.INTF_LanguageOverride:=@SysParam.saved.LangOverride;
+  SysVar.sys.SYS_UniqueInstance:=@ZCSysParams.saved.UniqueInstance;
+  SysVar.sys.SYS_NoSplash:=@ZCSysParams.saved.NoSplash;
+  SysVar.sys.SYS_NoLoadLayout:=@ZCSysParams.saved.NoLoadLayout;
+  SysVar.sys.SYS_UpdatePO:=@ZCSysParams.saved.UpdatePO;
+  SysVar.sys.SYS_MemProfiling:=@ZCSysParams.saved.MemProfiling;
+  SysVar.sys.SYS_UseExperimentalFeatures:=@ZESysParams.UseExperimentalFeatures;
+  SysVar.INTF.INTF_LanguageOverride:=@ZCSysParams.saved.LangOverride;
 
   SysVarUnit.AssignToSymbol(SysVar.INTF.INTF_ThemedUpToolbars,'INTF_ThemedUpToolbars');
   SysVarUnit.AssignToSymbol(SysVar.INTF.INTF_ThemedRightToolbars,'INTF_ThemedRightToolbars');

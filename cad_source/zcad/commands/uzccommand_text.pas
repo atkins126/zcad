@@ -31,7 +31,8 @@ uses
   URecordDescriptor,typedescriptors,uzeentityfactory,uzegeometry,Varman,
   uzccommandsabstract,uzccmdfloatinsert,uzeentabstracttext,uzeenttext,uzeentmtext,
   uzcinterface,uzcstrconsts,uzccommandsmanager,
-  uzeentity,uzcLog,uzctnrvectorstrings,uzestylestexts,uzeconsts,uzcsysvars,uzctextenteditor;
+  uzeentity,uzcLog,uzctnrvectorstrings,uzestylestexts,uzeconsts,uzcsysvars,uzctextenteditor,
+  varmandef;
 type
 {EXPORT+}
   {REGISTEROBJECTTYPE TextInsert_com}
@@ -43,6 +44,7 @@ type
                        procedure Command(Operands:TCommandOperands); virtual;
                        procedure BuildPrimitives; virtual;
                        procedure Format;virtual;
+                       procedure FormatAfterFielfmod(PField,PTypeDescriptor:Pointer);virtual;
                        function DoEnd(Context:TZCADCommandContext;pdata:Pointer):Boolean;virtual;
   end;
 {EXPORT-}
@@ -76,11 +78,11 @@ begin
      case TextInsertParams.mode of
            TIM_Text:
            begin
-             PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('Oblique',0,FA_READONLY);
-             PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('WidthFactor',0,FA_READONLY);
+             PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('Oblique',[],[fldaReadOnly]);
+             PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('WidthFactor',[],[fldaReadOnly]);
 
-             PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('Width',FA_READONLY,0);
-             PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('LineSpace',FA_READONLY,0);
+             PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('Width',[fldaReadOnly],[]);
+             PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('LineSpace',[fldaReadOnly],[]);
 
                 pt := Pointer(AllocEnt(GDBTextID));
                 pt^.init(@drawings.GetCurrentDWG^.ConstructObjRoot,drawings.GetCurrentDWG^.GetCurrentLayer,sysvar.dwg.DWG_CLinew^,'',nulvertex,2.5,0,1,0,jstl);
@@ -88,11 +90,11 @@ begin
            end;
            TIM_MText:
            begin
-                PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('Oblique',FA_READONLY,0);
-                PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('WidthFactor',FA_READONLY,0);
+                PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('Oblique',[fldaReadOnly],[]);
+                PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('WidthFactor',[fldaReadOnly],[]);
 
-                PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('Width',0,FA_READONLY);
-                PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('LineSpace',0,FA_READONLY);
+                PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('Width',[],[fldaReadOnly]);
+                PRecordDescriptor(TextInsert.commanddata.PTD)^.SetAttrib('LineSpace',[],[fldaReadOnly]);
 
                 pt := Pointer(AllocEnt(GDBMTextID));
                 pgdbobjmtext(pt)^.init(@drawings.GetCurrentDWG^.ConstructObjRoot,drawings.GetCurrentDWG^.GetCurrentLayer,sysvar.dwg.DWG_CLinew^,
@@ -174,6 +176,11 @@ begin
      //redrawoglwnd;
      build(context,'');
 end;
+procedure TextInsert_com.FormatAfterFielfmod(PField,PTypeDescriptor:Pointer);
+begin
+  inherited;
+  Self.Format;
+end;
 
 procedure TextInsert_com.Format;
 var
@@ -219,11 +226,11 @@ end;
 
 initialization
   programlog.LogOutFormatStr('Unit "%s" initialization',[{$INCLUDE %FILE%}],LM_Info,UnitsInitializeLMId);
-  SysUnit^.RegisterType(TypeInfo(PTTextInsertParams));//регистрируем тип данных в зкадном RTTI
-  //SysUnit^.RegisterType(TypeInfo(TTextInsertParams));
-  SysUnit^.SetTypeDesk(TypeInfo(TTextInsertParams),['mode','Style','justify','h','WidthFactor','Oblique','Width','LineSpace','text','runtexteditor']);//Даем програмные имена параметрам, по идее это должно быть в ртти, но ненашел
-  SysUnit^.SetTypeDesk(TypeInfo(TIMode),['TIM_Text','TIM_MText']);//Даем человечьи имена параметрам
-
+  if SysUnit<>nil then begin
+    SysUnit^.RegisterType(TypeInfo(PTTextInsertParams));//регистрируем тип данных в зкадном RTTI
+    SysUnit^.SetTypeDesk(TypeInfo(TTextInsertParams),['mode','Style','justify','h','WidthFactor','Oblique','Width','LineSpace','text','runtexteditor']);//Даем програмные имена параметрам, по идее это должно быть в ртти, но ненашел
+    SysUnit^.SetTypeDesk(TypeInfo(TIMode),['TIM_Text','TIM_MText']);//Даем человечьи имена параметрам
+  end;
   TextInsert.init('Text',0,0);
   TextInsertParams.Style.Enums.init(10);
   TextInsertParams.Style.Selected:=0;

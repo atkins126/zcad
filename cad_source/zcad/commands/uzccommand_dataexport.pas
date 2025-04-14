@@ -228,7 +228,7 @@ begin
          TExporterParser.TGeneralParsedText.GetResultWithPart(Source,(ParsedOperands as TExporterParser.TParsedText).Parts.Mutable[2]^,data,op2,opResultParam);
          ResultParam.L.CodeUnits:=1;
          if ResultParam.P.CodeUnitPos<>OnlyGetLength then begin
-           if MatchesMask(op1,op2,false)
+           if MatchesMask(op1,op2,false,AllMaskOpCodes)
                or (AnsiCompareText(op1,op2)=0) then
              Result[ResultParam.P.CodeUnitPos]:='+'
            else
@@ -398,7 +398,7 @@ end;
 
 function DataExport_com(const Context:TZCADCommandContext;operands:TCommandOperands):TCommandResult;
 type
-  TCmdMode=(CMEmpty,CMWaitFile,CMOptions,CMOptions1,CMOptions2,CMOptions3,CMExport);
+  TCmdMode=(CMWaitFile,CMOptions,CMOptions1,CMOptions2,CMOptions3,CMExport);
 var
   EntsTypeFilter:TEntsTypeFilter;
   EntityIncluder:ParserEntityPropFilter.TGeneralParsedText;
@@ -421,95 +421,106 @@ var
       exit;
     case Mode of
       CMWaitFile:begin
-                   if clFilePrompt=nil then
-                     clFilePrompt:=CMDLinePromptParser.GetTokens(RSCLPDataExportWaitFile);
-                   commandmanager.SetPrompt(clFilePrompt);               //выставляет результат парсинга в командную строчку
-                   commandmanager.ChangeInputMode([IPEmpty],[]);
-                 end;
-       CMOptions:begin
-                   if clOptionsPrompt=nil then
-                     clOptionsPrompt:=CMDLinePromptParser.GetTokens(RSCLPDataExportOptions);
-                   commandmanager.SetPrompt(clOptionsPrompt);
-                   commandmanager.ChangeInputMode([IPEmpty],[]);
-                 end;
+        if clFilePrompt=nil then
+          clFilePrompt:=CMDLinePromptParser.GetTokens(RSCLPDataExportWaitFile);
+        commandmanager.SetPrompt(clFilePrompt);               //выставляет результат парсинга в командную строчку
+        commandmanager.ChangeInputMode([IPEmpty],[]);
+      end;
+      CMOptions:begin
+        if clOptionsPrompt=nil then
+          clOptionsPrompt:=CMDLinePromptParser.GetTokens(RSCLPDataExportOptions);
+        commandmanager.SetPrompt(clOptionsPrompt);
+        commandmanager.ChangeInputMode([IPEmpty],[]);
+      end;
       CMOptions1:begin
-                   ZCMsgCallBackInterface.TextMessage(RSCLPDataExportEntsFilterCurrentValue,TMWOHistoryOut);
-                   ZCMsgCallBackInterface.TextMessage(DataExportParam.EntFilter^,TMWOHistoryOut);
-                   if clOptionsPrompt1=nil then
-                     clOptionsPrompt1:=CMDLinePromptParser.GetTokens(RSCLPDataExportEntsFilterNewValue);
-                   commandmanager.SetPrompt(clOptionsPrompt1);
-                   commandmanager.ChangeInputMode([IPEmpty],[]);
-                 end;
+        ZCMsgCallBackInterface.TextMessage(RSCLPDataExportEntsFilterCurrentValue,TMWOHistoryOut);
+        ZCMsgCallBackInterface.TextMessage(DataExportParam.EntFilter^,TMWOHistoryOut);
+        if clOptionsPrompt1=nil then
+          clOptionsPrompt1:=CMDLinePromptParser.GetTokens(RSCLPDataExportEntsFilterNewValue);
+        commandmanager.SetPrompt(clOptionsPrompt1);
+        commandmanager.ChangeInputMode([IPEmpty],[]);
+      end;
       CMOptions2:begin
-                   ZCMsgCallBackInterface.TextMessage(RSCLPDataExportPropsFilterCurrentValue,TMWOHistoryOut);
-                   ZCMsgCallBackInterface.TextMessage(DataExportParam.PropFilter^,TMWOHistoryOut);
-                   if clOptionsPrompt2=nil then
-                     clOptionsPrompt2:=CMDLinePromptParser.GetTokens(RSCLPDataExportPropsFilterNewValue);
-                   commandmanager.SetPrompt(clOptionsPrompt2);
-                   commandmanager.ChangeInputMode([IPEmpty],[]);
-                 end;
+        ZCMsgCallBackInterface.TextMessage(RSCLPDataExportPropsFilterCurrentValue,TMWOHistoryOut);
+        ZCMsgCallBackInterface.TextMessage(DataExportParam.PropFilter^,TMWOHistoryOut);
+        if clOptionsPrompt2=nil then
+          clOptionsPrompt2:=CMDLinePromptParser.GetTokens(RSCLPDataExportPropsFilterNewValue);
+        commandmanager.SetPrompt(clOptionsPrompt2);
+        commandmanager.ChangeInputMode([IPEmpty],[]);
+      end;
       CMOptions3:begin
-                   ZCMsgCallBackInterface.TextMessage(RSCLPDataExportExportScriptCurrentValue,TMWOHistoryOut);
-                   ZCMsgCallBackInterface.TextMessage(DataExportParam.Exporter^,TMWOHistoryOut);
-                   if clOptionsPrompt3=nil then
-                     clOptionsPrompt3:=CMDLinePromptParser.GetTokens(RSCLPDataExportExportScriptNewValue);
-                   commandmanager.SetPrompt(clOptionsPrompt3);
-                   commandmanager.ChangeInputMode([IPEmpty],[]);
-                 end;
+        ZCMsgCallBackInterface.TextMessage(RSCLPDataExportExportScriptCurrentValue,TMWOHistoryOut);
+        ZCMsgCallBackInterface.TextMessage(DataExportParam.Exporter^,TMWOHistoryOut);
+        if clOptionsPrompt3=nil then
+          clOptionsPrompt3:=CMDLinePromptParser.GetTokens(RSCLPDataExportExportScriptNewValue);
+        commandmanager.SetPrompt(clOptionsPrompt3);
+        commandmanager.ChangeInputMode([IPEmpty],[]);
+      end;
+      CMExport:;//заглушка на варнинг
     end;
     CmdMode:=Mode;
   end;
 
 begin
   zcShowCommandParams(SysUnit^.TypeName2PTD('TDataExportParam'),@DataExportParam);
-  CmdMode:=CMEmpty;
   SetCmdMode(CMWaitFile);
   repeat
     gr:=commandmanager.GetInput('',inpt);
-       case gr of
-             GRId:case commandmanager.GetLastId of
-                                      CLPIdOptions:SetCmdMode(CMOptions);
-                                         CLPIdBack:if CmdMode=CMOptions then
-                                                     SetCmdMode(CMWaitFile)
-                                                   else
-                                                     SetCmdMode(CMOptions);
-                                        CLPIdUser1:SetCmdMode(CMOptions1);
-                                        CLPIdUser2:SetCmdMode(CMOptions2);
-                                        CLPIdUser3:SetCmdMode(CMOptions3);
-                                   CLPIdFileDialog:begin
-                                                     filename:='';
-                                                     if SaveFileDialog(filename,'CSV',CSVFileFilter,'','Export data...') then begin
-                                                       DataExportParam.FileName^:=filename;
-                                                       CmdMode:=CMExport;
-                                                       system.break;
-                                                     end;
-
-                                                   end;
-                  end;
-         GRNormal:case CmdMode of
-                       CMWaitFile:begin
-                                    if inpt<>'' then
-                                      DataExportParam.FileName^:=inpt;
-                                    CmdMode:=CMExport;
-                                    system.break;
-                                  end;
-                       CMOptions1:begin
-                                    if inpt<>'' then
-                                      DataExportParam.EntFilter^:=inpt;
-                                    SetCmdMode(CMOptions);
-                                  end;
-                       CMOptions2:begin
-                                    if inpt<>'' then
-                                      DataExportParam.PropFilter^:=inpt;
-                                    SetCmdMode(CMOptions);
-                                  end;
-                       CMOptions3:begin
-                                    if inpt<>'' then
-                                      DataExportParam.Exporter^:=inpt;
-                                    SetCmdMode(CMOptions);
-                                  end;
-                  end;
-       end;
+    case gr of
+      GRId:
+        case commandmanager.GetLastId of
+          CLPIdOptions:
+            SetCmdMode(CMOptions);
+          CLPIdBack:
+            if CmdMode=CMOptions then
+              SetCmdMode(CMWaitFile)
+            else
+              SetCmdMode(CMOptions);
+          CLPIdUser1:
+            SetCmdMode(CMOptions1);
+          CLPIdUser2:
+            SetCmdMode(CMOptions2);
+          CLPIdUser3:
+            SetCmdMode(CMOptions3);
+          CLPIdFileDialog:begin
+            filename:='';
+            if SaveFileDialog(filename,'CSV',CSVFileFilter,'','Export data...') then begin
+              DataExportParam.FileName^:=filename;
+              CmdMode:=CMExport;
+              break;
+            end;
+          end;
+        end;
+      GRNormal,GRInput:
+        case CmdMode of
+          CMWaitFile:begin
+            if inpt<>'' then
+              DataExportParam.FileName^:=inpt;
+            CmdMode:=CMExport;
+            break;
+          end;
+          CMOptions1:begin
+            if inpt<>'' then
+              DataExportParam.EntFilter^:=inpt;
+            SetCmdMode(CMOptions);
+          end;
+          CMOptions2:begin
+            if inpt<>'' then
+              DataExportParam.PropFilter^:=inpt;
+            SetCmdMode(CMOptions);
+          end;
+          CMOptions3:begin
+            if inpt<>'' then
+              DataExportParam.Exporter^:=inpt;
+            SetCmdMode(CMOptions);
+          end;
+          CMOptions:begin
+            ZCMsgCallBackInterface.TextMessage(format('You enter "%s", but you need select a option',[inpt]),TMWOMessageBox);
+          end;
+          CMExport:;//заглушка на варнинг
+        end;
+      GRCancel:;//заглушка на варнинг
+    end;
   until gr=GRCancel;
 
   if CmdMode=CMExport then begin
@@ -568,25 +579,35 @@ initialization
 
   VU.init('test');
   VU.InterfaceUses.PushBackIfNotPresent(sysunit);
-
-  DataExportParam.EntFilter:=savedunit.FindOrCreateValue('tmpCmdParamSave_DataExportParam_EntFilter','AnsiString').data.Addr.Instance;
-  if DataExportParam.EntFilter^='' then
-    DataExportParam.EntFilter^:='IncludeEntityName(''Cable'');'#13#10'IncludeEntityName(''Device'')';
+  DataExportParam.EntFilter:=nil;
+  DataExportParam.PropFilter:=nil;
+  DataExportParam.Exporter:=nil;
+  if savedunit<>nil then
+    DataExportParam.EntFilter:=savedunit.FindOrCreateValue('tmpCmdParamSave_DataExportParam_EntFilter','AnsiString').data.Addr.Instance;
+  if DataExportParam.EntFilter<>nil then
+    if DataExportParam.EntFilter^='' then
+      DataExportParam.EntFilter^:='IncludeEntityName(''Cable'');'#13#10'IncludeEntityName(''Device'')';
+  if savedunit<>nil then
   DataExportParam.PropFilter:=savedunit.FindOrCreateValue('tmpCmdParamSave_DataExportParam_PropFilter','AnsiString').data.Addr.Instance;
   //if DataExportParam.PropFilter^='' then
   //  DataExportParam.PropFilter:='';
-  DataExportParam.Exporter:=savedunit.FindOrCreateValue('tmpCmdParamSave_DataExportParam_Exporter','AnsiString').data.Addr.Instance;
-  if DataExportParam.Exporter^='' then
-    DataExportParam.Exporter^:='DoIf(SameMask(%%(''EntityName''),''Device''),Export(%%(''EntityName''),''NMO_Name'',@@(''NMO_Name''),''Position'',@@(''Position'')))'+
-                           #10+'DoIf(SameMask(%%(''EntityName''),''Device''),Export(%%(''EntityName''),''NMO_Name'',@@(''NMO_Name''),''Power'',@@(''Power'')))'+
-                           #10+'DoIf(SameMask(%%(''EntityName''),''Cable''),Export(%%(''EntityName''),''NMO_Name'',@@(''NMO_Name''),''AmountD'',@@(''AmountD'')))'+
-                           #10+'DoIf(SameMask(%%(''EntityName''),''Cable''),Export(%%(''EntityName''),''NMO_Name'',@@(''NMO_Name''),''CABLE_Segment'',@@(''CABLE_Segment'')))';
-  DataExportParam.FileName:=savedunit.FindOrCreateValue('tmpCmdParamSave_DataExportParam_FileName','AnsiString').data.Addr.Instance;
-  if DataExportParam.FileName^='' then
-    DataExportParam.FileName^:='d:\test.csv';
-
-  SysUnit^.RegisterType(TypeInfo(TDataExportParam));//регистрируем тип данных в зкадном RTTI
-  SysUnit^.SetTypeDesk(TypeInfo(TDataExportParam),['EntFilter','PropFilter','Exporter','FileName'],[FNProgram]);//Даем програмные имена параметрам, по идее это должно быть в ртти, но ненашел
+  if savedunit<>nil then
+    DataExportParam.Exporter:=savedunit.FindOrCreateValue('tmpCmdParamSave_DataExportParam_Exporter','AnsiString').data.Addr.Instance;
+  if DataExportParam.Exporter<>nil then
+    if DataExportParam.Exporter^='' then
+      DataExportParam.Exporter^:='DoIf(SameMask(%%(''EntityName''),''Device''),Export(%%(''EntityName''),''NMO_Name'',@@(''NMO_Name''),''Position'',@@(''Position'')))'+
+                             #10+'DoIf(SameMask(%%(''EntityName''),''Device''),Export(%%(''EntityName''),''NMO_Name'',@@(''NMO_Name''),''Power'',@@(''Power'')))'+
+                             #10+'DoIf(SameMask(%%(''EntityName''),''Cable''),Export(%%(''EntityName''),''NMO_Name'',@@(''NMO_Name''),''AmountD'',@@(''AmountD'')))'+
+                             #10+'DoIf(SameMask(%%(''EntityName''),''Cable''),Export(%%(''EntityName''),''NMO_Name'',@@(''NMO_Name''),''CABLE_Segment'',@@(''CABLE_Segment'')))';
+  if savedunit<>nil then
+    DataExportParam.FileName:=savedunit.FindOrCreateValue('tmpCmdParamSave_DataExportParam_FileName','AnsiString').data.Addr.Instance;
+  if DataExportParam.FileName<>nil then
+    if DataExportParam.FileName^='' then
+      DataExportParam.FileName^:='d:\test.csv';
+  if SysUnit<>nil then begin
+    SysUnit^.RegisterType(TypeInfo(TDataExportParam));//регистрируем тип данных в зкадном RTTI
+    SysUnit^.SetTypeDesk(TypeInfo(TDataExportParam),['EntFilter','PropFilter','Exporter','FileName'],[FNProgram]);//Даем програмные имена параметрам, по идее это должно быть в ртти, но ненашел
+  end;
 
   CreateZCADCommand(@DataExport_com,'DataExport',  CADWG,0);
 

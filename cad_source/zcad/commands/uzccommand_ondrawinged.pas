@@ -78,32 +78,25 @@ begin
 end;
 
 procedure modifyobj(dist,wc:gdbvertex;save:Boolean;pconobj:pgdbobjEntity;var drawing:TDrawingDef;psa:PGDBSelectedObjArray);
-var i: Integer;
-//  d: Double;
-//  td:tcontrolpointdist;
+var
+  i: Integer;
   tdesc:pselectedobjdesc;
   dc:TDrawContext;
-
 begin
-  if psa^.count > 0 then
-  begin
+  if psa^.count > 0 then begin
     tdesc:=psa^.GetParrayAsPointer;
-    for i := 0 to psa^.count - 1 do
-    begin
+    for i := 0 to psa^.count - 1 do begin
       if tdesc^.pcontrolpoint<>nil then
         if tdesc^.pcontrolpoint^.SelectedCount<>0 then
-        begin
-           {tdesc^.objaddr^}PTAbstractDrawing(@drawing)^{gdb.GetCurrentDWG}.rtmodify(tdesc^.objaddr,tdesc,dist,wc,save);
-        end;
+           PTAbstractDrawing(@drawing)^.rtmodify(tdesc^.objaddr,tdesc,dist,wc,save);
       inc(tdesc);
     end;
   end;
-  if save then
-              begin
-                   dc:=drawing.CreateDrawingRC;
-                   PGDBObjGenericSubEntry(drawing.GetCurrentRootSimple)^.FormatAfterEdit(drawing,dc);
-              end;
 
+  if save then begin
+    dc:=drawing.CreateDrawingRC;
+    PGDBObjEntity(drawing.GetCurrentRootSimple)^.FormatAfterEdit(drawing,dc);
+  end;
 end;
 
 function OnDrawingEd_com.AfterClick(const Context:TZCADCommandContext;wc: GDBvertex; mc: GDBvertex2DI; var button: Byte;osp:pos_record): Integer;
@@ -136,7 +129,7 @@ begin
       drawings.GetCurrentDWG^{.UndoStack}.PushStartMarker('On drawing edit');
       modifyobj(dist,wc,true,pobj,drawings.GetCurrentDWG^,@drawings.GetCurrentDWG^.SelObjArray);
       drawings.GetCurrentDWG^{.UndoStack}.PushEndMarker;
-      drawings.GetCurrentDWG^.SelObjArray.resprojparam(drawings.GetCurrentDWG^.pcamera^.POSCOUNT,drawings.GetCurrentDWG^.pcamera^,@drawings.GetCurrentDWG^.myGluProject2,dc);
+      //drawings.GetCurrentDWG^.SelObjArray.resprojparam(drawings.GetCurrentDWG^.pcamera^.POSCOUNT,drawings.GetCurrentDWG^.pcamera^,@drawings.GetCurrentDWG^.myGluProject2,dc);
 
 
       if fixentities then
@@ -154,19 +147,20 @@ begin
            //tv:=vertexadd(wc,drawings.GetCurrentDWG^.OGLwindow1.param.startgluepoint.dcoord);
            dispmatr:=uzegeometry.CreateTranslationMatrix(createvertex(-tv.x,-tv.y,-tv.z));
 
-           rotmatr:=onematrix;
-           PGDBVertex(@rotmatr[0])^:=xdir;
-           PGDBVertex(@rotmatr[1])^:=ydir;
+           //rotmatr:=onematrix;
+           //PGDBVertex(@rotmatr.mtr[0])^:=xdir;
+           //PGDBVertex(@rotmatr.mtr[1])^:=ydir;
            if pgdbobjentity(osp^.PGDBObject)^.IsHaveLCS then
-                                                           PGDBVertex(@rotmatr[2])^:=PGDBObjWithLocalCS(osp^.PGDBObject)^.Local.basis.OZ
-                                                       else
-                                                           PGDBVertex(@rotmatr[2])^:={ZWCS}normalizevertex(uzegeometry.vectordot(ydir,xdir));
+             rotmatr:=CreateMatrixFromBasis(xdir,ydir,PGDBObjWithLocalCS(osp^.PGDBObject)^.Local.basis.OZ)
+           else
+             rotmatr:=CreateMatrixFromBasis(xdir,ydir,normalizevertex(uzegeometry.vectordot(ydir,xdir)));
+
            //rotmatr:=uzegeometry.MatrixMultiply(dispmatr,rotmatr);
            dispmatr2:=uzegeometry.CreateTranslationMatrix(createvertex(tv.x,tv.y,tv.z));
            //dispmatr:=uzegeometry.MatrixMultiply(rotmatr,dispmatr2);
 
            //drawings.GetCurrentDWG^.SelObjArray.TransformObj(dispmatr);
-           drawings.GetCurrentDWG^.SelObjArray.SetRotateObj(dispmatr,dispmatr2,rotmatr,PGDBVertex(@rotmatr[0])^,PGDBVertex(@rotmatr[1])^,PGDBVertex(@rotmatr[2])^);
+           drawings.GetCurrentDWG^.SelObjArray.SetRotateObj(dispmatr,dispmatr2,rotmatr,PGDBVertex(@rotmatr.mtr[0])^,PGDBVertex(@rotmatr.mtr[1])^,PGDBVertex(@rotmatr.mtr[2])^);
            end;
 
            fixentities:=true;
@@ -200,13 +194,13 @@ begin
            //tv:=vertexadd(wc,drawings.GetCurrentDWG^.OGLwindow1.param.startgluepoint.dcoord);
            dispmatr:=uzegeometry.CreateTranslationMatrix(createvertex(-tv.x,-tv.y,-tv.z));
 
-           rotmatr:=onematrix;
-           PGDBVertex(@rotmatr[0])^:=xdir;
-           PGDBVertex(@rotmatr[1])^:=ydir;
+           //rotmatr:=onematrix;
+           //PGDBVertex(@rotmatr.mtr[0])^:=xdir;
+           //PGDBVertex(@rotmatr.mtr[1])^:=ydir;
            if pgdbobjentity(osp^.PGDBObject)^.IsHaveLCS then
-                                                           PGDBVertex(@rotmatr[2])^:=PGDBObjWithLocalCS(osp^.PGDBObject)^.Local.basis.OZ
-                                                       else
-                                                           PGDBVertex(@rotmatr[2])^:={ZWCS}normalizevertex(uzegeometry.vectordot(ydir,xdir));;
+             rotmatr:=CreateMatrixFromBasis(xdir,ydir,PGDBObjWithLocalCS(osp^.PGDBObject)^.Local.basis.OZ)
+           else
+             rotmatr:=CreateMatrixFromBasis(xdir,ydir,normalizevertex(uzegeometry.vectordot(ydir,xdir)));
            {xdir:=normalizevertex(xdir);
            ydir:=uzegeometry.vectordot(pgdbobjlwPolyline(osp^.PGDBObject).Local.OZ,xdir);
 
@@ -224,7 +218,7 @@ begin
 
 
            //drawings.GetCurrentDWG^.SelObjArray.Transform(dispmatr);
-           drawings.GetCurrentDWG^.SelObjArray.SetRotate(dispmatr,dispmatr2,rotmatr,PGDBVertex(@rotmatr[0])^,PGDBVertex(@rotmatr[1])^,PGDBVertex(@rotmatr[2])^);
+           drawings.GetCurrentDWG^.SelObjArray.SetRotate(dispmatr,dispmatr2,rotmatr,PGDBVertex(@rotmatr.mtr[0])^,PGDBVertex(@rotmatr.mtr[1])^,PGDBVertex(@rotmatr.mtr[2])^);
 
            fixentities:=true;
            end;

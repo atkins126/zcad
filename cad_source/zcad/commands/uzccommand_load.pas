@@ -65,9 +65,9 @@ var
     if cdwg<>nil then begin
       result:=ExtractFileDir(cdwg^.GetFileName);
       if result=''then
-        result:=TempPath;
+        result:=GetTempPath;
     end else
-      result:=TempPath;
+      result:=GetTempPath;
   end;
 
   class function TZCADPathsMacroMethods.MacroFuncCurrentDrawingFileNameOnly(const {%H-}Param: string; const Data: PtrInt;var {%H-}Abort: boolean): string;
@@ -79,9 +79,9 @@ var
       result:=ExtractFileName(cdwg^.GetFileName);
       result:=ChangeFileExt(result,'');
       if result=''then
-        result:=TempPath;
+        result:=GetTempPath;
     end else
-      result:=TempPath;
+      result:=GetTempPath;
   end;
 
   class function TZCADPathsMacroMethods.MacroFuncCurrentDrawingFileName(const {%H-}Param: string; const Data: PtrInt;var {%H-}Abort: boolean): string;
@@ -92,14 +92,14 @@ var
     if cdwg<>nil then begin
       result:=ExtractFileName(cdwg^.GetFileName);
       if result=''then
-        result:=TempPath;
+        result:=GetTempPath;
     end else
-      result:=TempPath;
+      result:=GetTempPath;
   end;
 
   class function TZCADPathsMacroMethods.MacroFuncLastAutoSaveFile(const {%H-}Param: string; const Data: PtrInt;var {%H-}Abort: boolean): string;
   begin
-    result:=ExpandPath(SysParam.saved.LastAutoSaveFile);
+    result:=ExpandPath(ZCSysParams.saved.LastAutoSaveFile);
   end;
 
 
@@ -123,7 +123,7 @@ begin
     if LastFileHandle>=0 then
       loadproc:=Ext2LoadProcMap.vec.GetPLincedData(LastFileHandle)^.FileLoadProcedure;
   end else begin
-    s:=FindInSupportPath(GetSupportPath,operands);
+    s:=FindInPaths(GetSupportPaths,operands);
     if s='' then
     s:=ExpandPath(operands);
   end;
@@ -140,6 +140,7 @@ begin
     ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIActionRedrawContent);
     if assigned(ProcessFilehistoryProc) then
       ProcessFilehistoryProc(s);
+    drawings.GetCurrentDWG^.LostActuality;
     result:=cmd_ok;
   end else begin
     ZCMsgCallBackInterface.TextMessage('LOAD:'+format(rsUnableToOpenFile,[s+'('+Operands+')']),TMWOShowError);

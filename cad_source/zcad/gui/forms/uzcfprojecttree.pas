@@ -136,7 +136,7 @@ begin
                        begin
                             T_ProjectDB.Selected:=nil;
                             self.ProjectEquipmentN.DeleteChildren;
-                            BuildTreeByEQ(ProjectEquipmentN,PTZCADDrawing(drawings.GetCurrentDWG).DWGUnits.findunit(GetSupportPath,InterfaceTranslate,DrawingDeviceBaseUnitName),MenusManager.GetPopupMenu('PROJECTDBCXMENU',nil));
+                            BuildTreeByEQ(ProjectEquipmentN,PTZCADDrawing(drawings.GetCurrentDWG).DWGUnits.findunit(GetSupportPaths,InterfaceTranslate,DrawingDeviceBaseUnitName),MenusManager.GetPopupMenu('PROJECTDBCXMENU',nil));
                             (*
                             ProjectEquipmentNodeN.free;
                             Getmem(pointer(ProjectEquipmentNode.SubNode),sizeof(TGDBTree));
@@ -270,7 +270,7 @@ var
 begin
   inherited;
   //self.Position:=poScreenCenter;
-  self.BoundsRect:=GetBoundsFromSavedUnit('ProjectTreeWND',SysParam.notsaved.ScreenX,SysParam.notsaved.Screeny);
+  self.BoundsRect:=GetBoundsFromSavedUnit('ProjectTreeWND',ZCSysParams.notsaved.ScreenX,ZCSysParams.notsaved.Screeny);
   caption:=rsProjectTree;
   self.borderstyle:=bsSizeToolWin;
 
@@ -346,7 +346,7 @@ begin
 
   BuildTreeByEQ(ProgramEquipmentN,DBUnit,MenusManager.GetPopupMenu('PROGRAMDBCXMENU',nil));
   if drawings.GetCurrentDWG<>nil then
-  BuildTreeByEQ(ProjectEquipmentN,PTZCADDrawing(drawings.GetCurrentDWG).DWGUnits.findunit(GetSupportPath,InterfaceTranslate,DrawingDeviceBaseUnitName),MenusManager.GetPopupMenu('PROJECTDBCXMENU',nil));
+  BuildTreeByEQ(ProjectEquipmentN,PTZCADDrawing(drawings.GetCurrentDWG).DWGUnits.findunit(GetSupportPaths,InterfaceTranslate,DrawingDeviceBaseUnitName),MenusManager.GetPopupMenu('PROJECTDBCXMENU',nil));
 
 end;
 function ProjectTree_com(const Context:TZCADCommandContext;Operands:pansichar):Integer;
@@ -361,8 +361,8 @@ begin
   ProjectTreeForm:=nil;
   BlockCategory.init(100);
   EqCategory.init(100);
-  BlockCategory.loadfromfile(expandpath('$(ZCADPath)/rtl/BlockCategory.cat'));
-  EqCategory.loadfromfile(expandpath('$(ZCADPath)/rtl/EqCategory.cat'));
+  BlockCategory.loadfromfile(expandpath('$(DistribPath)/rtl/BlockCategory.cat'));
+  EqCategory.loadfromfile(expandpath('$(DistribPath)/rtl/EqCategory.cat'));
   CreateZCADCommand(@ProjectTree_com,'ProjectTree',CADWG,0);
 end;
 finalization

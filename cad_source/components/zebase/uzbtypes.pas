@@ -16,10 +16,14 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>)
 }
 unit uzbtypes;
+{$Mode delphi}
+{$ModeSwitch ADVANCEDRECORDS}
 
 interface
-uses uzegeometrytypes,sysutils;
-     //gdbobjectsconstdef;
+uses
+  sysutils,
+  uzegeometrytypes,uzbHandles;
+
 const
      GDBBaseObjectID = 30000;
      ObjN_NotRecognized='NotRecognized';
@@ -27,6 +31,15 @@ type
 TProcCounter=procedure(const PInstance,PCounted:Pointer;var Counter:Integer);
 TControlPointAttr=(CPA_Strech);
 TControlPointAttrs=set of TControlPointAttr;
+TTimeMeter=record
+  private
+    fLPTime:TDateTime;
+  public
+    class function StartMeasure:TTimeMeter;static;
+    procedure EndMeasure;
+    function ElapsedMiliSec:Integer;
+end;
+
 {EXPORT+}
 (*varcategoryforoi SUMMARY='Summary'*)
 (*varcategoryforoi CABLE='Cable params'*)
@@ -64,26 +77,36 @@ GDBaseObject=object
     constructor initnul;
     destructor Done;virtual;{ abstract;}
   end;
-TActulity=Integer;
+TCameraCounters=record
+  totalobj,infrustum:Integer;
+  {-}constructor CreateRec(AT,AI:Integer);{//}
+end;
+TActuality=PtrUInt;
+TVisActuality=record
+  VisibleActualy:TActuality;
+  InfrustumActualy:TActuality;
+  {-}constructor CreateRec(AV,AI:TActuality);{//}
+end;
 TEntUpgradeInfo=LongWord;
 PGDBBaseCamera=^GDBBaseCamera;
 {REGISTEROBJECTTYPE GDBBaseCamera}
 GDBBaseCamera=object(GDBaseObject)
                 modelMatrix:DMatrix4D;
                 fovy:Double;
-                totalobj:Integer;
+                Counters:TCameraCounters;
+                //totalobj:Integer;
                 prop:GDBCameraBaseProp;
                 anglx,angly,zmin,zmax:Double;
                 projMatrix:DMatrix4D;
                 viewport:IMatrix4;
                 clip:DMatrix4D;
                 frustum:ClipArray;
-                infrustum:Integer;
+                //infrustum:Integer;
                 obj_zmax,obj_zmin:Double;
                 DRAWNOTEND:Boolean;
-                DRAWCOUNT:TActulity;
-                POSCOUNT:TActulity;
-                VISCOUNT:TActulity;
+                DRAWCOUNT:TActuality;
+                POSCOUNT:TActuality;
+                VISCOUNT:TActuality;
                 CamCSOffset:GDBvertex;
                 procedure NextPosition;virtual; abstract;
           end;
@@ -178,12 +201,73 @@ TImageDegradation=record
                     end;
 PExtensionData=Pointer;
 TDCableMountingMethod={-}type {//}string;
+
+
+PTZColor=^TZColor;
+TZColor={-}type {//}Longword;
+
+{REGISTERRECORDTYPE TDummyMethod}
+TDummyMethod=record
+  Code:Pointer;
+  Data:Pointer;
+end;
+{REGISTERRECORDTYPE TDummyGetterSetter}
+TDummyGetterSetter=record
+  Getter:TDummyMethod;
+  Setter:TDummyMethod;
+end;
+{-}GGetterSetter<T>=record{//}
+{-}  type{//}
+{-}    TGetter=function:T of object;{//}
+{-}    TSetter=procedure(const AValue:T) of object;{//}
+{-}  var{//}
+{-}    Getter:TGetter;{//}
+{-}    Setter:TSetter;{//}
+{-}  procedure Setup(const AGetter:TGetter;const ASetter:TSetter);{//}
+{-}end;{//}
+TGetterSetterString={-}GGetterSetter<string>{/TDummyGetterSetter/};
+
+PTGetterSetterInteger=^TGetterSetterInteger;
+TGetterSetterInteger={-}GGetterSetter<integer>{/TDummyGetterSetter/};
+
+PTGetterSetterLongWord=^TGetterSetterLongWord;
+TGetterSetterLongWord={-}GGetterSetter<LongWord>{/TDummyGetterSetter/};
+
+
+PTGetterSetterBoolean=^TGetterSetterBoolean;
+TGetterSetterBoolean={-}GGetterSetter<boolean>{/TDummyGetterSetter/};
+
+PTGetterSetterTZColor=^TGetterSetterTZColor;
+TGetterSetterTZColor={-}GGetterSetter<TZColor>{/TDummyGetterSetter/};
+
+{-}GUsable<T>=record                                      {//}
+{-}  public type                                          {//}
+{-}    PT=^T;                                             {//}
+{-}    TSelfType=GUsable<T>;                              {//}
+{-}  private                                              {//}
+{-}    FValue:T;                                          {//}
+{-}    FUsable:Boolean;                                   {//}
+{-}  Public                                               {//}
+{-}    function ValueOrDefault(const ADefaultValue:T):T;  {//}
+{-}    Property Value:T  read FValue write FValue;        {//}
+{-}    Property Usable:Boolean read FUsable write FUsable;{//}
+{-}end;                                                   {//}
+
+PTUsableInteger=^TUsableInteger;
+TUsableInteger={-}GUsable<Integer>;{/record Value:integer; Usable:boolean; end;/}
+
+PTGetterSetterTUsableInteger=^TGetterSetterTUsableInteger;
+TGetterSetterTUsableInteger={-}GGetterSetter<TUsableInteger>{/TDummyGetterSetter/};
+
 PTCalculatedString=^TCalculatedString;
 {REGISTERRECORDTYPE TCalculatedString}
 TCalculatedString=record
   value:string;
   format:string;
 end;
+PFString=^TFString;
+TFString={-}function:string{/pointer/};
+
 TOSnapModeControl=(On,Off,AsOwner);
 TTextJustify=(jstl(*'TopLeft'*),
               jstc(*'TopCenter'*),
@@ -197,16 +281,48 @@ TTextJustify=(jstl(*'TopLeft'*),
               jsbtl(*'Left'*),
               jsbtc(*'Center'*),
               jsbtr(*'Right'*));
-
-PTZColor=^TZColor;
-TZColor={-}type {//}Integer;
 {EXPORT-}
+TZHandleCreator=GTSimpleHandles<TActuality,GTHandleManipulator<TActuality>>;
+
+var
+  zeHandles:TZHandleCreator;
+
 function IsIt(PType,PChecedType:Pointer):Boolean;
 
 {$IFDEF DELPHI}
 function StrToQWord(const sh:string):UInt64;
 {$ENDIF}
 implementation
+
+procedure GGetterSetter<T>.Setup(const AGetter:TGetter;const ASetter:TSetter);
+begin
+  Getter:=AGetter;
+  Setter:=ASetter;
+end;
+
+class function TTimeMeter.StartMeasure:TTimeMeter;static;
+begin
+  result.fLPTime:=now();
+end;
+procedure TTimeMeter.EndMeasure;
+begin
+  fLPTime:=now()-fLPTime;
+end;
+function TTimeMeter.ElapsedMiliSec:Integer;
+begin
+  result:=round(fLPTime*10e7);
+end;
+
+constructor TCameraCounters.CreateRec(AT,AI:Integer);
+begin
+  totalobj:=AT;
+  infrustum:=AI;
+end;
+constructor TVisActuality.CreateRec(AV,AI:TActuality);
+begin
+  VisibleActualy:=AV;
+  InfrustumActualy:=AI;
+end;
 
 function GDBaseObject.GetObjType:Word;
 begin
@@ -272,7 +388,16 @@ begin
       result:=strtoint(sh);
 end;
 {$ENDIF}
+function GUsable<T>.ValueOrDefault(const ADefaultValue:T):T;
 begin
-
+  if FUsable then
+    result:=FValue
+  else
+    result:=ADefaultValue
+end;
+initialization
+  zeHandles.init;
+finalization
+  zeHandles.done;
 end.
 

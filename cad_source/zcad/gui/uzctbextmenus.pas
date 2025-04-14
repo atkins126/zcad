@@ -42,7 +42,8 @@ uses
        uzcimagesmanager,
   {}
        uzmacros,uzxmlnodesutils,
-       uzcguimanager;
+       uzcguimanager,
+    uzcFileStructure;
 type
   PTDummyMyActionsArray=^TDummyMyActionsArray;
   TDummyMyActionsArray=Array [0..0] of TmyAction;
@@ -78,7 +79,14 @@ var
   OpenedDrawings:TOpenedDrawings;
 
   localpm:TFiletoMenuIteratorData;
+function CreateTBShowAction(AAcnName:string;ATBName,ATBCaption:string;AAcnLst:TActionList):TmyAction;
 implementation
+
+const
+  CDxfMask='*.dxf';
+  CDwgMask='*.dwg';
+  CDxf='Dxf';
+  CParentDir='..';
 
 {function FindMenuItem(name,localizedcaption:string;RootMenuItem:TMenuItem):TMenuItem;
 var
@@ -109,9 +117,9 @@ end;
 class procedure ZMenuExt.ZMenuExtSampleFiles(MT:TMenuType;fmf:TForm;aName: string;aNode: TDomNode;actlist:TActionList;RootMenuItem:TMenuItem;MPF:TMacroProcessFunc);
 begin
   localpm.localpm:=RootMenuItem;
-  localpm.ImageIndex:=ImagesManager.GetImageIndex('Dxf');
-  FromDirIterator(expandpath('$(ZCADPath)//examples'),'*.dxf','',@bugfileiterator,nil);
-  FromDirIterator(expandpath('$(ZCADPath)//examples'),'*.dwg','',@bugfileiterator,nil);
+  localpm.ImageIndex:=ImagesManager.GetImageIndex(CDxf);
+  FromDirIterator(GetPathsInDistribPath(CFSexamplesDir),CDxfMask,'',@bugfileiterator,nil);
+  FromDirIterator(GetPathsInDistribPath(CFSexamplesDir),CDwgMask,'',@bugfileiterator,nil);
   localpm.localpm:=nil;
   localpm.ImageIndex:=-1;
 end;
@@ -119,8 +127,8 @@ end;
 class procedure ZMenuExt.ZMenuExtDebugFiles(MT:TMenuType;fmf:TForm;aName: string;aNode: TDomNode;actlist:TActionList;RootMenuItem:TMenuItem;MPF:TMacroProcessFunc);
 begin
   localpm.localpm:=RootMenuItem;
-  localpm.ImageIndex:=ImagesManager.GetImageIndex('Dxf');
-  FromDirIterator(expandpath('$(ZCADPath)/../errors/'),'*.dxf','',@bugfileiterator,nil);
+  localpm.ImageIndex:=ImagesManager.GetImageIndex(CDxf);
+  FromDirIterator(ExpandPath(ConcatPaths([GetBinaryPath,CParentDir,CParentDir,CParentDir,CFSerrorsDir])),CDxfMask,'',@bugfileiterator,nil);
   localpm.localpm:=nil;
   localpm.ImageIndex:=-1;
 end;
@@ -337,6 +345,18 @@ begin
     CreatedMenuItem.Action:=OpenedDrawings[i];
     RootMenuItem.Add(CreatedMenuItem);
   end;
+end;
+
+function CreateTBShowAction({fmf:TForm;}AAcnName:string;ATBName,ATBCaption:string;AAcnLst:TActionList):TmyAction;
+begin
+  result:=TmyAction.Create({fmf}AAcnLst);
+  result.Name:=AAcnName;
+  result.Caption:=ATBCaption;
+  result.command:='ShowToolBar';
+  result.options:=ATBName;
+  result.DisableIfNoHandler:=false;
+  AAcnLst.AddMyAction(result);
+  result.pfoundcommand:=commandmanager.FindCommand(result.command);
 end;
 
 class procedure ZMenuExt.TTBRegisterInAPPFunc(fmf:TForm;actlist:TActionList;aTBNode: TDomNode;aName,aType: string;Data:Pointer);

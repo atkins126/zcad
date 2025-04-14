@@ -1,7 +1,0 @@
-cfgAddSupportPath($(CurrentMacrosPath))
-cfgAddSupportPath($(CurrentMacrosPath)schemes)
-cfgAddSupportPath($(CurrentMacrosPath)plan$(DirectorySeparator)sockets)
-cfgAddSupportPath($(CurrentMacrosPath)plan$(DirectorySeparator)shields)
-cfgAddSupportPath($(CurrentMacrosPath)plan$(DirectorySeparator)elreceiver)
-cfgAddSupportPath($(CurrentMacrosPath)plan$(DirectorySeparator)lighting)
-LoadPalettes($(CurrentMacrosPath)velectrical.xml)

@@ -33,7 +33,9 @@ uses
   uzcgui2linewidth,uzcflineweights,uzcgui2textstyles,uzcgui2dimstyles,
   uzedrawingsimple,uzcdrawing,uzcuidialogs,uzbstrproc,
   uzestyleslayers,zUndoCmdChgBaseTypes,uzcutils,gzctnrVectorTypes,uzcCtrlFindEditBox,
-  zUndoCmdChgTypes;
+  zUndoCmdChgTypes,uzcLog,uzcFileStructure;
+const
+  CToolBarCaptionTranslateFormat='toolbar_caption~%s';
 type
   TMyToolbar=class(TToolBar)
     public
@@ -54,7 +56,7 @@ type
     class procedure TBTStyleComboBoxCreateFunc(fmf:TForm;actlist:TActionList;aNode: TDomNode; TB:TToolBar);
     class procedure TBDimStyleComboBoxCreateFunc(fmf:TForm;actlist:TActionList;aNode: TDomNode; TB:TToolBar);
     class procedure TBVariableCreateFunc(fmf:TForm;actlist:TActionList;aNode: TDomNode; TB:TToolBar);
-    class function TBCreateZCADToolBar(aName,atype: string):TToolBar;
+    class function TBCreateZCADToolBar(fmf:TForm;aName,aCaption,atype: string):TToolBar;
     class procedure ZActionsReader(aName: string;aNode: TDomNode;CategoryOverrider:string;actlist:TActionList);
     class procedure ZAction2VariableReader(aName: string;aNode: TDomNode;CategoryOverrider:string;actlist:TActionList);
 
@@ -272,77 +274,72 @@ var
   SubNode: TDomNode;
   i:integer;
   proxy:TPopUpMenyProxyAction;
-  tbutton:TZToolButton;
+  tmpBtn:TZToolButton;
   MPF:TMacroProcessFunc;
 begin
   ActionIndex:=getAttrValue(aNode,'Index',0);
-  tbutton:=TZToolButton.Create(tb);
+  tmpBtn:=TZToolButton.Create(tb);
   begin
-    //tbutton.style:=tbsButtonDrop;
-    tbutton.ShowCaption:=false;
-    tbutton.ShowHint:=true;
-    tbutton.PopupMenu:=TPopupMenu.Create(application);
-    tbutton.PopupMenu.Images:=actlist.Images;
-    {if assigned(_action) then
-      Caption:=_action.imgstr;}
-    tbutton.Parent:=tb;
-    tbutton.Visible:=true;
+    tmpBtn.ShowCaption:=false;
+    tmpBtn.ShowHint:=true;
+    tmpBtn.PopupMenu:=TPopupMenu.Create(application);
+    tmpBtn.PopupMenu.Images:=actlist.Images;
+    tmpBtn.Parent:=tb;
+    tmpBtn.Visible:=true;
 
     if assigned(aNode) then
       SubNode:=aNode.FirstChild;
     if assigned(SubNode) then
       while assigned(SubNode)do
       begin
-        TMenuDefaults.TryRunMenuCreateFunc(TMenuType.TMT_PopupMenu,fmf,SubNode.NodeName,SubNode,actlist,tmenuitem(tbutton.PopupMenu),mpf);
+        TMenuDefaults.TryRunMenuCreateFunc(TMenuType.TMT_PopupMenu,fmf,SubNode.NodeName,SubNode,actlist,tmenuitem(tmpBtn.PopupMenu){,mpf});
         SubNode:=SubNode.NextSibling;
       end;
-    if (ActionIndex>=0)and(ActionIndex<tbutton.PopupMenu.Items.Count) then
-      tbutton.action:=tbutton.PopupMenu.Items[ActionIndex].action;
-    for i:=0 to tbutton.PopupMenu.Items.Count-1 do
+    if (ActionIndex>=0)and(ActionIndex<tmpBtn.PopupMenu.Items.Count) then
+      tmpBtn.action:=tmpBtn.PopupMenu.Items[ActionIndex].action;
+    for i:=0 to tmpBtn.PopupMenu.Items.Count-1 do
     begin
-      if assigned(tbutton.PopupMenu.Items[i].action)then begin
+      if assigned(tmpBtn.PopupMenu.Items[i].action)then begin
         proxy:=TPopUpMenyProxyAction.Create(Application);
-        proxy.MainAction:=TAction(tbutton.PopupMenu.Items[i].action);
-        proxy.ToolButton:=tbutton;
-        proxy.Assign(tbutton.PopupMenu.Items[i].action);
-        tbutton.PopupMenu.Items[i].action:=proxy;
-        if proxy.MainAction.ImageIndex<>-1 then tbutton.caption:='';
+        proxy.MainAction:=TAction(tmpBtn.PopupMenu.Items[i].action);
+        proxy.ToolButton:=tmpBtn;
+        proxy.Assign(tmpBtn.PopupMenu.Items[i].action);
+        tmpBtn.PopupMenu.Items[i].action:=proxy;
+        if proxy.MainAction.ImageIndex<>-1 then tmpBtn.caption:='';
       end;
     end;
-    //Caption:='';
   end;
 end;
 
 procedure SetImage(actlist:TActionList;ppanel:TToolBar;b:TToolButton;img:string;autosize:boolean;identifer:string);
 var
-    bmp:Graphics.TBitmap;
+  bmp:Graphics.TBitmap;
 begin
-     if length(img)>1 then
-     begin
-          if img[1]<>'#' then
-                              begin
-                              img:={SysToUTF8}(ProgramPath)+'/menu/BMP/'+img;
-                              bmp:=Graphics.TBitmap.create;
-                              bmp.LoadFromFile(img);
-                              bmp.Transparent:=true;
-                              if not assigned(ppanel.Images) then
-                                                                 ppanel.Images:=actlist.Images;
-                              b.ImageIndex:=
-                              ppanel.Images.Add(bmp,nil);
-                              freeandnil(bmp);
-                              //-----------b^.SetImageFromFile(img)
-                              end
-                          else
-                              begin
-                              b.caption:=(system.copy(img,2,length(img)-1));
-                              b.caption:=InterfaceTranslate(identifer,b.caption);
-                              if autosize then
-                               if utf8length(img)>3 then
-                                                    b.Font.size:=11-utf8length(img);
-                              end;
-     end;
-                              b.Height:=ppanel.ButtonHeight;
-                              b.Width:=ppanel.ButtonWidth;
+  if length(img)>1 then begin
+    if img[1]<>'#' then begin
+      img:=ConcatPaths([GetRoCfgsPath,'menu/BMP',img]);
+      bmp:=Graphics.TBitmap.create;
+      try
+        bmp.LoadFromFile(img);
+        bmp.Transparent:=true;
+        if not assigned(ppanel.Images) then
+          ppanel.Images:=actlist.Images;
+        b.ImageIndex:=
+        ppanel.Images.Add(bmp,nil);
+      except
+        programlog.LogOutStr(sysutils.format('Image "%s" not not found',[img]),LM_Error);
+      end;
+      bmp.free;
+    end else begin
+      b.caption:=(system.copy(img,2,length(img)-1));
+      b.caption:=InterfaceTranslate(identifer,b.caption);
+      if autosize then
+        if utf8length(img)>3 then
+          b.Font.size:=11-utf8length(img);
+    end;
+  end;
+  b.Height:=ppanel.ButtonHeight;
+  b.Width:=ppanel.ButtonWidth;
 end;
 
 class procedure TZTBZCADExtensions.TBButtonCreateFunc(fmf:TForm;actlist:TActionList;aNode: TDomNode; TB:TToolBar);
@@ -393,7 +390,7 @@ begin
   if actionshortcuts<>'' then begin
     repeat
           GetPartOfPath(actionshortcut,actionshortcuts,'|');
-          action.SecondaryShortCuts.AddObject(actionshortcut,TObject(pointer(MyTextToShortCut(actionshortcut))));
+          action.SecondaryShortCuts.AddObject(actionshortcut,TObject(MyTextToShortCut(actionshortcut)));
     until actionshortcuts='';
   end;
   actioncommand:=getAttrValue(aNode,'Command','');
@@ -628,7 +625,7 @@ var
     s:string;
 begin
   if sender is TComboBox then begin
-    s:=ProgramPath+'/components/'+(sender as TComboBox).text+'.xml';
+    s:=ConcatPaths([GetRoCfgsPath,CFScomponentsDir,(sender as TComboBox).text+'.xml']);
     LoadLayoutFromFile(s);
   end;
 end;
@@ -653,7 +650,7 @@ begin
   result:=TComboBox.Create(tb);
   result.Style:=csDropDownList;
   result.Sorted:=true;
-  FromDirIterator(ProgramPath+'/components/','*.xml','',addfiletoLayoutbox,nil,pointer(result));
+  FromDirsIterator(GetPathsInCfgsPaths(CFScomponentsDir),'*.xml','',addfiletoLayoutbox,nil,pointer(result));
   result.OnChange:=ChangeLayout;
 
   s:=extractfilename(sysvar.PATH.LayoutFile^);
@@ -840,10 +837,11 @@ begin
   enabledcontrols.Add(DimStyleBox);
 end;
 
-class function TZTBZCADExtensions.TBCreateZCADToolBar(aName,atype: string):TToolBar;
+class function TZTBZCADExtensions.TBCreateZCADToolBar(fmf:TForm;aName,aCaption,atype: string):TToolBar;
 begin
-  result:=TmyToolBar.Create(Application);
-  ToolBarsManager.SetupDefaultToolBar(aName,atype, result);
+  result:=TmyToolBar.Create(fmf);
+  aCaption:=InterfaceTranslate(format(CToolBarCaptionTranslateFormat,[aName]),aCaption);
+  ToolBarsManager.SetupDefaultToolBar(aName,aCaption,atype,result);
 end;
 
 class procedure TZTBZCADExtensions.TBVariableCreateFunc(fmf:TForm;actlist:TActionList;aNode: TDomNode; TB:TToolBar);

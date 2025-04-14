@@ -23,7 +23,7 @@ unit uzeentspline;
 interface
 uses
   uzegluinterface,uzeentityfactory,uzgldrawcontext,uzgloglstatemanager,
-  gzctnrVector,UGDBPoint3DArray,uzedrawingdef,uzecamera,UGDBVectorSnapArray,
+  UGDBPoint3DArray,uzedrawingdef,uzecamera,UGDBVectorSnapArray,
   uzestyleslayers,uzeentsubordinated,uzeentcurve,
   uzeentity,uzctnrVectorBytes,uzbtypes,uzeconsts,uzglviewareadata,
   gzctnrVectorTypes,uzegeometrytypes,uzegeometry,uzeffdxfsupport,sysutils,
@@ -111,7 +111,7 @@ end;
 
 function GDBObjSpline.getsnap;
 begin
-  result:=GDBPoint3dArraygetsnap(VertexArrayInWCS,PProjPoint,{snaparray}PGDBVectorSnapArray(pdata)^,osp,closed,param,ProjectProc,snapmode);
+  result:=GDBPoint3dArraygetsnapWOPProjPoint(VertexArrayInWCS,{snaparray}PGDBVectorSnapArray(pdata)^,osp,closed,param,ProjectProc,snapmode);
 end;
 
 procedure NurbsVertexCallBack(const v: PGDBvertex3S;const Data: Pointer);{$IFDEF Windows}stdcall{$ELSE}cdecl{$ENDIF};
@@ -213,7 +213,7 @@ begin
 
   CP.done;
   AproxPointInWCS.Shrink;
-
+  CalcActualVisible(dc.DrawingContext.VActuality);
   Representation.Clear;
   if (not (ESTemp in State))and(DCODrawable in DC.Options) then
     Representation.DrawPolyLineWithLT(dc,AproxPointInWCS,vp,false,false);

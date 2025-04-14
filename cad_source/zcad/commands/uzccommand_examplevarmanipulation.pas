@@ -73,7 +73,7 @@ begin
       ProcessVariableAttributes(pvd^.attrib,vda_RO,0);//ставим ридонли для инспектора
 
       //пытаемся найти или загрузить модуль
-      pu:=units.findunit(GetSupportPath,//пути по которым будет искаться юнит если он еще небыл загружен
+      pu:=units.findunit(GetSupportPaths,//пути по которым будет искаться юнит если он еще небыл загружен
                          InterfaceTranslate,//процедура локализации которая будет пытаться перевести на русский все что можно при загрузке
                          'uentrepresentation');//имя модуля
       if pu<>nil then begin //если нашли
@@ -90,7 +90,7 @@ begin
             pvd:=Varext.entityunit.FindVariable(VarName);//находим описатель созданой переменной
             pvd^.username:=pvd2^.username;//пользовательское имя устанавливаем отдлельно
 
-            pvd2^.data.PTD.CopyInstanceTo(pvd2^.data.Addr.Instance,pvd.data.Addr.Instance);//копируем значение из старой переменной в новую
+            pvd2^.data.PTD.CopyValueToInstance(pvd2^.data.Addr.Instance,pvd.data.Addr.Instance);//копируем значение из старой переменной в новую
 
             pvd2:=pu^.InterfaceVariables.vardescarray.iterate(ir); //следующая переменная
           until pvd2=nil;

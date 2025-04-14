@@ -47,14 +47,14 @@ var //t:PUserTypeDescriptor;
 begin
      if commandmanager.ContextCommandParams<>nil then
      begin
-           pu:=PTZCADDrawing(drawings.GetCurrentDWG).DWGUnits.findunit(GetSupportPath,InterfaceTranslate,DrawingDeviceBaseUnitName);
+           pu:=PTZCADDrawing(drawings.GetCurrentDWG).DWGUnits.findunit(GetSupportPaths,InterfaceTranslate,DrawingDeviceBaseUnitName);
            pvd:=pu^.FindVariable('DBCounter');
            vn:=inttostr(Integer(pvd.data.Addr.Instance^));
            vn:='_EQ'+dupestring('0',6-length(vn))+vn;
            pu.CreateVariable(vn,PUserTypeDescriptor(PTHardTypedData(commandmanager.ContextCommandParams).ptd)^.TypeName);
            p:=pu.FindVariable(vn).data.Addr.Instance;
            PObjectDescriptor(PTHardTypedData(commandmanager.ContextCommandParams)^.ptd)^.RunMetod('initnul',p);
-           PUserTypeDescriptor(PTHardTypedData(commandmanager.ContextCommandParams)^.ptd)^.CopyInstanceTo(PTHardTypedData(commandmanager.ContextCommandParams)^.Instance,p);
+           PUserTypeDescriptor(PTHardTypedData(commandmanager.ContextCommandParams)^.ptd)^.CopyValueToInstance(PTHardTypedData(commandmanager.ContextCommandParams)^.Instance,p);
            //PObjectDescriptor(PTTypedData(commandmanager.ContextCommandParams)^.ptd)^.RunMetod('format',p);
            inc(Integer(pvd.data.Addr.Instance^));
      end
@@ -73,7 +73,7 @@ var
 begin
      if commandmanager.ContextCommandParams<>nil then
      begin
-           pu:=PTZCADDrawing(drawings.GetCurrentDWG).DWGUnits.findunit(GetSupportPath,InterfaceTranslate,DrawingDeviceBaseUnitName);
+           pu:=PTZCADDrawing(drawings.GetCurrentDWG).DWGUnits.findunit(GetSupportPaths,InterfaceTranslate,DrawingDeviceBaseUnitName);
            pdbv:=pu.InterfaceVariables.findvardescbyinst(PTHardTypedData(commandmanager.ContextCommandParams)^.Instance);
            if pdbv<>nil then
            begin
@@ -131,7 +131,7 @@ begin
           pum:=drawing.GetDWGUnits;
           if pum<>nil then
           begin
-            pdbu:=pum^.findunit(GetSupportPath,InterfaceTranslate,DrawingDeviceBaseUnitName);
+            pdbu:=pum^.findunit(GetSupportPaths,InterfaceTranslate,DrawingDeviceBaseUnitName);
             if pdbu<>nil then
             begin
               pdbv:=pdbu^.FindVariable(pstring(pvn.data.Addr.Instance)^);
@@ -161,7 +161,7 @@ var //t:PUserTypeDescriptor;
 begin
      if commandmanager.ContextCommandParams<>nil then
      begin
-           pu:=PTZCADDrawing(drawings.GetCurrentDWG).DWGUnits.findunit(GetSupportPath,InterfaceTranslate,DrawingDeviceBaseUnitName);
+           pu:=PTZCADDrawing(drawings.GetCurrentDWG).DWGUnits.findunit(GetSupportPaths,InterfaceTranslate,DrawingDeviceBaseUnitName);
            pdbv:=pu.InterfaceVariables.findvardescbyinst(PTHardTypedData(commandmanager.ContextCommandParams)^.Instance);
            if pdbv<>nil then
            begin

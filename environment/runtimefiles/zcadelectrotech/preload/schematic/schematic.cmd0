@@ -1,4 +1,0 @@
-cfgAddSupportPath($(CurrentMacrosPath))
-cfgAddSupportPath($(CurrentMacrosPath)rtl)
-cfgAddSupportPath($(CurrentMacrosPath)rtl$(DirectorySeparator)include)
-LoadPalettes($(CurrentMacrosPath)$(DirectorySeparator)schematic.xml)

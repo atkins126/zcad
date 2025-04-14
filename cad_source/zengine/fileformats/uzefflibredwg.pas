@@ -79,7 +79,8 @@ begin
         exit;
       end;
     end;
-    fillchar(dwg,sizeof(dwg),0);
+    //fillchar(dwg,sizeof(dwg),0);
+    dwg:=default(Dwg_Data);
     dwg.opts:=0;
     zDebugLn(['{WH}try load file: ',ansistring(filename)]);
     lph:=lps.StartLongProcess('LibreDWG.dwg_read_file',nil);
@@ -92,7 +93,7 @@ begin
     zDebugLn(['{WH}Success: ',Success]);
     DebugDWG(@dwg);
     lph:=lps.StartLongProcess('Parse DWG data',nil,dwg.num_objects);
-    ZCDWGParser.parseDwg_Data(ZCDCtx,dwg,@PLP,pointer(lph));
+    ZCDWGParser.parseDwg_Data(ZCDCtx,dwg,@PLP,TData(lph));
     lps.EndLongProcess(lph);
     dwg_free(@dwg);
   finally
@@ -115,7 +116,8 @@ begin
         exit;
       end;
     end;
-    fillchar(dwg,sizeof(dwg),0);
+    //fillchar(dwg,sizeof(dwg),0);
+    dwg:=default(Dwg_Data);
     dwg.opts:=0;
     zDebugLn(['{WH}try load file: ',ansistring(filename)]);
     lph:=lps.StartLongProcess('LibreDWG.dxf_read_file',nil);
@@ -124,7 +126,7 @@ begin
     zDebugLn(['{WH}Success: ',Success]);
     DebugDWG(@dwg);
     lph:=lps.StartLongProcess('Parse DWG data',nil,dwg.num_objects);
-    ZCDWGParser.parseDwg_Data(ZCDCtx,dwg,@PLP,pointer(lph));
+    ZCDWGParser.parseDwg_Data(ZCDCtx,dwg,@PLP,TData(lph));
     lps.EndLongProcess(lph);
     dwg_free(@dwg);
   finally

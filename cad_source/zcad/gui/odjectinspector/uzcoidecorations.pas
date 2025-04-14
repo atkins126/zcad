@@ -16,7 +16,7 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
 
-unit uzcoidecorations;
+unit uzcOIDecorations;
 {$INCLUDE zengineconfig.inc}
 
 interface
@@ -31,7 +31,8 @@ uses
   StdCtrls,uzcdrawings,uzcstrconsts,Controls,Classes,uzbstrproc,uzcsysvars,uzccommandsmanager,
   uzcsysparams,gzctnrVectorTypes,uzegeometrytypes,uzcinterface,uzcoimultiobjects,
   uzcgui2color,uzcgui2linewidth,uzcgui2linetypes,
-  uzccommand_layer,uzcuitypes,uzeNamedObject,uzccommandsimpl,uzedimensionaltypes;
+  uzccommand_layer,uzcuitypes,uzeNamedObject,uzccommandsimpl,uzedimensionaltypes,
+  uzcOI;
 type
     AsyncCommHelper=class
                          class procedure GetVertex(Pinstance:PtrInt);
@@ -67,6 +68,10 @@ function ZColorDecorator(PInstance:Pointer):String;
 begin
      result:=ColorToString(PColor(PInstance)^);
 end;
+function TFStringDecorator(PInstance:Pointer):String;
+begin
+     result:=PFString(PInstance)^;
+end;
 procedure CreateComboPropEditor(TheOwner:TPropEditorOwner;pinstance:pointer;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor;out propeditor:TPropEditor; out cbedit:TComboBox;f:TzeUnitsFormat);
 begin
   propeditor:=TPropEditor.Create(theowner,PInstance,ptd^,FreeOnLostFocus,f);
@@ -89,7 +94,7 @@ begin
   cbedit:=TColorBox.Create(propeditor);
   cbedit.Text:=PTD.GetValueAsString(pinstance);
   cbedit.OnChange:=propeditor.EditingProcess;
-  SetComboSize(TComboBox(cbedit),sysvar.INTF.INTF_DefaultControlHeight^-6,CBReadOnly);
+  SetComboSize(cbedit,sysvar.INTF.INTF_DefaultControlHeight^-6);
   {$IFNDEF DELPHI}
   {cbedit.ReadOnly:=true;//now it deprecated, see in SetComboSize}
   {$ENDIF}
@@ -330,12 +335,26 @@ var
   cbedit:TColorBox;
 begin
   CreateTColorPropEditor(TheOwner,pinstance,FreeOnLostFocus,PTD,result.editor,cbedit,f);
-  SetComboSize(TComboBox(cbedit),sysvar.INTF.INTF_DefaultControlHeight^-6,CBReadOnly);
+  SetComboSize(cbedit,sysvar.INTF.INTF_DefaultControlHeight^-6);
   cbedit.Style:=cbedit.Style+[cbStandardColors,cbExtendedColors,cbSystemColors,cbIncludeDefault];
   cbedit.Selected:=PColor(pinstance)^;
   result.mode:=TEM_Integrate;
 end;
 
+function TGetterSetterTZColorDecoratorCreateEditor(TheOwner:TPropEditorOwner;rect:trect;pinstance:pointer;psa:PTZctnrVectorStrings;FreeOnLostFocus:boolean;PTD:PUserTypeDescriptor;f:TzeUnitsFormat):TEditorDesc;
+var
+  cbedit:TColorBox;
+begin
+  CreateTColorPropEditor(TheOwner,pinstance,FreeOnLostFocus,PTD,result.editor,cbedit,f);
+  SetComboSize(cbedit,sysvar.INTF.INTF_DefaultControlHeight^-6);
+  cbedit.Style:=cbedit.Style+[cbStandardColors,cbExtendedColors,cbSystemColors,cbIncludeDefault];
+  cbedit.Selected:=PTGetterSetterTZColor(pinstance)^.Getter{PColor(pinstance)^};
+  result.mode:=TEM_Integrate;
+end;
+function TGetterSetterTZColorDecorator(PInstance:Pointer):String;
+begin
+     result:=ColorToString(PTGetterSetterTZColor(pinstance)^.Getter);
+end;
 
 procedure drawLTProp(canvas:TCanvas;ARect:TRect;PInstance:Pointer);
 var
@@ -365,7 +384,7 @@ begin
      if not assigned(InfoForm) then
      begin
      InfoForm:=TInfoForm.createnew(application.MainForm);
-     InfoForm.BoundsRect:=GetBoundsFromSavedUnit('TEdWND',SysParam.notsaved.ScreenX,SysParam.notsaved.Screeny);
+     InfoForm.BoundsRect:=GetBoundsFromSavedUnit('TEdWND',ZCSysParams.notsaved.ScreenX,ZCSysParams.notsaved.Screeny);
      end;
      InfoForm.caption:=(rsTextEdCaption);
      if assigned(SysVar.INTF.INTF_DefaultEditorFontHeight) then
@@ -387,7 +406,7 @@ begin
      if not assigned(InfoForm) then
      begin
      InfoForm:=TInfoForm.createnew(application.MainForm);
-     InfoForm.BoundsRect:=GetBoundsFromSavedUnit('TEdWND',SysParam.notsaved.ScreenX,SysParam.notsaved.Screeny);
+     InfoForm.BoundsRect:=GetBoundsFromSavedUnit('TEdWND',ZCSysParams.notsaved.ScreenX,ZCSysParams.notsaved.Screeny);
      end;
      InfoForm.caption:=(rsTextEdCaption);
      if assigned(SysVar.INTF.INTF_DefaultEditorFontHeight) then
@@ -548,76 +567,89 @@ begin
 end;
 procedure DecorateSysTypes;
 begin
-     AddEditorToType(SysUnit.TypeName2PTD('Boolean'),TBaseTypesEditors.BooleanCreateEditor);
-     //AddEditorToType(SysUnit.TypeName2PTD('Boolean'),TBaseTypesEditors.BooleanCreateEditor);
+  if SysUnit<>nil then begin
+    AddEditorToType(SysUnit.TypeName2PTD('Boolean'),TBaseTypesEditors.BooleanCreateEditor);
+    AddEditorToType(SysUnit.TypeName2PTD('ShortInt'),TBaseTypesEditors.BaseCreateEditor);
+    AddEditorToType(SysUnit.TypeName2PTD('Byte'),TBaseTypesEditors.BaseCreateEditor);
+    AddEditorToType(SysUnit.TypeName2PTD('SmallInt'),TBaseTypesEditors.BaseCreateEditor);
+    AddEditorToType(SysUnit.TypeName2PTD('Word'),TBaseTypesEditors.BaseCreateEditor);
+    AddEditorToType(SysUnit.TypeName2PTD('LongInt'),TBaseTypesEditors.BaseCreateEditor);
+    AddEditorToType(SysUnit.TypeName2PTD('LongWord'),TBaseTypesEditors.BaseCreateEditor);
+    AddEditorToType(SysUnit.TypeName2PTD('QWord'),TBaseTypesEditors.BaseCreateEditor);
+    AddEditorToType(SysUnit.TypeName2PTD('Double'),TBaseTypesEditors.BaseCreateEditor);
+    AddEditorToType(SysUnit.TypeName2PTD('GDBNonDimensionDouble'),TBaseTypesEditors.BaseCreateEditor);
+    AddEditorToType(SysUnit.TypeName2PTD('GDBAngleDouble'),TBaseTypesEditors.BaseCreateEditor);
+    AddEditorToType(SysUnit.TypeName2PTD('GDBAngleDegDouble'),TBaseTypesEditors.BaseCreateEditor);
+    AddEditorToType(SysUnit.TypeName2PTD('String'),TBaseTypesEditors.BaseCreateEditor);
+    AddEditorToType(SysUnit.TypeName2PTD('AnsiString'),TBaseTypesEditors.BaseCreateEditor);
+    AddEditorToType(SysUnit.TypeName2PTD('AnsiString1251'),TBaseTypesEditors.BaseCreateEditor);
+    AddEditorToType(SysUnit.TypeName2PTD('UnicodeString'),TBaseTypesEditors.BaseCreateEditor);
+    AddEditorToType(SysUnit.TypeName2PTD('Single'),TBaseTypesEditors.BaseCreateEditor);
+    AddEditorToType(SysUnit.TypeName2PTD('Pointer'),TBaseTypesEditors.BaseCreateEditor);
+    AddEditorToType(SysUnit.TypeName2PTD('PtrUInt'),TBaseTypesEditors.BaseCreateEditor);
+    AddEditorToType(SysUnit.TypeName2PTD('TEnumDataDescriptor'),TBaseTypesEditors.TEnumDataCreateEditor);
+    EnumGlobalEditor:=TBaseTypesEditors.EnumDescriptorCreateEditor;
+    AddEditorToType(SysUnit.TypeName2PTD('TCalculatedStringDescriptor'),TBaseTypesEditors.BaseCreateEditor);
+    AddEditorToType(SysUnit.TypeName2PTD('TGetterSetterIntegerDescriptor'),TBaseTypesEditors.BaseCreateEditor);
+    AddEditorToType(SysUnit.TypeName2PTD('TGetterSetterBooleanDescriptor'),TBaseTypesEditors.BooleanCreateEditor);
+    AddEditorToType(SysUnit.TypeName2PTD('TGetterSetterTUsableIntegerDescriptor'),TBaseTypesEditors.BaseCreateEditor);
 
 
-     AddEditorToType(SysUnit.TypeName2PTD('ShortInt'),TBaseTypesEditors.BaseCreateEditor);
-     AddEditorToType(SysUnit.TypeName2PTD('Byte'),TBaseTypesEditors.BaseCreateEditor);
-     AddEditorToType(SysUnit.TypeName2PTD('SmallInt'),TBaseTypesEditors.BaseCreateEditor);
-     AddEditorToType(SysUnit.TypeName2PTD('Word'),TBaseTypesEditors.BaseCreateEditor);
-     AddEditorToType(SysUnit.TypeName2PTD('LongInt'),TBaseTypesEditors.BaseCreateEditor);
-     AddEditorToType(SysUnit.TypeName2PTD('LongWord'),TBaseTypesEditors.BaseCreateEditor);
-     AddEditorToType(SysUnit.TypeName2PTD('QWord'),TBaseTypesEditors.BaseCreateEditor);
-     AddEditorToType(SysUnit.TypeName2PTD('Double'),TBaseTypesEditors.BaseCreateEditor);
-     //AddEditorToType(SysUnit.TypeName2PTD('Double'),TBaseTypesEditors.BaseCreateEditor);
-     AddEditorToType(SysUnit.TypeName2PTD('GDBNonDimensionDouble'),TBaseTypesEditors.BaseCreateEditor);
-     AddEditorToType(SysUnit.TypeName2PTD('GDBAngleDouble'),TBaseTypesEditors.BaseCreateEditor);
-     AddEditorToType(SysUnit.TypeName2PTD('GDBAngleDegDouble'),TBaseTypesEditors.BaseCreateEditor);
-     AddEditorToType(SysUnit.TypeName2PTD('String'),TBaseTypesEditors.BaseCreateEditor);
-     AddEditorToType(SysUnit.TypeName2PTD('AnsiString'),TBaseTypesEditors.BaseCreateEditor);
-     AddEditorToType(SysUnit.TypeName2PTD('AnsiString1251'),TBaseTypesEditors.BaseCreateEditor);
-     AddEditorToType(SysUnit.TypeName2PTD('UnicodeString'),TBaseTypesEditors.BaseCreateEditor);
-     AddEditorToType(SysUnit.TypeName2PTD('Single'),TBaseTypesEditors.BaseCreateEditor);
-     AddEditorToType(SysUnit.TypeName2PTD('Pointer'),TBaseTypesEditors.BaseCreateEditor);
-     AddEditorToType(SysUnit.TypeName2PTD('PtrUInt'),TBaseTypesEditors.BaseCreateEditor);
-     AddEditorToType(SysUnit.TypeName2PTD('TEnumDataDescriptor'),TBaseTypesEditors.TEnumDataCreateEditor);
-     EnumGlobalEditor:=TBaseTypesEditors.EnumDescriptorCreateEditor;
-     AddEditorToType(SysUnit.TypeName2PTD('TCalculatedStringDescriptor'),TBaseTypesEditors.BaseCreateEditor);
+    DecorateType(SysUnit.TypeName2PTD('TGDBLineWeight'),LWDecorator,LineWeightDecoratorCreateEditor,drawLWProp);
+    DecorateType(SysUnit.TypeName2PTD('PGDBLayerPropObjInsp'),NamedObjectsDecorator,LayersDecoratorCreateEditor,nil);
+    DecorateType(SysUnit.TypeName2PTD('PGDBLtypePropObjInsp'),NamedObjectsDecorator,LTypeDecoratorCreateEditor,drawLTProp);
+    DecorateType(SysUnit.TypeName2PTD('PGDBTextStyleObjInsp'),NamedObjectsDecorator,TextStyleDecoratorCreateEditor,nil);
+    DecorateType(SysUnit.TypeName2PTD('PGDBDimStyleObjInsp'),NamedObjectsDecorator,DimStyleDecoratorCreateEditor,nil);
+    DecorateType(SysUnit.TypeName2PTD('TGDBPaletteColor'),PaletteColorDecorator,ColorDecoratorCreateEditor,drawIndexColorProp);
+    DecorateType(SysUnit.TypeName2PTD('TGDBOSMode'),nil,CreateEmptyEditor,nil);
+    DecorateType(SysUnit.TypeName2PTD('TZColor'),ZColorDecorator,ZColorDecoratorCreateEditor,nil);
+    DecorateType(SysUnit.TypeName2PTD('TFString'),TFStringDecorator,ZColorDecoratorCreateEditor,nil);
+
+    AddFastEditorToType(SysUnit.TypeName2PTD('TGetterSetterInteger'),@OIUI_FE_HalfButtonGetPrefferedSize,@OIUI_FE_ButtonGreatThatDraw,@OIUI_FE_GetterSetterIntegerInc);
+    AddFastEditorToType(SysUnit.TypeName2PTD('TGetterSetterInteger'),@OIUI_FE_HalfButtonGetPrefferedSize,@OIUI_FE_ButtonLessThatDraw,@OIUI_FE_GetterSetterIntegerDec);
+    AddFastEditorToType(SysUnit.TypeName2PTD('TGetterSetterBoolean'),@OIUI_FE_BooleanGetPrefferedSize,@OIUI_FE_GetterSetterBooleanDraw,@OIUI_FE_GetterSetterBooleanInverse);
+
+    AddFastEditorToType(SysUnit.TypeName2PTD('TGetterSetterTUsableInteger'),@OIUI_FE_HalfButtonGetPrefferedSize,@OIUI_FE_ButtonGreatThatDraw,@OIUI_FE_GetterSetterUsableIntegerInc);
+    AddFastEditorToType(SysUnit.TypeName2PTD('TGetterSetterTUsableInteger'),@OIUI_FE_HalfButtonGetPrefferedSize,@OIUI_FE_ButtonLessThatDraw,@OIUI_FE_GetterSetterUsableIntegerDec);
+    AddFastEditorToType(SysUnit.TypeName2PTD('TGetterSetterTUsableInteger'),@OIUI_FE_BooleanGetPrefferedSize,@OIUI_FE_GetterSetterUsableIntegerUsableDraw,@OIUI_FE_GetterSetterUsableIntegerUsableInverse);
+    DecorateType(SysUnit.TypeName2PTD('TGetterSetterTZColor'),TGetterSetterTZColorDecorator,TGetterSetterTZColorDecoratorCreateEditor,nil);
 
 
-     DecorateType(SysUnit.TypeName2PTD('TGDBLineWeight'),LWDecorator,LineWeightDecoratorCreateEditor,drawLWProp);
-     DecorateType(SysUnit.TypeName2PTD('PGDBLayerPropObjInsp'),NamedObjectsDecorator,LayersDecoratorCreateEditor,nil);
-     DecorateType(SysUnit.TypeName2PTD('PGDBLtypePropObjInsp'),NamedObjectsDecorator,LTypeDecoratorCreateEditor,drawLTProp);
-     DecorateType(SysUnit.TypeName2PTD('PGDBTextStyleObjInsp'),NamedObjectsDecorator,TextStyleDecoratorCreateEditor,nil);
-     DecorateType(SysUnit.TypeName2PTD('PGDBDimStyleObjInsp'),NamedObjectsDecorator,DimStyleDecoratorCreateEditor,nil);
-     DecorateType(SysUnit.TypeName2PTD('TGDBPaletteColor'),PaletteColorDecorator,ColorDecoratorCreateEditor,drawIndexColorProp);
-     DecorateType(SysUnit.TypeName2PTD('TGDBOSMode'),nil,CreateEmptyEditor,nil);
-     DecorateType(SysUnit.TypeName2PTD('TZColor'),ZColorDecorator,ZColorDecoratorCreateEditor,{drawIndexColorProp}nil);
 
-     AddFastEditorToType(SysUnit.TypeName2PTD('Integer'),@OIUI_FE_HalfButtonGetPrefferedSize,@OIUI_FE_ButtonGreatThatDraw,@OIUI_FE_IntegerInc);
-     AddFastEditorToType(SysUnit.TypeName2PTD('Integer'),@OIUI_FE_HalfButtonGetPrefferedSize,@OIUI_FE_ButtonLessThatDraw,@OIUI_FE_IntegerDec);
+    AddFastEditorToType(SysUnit.TypeName2PTD('Integer'),@OIUI_FE_HalfButtonGetPrefferedSize,@OIUI_FE_ButtonGreatThatDraw,@OIUI_FE_IntegerInc);
+    AddFastEditorToType(SysUnit.TypeName2PTD('Integer'),@OIUI_FE_HalfButtonGetPrefferedSize,@OIUI_FE_ButtonLessThatDraw,@OIUI_FE_IntegerDec);
 
-     AddFastEditorToType(SysUnit.TypeName2PTD('TArrayIndex'),@OIUI_FE_HalfButtonGetPrefferedSize,@OIUI_FE_ButtonGreatThatDraw,@OIUI_FE_IntegerInc);
-     AddFastEditorToType(SysUnit.TypeName2PTD('TArrayIndex'),@OIUI_FE_HalfButtonGetPrefferedSize,@OIUI_FE_ButtonLessThatDraw,@OIUI_FE_IntegerDec);
+    AddFastEditorToType(SysUnit.TypeName2PTD('TArrayIndex'),@OIUI_FE_HalfButtonGetPrefferedSize,@OIUI_FE_ButtonGreatThatDraw,@OIUI_FE_IntegerInc);
+    AddFastEditorToType(SysUnit.TypeName2PTD('TArrayIndex'),@OIUI_FE_HalfButtonGetPrefferedSize,@OIUI_FE_ButtonLessThatDraw,@OIUI_FE_IntegerDec);
 
-     AddFastEditorToType(SysUnit.TypeName2PTD('TGDBPaletteColor'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonDraw,@runcolorswnd);
-     AddFastEditorToType(SysUnit.TypeName2PTD('Boolean'),@OIUI_FE_BooleanGetPrefferedSize,@OIUI_FE_BooleanDraw,@OIUI_FE_BooleanInverse);
-     AddFastEditorToType(SysUnit.TypeName2PTD('TGDB3StateBool'),@OIUI_FE_BooleanGetPrefferedSize,@_3SBooleanDrawFastEditor,@_3SBooleanInverse);
-     AddFastEditorToType(SysUnit.TypeName2PTD('PGDBLayerPropObjInsp'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonDraw,@runlayerswnd);
-     AddFastEditorToType(SysUnit.TypeName2PTD('String'),@OIUI_FE_ButtonGetPrefferedSize,@ButtonTxtDrawFastEditor,@RunStringEditor);
-     AddFastEditorToType(SysUnit.TypeName2PTD('AnsiString'),@OIUI_FE_ButtonGetPrefferedSize,@ButtonTxtDrawFastEditor,@RunAnsiStringEditor);
-     AddFastEditorToType(SysUnit.TypeName2PTD('GDBCoordinates3D'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonCrossDraw,@GetVertexFromDrawing,true);
-     AddFastEditorToType(SysUnit.TypeName2PTD('GDBLength'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonHLineDraw,@GetLengthFromDrawing,true);
-     AddFastEditorToType(SysUnit.TypeName2PTD('GDBXCoordinate'),@OIUI_FE_ButtonGetPrefferedSize,@ButtonXDrawFastEditor,@GetXFromDrawing,true);
-     AddFastEditorToType(SysUnit.TypeName2PTD('GDBYCoordinate'),@OIUI_FE_ButtonGetPrefferedSize,@ButtonYDrawFastEditor,@GetYFromDrawing,true);
-     AddFastEditorToType(SysUnit.TypeName2PTD('GDBZCoordinate'),@OIUI_FE_ButtonGetPrefferedSize,@ButtonZDrawFastEditor,@GetZFromDrawing,true);
-     AddFastEditorToType(SysUnit.TypeName2PTD('TGDBOSMode'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonDraw,@runOSwnd);
-     AddFastEditorToType(SysUnit.TypeName2PTD('TMSPrimitiveDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonHLineDraw,@DeselectEnts,true);
-     AddFastEditorToType(SysUnit.TypeName2PTD('TMSPrimitiveDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonMultiplyDraw,@SelectOnlyThisEnts,true);
-     AddFastEditorToType(SysUnit.TypeName2PTD('TMSBlockNamesDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonHLineDraw,@DeselectBlocsByName,true);
-     AddFastEditorToType(SysUnit.TypeName2PTD('TMSBlockNamesDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonMultiplyDraw,@SelectOnlyThisBlocsByName,true);
+    AddFastEditorToType(SysUnit.TypeName2PTD('TGDBPaletteColor'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonDraw,@runcolorswnd);
+    AddFastEditorToType(SysUnit.TypeName2PTD('Boolean'),@OIUI_FE_BooleanGetPrefferedSize,@OIUI_FE_BooleanDraw,@OIUI_FE_BooleanInverse);
+    AddFastEditorToType(SysUnit.TypeName2PTD('TGDB3StateBool'),@OIUI_FE_BooleanGetPrefferedSize,@_3SBooleanDrawFastEditor,@_3SBooleanInverse);
+    AddFastEditorToType(SysUnit.TypeName2PTD('PGDBLayerPropObjInsp'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonDraw,@runlayerswnd);
+    AddFastEditorToType(SysUnit.TypeName2PTD('String'),@OIUI_FE_ButtonGetPrefferedSize,@ButtonTxtDrawFastEditor,@RunStringEditor);
+    AddFastEditorToType(SysUnit.TypeName2PTD('AnsiString'),@OIUI_FE_ButtonGetPrefferedSize,@ButtonTxtDrawFastEditor,@RunAnsiStringEditor);
+    AddFastEditorToType(SysUnit.TypeName2PTD('GDBCoordinates3D'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonCrossDraw,@GetVertexFromDrawing,true);
+    AddFastEditorToType(SysUnit.TypeName2PTD('GDBLength'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonHLineDraw,@GetLengthFromDrawing,true);
+    AddFastEditorToType(SysUnit.TypeName2PTD('GDBXCoordinate'),@OIUI_FE_ButtonGetPrefferedSize,@ButtonXDrawFastEditor,@GetXFromDrawing,true);
+    AddFastEditorToType(SysUnit.TypeName2PTD('GDBYCoordinate'),@OIUI_FE_ButtonGetPrefferedSize,@ButtonYDrawFastEditor,@GetYFromDrawing,true);
+    AddFastEditorToType(SysUnit.TypeName2PTD('GDBZCoordinate'),@OIUI_FE_ButtonGetPrefferedSize,@ButtonZDrawFastEditor,@GetZFromDrawing,true);
+    AddFastEditorToType(SysUnit.TypeName2PTD('TGDBOSMode'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonDraw,@runOSwnd);
+    AddFastEditorToType(SysUnit.TypeName2PTD('TMSPrimitiveDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonHLineDraw,@DeselectEnts,true);
+    AddFastEditorToType(SysUnit.TypeName2PTD('TMSPrimitiveDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonMultiplyDraw,@SelectOnlyThisEnts,true);
+    AddFastEditorToType(SysUnit.TypeName2PTD('TMSBlockNamesDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonHLineDraw,@DeselectBlocsByName,true);
+    AddFastEditorToType(SysUnit.TypeName2PTD('TMSBlockNamesDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonMultiplyDraw,@SelectOnlyThisBlocsByName,true);
 
-     AddFastEditorToType(SysUnit.TypeName2PTD('TMSTextsStylesDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonHLineDraw,@DeselectTextsByStyle,true);
-     AddFastEditorToType(SysUnit.TypeName2PTD('TMSTextsStylesDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonMultiplyDraw,@SelectOnlyThisTextsByStyle,true);
+    AddFastEditorToType(SysUnit.TypeName2PTD('TMSTextsStylesDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonHLineDraw,@DeselectTextsByStyle,true);
+    AddFastEditorToType(SysUnit.TypeName2PTD('TMSTextsStylesDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonMultiplyDraw,@SelectOnlyThisTextsByStyle,true);
 
-     AddFastEditorToType(SysUnit.TypeName2PTD('TMSEntsLayersDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonHLineDraw,@DeselectEntsByLayer,true);
-     AddFastEditorToType(SysUnit.TypeName2PTD('TMSEntsLayersDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonMultiplyDraw,@SelectOnlyThisEntsByLayer,true);
+    AddFastEditorToType(SysUnit.TypeName2PTD('TMSEntsLayersDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonHLineDraw,@DeselectEntsByLayer,true);
+    AddFastEditorToType(SysUnit.TypeName2PTD('TMSEntsLayersDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonMultiplyDraw,@SelectOnlyThisEntsByLayer,true);
 
-     AddFastEditorToType(SysUnit.TypeName2PTD('TMSEntsLinetypesDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonHLineDraw,@DeselectEntsByLinetype,true);
-     AddFastEditorToType(SysUnit.TypeName2PTD('TMSEntsLinetypesDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonMultiplyDraw,@SelectOnlyThisEntsByLinetype,true);
+    AddFastEditorToType(SysUnit.TypeName2PTD('TMSEntsLinetypesDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonHLineDraw,@DeselectEntsByLinetype,true);
+    AddFastEditorToType(SysUnit.TypeName2PTD('TMSEntsLinetypesDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonMultiplyDraw,@SelectOnlyThisEntsByLinetype,true);
 
-     AddFastEditorToType(SysUnit.TypeName2PTD('TMSEntsExtendersDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonHLineDraw,@DeselectEntsByExtender,true);
-     AddFastEditorToType(SysUnit.TypeName2PTD('TMSEntsExtendersDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonMultiplyDraw,@SelectOnlyThisEntsByExtender,true);
+    AddFastEditorToType(SysUnit.TypeName2PTD('TMSEntsExtendersDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonHLineDraw,@DeselectEntsByExtender,true);
+    AddFastEditorToType(SysUnit.TypeName2PTD('TMSEntsExtendersDetector'),@OIUI_FE_ButtonGetPrefferedSize,@OIUI_FE_ButtonMultiplyDraw,@SelectOnlyThisEntsByExtender,true);
+  end;
 end;
 end.

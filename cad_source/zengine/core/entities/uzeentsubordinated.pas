@@ -41,7 +41,6 @@ end;
 
 PGDBObjDrawable=^GDBObjDrawable;
 GDBObjDrawable=object(GDBObjExtendable)
-  procedure RenderFeedback(pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;abstract;
 end;
 
 PGDBObjSubordinated=^GDBObjSubordinated;
@@ -55,10 +54,8 @@ GDBObjGenericWithSubordinated= object(GDBObjDrawable)
                                     procedure AddMi(pobj:PGDBObjSubordinated);virtual;abstract;
                                     procedure RemoveInArray(pobjinarray:Integer);virtual;abstract;
                                     procedure createfield;virtual;
-                                    //function FindVariable(varname:String):pvardesk;virtual;
                                     destructor done;virtual;
                                     function GetMatrix:PDMatrix4D;virtual;abstract;
-                                    //function GetLineWeight:SmallInt;virtual;abstract;
                                     function GetLayer:PGDBLayerProp;virtual;abstract;
                                     function GetHandle:PtrInt;virtual;
                                     function GetType:PtrInt;virtual;
@@ -74,10 +71,10 @@ TEntityAddress=record
                           Owner:PGDBObjGenericWithSubordinated;
                           SelfIndex:TArrayIndex;
               end;
-TTreeAddress=record
-                          Owner:Pointer;
-                          SelfIndex:TArrayIndex;
-              end;
+  TTreeAddress=record
+    Owner:Pointer;
+    SelfIndexInNode:TArrayIndex;
+  end;
 GDBObjBaseProp=record
                       ListPos:TEntityAddress;
                       TreePos:TTreeAddress;
@@ -87,10 +84,9 @@ GDBObjSubordinated= object(GDBObjGenericWithSubordinated)
                          OSnapModeControl:TOSnapModeControl;
                          function GetOwner:PGDBObjSubordinated;virtual;abstract;
                          procedure createfield;virtual;
-                         //function FindVariable(varname:String):pvardesk;virtual;
-                         //function FindShellByClass(_type:TDeviceClass):PGDBObjSubordinated;virtual;
                          destructor done;virtual;
                          procedure postload(var context:TIODXFLoadContext);virtual;abstract;
+                         function IsNeedSeparate:Boolean;virtual;
          end;
 
 procedure extractvarfromdxfstring2(_Value:String;out vn,vt,vun:String);
@@ -169,6 +165,11 @@ destructor GDBObjSubordinated.done;
 begin
      inherited;
 end;
+function GDBObjSubordinated.IsNeedSeparate:Boolean;
+begin
+     result:=false;
+end;
+
 
 {function GDBObjSubordinated.FindShellByClass(_type:TDeviceClass):PGDBObjSubordinated;
 var

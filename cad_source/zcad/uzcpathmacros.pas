@@ -20,17 +20,26 @@ unit uzcPathMacros;
 {$INCLUDE zengineconfig.inc}
 interface
 uses
+  SysUtils,Forms,
+  {$IFDEF WINDOWS}ShlObj,{$ENDIF}LazUTF8,
+  uzcSysParams,
   MacroDefIntf,uzmacros,
-  uzclog,uzblog,uzbpaths,Forms,uzcstrconsts,
-  {$IFDEF WINDOWS}ShlObj,{$ENDIF}{$IFNDEF DELPHI}LazUTF8,{$ENDIF}sysutils,uzcsysvars;
+  uzclog,uzblog,uzbpaths,uzcstrconsts,
+  uzcFileStructure;
 type
   TZCADPathsMacroMethods=class
-    class function MacroFuncZCADPath       (const {%H-}Param: string; const Data: PtrInt;
-                                              var {%H-}Abort: boolean): string;
-    class function MacroFuncZCADDictionariesPath(const {%H-}Param: string; const Data: PtrInt;
+    class function MacroFuncRoCfgs(const {%H-}Param: string; const Data: PtrInt;
+                                        var {%H-}Abort: boolean): string;
+    class function MacroFuncBinaryPath(const {%H-}Param: string; const Data: PtrInt;
+                                       var {%H-}Abort: boolean): string;
+    class function MacroFuncDistribPath(const {%H-}Param: string; const Data: PtrInt;
+                                       var {%H-}Abort: boolean): string;
+    class function MacroFuncDataSearhPrefixes(const {%H-}Param: string; const Data: PtrInt;
+                                       var {%H-}Abort: boolean): string;
+    class function MacroFuncDictPath(const {%H-}Param: string; const Data: PtrInt;
                                                  var {%H-}Abort: boolean): string;
-    class function MacroFuncTEMPPath       (const {%H-}Param: string; const Data: PtrInt;
-                                              var {%H-}Abort: boolean): string;
+    class function MacroFuncTEMPPath(const {%H-}Param: string; const Data: PtrInt;
+                                       var {%H-}Abort: boolean): string;
     class function MacroFuncSystemFontsPath(const {%H-}Param: string; const Data: PtrInt;
                                               var {%H-}Abort: boolean): string;
     class function MacroFuncsUserFontsPath (const {%H-}Param: string; const Data: PtrInt;
@@ -49,18 +58,26 @@ type
                                                var {%H-}Abort: boolean): string;
   end;
 implementation
-class function TZCADPathsMacroMethods.MacroFuncZCADPath(const {%H-}Param: string; const Data: PtrInt;var {%H-}Abort: boolean): string;
+class function TZCADPathsMacroMethods.MacroFuncRoCfgs(const {%H-}Param: string; const Data: PtrInt;var {%H-}Abort: boolean): string;
 begin
-  result:=ProgramPath;
+  result:=GetRoCfgsPath;
 end;
-class function TZCADPathsMacroMethods.MacroFuncZCADDictionariesPath(const {%H-}Param: string; const Data: PtrInt;
+class function TZCADPathsMacroMethods.MacroFuncBinaryPath(const {%H-}Param: string; const Data: PtrInt;var {%H-}Abort: boolean): string;
+begin
+  result:=GetBinaryPath;
+end;
+class function TZCADPathsMacroMethods.MacroFuncDistribPath(const {%H-}Param: string; const Data: PtrInt;var {%H-}Abort: boolean): string;
+begin
+  result:=GetDistribPath{ZCSysParams.saved.PreferredDistribPath};
+end;
+class function TZCADPathsMacroMethods.MacroFuncDictPath(const {%H-}Param: string; const Data: PtrInt;
                                              var {%H-}Abort: boolean): string;
 begin
-  result:=ProgramPath+'/dictionaries';
+  result:=ConcatPaths([GetDistribPath,CFSdictionariesDir]);
 end;
 class function TZCADPathsMacroMethods.MacroFuncTEMPPath(const {%H-}Param: string; const Data: PtrInt;var {%H-}Abort: boolean): string;
 begin
-  result:=TempPath;
+  result:=GetTempPath;
 end;
 class function TZCADPathsMacroMethods.MacroFuncSystemFontsPath(const {%H-}Param: string; const Data: PtrInt;var {%H-}Abort: boolean): string;
 {$IF defined(WINDOWS)}
@@ -98,17 +115,23 @@ class function TZCADPathsMacroMethods.MacroFuncEnv(const Param: string; const Da
 begin
   Result:=GetEnvironmentVariableUTF8(Param);
 end;
+class function TZCADPathsMacroMethods.MacroFuncDataSearhPrefixes(const {%H-}Param: string; const Data: PtrInt;
+                                   var {%H-}Abort: boolean): string;
+begin
+  //Result:=IncludeTrailingPathDelimiter(IncludeTrailingPathDelimiter(GetAppConfigDir(false))+Param)+';'+IncludeTrailingPathDelimiter(IncludeTrailingPathDelimiter(GetDistroPath)+Param);
+  Result:=ConcatPaths([GetWrCfgsPath{GetAppConfigDir(false)},Param])+';'+ConcatPaths([GetRoCfgsPath,Param]);
+end;
 class function TZCADPathsMacroMethods.MacroFuncUserDir(const Param: string; const {%H-}Data: PtrInt;var {%H-}Abort: boolean): string;
 begin
   Result:=GetUserDir;
 end;
 class function TZCADPathsMacroMethods.MacroFuncLocalConfigDir(const Param: string; const {%H-}Data: PtrInt;var {%H-}Abort: boolean): string;
 begin
-  Result:=GetAppConfigDir(false);
+  Result:=GetWrCfgsPath{GetAppConfigDir(false)};
 end;
 class function TZCADPathsMacroMethods.MacroFuncGlobalConfigDir(const Param: string; const {%H-}Data: PtrInt; var {%H-}Abort: boolean): string;
 begin
-  Result:=GetAppConfigDir(true);
+  Result:=GetRoCfgsPath{GetAppConfigDir(true)};
 end;
 class function TZCADPathsMacroMethods.MacroFuncAppName(const Param: string; const {%H-}Data: PtrInt;var {%H-}Abort: boolean): string;
 begin
@@ -120,12 +143,16 @@ begin
 end;
 
 initialization
-DefaultMacros.AddMacro(TTransferMacro.Create('ZCADPath','',
-                       'Path to ZCAD',TZCADPathsMacroMethods.MacroFuncZCADPath,[]));
+DefaultMacros.AddMacro(TTransferMacro.Create('BinaryPath','',
+                       'Path to ZCAD binary',TZCADPathsMacroMethods.MacroFuncBinaryPath,[]));
+DefaultMacros.AddMacro(TTransferMacro.Create('DistribPath','',
+                       'Path to ZCAD Distributive',TZCADPathsMacroMethods.MacroFuncDistribPath,[]));
+DefaultMacros.AddMacro(TTransferMacro.Create('RoCfgs','',
+                       'Path to read only configs',TZCADPathsMacroMethods.MacroFuncRoCfgs,[]));
 DefaultMacros.AddMacro(TTransferMacro.Create('TEMP','',
                        'TEMP path',TZCADPathsMacroMethods.MacroFuncTEMPPath,[]));
-DefaultMacros.AddMacro(TTransferMacro.Create('ZCADDictionariesPath','',
-                       'Dictionaries path',TZCADPathsMacroMethods.MacroFuncZCADDictionariesPath(),[]));
+DefaultMacros.AddMacro(TTransferMacro.Create('DictPath','',
+                       'Dictionaries path',TZCADPathsMacroMethods.MacroFuncDictPath(),[]));
 DefaultMacros.AddMacro(TTransferMacro.Create('SystemFontsPath','',
                        'System fonts path',TZCADPathsMacroMethods.MacroFuncSystemFontsPath(),[]));
 DefaultMacros.AddMacro(TTransferMacro.Create('UserFontsPath','',
@@ -138,6 +165,8 @@ DefaultMacros.AddMacro(TTransferMacro.Create('LocalConfigDir','',
                        'Local config dir',TZCADPathsMacroMethods.MacroFuncLocalConfigDir,[]));
 DefaultMacros.AddMacro(TTransferMacro.Create('GlobalConfigDir','',
                        'Global config dir',TZCADPathsMacroMethods.MacroFuncGlobalConfigDir,[]));
+DefaultMacros.AddMacro(TTransferMacro.Create('DataSearhPrefixes','',
+                       'Expand to data searh paths',TZCADPathsMacroMethods.MacroFuncDataSearhPrefixes,[]));
 DefaultMacros.AddMacro(TTransferMacro.Create('AppName','',
                        'Application name',TZCADPathsMacroMethods.MacroFuncAppName,[]));
 DefaultMacros.AddMacro(TTransferMacro.Create('DirectorySeparator','',

@@ -46,7 +46,7 @@ var
    FileName:ansistring;
    dwgname:ansistring;
 begin
-  PDrawing:=drawings.CreateDWG('$(ZCADPath)/rtl/dwg/DrawingDeviceBase.pas','$(ZCADPath)/rtl/dwg/DrawingVars.pas');
+  PDrawing:=drawings.CreateDWG('$(DistribPath)/rtl/dwg/DrawingDeviceBase.pas','$(DistribPath)/rtl/dwg/DrawingVars.pas');
   drawings.PushBackData(PDrawing);
   FileName:=operands;
 
@@ -93,8 +93,8 @@ begin
   ZCADMainWindow.PageControl.ActivePage:=TabSheet;
 
   if not fileexists(FileName) then begin
-    FileName:=expandpath(sysvar.PATH.Template_Path^)+sysvar.PATH.Template_File^;
-    if fileExists(utf8tosys(FileName)) then
+    FileName:=ConcatPaths([ExpandPath(sysvar.PATH.Template_Path^),ExpandPath(sysvar.PATH.Template_File^)]);
+    if fileExists(UTF8ToSys(FileName)) then
       Load_merge(FileName,TLOLoad)
     else
       ZCMsgCallBackInterface.TextMessage(format(rsTemplateNotFound,[FileName]),TMWOShowError);

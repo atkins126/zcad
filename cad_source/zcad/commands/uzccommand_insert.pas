@@ -149,7 +149,7 @@ begin
     drawings.GetCurrentROOT^.ObjArray.ObjTree.CorrectNodeBoundingBox(pb^);
     pb^.Visible:=0;
     drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.Count := 0;
-    pb^.RenderFeedback(drawings.GetCurrentDWG^.pcamera^.POSCOUNT,drawings.GetCurrentDWG^.pcamera^,drawings.GetCurrentDWG^.myGluProject2,dc);
+    //pb^.RenderFeedback(drawings.GetCurrentDWG^.pcamera^.POSCOUNT,drawings.GetCurrentDWG^.pcamera^,drawings.GetCurrentDWG^.myGluProject2,dc);
     pb:=nil;
     //commandmanager.executecommandend;
     //result:=1;
@@ -192,14 +192,13 @@ begin
                          Freemem(pointer(pb));
                          pb:=pointer(tb);
     end;
-    drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.AddPEntity(pb^);
     //PGDBObjEntity(pb)^.FromDXFPostProcessAfterAdd;
     pb^.CalcObjMatrix;
     pb^.BuildGeometry(drawings.GetCurrentDWG^);
     pb^.BuildVarGeometry(drawings.GetCurrentDWG^);
     pb^.FormatEntity(drawings.GetCurrentDWG^,dc);
+    drawings.GetCurrentDWG^.ConstructObjRoot.ObjArray.AddPEntity(pb^);
     //drawings.GetCurrentDWG^.ConstructObjRoot.Count := 0;
-    //pb^.RenderFeedback;
   end;
 end;
 procedure Insert_com_CommandEnd(const Context:TZCADCommandContext;_self:pointer);
@@ -218,8 +217,10 @@ initialization
   BIProp.Blocks.Enums.init(100);
   BIProp.Scale:=uzegeometry.OneVertex;
   BIProp.Rotation:=0;
-  SysUnit^.RegisterType(TypeInfo(TBlockInsert));
-  SysUnit^.SetTypeDesk(TypeInfo(TBlockInsert),['Block','Scale','Rotation']);
+  if SysUnit<>nil then begin
+    SysUnit^.RegisterType(TypeInfo(TBlockInsert));
+    SysUnit^.SetTypeDesk(TypeInfo(TBlockInsert),['Block','Scale','Rotation']);
+  end;
   CreateCommandRTEdObjectPlugin(@Insert_com_CommandStart,@Insert_com_CommandEnd,nil,nil,@Insert_com_BeforeClick,@Insert_com_BeforeClick,nil,nil,'Insert',0,0);
 finalization
   BIProp.Blocks.Enums.done;

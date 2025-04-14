@@ -31,7 +31,7 @@ GDBObjNet= object(GDBObjConnected)
                  procedure restructure(var drawing:TDrawingDef);virtual;
                  procedure DeSelect(var SelectedObjCount:Integer;ds2s:TDeSelect2Stage);virtual;
                  procedure BuildGraf(var drawing:TDrawingDef);virtual;
-                 procedure DrawGeometry(lw:Integer;var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
+                 procedure DrawGeometry(lw:Integer;var DC:TDrawContext);virtual;
                  procedure EraseMi(pobj:pgdbobjEntity;pobjinarray:Integer;var drawing:TDrawingDef);virtual;
                  function CalcNewName(Net1,Net2:PGDBObjNet):Integer;
                  procedure connectedtogdb(ConnectedArea:PGDBObjGenericSubEntry;var drawing:TDrawingDef);virtual;
@@ -162,6 +162,7 @@ begin
      if assigned(EntExtensions)then
        EntExtensions.RunOnBeforeEntityFormat(@self,drawing,DC);
      GetDXFIOFeatures.RunFormatProcs(drawing,@self);
+     CalcActualVisible(dc.DrawingContext.VActuality);
      inherited;
      if self.ObjArray.Count=0 then
                                   begin

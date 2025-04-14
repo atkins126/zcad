@@ -55,7 +55,7 @@ var
 
 begin
     //Ищем модуль и загружаем его
-  pu:=units.findunit(GetSupportPath,//пути по которым будет искаться юнит если он еще небыл загружен
+  pu:=units.findunit(GetSupportPaths,//пути по которым будет искаться юнит если он еще небыл загружен
                      InterfaceTranslate,//процедура локализации которая будет пытаться перевести на русский все что можно при загрузке
                      'slcabagenmodul');//имя модуля
   if pu<>nil then begin //если нашли
@@ -99,7 +99,7 @@ begin
                       pvd^.username:=pvdadd^.username;
                       //ProcessVariableAttributes(pvd^.attrib,vda_RO,0);//ставим ридонли для инспектора
 
-                      pvdadd^.data.PTD.CopyInstanceTo(pvdadd^.data.Addr.Instance,pvd.data.Addr.Instance);//копируем значение из старой переменной в новую
+                      pvdadd^.data.PTD.CopyValueToInstance(pvdadd^.data.Addr.Instance,pvd.data.Addr.Instance);//копируем значение из старой переменной в новую
 
                       RegisterVarCategory(velec_VarNameForConnectBefore+inttostr(numConnect),velec_VarNameForConnectBeforeName+inttostr(numConnect),@InterfaceTranslate);
 

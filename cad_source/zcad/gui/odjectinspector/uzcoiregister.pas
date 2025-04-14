@@ -16,7 +16,7 @@
 @author(Andrey Zubarev <zamtmn@yandex.ru>) 
 }
 
-unit uzcoiregister;
+unit uzcOIRegister;
 {$INCLUDE zengineconfig.inc}
 interface
 uses Laz2_DOM,Toolwin,Clipbrd,sysutils,uzccommandsabstract,uzcfcommandline,uzcutils,uzbpaths,TypeDescriptors,uzcTranslations,Forms,uzcinterface,uzeroot,
@@ -25,7 +25,9 @@ uses Laz2_DOM,Toolwin,Clipbrd,sysutils,uzccommandsabstract,uzcfcommandline,uzcut
      gzctnrVectorTypes,Types,Controls,uzcdrawings,Varman,UUnitManager,uzcsysvars,
      uzcsysparams,zcobjectinspectorui,uzcoimultiobjects,uzccommandsimpl,
      uzmenusmanager,uzcLog,menus,ComCtrls,uztoolbarsmanager,uzcimagesmanager,
-     uzedimensionaltypes;
+     uzedimensionaltypes,uzctreenode,uzcActionsManager,uzObjectInspectorManager,
+     zeundostack,uzcOI,
+     classes;
 const
     PEditorFocusPriority=550;
 type
@@ -40,11 +42,55 @@ type
     function GetPeditorFocusPriority:TControlWithPriority;
   end;
 var
-  INTFObjInspRowHeight:TIntegerOverrider;
   dummyclass:tdummyclass;
 implementation
 var
   system_pas_path:string;
+procedure SetLastClientWidth(w:integer);
+begin
+       if assigned(GDBobjinsp)then
+                                  begin
+                                       GDBobjinsp.NameColumnWidthCorrector.LastClientWidth:=w;
+                                  end;
+end;
+
+function GetPeditor:TComponent;
+begin
+       if assigned(GDBobjinsp)then
+                                  begin
+                                       result:=GDBobjinsp.peditor;
+                                  end
+                               else
+                                   result:=nil;
+end;
+
+function GetNameColWidth:integer;
+begin
+       if assigned(GDBobjinsp)then
+                                  begin
+                                       result:=GDBobjinsp.NameColumnWidth;
+                                  end
+                               else
+                                   result:=0;
+end;
+function GetOIWidth:integer;
+begin
+       if assigned(GDBobjinsp)then
+                                  begin
+                                       result:=GDBobjinsp.ClientWidth;
+                                  end
+                               else
+                                   result:=0;
+end;
+function  GetCurrentObj:Pointer;
+begin
+       if assigned(GDBobjinsp)then
+                                  begin
+                                       result:=GDBobjinsp.CurrPObj;
+                                  end
+                              else
+                                  result:=nil;
+end;
 procedure SetCurrentObjDefault;
 begin
        if assigned(GDBobjinsp)then
@@ -59,100 +105,6 @@ begin
   //  if PGDBaseObject(_pcurrobj)^.IsEntity then
   //    result:=true;
 end;
-procedure ZCADFormSetupProc(Form:TControl);
-var
-  pint:PInteger;
-  TBNode:TDomNode;
-  tb:TToolBar;
-begin
-
-  GDBobjinsp:=TGDBObjInsp.Create(Application);
-  GDBobjinsp._IsCurrObjInUndoContext:=IsCurrObjInUndoContext;
-  GDBobjinsp.OnContextPopup:=dummyclass.ContextPopup;
-
-  StoreAndSetGDBObjInsp(nil,drawings.GetUnitsFormat,SysUnit.TypeName2PTD('gdbsysvariable'),@sysvar,nil);
-  //StoreAndSetGDBObjInsp(nil,drawings.GetUnitsFormat,SysUnit.TypeName2PTD('PTLayerControl'),@sysvar.DSGN.DSGN_LayerControls.DSGN_LC_Cable,nil);
-  SetCurrentObjDefault;
-  //pint:=SavedUnit.FindValue('VIEW_ObjInspV');
-  SetNameColWidth(Form.Width div 2);
-  pint:=SavedUnit.FindValue('VIEW_ObjInspSubV').data.Addr.Instance;
-  if assigned(pint)then
-                       SetNameColWidth(pint^);
-  pint:=SavedUnit.FindValue('VIEW_ObjInspV').data.Addr.Instance;
-  if assigned(pint)then
-                       SetLastClientWidth(pint^);
-  TBNode:=nil;
-  if assigned(ToolBarsManager)then
-    TBNode:=ToolBarsManager.FindBarsContent('ObjInspUpToolbar');
-  if assigned(TBNode)then begin
-    tb:=ttoolbar.create(form);
-    tb.Images:=ImagesManager.IconList;
-    tb.AutoSize:=true;
-    tb.ShowCaptions:=true;
-    tb.Align:=alTop;
-    tb.EdgeBorders:=[];//[ebBottom];
-    ToolBarsManager.CreateToolbarContent(tb,TBNode);
-    tb.Parent:=tform(Form);
-  end;
-  GDBobjinsp.Align:=alClient;
-  GDBobjinsp.BorderStyle:=bsNone;
-  GDBobjinsp.Parent:=tform(Form);
-  ZCMsgCallBackInterface.RegisterHandler_KeyDown(GDBobjinsp.myKeyDown);
-end;
-procedure _onNotify(const pcurcontext:pointer);
-begin
-  if pcurcontext<>nil then
-  begin
-       PTDrawingDef(pcurcontext).ChangeStampt(true);
-  end;
-end;
-procedure _onUpdateObjectInInsp(const EDContext:TEditorContext;const currobjgdbtype:PUserTypeDescriptor;const pcurcontext:pointer;const pcurrobj:pointer;const GDBobj:boolean);
-function CurrObjIsEntity:boolean;
-begin
-  result:=false;
-  //if GDBobj then
-  //  if PGDBaseObject(pcurrobj)^.IsEntity then
-  //    result:=true;
-end;
-function IsEntityInCurrentContext:boolean;
-begin
-     if PGDBObjEntity(pcurrobj).bp.ListPos.Owner=PTDrawingDef(pcurcontext)^.GetCurrentRootSimple
-     then
-         result:=true
-    else
-         result:=false;
-end;
-var
-   dc:TDrawContext;
-begin
-  if GDBobj then
-                begin
-                     dc:=PTDrawingDef(pcurcontext)^.CreateDrawingRC;
-                    if CurrObjIsEntity then
-                                           begin
-                                               PGDBObjEntity(pcurrobj)^.FormatEntity(PTDrawingDef(pcurcontext)^,dc);
-                                               if IsEntityInCurrentContext
-                                               then
-                                                   PGDBObjEntity(pcurrobj).YouChanged(PTDrawingDef(pcurcontext)^)
-                                               else
-                                                   PGDBObjRoot(PTDrawingDef(pcurcontext)^.GetCurrentRootSimple)^.FormatAfterEdit(PTDrawingDef(pcurcontext)^,dc);
-                                           end
-                                       else
-                                        begin
-                                           if assigned(EDContext.ppropcurrentedit) then
-                                             PGDBaseObject(pcurrobj)^.FormatAfterFielfmod(EDContext.ppropcurrentedit^.valueAddres,currobjgdbtype);
-                                        end;
-                end;
-  ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIResetOGLWNDProc);
-  zcRedrawCurrentDrawing;
-  ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIActionRedraw);
-
-  // убрано, потому что с этим не работают фильтры в инспекторе
-  //if GDBobj then
-  //  if typeof(PGDBaseObject(pcurrobj)^)=typeof(TMSEditor) then
-  //    PMSEditor(pcurrobj)^.CreateUnit(PMSEditor(pcurrobj)^.SavezeUnitsFormat);
-end;
-
 procedure _onGetOtherValues(var vsa:TZctnrVectorStrings;const valkey:string;const pcurcontext:pointer;const pcurrobj:pointer;const GDBobj:boolean;const f:TzeUnitsFormat);
 var
   pentvarext:TVariablesExtender;
@@ -186,12 +138,147 @@ begin
        vsa.sort;
   end;
 end;
+procedure _onUpdateObjectInInsp(const EDContext:TEditorContext;const currobjgdbtype:PUserTypeDescriptor;const pcurcontext:pointer;const pcurrobj:pointer;const GDBobj:boolean);
+  function CurrObjIsEntity:boolean;
+  begin
+    result:=false;
+    //if GDBobj then
+    //  if PGDBaseObject(pcurrobj)^.IsEntity then
+    //    result:=true;
+  end;
+  function IsEntityInCurrentContext:boolean;
+  begin
+       if PGDBObjEntity(pcurrobj).bp.ListPos.Owner=PTDrawingDef(pcurcontext)^.GetCurrentRootSimple
+       then
+           result:=true
+      else
+           result:=false;
+  end;
+var
+   dc:TDrawContext;
+begin
+  if GDBobj then
+                begin
+                     dc:=PTDrawingDef(pcurcontext)^.CreateDrawingRC;
+                    if CurrObjIsEntity then
+                                           begin
+                                               PGDBObjEntity(pcurrobj)^.FormatEntity(PTDrawingDef(pcurcontext)^,dc);
+                                               if IsEntityInCurrentContext
+                                               then
+                                                   PGDBObjEntity(pcurrobj).YouChanged(PTDrawingDef(pcurcontext)^)
+                                               else
+                                                   PGDBObjRoot(PTDrawingDef(pcurcontext)^.GetCurrentRootSimple)^.FormatAfterEdit(PTDrawingDef(pcurcontext)^,dc);
+                                           end
+                                       else
+                                        begin
+                                           if assigned(EDContext.ppropcurrentedit) then
+                                             PGDBaseObject(pcurrobj)^.FormatAfterFielfmod(EDContext.ppropcurrentedit^.valueAddres,currobjgdbtype);
+                                        end;
+                end;
+  ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIResetOGLWNDProc);
+  zcRedrawCurrentDrawing;
+  ZCMsgCallBackInterface.Do_GUIaction(nil,ZMsgID_GUIActionRedraw);
+
+  // убрано, потому что с этим не работают фильтры в инспекторе
+  //if GDBobj then
+  //  if typeof(PGDBaseObject(pcurrobj)^)=typeof(TMSEditor) then
+  //    PMSEditor(pcurrobj)^.CreateUnit(PMSEditor(pcurrobj)^.SavezeUnitsFormat);
+end;
+procedure _onNotify(const pcurcontext:pointer);
+begin
+  if pcurcontext<>nil then
+  begin
+       PTDrawingDef(pcurcontext).ChangeStampt(true);
+  end;
+end;
 procedure _onAfterFreeEditor(sender:tobject);
 begin
   if assigned(uzcfcommandline.cmdedit) then
     if uzcfcommandline.cmdedit.IsVisible then
       if uzcfcommandline.cmdedit.CanFocus then
         uzcfcommandline.cmdedit.SetFocus;
+end;
+
+procedure StoreAndSetGDBObjInsp(const UndoStack:PTZctnrVectorUndoCommands;const f:TzeUnitsFormat;exttype:PUserTypeDescriptor; addr,context:pointer;popoldpos:boolean=false);
+begin
+     if assigned(GDBobjinsp)then
+     begin
+     if popoldpos then
+     if (GDBobjinsp.PStoredObj=nil) then
+                             begin
+                                  GDBobjinsp.PStoredObj:=GDBobjinsp.CurrPObj;
+                                  GDBobjinsp.StoredObjGDBType:=GDBobjinsp.CurrObjGDBType;
+                                  GDBobjinsp.pStoredContext:=GDBobjinsp.CurrContext;
+                                  GDBobjinsp.StoredUndoStack:=GDBobjinsp.EDContext.UndoStack;
+                                  GDBobjinsp.StoredUnitsFormat:=GDBobjinsp.CurrUnitsFormat;
+                             end;
+     GDBobjinsp.setptr(UndoStack,f,exttype,addr,context);
+     end;
+end;
+
+procedure SetNameColWidth(w:integer);
+begin
+       if assigned(GDBobjinsp)then
+                                  begin
+                                       GDBobjinsp.NameColumnWidth:=w;
+                                       GDBobjinsp.NameColumnWidthCorrector.LastNameColumnWidth:=w;
+                                  end;
+end;
+
+procedure ZCADFormSetupProc(Form:TControl);
+var
+  pint:PInteger;
+  TBNode:TDomNode;
+  tb:TToolBar;
+  action:tmyaction;
+begin
+
+  GDBobjinsp:=TGDBObjInsp.Create(Application);
+  GDBobjinsp._IsCurrObjInUndoContext:=IsCurrObjInUndoContext;
+  GDBobjinsp.OnContextPopup:=dummyclass.ContextPopup;
+  GDBobjinsp.onGetOtherValues:=_onGetOtherValues;
+  GDBobjinsp.onUpdateObjectInInsp:=_onUpdateObjectInInsp;
+  GDBobjinsp.onNotify:=_onNotify;
+  GDBobjinsp.onAfterFreeEditor:=_onAfterFreeEditor;
+
+  StoreAndSetGDBObjInsp(nil,drawings.GetUnitsFormat,SysUnit.TypeName2PTD('gdbsysvariable'),@sysvar,nil);
+  SetCurrentObjDefault;
+  //pint:=SavedUnit.FindValue('VIEW_ObjInspV');
+  SetNameColWidth(Form.Width div 2);
+  pint:=SavedUnit.FindValue('VIEW_ObjInspSubV').data.Addr.Instance;
+  if assigned(pint)then
+                       SetNameColWidth(pint^);
+  pint:=SavedUnit.FindValue('VIEW_ObjInspV').data.Addr.Instance;
+  if assigned(pint)then
+                       SetLastClientWidth(pint^);
+  TBNode:=nil;
+  if assigned(ToolBarsManager)then
+    TBNode:=ToolBarsManager.FindBarsContent('ObjInspUpToolbar');
+  if assigned(TBNode)then begin
+    tb:=ttoolbar.create(form);
+    tb.Images:=ImagesManager.IconList;
+    tb.AutoSize:=true;
+    tb.ShowCaptions:=true;
+    tb.Align:=alTop;
+    tb.EdgeBorders:=[];//[ebBottom];
+    ToolBarsManager.CreateToolbarContent(tb,TBNode);
+    tb.Parent:=tform(Form);
+  end;
+
+  action:=tmyaction(StandartActions.ActionByName(ToolBarNameToActionName('ObjInspUpToolbar')));
+  if assigned(action) then
+    begin
+      action.Enabled:=false;
+      action.Checked:=true;
+      action.pfoundcommand:=nil;
+      action.command:='';
+      action.options:='';
+    end;
+
+  GDBobjinsp.Align:=alClient;
+  GDBobjinsp.BorderStyle:=bsNone;
+  GDBobjinsp.Parent:=tform(Form);
+  ZCMsgCallBackInterface.RegisterHandler_KeyDown(GDBobjinsp.myKeyDown);
 end;
 function CreateObjInspInstance(FormName:string):TForm;
 begin
@@ -299,44 +386,78 @@ begin
     result.control:=GDBobjinsp.PEditor.geteditor;
   end;
 end;
-
+var
+  vd:vardesk;
 initialization
-  system_pas_path:=expandpath('$(ZCADPath)/rtl/system.pas');
-  units.CreateExtenalSystemVariable(SysVarUnit,SysVarN,GetSupportPath,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_WhiteBackground','Boolean',@INTFObjInspWhiteBackground);
-  units.CreateExtenalSystemVariable(SysVarUnit,SysVarN,GetSupportPath,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_Level0HeaderColor','Integer',@INTFObjInspLevel0HeaderColor);
-  units.CreateExtenalSystemVariable(SysVarUnit,SysVarN,GetSupportPath,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_BorledColor','Integer',@INTFObjInspBorderColor);
-  units.CreateExtenalSystemVariable(SysVarUnit,SysVarN,GetSupportPath,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_ShowHeaders','Boolean',@INTFObjInspShowHeaders);
-  units.CreateExtenalSystemVariable(SysVarUnit,SysVarN,GetSupportPath,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_ShowSeparator','Boolean',@INTFObjInspShowSeparator);
-  units.CreateExtenalSystemVariable(SysVarUnit,SysVarN,GetSupportPath,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_OldStyleDraw','Boolean',@INTFObjInspOldStyleDraw);
-  units.CreateExtenalSystemVariable(SysVarUnit,SysVarN,GetSupportPath,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_ShowFastEditors','Boolean',@INTFObjInspShowFastEditors);
-  units.CreateExtenalSystemVariable(SysVarUnit,SysVarN,GetSupportPath,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_ShowOnlyHotFastEditors','Boolean',@INTFObjInspShowOnlyHotFastEditors);
-  INTFObjInspRowHeight.Enable:=LocalRowHeightOverride;
-  INTFObjInspRowHeight.Value:=LocalRowHeight;
-  units.CreateExtenalSystemVariable(SysVarUnit,SysVarN,GetSupportPath,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_RowHeight_OverriderEnable','Boolean',@INTFObjInspRowHeight.Enable);
-  PRowHeight:=@INTFObjInspRowHeight.Value;
-  PRowHeightOverride:=@INTFObjInspRowHeight.Enable;
-  units.CreateExtenalSystemVariable(SysVarUnit,SysVarN,GetSupportPath,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_RowHeight_OverriderValue','Integer',@INTFObjInspRowHeight.Value);
-  units.CreateExtenalSystemVariable(SysVarUnit,SysVarN,GetSupportPath,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_SpaceHeight','Integer',@INTFObjInspSpaceHeight);
-  units.CreateExtenalSystemVariable(SysVarUnit,SysVarN,GetSupportPath,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_ShowEmptySections','Boolean',@INTFObjInspShowEmptySections);
-  units.CreateExtenalSystemVariable(SysVarUnit,SysVarN,GetSupportPath,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_ButtonSizeReducing','Integer',@INTFObjInspButtonSizeReducing);
-  SysVar.INTF.INTF_OBJINSP_Properties.INTF_ObjInsp_RowHeight:=@INTFObjInspRowHeight;
-  SysVar.INTF.INTF_OBJINSP_Properties.INTF_ObjInsp_Level0HeaderColor:=@INTFObjInspLevel0HeaderColor;
-  SysVar.INTF.INTF_OBJINSP_Properties.INTF_ObjInsp_BorderColor:=@INTFObjInspBorderColor;
-  zcobjectinspector.INTFDefaultControlHeight:=sysparam.notsaved.defaultheight;
+  system_pas_path:=expandpath('$(DistribPath)/rtl/system.pas');
+  //units.CreateExtenalSystemVariable(SysVarUnit,SysVarN,GetSupportPaths,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_WhiteBackground','Boolean',@OIManager.INTFObjInspWhiteBackground);
+  vd:=units.CreateInternalSystemVariable(SysVarUnit,SysVarN,GetSupportPaths,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_WhiteBackground','TGetterSetterBoolean');
+  PTGetterSetterBoolean(vd.data.Addr.GetInstance)^.Setup(OIManager.getWhiteBackground,OIManager.setWhiteBackground);
+  SysVar.INTF.INTF_OBJINSP_Properties.INTF_ObjInsp_WhiteBackground.Setup(OIManager.getWhiteBackground,OIManager.setWhiteBackground);
+
+  vd:=units.CreateInternalSystemVariable(SysVarUnit,SysVarN,GetSupportPaths,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_ShowHeaders','TGetterSetterBoolean');
+  PTGetterSetterBoolean(vd.data.Addr.GetInstance)^.Setup(OIManager.getShowHeaders,OIManager.setShowHeaders);
+  SysVar.INTF.INTF_OBJINSP_Properties.INTF_ObjInsp_ShowHeaders.Setup(OIManager.getShowHeaders,OIManager.setShowHeaders);
+
+  vd:=units.CreateInternalSystemVariable(SysVarUnit,SysVarN,GetSupportPaths,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_ShowSeparator','TGetterSetterBoolean');
+  PTGetterSetterBoolean(vd.data.Addr.GetInstance)^.Setup(OIManager.getShowSeparator,OIManager.setShowSeparator);
+  SysVar.INTF.INTF_OBJINSP_Properties.INTF_ObjInsp_ShowSeparator.Setup(OIManager.getShowSeparator,OIManager.setShowSeparator);
+
+  vd:=units.CreateInternalSystemVariable(SysVarUnit,SysVarN,GetSupportPaths,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_OldStyleDraw','TGetterSetterBoolean');
+  PTGetterSetterBoolean(vd.data.Addr.GetInstance)^.Setup(OIManager.getOldStyleDraw,OIManager.setOldStyleDraw);
+  SysVar.INTF.INTF_OBJINSP_Properties.INTF_ObjInsp_OldStyleDraw.Setup(OIManager.getOldStyleDraw,OIManager.setOldStyleDraw);
+
+  vd:=units.CreateInternalSystemVariable(SysVarUnit,SysVarN,GetSupportPaths,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_ShowFastEditors','TGetterSetterBoolean');
+  PTGetterSetterBoolean(vd.data.Addr.GetInstance)^.Setup(OIManager.getShowFastEditors,OIManager.setShowFastEditors);
+  SysVar.INTF.INTF_OBJINSP_Properties.INTF_ObjInsp_ShowFastEditors.Setup(OIManager.getShowFastEditors,OIManager.setShowFastEditors);
+
+  vd:=units.CreateInternalSystemVariable(SysVarUnit,SysVarN,GetSupportPaths,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_ShowOnlyHotFastEditors','TGetterSetterBoolean');
+  PTGetterSetterBoolean(vd.data.Addr.GetInstance)^.Setup(OIManager.getShowOnlyHotFastEditors,OIManager.setShowOnlyHotFastEditors);
+  SysVar.INTF.INTF_OBJINSP_Properties.INTF_ObjInsp_ShowOnlyHotFastEditors.Setup(OIManager.getShowOnlyHotFastEditors,OIManager.setShowOnlyHotFastEditors);
+
+
+  vd:=units.CreateInternalSystemVariable(SysVarUnit,SysVarN,GetSupportPaths,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_Level0HeaderColor','TGetterSetterTZColor');
+  PTGetterSetterTZColor(vd.data.Addr.GetInstance)^.Setup(OIManager.getLevel0HeaderZColor,OIManager.setLevel0HeaderZColor);
+  SysVar.INTF.INTF_OBJINSP_Properties.INTF_ObjInsp_Level0HeaderColor.Setup(OIManager.getLevel0HeaderZColor,OIManager.setLevel0HeaderZColor);
+
+  vd:=units.CreateInternalSystemVariable(SysVarUnit,SysVarN,GetSupportPaths,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_BorledColor','TGetterSetterTZColor');
+  PTGetterSetterTZColor(vd.data.Addr.GetInstance)^.Setup(OIManager.getBorderZColor,OIManager.setBorderZColor);
+  SysVar.INTF.INTF_OBJINSP_Properties.INTF_ObjInsp_BorderColor.Setup(OIManager.getBorderZColor,OIManager.setBorderZColor);
+
+  vd:=units.CreateInternalSystemVariable(SysVarUnit,SysVarN,GetSupportPaths,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_RowHeight_OverriderEnable','TGetterSetterBoolean');
+  PTGetterSetterBoolean(vd.data.Addr.GetInstance)^.Setup(OIManager.getRowHeightOverrideUsable,OIManager.setRowHeightOverrideUsable);
+  vd:=units.CreateInternalSystemVariable(SysVarUnit,SysVarN,GetSupportPaths,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_RowHeight_OverriderValue','TGetterSetterInteger');
+  PTGetterSetterInteger(vd.data.Addr.GetInstance)^.Setup(OIManager.getRowHeightOverrideValue,OIManager.setRowHeightOverrideValue);
+  SysVar.INTF.INTF_OBJINSP_Properties.INTF_ObjInsp_RowHeight.Setup(OIManager.getRowHeightOverride,OIManager.setRowHeightOverride);
+
+
+  vd:=units.CreateInternalSystemVariable(SysVarUnit,SysVarN,GetSupportPaths,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_ButtonSizeReducing','TGetterSetterInteger');
+  PTGetterSetterInteger(vd.data.Addr.GetInstance)^.Setup(OIManager.getButtonSizeReducing,OIManager.setButtonSizeReducing);
+  SysVar.INTF.INTF_OBJINSP_Properties.INTF_ObjInsp_ButtonSizeReducing.Setup(OIManager.getButtonSizeReducing,OIManager.setButtonSizeReducing);
+
+  //INTFObjInspRowHeight.Enable:=OIManager.LocalRowHeightOverride;
+  //INTFObjInspRowHeight.Value:=OIManager.LocalRowHeight;
+  //OIManager.PRowHeight:=@INTFObjInspRowHeight.Value;
+  //OIManager.PRowHeightOverride:=@INTFObjInspRowHeight.Enable;
+
+  vd:=units.CreateInternalSystemVariable(SysVarUnit,SysVarN,GetSupportPaths,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_SpaceHeight','TGetterSetterInteger');
+  PTGetterSetterInteger(vd.data.Addr.GetInstance)^.Setup(OIManager.getOpenNodeIdent,OIManager.setOpenNodeIdent);
+  SysVar.INTF.INTF_OBJINSP_Properties.INTF_ObjInsp_SpaceHeight.Setup(OIManager.getOpenNodeIdent,OIManager.setOpenNodeIdent);
+
+  vd:=units.CreateInternalSystemVariable(SysVarUnit,SysVarN,GetSupportPaths,system_pas_path,InterfaceTranslate,'INTF_ObjInsp_ShowEmptySections','TGetterSetterBoolean');
+  PTGetterSetterBoolean(vd.data.Addr.GetInstance)^.Setup(OIManager.getShowEmptySections,OIManager.setShowEmptySections);
+  SysVar.INTF.INTF_OBJINSP_Properties.INTF_ObjInsp_ShowEmptySections.Setup(OIManager.getShowEmptySections,OIManager.setShowEmptySections);
+
+
+
+  OIManager.DefaultRowHeight:=ZCSysParams.notsaved.defaultheight;
   ZCADGUIManager.RegisterZCADFormInfo('ObjectInspector',rsGDBObjinspWndName,TGDBobjinsp,rect(0,100,200,600),ZCADFormSetupProc,CreateObjInspInstance,@GDBobjinsp);
-  PropertyRowName:=rsProperty;
-  ValueRowName:=rsValue;
-  DifferentName:=rsDifferent;
-  onGetOtherValues:=_onGetOtherValues;
-  onUpdateObjectInInsp:=_onUpdateObjectInInsp;
-  onNotify:=_onNotify;
-  onAfterFreeEditor:=_onAfterFreeEditor;
+  OIManager.PropertyRowName:=rsProperty;
+  OIManager.ValueRowName:=rsValue;
+  OIManager.DifferentName:=rsDifferent;
 
   //GDBobjinsp.currpd:=nil;
   ZCMsgCallBackInterface.RegisterHandler_PrepareObject(StoreAndSetGDBObjInsp());
-  //PrepareObject:={TSetGDBObjInsp}(StoreAndSetGDBObjInsp);
-  //StoreAndSetGDBObjInspProc:=TSetGDBObjInsp(StoreAndSetGDBObjInsp);
-  //ReStoreGDBObjInspProc:=ReStoreGDBObjInsp;
   dummyclass:=tdummyclass.create;
   ZCMsgCallBackInterface.RegisterHandler_GUIAction(dummyclass.UpdateObjInsp);
   //UpdateObjInspProc:=dummyclass.UpdateObjInsp;

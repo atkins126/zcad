@@ -19,10 +19,12 @@
 unit uzcSysParams;
 {$INCLUDE zengineconfig.inc}
 interface
-uses XMLConf,XMLPropStorage,LazConfigStorage,fileutil,
-  LCLProc,uzclog,uzbpaths,Forms{$IFNDEF DELPHI},LazUTF8{$ENDIF},sysutils;
-const
-  CParamsFile='/rtl/config.xml';
+uses
+  SysUtils,
+  XMLConf,XMLPropStorage,LazConfigStorage,DOM,
+  FileUtil,
+  LCLProc,Forms{$IFNDEF DELPHI},LazUTF8{$ENDIF},
+  uzcLog,uzbPaths;
 type
 {EXPORT+}
   {REGISTERRECORDTYPE TmyFileVersionInfo}
@@ -31,8 +33,8 @@ type
     AbbreviatedName:AnsiString;
     VersionString:AnsiString;
   end;
-  {REGISTERRECORDTYPE tsavedparams}
-  tsavedparams=record
+  {REGISTERRECORDTYPE TZCSavedParams}
+  TZCSavedParams=record
     UniqueInstance:Boolean;(*'Unique instance'*)
     NoSplash:Boolean;(*'No splash screen'*)
     NoLoadLayout:Boolean;(*'No load layout'*)
@@ -41,9 +43,10 @@ type
     LangOverride:string;(*'Language override'*)
     DictionariesPath:string;(*'Dictionaries path'*)
     LastAutoSaveFile:string;(*'Last autosave file'*)
+    PreferredDistribPath:String;(*'Path to distributive'*)
   end;
-  {REGISTERRECORDTYPE tnotsavedparams}
-  tnotsavedparams=record
+  {REGISTERRECORDTYPE TZCNotSavedParams}
+  TZCNotSavedParams=record
     ScreenX:Integer;(*'Screen X'*)(*oi_readonly*)
     ScreenY:Integer;(*'Screen Y'*)(*oi_readonly*)
     otherinstancerun:Boolean;(*'Other instance run'*)(*oi_readonly*)
@@ -51,30 +54,36 @@ type
     Ver:TmyFileVersionInfo;(*'Version'*)(*oi_readonly*)
     DefaultHeight:Integer;(*'Default controls height'*)(*oi_readonly*)
   end;
-  ptsysparam=^tsysparam;
-  {REGISTERRECORDTYPE tsysparam}
-  tsysparam=record
-    saved:tsavedparams;(*'Saved params'*)
-    notsaved:tnotsavedparams;(*'Not saved params'*)(*oi_readonly*)
+  PZCSysParams=^TZCSysParams;
+  {REGISTERRECORDTYPE TZCSysParams}
+  TZCSysParams=record
+    saved:TZCSavedParams;(*'Saved params'*)
+    notsaved:TZCNotSavedParams;(*'Not saved params'*)(*oi_readonly*)
   end;
 {EXPORT-}
 const
-  DefaultSavedParams:tsavedparams=(UniqueInstance:true;
+  DefaultSavedParams:TZCSavedParams=(UniqueInstance:true;
                                    NoSplash:false;
                                    NoLoadLayout:false;
                                    UpdatePO:false;
                                    MemProfiling:false;
                                    LangOverride:'';
                                    DictionariesPath:'ru=$(ZCADDictionariesPath)/ru_RU.dic|en=$(ZCADDictionariesPath)/en_US.dic;$(ZCADDictionariesPath)/en_US_interface.dic|abbrv=$(ZCADDictionariesPath)/abbrv.dic';
-                                   LastAutoSaveFile:'noAutoSaveFile');
+                                   LastAutoSaveFile:'noAutoSaveFile';
+                                   PreferredDistribPath:'sss');
   zcaduniqueinstanceid='zcad unique instance';
 var
-  SysParam: tsysparam;
+  ZCSysParams: TZCSysParams;
 
-procedure SaveParams(xmlfile:string;var Params:tsavedparams);
-procedure LoadParams(xmlfile:string;out Params:tsavedparams);
+procedure SaveParams(xmlfile:string;var Params:TZCSavedParams);
+procedure LoadParams(xmlfile:string;out Params:TZCSavedParams);
 implementation
-procedure SaveParamToConfig(Config: TConfigStorage; var Params:tsavedparams);
+type
+  TXMLConfigHelper=class helper for TXMLConfig
+    function  GetAnsiValue(const APath: DOMString; const ADefault: AnsiString): AnsiString;
+  end;
+
+procedure SaveParamToConfig(Config: TConfigStorage; var Params:TZCSavedParams);
 begin
   Config.AppendBasePath('Stage0Params/');
   Config.SetDeleteValue('UniqueInstance',Params.UniqueInstance,DefaultSavedParams.UniqueInstance);
@@ -85,10 +94,11 @@ begin
   Config.SetDeleteValue('LangOverride',Params.LangOverride,DefaultSavedParams.LangOverride);
   Config.SetDeleteValue('DictionariesPath',Params.DictionariesPath,DefaultSavedParams.DictionariesPath);
   Config.SetDeleteValue('LastAutoSaveFile',Params.LastAutoSaveFile,DefaultSavedParams.LastAutoSaveFile);
+  Config.SetDeleteValue('PreferredDistribPath',Params.PreferredDistribPath,DefaultSavedParams.PreferredDistribPath);
   Config.UndoAppendBasePath;
 end;
 
-procedure SaveParams(xmlfile:string;var Params:tsavedparams);
+procedure SaveParams(xmlfile:string;var Params:TZCSavedParams);
 var
   XMLConfig: TXMLConfig;
   Config: TXMLConfigStorage;
@@ -105,12 +115,21 @@ begin
     finally
       Config.Free;
     end;
-    XMLConfig.Flush;
+    //не писать файл нельзя(когда все значения по умолчанию)
+    //т.к. при не нахождении конфиг "по умолчанию" создан не будет,
+    //но будет взят конфиг из дитрибутива
+    XMLConfig.SaveToFile(xmlfile);
+    //XMLConfig.Flush;
   finally
     XMLConfig.Free;
   end;
 end;
-procedure LoadParams(xmlfile:string;out Params:tsavedparams);
+function TXMLConfigHelper.GetAnsiValue(const APath: DOMString; const ADefault: AnsiString): AnsiString;
+begin
+  result:=AnsiString(GetValue(APath,DOMString(ADefault)));
+end;
+
+procedure LoadParams(xmlfile:string;out Params:TZCSavedParams);
 var
   XMLConfig:TXMLConfig;
 begin
@@ -123,9 +142,11 @@ begin
   Params.NoLoadLayout:=XMLConfig.GetValue('NoLoadLayout',DefaultSavedParams.NoLoadLayout);
   Params.UpdatePO:=XMLConfig.GetValue('UpdatePO',DefaultSavedParams.UpdatePO);
   Params.MemProfiling:=XMLConfig.GetValue('MemProfiling',DefaultSavedParams.MemProfiling);
-  Params.LangOverride:=XMLConfig.GetValue('LangOverride',DefaultSavedParams.LangOverride);
-  Params.DictionariesPath:=XMLConfig.GetValue('DictionariesPath',DefaultSavedParams.DictionariesPath);
-  Params.LastAutoSaveFile:=XMLConfig.GetValue('LastAutoSaveFile',DefaultSavedParams.LastAutoSaveFile);
+  Params.LangOverride:=XMLConfig.GetAnsiValue('LangOverride',DefaultSavedParams.LangOverride);
+  Params.DictionariesPath:=XMLConfig.GetAnsiValue('DictionariesPath',DefaultSavedParams.DictionariesPath);
+  Params.LastAutoSaveFile:=XMLConfig.GetAnsiValue('LastAutoSaveFile',DefaultSavedParams.LastAutoSaveFile);
+  Params.PreferredDistribPath:=XMLConfig.GetAnsiValue('PreferredDistribPath',DefaultSavedParams.PreferredDistribPath);
+  SetDistribPath(Params.PreferredDistribPath);
   XMLConfig.CloseKey;
   FreeAndNil(XMLConfig);
 end;

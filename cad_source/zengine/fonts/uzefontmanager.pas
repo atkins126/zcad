@@ -60,7 +60,7 @@ type
     FontFiles:{-}TFontName2FontFileMap{/pointer/};
     shxfontfiles:TStringList;
     constructor init(m:Integer);
-    destructor done;virtual;
+    procedure done;virtual;
     procedure CreateBaseFont;
 
     function addFonfByFile(const FontPathName:String):PGDBfont;
@@ -135,7 +135,7 @@ procedure GDBFontManager.EnumerateSHXFontFile(const filename:String;pdata:pointe
 begin
      shxfontfiles.Add(filename);
 end;
-destructor GDBFontManager.done;
+procedure GDBFontManager.done;
 begin
   inherited;
   if assigned(FontFiles)then
@@ -163,34 +163,34 @@ begin
   inherited init(m);
 end;
 procedure GDBFontManager.CreateBaseFont;
+var
+  PathWithFileName:string;
 {NEEDFIXFORDELPHI}
 {$IFNDEF DELPHI}
-var
-   r: TLResource;
-   f:TZctnrVectorBytes;
+  r:TLResource;
+  f:TZctnrVectorBytes;
 {$ENDIF}
 const
-   resname='GEWIND';
-   filename='GEWIND.SHX';
+  resname='GEWIND';
+  filename='GEWIND.SHX';
 begin
   {$IFNDEF DELPHI}
   pbasefont:=addFonfByFile(FindInPaths(sysvarPATHFontsPath,sysvarAlternateFont));
-  if pbasefont=nil then
-  begin
-       zDebugLn('{E}'+rsAlternateFontNotFoundIn,[sysvarAlternateFont,sysvarPATHFontsPath]);
-       r := LazarusResources.Find(resname);
-       if r = nil then
-                      zDebugLn('{F}'+rsReserveFontNotFound)
-                  else
-                      begin
-                           f.init(length(r.Value));
-                           f.AddData(@r.Value[1],length(r.Value));
-                           f.SaveToFile(expandpath(TempPath+filename));
-                           pbasefont:=addFonfByFile(TempPath+filename);
-                           f.done;
-                           if pbasefont=nil then
-                                                zDebugLn('{F}'+rsReserveFontNotLoad)
-                      end;
+  if pbasefont=nil then begin
+    zDebugLn('{E}'+rsAlternateFontNotFoundIn,[sysvarAlternateFont,sysvarPATHFontsPath]);
+    r := LazarusResources.Find(resname);
+    if r = nil then
+      zDebugLn('{F}'+rsReserveFontNotFound)
+    else begin
+      f.init(length(r.Value));
+      f.AddData(@r.Value[1],length(r.Value));
+      PathWithFileName:=expandpath(ConcatPaths([GetTempPath,filename]));
+      f.SaveToFile(PathWithFileName);
+      pbasefont:=addFonfByFile(PathWithFileName);
+      f.done;
+      if pbasefont=nil then
+        zDebugLn('{F}'+rsReserveFontNotLoad)
+    end;
   end;
   addFonfByFile(FindInPaths(sysvarPATHFontsPath,'ltypeshp.shx'));
   {$ENDIF}

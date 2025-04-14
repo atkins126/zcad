@@ -39,14 +39,13 @@ GDBSelectedObjArray= object(GZVector{-}<selectedobjdesc>{//})
                           function addobject(PEntity:PGDBObjEntity):pselectedobjdesc;virtual;
                           procedure pushobject(PEntity:PGDBObjEntity);
                           procedure free;virtual;
-                          procedure remappoints(pcount:TActulity;ScrollMode:Boolean;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;
+                          procedure remappoints(pcount:TActuality;ScrollMode:Boolean;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;
                           procedure drawpoint(var DC:TDrawContext;const GripSize:Integer; const SelColor,UnSelColor:TRGB);virtual;
-                          procedure drawobject(var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
+                          procedure drawobject(var DC:TDrawContext);virtual;
                           function getnearesttomouse(mx,my:integer):tcontrolpointdist;virtual;
                           function getonlyoutbound(var DC:TDrawContext):TBoundingBox;
                           procedure selectcurrentcontrolpoint(key:Byte;mx,my,h:integer);virtual;
                           procedure selectcontrolpointinframe(f1,f2: GDBvertex2DI);virtual;
-                          procedure RenderFeedBack(pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);virtual;
                           //destructor done;virtual;
                           procedure freeclones;
                           procedure Transform(const dispmatr:DMatrix4D);
@@ -54,15 +53,15 @@ GDBSelectedObjArray= object(GZVector{-}<selectedobjdesc>{//})
                           procedure SetRotateObj(const minusd,plusd,rm:DMatrix4D;const x,y,z:GDBVertex);
                           procedure TransformObj(const dispmatr:DMatrix4D);
 
-                          procedure drawobj(var DC:TDrawContext{infrustumactualy:TActulity;subrender:Integer});virtual;
+                          procedure drawobj(var DC:TDrawContext);virtual;
                           procedure freeelement(PItem:PT);virtual;
-                          procedure calcvisible(const frustum:cliparray;infrustumactualy:TActulity;visibleactualy:TActulity;var totalobj,infrustumobj:Integer; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double);virtual;
-                          procedure resprojparam(pcount:TActulity;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);
+                          procedure calcvisible(const frustum:cliparray;const Actuality:TVisActuality;var Counters:TCameraCounters; ProjectProc:GDBProjectProc;const zoom,currentdegradationfactor:Double);virtual;
+                          //procedure resprojparam(pcount:TActuality;var camera:GDBObjCamera; ProjectProc:GDBProjectProc;var DC:TDrawContext);
                     end;
 {EXPORT-}
 implementation
 //uses uzedrawingabstract,uzeentgenericsubentry;
-procedure GDBSelectedObjArray.resprojparam;
+{procedure GDBSelectedObjArray.resprojparam;
 var tdesc:pselectedobjdesc;
     i:Integer;
 begin
@@ -71,12 +70,11 @@ begin
        tdesc:=GetParrayAsPointer;
        for i:=0 to count-1 do
        begin
-            //dec(tdesc^.objaddr^.vp.LastCameraPos);
             tdesc^.objaddr^.Renderfeedback(pcount,camera,ProjectProc,dc);
             inc(tdesc);
        end;
   end;
-end;
+end;}
 procedure GDBSelectedObjArray.freeelement;
 begin
   if PSelectedObjDesc(PItem).pcontrolpoint<>nil then
@@ -167,7 +165,7 @@ begin
        dc.drawer.SetPointSize(1);
   end;
 end;
-procedure GDBSelectedObjArray.RenderFeedBack;
+{procedure GDBSelectedObjArray.RenderFeedBack;
 var tdesc:pselectedobjdesc;
     i:Integer;
 begin
@@ -187,7 +185,8 @@ begin
             inc(tdesc);
        end;
   end;
-end;procedure GDBSelectedObjArray.drawobject;
+end;}
+procedure GDBSelectedObjArray.drawobject;
 var tdesc:pselectedobjdesc;
     i:Integer;
 begin
@@ -297,12 +296,13 @@ begin
   pobj^.Transform(minusd);
 
   m:=PGDBObjWithMatrix(pobj)^.ObjMatrix;
-  P_insert_in_OCS:=PGDBVertex(@m[3])^;
-  PGDBVertex(@m[3])^:=nulvertex;
+  P_insert_in_OCS:=PGDBVertex(@m.mtr[3])^;
+  PGDBVertex(@m.mtr[3])^:=nulvertex;
   matrixinvert(m);
   P_insert_in_WCS:=VectorTransform3D(P_insert_in_OCS,m);
-  m:=onematrix;
-  PGDBVertex(@m[3])^:=P_insert_in_wCS;
+  //m:=onematrix;
+  //PGDBVertex(@m.mtr[3])^:=P_insert_in_wCS;
+  m:=CreateTranslationMatrix(P_insert_in_wCS);
   PGDBObjWithMatrix(pobj)^.ObjMatrix:=m;
   pobj^.Transform(rm);
 
@@ -519,7 +519,7 @@ begin
       if tdesc^.ptempobj<>nil then
                                   begin
                                   //tdesc^.ptempobj^.getoutbound;
-                                  tdesc^.ptempobj^.calcvisible(frustum,infrustumactualy,visibleactualy,totalobj,infrustumobj, ProjectProc,zoom,currentdegradationfactor);
+                                  tdesc^.ptempobj^.calcvisible(frustum,Actuality,Counters, ProjectProc,zoom,currentdegradationfactor);
                                   end;
       inc(tdesc);
     end;

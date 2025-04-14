@@ -33,8 +33,8 @@ initialization;
      with programlog.Enter('uzcregsystempas.initialization',LM_Debug) do begin
      if SysUnit=nil then
        begin
-         units.loadunit(GetSupportPath,InterfaceTranslate,expandpath('$(ZCADPath)/rtl/system.pas'),nil);
-         SysUnit:=units.findunit(GetSupportPath,InterfaceTranslate,'System');
+         units.loadunit(GetSupportPaths,InterfaceTranslate,expandpath('$(DistribPath)/rtl/system.pas'),nil);
+         SysUnit:=units.findunit(GetSupportPaths,InterfaceTranslate,'System');
        end;
      programlog.leave(IfEntered);
      end;

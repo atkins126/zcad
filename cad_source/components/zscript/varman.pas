@@ -271,6 +271,7 @@ function GetIntegerFromSavedUnit(const name,suffix:string;def,min,max:integer):i
 function GetAnsiStringFromSavedUnit(const name,suffix:ansistring;const def:ansistring):ansistring;
 function GetBooleanFromSavedUnit(const name,suffix:ansistring;def:Boolean):Boolean;
 procedure StoreIntegerToSavedUnit(const name,suffix:string;value:integer);
+procedure StoreBooleanToSavedUnit(const name,suffix:string;value:Boolean);
 procedure StoreAnsiStringToSavedUnit(const name,suffix:string;const value:string);
 procedure RegisterVarCategory(const CategoryName,CategoryUserName:string;TranslateFunc:TTranslateFunction);
 implementation
@@ -370,6 +371,20 @@ begin
      else
        pint:=pvd^.data.Addr.Instance;
      pint^:=value;
+end;
+procedure StoreBooleanToSavedUnit(const name,suffix:string;value:Boolean);
+var
+   pbool:PBoolean;
+   pvd:pvardesk;
+   vn:TInternalScriptString;
+begin
+     vn:=name+suffix;
+     pvd:=SavedUnit.FindValue(vn);
+     if not assigned(pvd) then
+       pbool:=SavedUnit.CreateVariable(vn,'Boolean').data.Addr.instance
+     else
+       pbool:=pvd^.data.Addr.Instance;
+     pbool^:=value;
 end;
 procedure StoreAnsiStringToSavedUnit(const name,suffix:string;const value:string);
 var
@@ -475,7 +490,7 @@ begin
           if source^.FindVariable(pv^.name,True)=nil then begin
             source^.setvardesc(vd,pv^.name,pv^.username,pv^.data.ptd^.TypeName);
             source^.InterfaceVariables.createvariable(vd.name, vd);
-            pv^.data.ptd^.CopyInstanceTo(pv^.data.Addr.Instance,vd.data.Addr.Instance);
+            pv^.data.ptd^.CopyValueToInstance(pv^.data.Addr.Instance,vd.data.Addr.Instance);
           end;
           pv:=InterfaceVariables.vardescarray.iterate(ir);
         until pv=nil;
@@ -499,7 +514,7 @@ begin
           if FindVariable(pv^.name,True)=nil then begin
               setvardesc(vd,pv^.name,pv^.username,pv^.data.ptd^.TypeName);
               InterfaceVariables.createvariable(vd.name, vd);
-              pv^.data.ptd^.CopyInstanceTo(pv^.data.Addr.Instance,vd.data.Addr.Instance);
+              pv^.data.ptd^.CopyValueToInstance(pv^.data.Addr.Instance,vd.data.Addr.Instance);
           end;
           pv:=source.InterfaceVariables.vardescarray.iterate(ir);
         until pv=nil;
@@ -524,7 +539,7 @@ begin
 
           fd.base.ProgramName:=ti.Name;
           fd.base.PFT:=RegisterType(ti);;
-          fd.base.Attributes:=0;
+          fd.base.Attributes:=[];
           fd.base.Saved:=0;
           fd.Collapsed:=true;
           fd.Offset:=mf.FldOffset;
@@ -913,6 +928,10 @@ begin
      AddTypeByRef(FundamentalSingleDescriptorObj);
      AddTypeByRef(GDBEnumDataDescriptorObj);
      AddTypeByRef(CalculatedStringDescriptor);
+     AddTypeByRef(GetterSetterIntegerDescriptor);
+     AddTypeByRef(GetterSetterBooleanDescriptor);
+     AddTypeByRef(GetterSetterTUsableIntegerDescriptor);
+     AddTypeByRef(GetterSetterTZColorDescriptor);
      AddTypeByRef(AliasIntegerDescriptorOdj);
      AddTypeByRef(AliasCardinalDescriptorOdj);
      AddTypeByRef(AliasDWordDescriptorOdj);
@@ -1153,14 +1172,12 @@ begin
            oi_hidden:
                           begin
                                //a:=PFieldDescriptor(PRecordDescriptor(ptd)^.Fields.getDataMutable(PRecordDescriptor(ptd)^.Fields.Count-1))^.Attributes;
-                               getlastfirld.Attributes:=
-                               getlastfirld.Attributes or FA_HIDDEN_IN_OBJ_INSP;
+                               getlastfirld.Attributes:=getlastfirld.Attributes+[fldaHidden];
                           end;
            oi_readonly:
                        begin
                                //a:=PFieldDescriptor(PRecordDescriptor(ptd)^.Fields.getDataMutable(PRecordDescriptor(ptd)^.Fields.Count-1))^.Attributes;
-                               getlastfirld.Attributes:=
-                               getlastfirld.Attributes or FA_READONLY;
+                               getlastfirld.Attributes:=getlastfirld.Attributes+[fldaReadOnly];
                           end;
            username:
                     begin
@@ -1201,7 +1218,7 @@ begin
                                        pd.base.PFT:=fieldgdbtype;
                                        pd.r:=parseresult^.getData(2);
                                        pd.w:=parseresult^.getData(3);
-                                       pd.base.Attributes:=0;
+                                       pd.base.Attributes:=[];
                                        if ptd<>nil then PObjectDescriptor(ptd)^.AddProperty(pd);
                                   end
                               else
@@ -1245,7 +1262,7 @@ begin
                                                              fd.base.PFT:=fieldgdbtype;
                                                              //Pointer(fd.base.UserName):=nil;
                                                              //fd.UserName:='sdfsdf';
-                                                             fd.base.Attributes:=0;
+                                                             fd.base.Attributes:=[];
                                                              fd.base.Saved:=0;
                                                              fd.Collapsed:=true;
                                                              //if fieldsmode<>primary then fd.Attributes:=fd.Attributes or FA_CALCULATED;

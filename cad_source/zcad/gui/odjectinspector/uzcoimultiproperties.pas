@@ -41,7 +41,8 @@ type
                      PGetDataInEtity:Pointer;
                      PSetDataInEtity:Pointer;
                end;
-
+  TBeforeProc=procedure;
+  TBeforeProcVector=TMyVector<TBeforeProc>;
   TBeforeIterateProc=function(mp:TMultiProperty;pu:PTEntityUnit):Pointer;
   TAfterIterateProc=procedure(piteratedata:Pointer;mp:TMultiProperty);
   TEntChangeProc=procedure(var UMPlaced:boolean;pu:PTEntityUnit;PSourceVD:PVarDesk;ChangedData:TChangedData;mp:TMultiProperty);
@@ -91,6 +92,8 @@ type
   LessObjIDWithExtender=class
     class function c(a,b:TObjIDWithExtender):boolean;inline;
   end;
+  TMPFlag=(MPFFirstPass{Установлен на первом проходе, когда значение из примитива просто копируется});
+  TMPFlags=set of TMPFlag;
 
   TObjID2MultiPropertyProcs=GKey2DataMapOld<TObjIDWithExtender,TMultiPropertyDataForObjects,LessObjIDWithExtender>;
   TMultiProperty=class
@@ -99,7 +102,8 @@ type
                        MPType:PUserTypeDescriptor;
                        MPCategory:TMultiPropertyCategory;
                        MPObjectsData:TObjID2MultiPropertyProcs;
-                       usecounter:SizeUInt;
+                       UseCounter:SizeUInt;
+                       Flags:TMPFlags;
                        sortedid:integer;
                        MIPD:TMainIterateProcsData;
                        {BeforeIterateProc:TBeforeIterateProc;
@@ -123,6 +127,7 @@ type
                                MultiPropertyDictionary:TMyString2TMultiPropertyDictionary;
                                MultiPropertyVector:TMultiPropertyVector;
                                MPObjectsDataList:TObjectList;
+                               BeforeProcVector:TBeforeProcVector;
                                constructor create;
                                destructor destroy;override;
                                procedure reorder(oldsortedid,sortedid:integer;IdWithExtdr:TObjIDWithExtender);
@@ -159,7 +164,7 @@ type
                                                                        //ECP:TEntChangeProc;             //функция присвоения нового значения
                                                                        //CV:TCheckValueFunc=nil;         //функция проверки введенного значения
                                                                        UseMode:TMultiPropertyUseMode=MPUM_AllEntsMatched);
-
+                               procedure RegisterBeforeProc(ABeforeProc:TBeforeProc);
                                procedure DoRegisterMultiproperty(name:String;                 //уникальное имя проперти
                                                                  username:String;             //имя проперти в инспекторе
                                                                  ptm:PUserTypeDescriptor;        //тип проперти
@@ -260,6 +265,11 @@ begin
   GSData.Mode:=GSMRel;
   DoRegisterMultiproperty(Name,UserName,ptm,category,{id,extdr}TObjIDWithExtender.Create(id,extdr),GSData,MIPD,EIPD{ebip,eip,ECP,CV},GSMRel,UseMode);
 end;
+procedure TMultiPropertiesManager.RegisterBeforeProc(ABeforeProc:TBeforeProc);
+begin
+  BeforeProcVector.PushBack(ABeforeProc);
+end;
+
 procedure TMultiPropertiesManager.RegisterPropertyMultiproperty(Name:String;
                                         UserName:String;
                                         category:TMultiPropertyCategory;
@@ -366,7 +376,7 @@ begin
      MPType:=mp.MPType;
      MPCategory:=mp.MPCategory;
      MPObjectsData:=mp.MPObjectsData;
-     usecounter:=mp.usecounter;
+     UseCounter:=mp.UseCounter;
      sortedid:=mp.sortedid;
      MIPD:=mp.MIPD;
      //BeforeIterateProc:=mp.BeforeIterateProc;
@@ -380,6 +390,7 @@ begin
      MultiPropertyDictionary:=TMyString2TMultiPropertyDictionary.create;
      MultiPropertyVector:=TMultiPropertyVector.Create;
      MPObjectsDataList:=TObjectList.Create;
+  BeforeProcVector:=TBeforeProcVector.Create;
 end;
 destructor TMultiPropertiesManager.destroy;
 var
@@ -390,6 +401,7 @@ begin
      MultiPropertyDictionary.destroy;
      MultiPropertyVector.destroy;
      MPObjectsDataList.Destroy;
+  BeforeProcVector.destroy;
      inherited;
 end;
 initialization

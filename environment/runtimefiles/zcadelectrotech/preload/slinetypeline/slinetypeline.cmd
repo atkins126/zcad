@@ -1,1 +1,0 @@
-MergeBlocks($(CurrentMacrosPath)_slinetypeline.dxf)

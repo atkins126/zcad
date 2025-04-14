@@ -19,7 +19,8 @@ uses
   uzeparserenttypefilter,uzeparserentpropfilter,uzeparsernavparam,uzclog,uzcuidialogs,
   XMLConf,XMLPropStorage, EditBtn,LazConfigStorage,uzcdialogsfiles,
   Masks,garrayutils,LCLType,LCLIntf, Buttons,
-  gzctnrSTL,uzcActionsManager,uzglviewareageneral,uzedrawingsimple;
+  gzctnrSTL,uzcActionsManager,uzglviewareageneral,uzedrawingsimple,
+  uzcFileStructure;
 
 resourcestring
   rsStandaloneDevices='Standalone devices';
@@ -600,7 +601,7 @@ begin
   result:=false;
   if not assigned(InfoForm) then begin
     InfoForm:=TInfoForm.createnew(application.MainForm);
-    InfoForm.BoundsRect:=GetBoundsFromSavedUnit(BoundsSaveName,SysParam.notsaved.ScreenX,SysParam.notsaved.Screeny);
+    InfoForm.BoundsRect:=GetBoundsFromSavedUnit(BoundsSaveName,ZCSysParams.notsaved.ScreenX,ZCSysParams.notsaved.Screeny);
   end;
   InfoForm.caption:=cpt;
   InfoForm.memo.text:=AText;
@@ -1095,7 +1096,7 @@ begin
         presets.caption:='Presets';
         presets.Clear;
         CfgFilesDesks:=TCfgFilesDesks.Create;
-        FromDirsIterator(SysVar.PATH.Program_Run^,format(AllFilesWithExt,[FileExt]),'',EnumerateCfgs,nil,CfgFilesDesks);
+        FromDirsIterator(GetPathsInCfgsPaths(ConcatPaths([CFSconfigsDir,CFSnavigatorsDir])),format(AllFilesWithExt,[FileExt]),'',EnumerateCfgs,nil,CfgFilesDesks,true);
         if CfgFilesDesks.Size>0 then begin
           if CfgFilesDesks.Size>1 then
             TCfgFilesDesksSorter.Sort(CfgFilesDesks,CfgFilesDesks.Size-1);
